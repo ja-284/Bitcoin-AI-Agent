@@ -18,6 +18,12 @@ import pandas_ta_classic as ta
 
 from agent.shared.types import PriceBar
 
+# The feature window: how many closed hourly candles every calculation sees. Live runs
+# fetch exactly this many; the backtest replays with exactly this many per simulated
+# hour, so the two produce identical values (RSI/MACD smoothing depends on how much
+# history is fed in -- a growing window would silently diverge from live behaviour).
+HISTORY_HOURS = 250  # longest warm-up is the 200h SMA, plus margin
+
 SMA_SHORT = 50
 SMA_LONG = 200
 RSI_LENGTH = 14

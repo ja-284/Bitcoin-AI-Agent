@@ -123,10 +123,24 @@ def save_outcome(prediction_id: int, horizon_hours: int, price_at_horizon: float
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO prediction_outcomes (prediction_id, horizon_hours, price_at_horizon, pct_change_from_prediction)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO prediction_outcomes (prediction_id, horizon_hours, status, price_at_horizon, pct_change_from_prediction)
+            VALUES (%s, %s, 'ok', %s, %s)
             ON CONFLICT (prediction_id, horizon_hours) DO NOTHING
             """,
             (prediction_id, horizon_hours, price_at_horizon, pct_change),
+        )
+        conn.commit()
+
+
+def save_outcome_unavailable(prediction_id: int, horizon_hours: int) -> None:
+    """The target candle does not exist in the exchange's history; record that fact and stop retrying."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO prediction_outcomes (prediction_id, horizon_hours, status)
+            VALUES (%s, %s, 'unavailable')
+            ON CONFLICT (prediction_id, horizon_hours) DO NOTHING
+            """,
+            (prediction_id, horizon_hours),
         )
         conn.commit()

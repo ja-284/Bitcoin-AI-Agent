@@ -8,6 +8,8 @@ was asked.
 from datetime import datetime, timedelta, timezone
 
 import agent.orchestrator as orch
+from agent.data_providers.market_data import MarketData
+from agent.data_providers.quality import validate_bars
 from agent.news.news_service import NewsResult
 from agent.shared.types import CategoryScore, PriceBar
 
@@ -23,6 +25,10 @@ def _bars(n: int) -> list[PriceBar]:
     return bars
 
 
+def _market(bars: list[PriceBar]) -> MarketData:
+    return MarketData(bars=bars, quality=validate_bars(bars), provider="test")
+
+
 def test_cutoff_is_reference_candle_close_and_reaches_news_and_prediction(monkeypatch):
     bars = _bars(orch.HISTORY_HOURS)
     seen = {}
@@ -31,7 +37,7 @@ def test_cutoff_is_reference_candle_close_and_reaches_news_and_prediction(monkey
         seen["news_cutoff"] = cutoff
         return NewsResult(items=[], cutoff=cutoff, sources_attempted=3)
 
-    monkeypatch.setattr(orch, "get_hourly_bars", lambda n: bars)
+    monkeypatch.setattr(orch, "get_market_data", lambda n: _market(bars))
     monkeypatch.setattr(orch, "prediction_exists", lambda as_of: False)
     monkeypatch.setattr(orch, "get_recent_news", fake_news)
     monkeypatch.setattr(orch.news_scorer, "score_news", lambda items: CategoryScore("news", 0.0, 0.0, True, {}))
@@ -45,6 +51,7 @@ def test_cutoff_is_reference_candle_close_and_reaches_news_and_prediction(monkey
     assert prediction.as_of == bars[-1].as_of
     assert prediction.run_meta["lag_seconds_after_cutoff"] == (prediction.fetched_at - expected_cutoff).total_seconds()
     assert prediction.run_meta["news"]["cutoff"] == expected_cutoff.isoformat()
+    assert prediction.run_meta["price_data"]["gaps"] == 0
     assert prediction.pipeline_version == orch.PIPELINE_VERSION
 
 
@@ -52,7 +59,7 @@ def test_existing_prediction_short_circuits_before_any_ai_call(monkeypatch):
     bars = _bars(orch.HISTORY_HOURS)
     calls = {"news": 0, "explain": 0}
 
-    monkeypatch.setattr(orch, "get_hourly_bars", lambda n: bars)
+    monkeypatch.setattr(orch, "get_market_data", lambda n: _market(bars))
     monkeypatch.setattr(orch, "prediction_exists", lambda as_of: True)
     monkeypatch.setattr(orch, "get_recent_news", lambda cutoff: calls.__setitem__("news", calls["news"] + 1))
     monkeypatch.setattr(orch.news_scorer, "score_news", lambda items: calls.__setitem__("news", calls["news"] + 1))

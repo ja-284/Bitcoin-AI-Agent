@@ -10,16 +10,18 @@ expected from shared math, not confirmation from two separate signals. The confi
 calculation (in decision.py) only treats the genuinely independent categories as real
 "agreement" evidence.
 
-The `news_score` parameter is optional on purpose: the AI-based news reading module
-isn't wired in yet (it needs an Anthropic API key we don't have yet), so this scorer
-already works correctly with news absent -- it's simply excluded from the weighted
-average, and that gap shows up honestly in the completeness figure. Once the AI module
-exists, it will just pass a real CategoryScore in here; nothing in this file changes.
+The `news_score` parameter is optional on purpose: news is absent whenever the feeds or
+the AI step fail, and always absent in backtests (RSS has no archive). In that case the
+category is simply excluded from the weighted average, and the gap shows up honestly
+in the completeness figure rather than being scored as neutral at full weight.
+
+Version note: these formulas are SCORING_VERSION 0.1.0, unchanged since go-live. They
+are the baseline under evaluation and must not be tuned until that evaluation exists.
 """
 
 from dataclasses import dataclass
 
-from agent.indicators.engine import IndicatorSet
+from agent.indicators.engine import VOLUME_AVG_LENGTH, IndicatorSet
 from agent.patterns.rules import PatternResult
 from agent.shared.types import CategoryScore, PriceBar
 
@@ -85,6 +87,11 @@ def score_momentum(indicators: IndicatorSet) -> CategoryScore:
 def score_volume(indicators: IndicatorSet, bars: list[PriceBar]) -> CategoryScore:
     if indicators.volume_avg is None or len(bars) < RECENT_CHANGE_LOOKBACK + 1:
         return CategoryScore("volume", score=0.0, weight=0.0, is_independent=True, detail={"reason": "insufficient history"})
+    if any(b.is_synthetic for b in bars[-VOLUME_AVG_LENGTH:]):
+        # Fallback (CoinGecko) bars carry a rolling 24h volume, not the volume traded in
+        # that hour. Comparing that to its own average says nothing about conviction, so
+        # the category is marked unavailable rather than scored on incompatible data.
+        return CategoryScore("volume", score=0.0, weight=0.0, is_independent=True, detail={"reason": "synthetic bars: no true hourly volume"})
 
     recent_change = bars[-1].close - bars[-1 - RECENT_CHANGE_LOOKBACK].close
     direction = 1.0 if recent_change > 0 else (-1.0 if recent_change < 0 else 0.0)

@@ -13,7 +13,7 @@ Every bar from this source is marked `is_synthetic=True` so the rest of the syst
 This is why Binance is the primary source and this is only a fallback.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import requests
 
@@ -41,18 +41,29 @@ class CoinGeckoProvider(MarketDataProvider):
         prices = data["prices"]  # [[ts_ms, price], ...]
         volumes = dict(data["total_volumes"])  # {ts_ms: rolling_24h_volume}
 
+        # CoinGecko's points are snapshots taken a few minutes into each hour, not candles.
+        # Each is assigned to the hour it falls in (floored), keeping the LAST snapshot per
+        # hour as that hour's "close". A snapshot from 10:03 becomes the 10:00 hour's price:
+        # older than the true 11:00 close, never newer, so this errs on the safe side.
+        by_hour: dict[datetime, tuple[float, float]] = {}
+        for ts_ms, price in prices:
+            hour = datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc).replace(minute=0, second=0, microsecond=0)
+            by_hour[hour] = (price, volumes.get(ts_ms, 0.0))
+
+        now = datetime.now(tz=timezone.utc)
         bars = []
         prev_price = None
-        for ts_ms, price in prices:
-            if prev_price is not None:
+        for hour in sorted(by_hour):
+            price, volume = by_hour[hour]
+            if prev_price is not None and hour + timedelta(hours=1) <= now:
                 bars.append(
                     PriceBar(
-                        as_of=datetime.fromtimestamp(ts_ms / 1000, tz=timezone.utc),
+                        as_of=hour,
                         open=prev_price,
                         high=max(prev_price, price),
                         low=min(prev_price, price),
                         close=price,
-                        volume=volumes.get(ts_ms, 0.0),
+                        volume=volume,
                         source=self.name,
                         is_synthetic=True,
                     )

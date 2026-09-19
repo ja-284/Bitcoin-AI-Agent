@@ -21,10 +21,10 @@ from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 
 from agent.ai import explainer, news_scorer
-from agent.data_providers.market_data import get_hourly_bars
+from agent.data_providers.market_data import get_market_data
 from agent.database.db import prediction_exists, save_prediction
 from agent.decision.decision import compute_confidence, decide_signal
-from agent.indicators.engine import compute_indicators
+from agent.indicators.engine import HISTORY_HOURS, compute_indicators
 from agent.news.news_service import get_recent_news
 from agent.patterns.rules import detect_patterns
 from agent.scoring.scorer import SCORING_VERSION, score_all
@@ -32,8 +32,6 @@ from agent.shared.types import Prediction, PriceBar
 from agent.version import PIPELINE_VERSION
 
 logger = logging.getLogger(__name__)
-
-HISTORY_HOURS = 250  # enough to cover the longest indicator warm-up (the 200h moving average)
 
 
 def information_cutoff(reference_bar: PriceBar) -> datetime:
@@ -49,7 +47,8 @@ def run_once(save: bool = True) -> Prediction | None:
     """
     fetched_at = datetime.now(tz=timezone.utc)
 
-    bars = get_hourly_bars(HISTORY_HOURS)
+    market = get_market_data(HISTORY_HOURS)
+    bars = market.bars
     reference = bars[-1]
     cutoff = information_cutoff(reference)
     if save and prediction_exists(reference.as_of):
@@ -58,8 +57,10 @@ def run_once(save: bool = True) -> Prediction | None:
 
     run_meta: dict = {
         "lag_seconds_after_cutoff": (fetched_at - cutoff).total_seconds(),
-        "history_bars": len(bars),
+        "price_data": {"provider": market.provider, "synthetic": reference.is_synthetic, **market.quality.summary()},
     }
+    if reference.is_synthetic:
+        logger.warning("Price data is SYNTHETIC (%s fallback): volume is not a true hourly figure this run.", market.provider)
 
     indicators = compute_indicators(bars)
     patterns = detect_patterns(bars, indicators)

@@ -47,21 +47,26 @@ CREATE INDEX IF NOT EXISTS idx_predictions_as_of ON predictions (as_of);
 -- pct_change_from_prediction is also exactly what plain buy-and-hold would have
 -- earned over the window, which is the baseline needed to tell real skill apart
 -- from Bitcoin simply drifting up or down on its own.
+-- status 'ok': graded. status 'unavailable': the target candle does not exist in the
+-- exchange's history (downtime gap); price/pct are NULL and the row stops further retries.
 CREATE TABLE IF NOT EXISTS prediction_outcomes (
     id BIGSERIAL PRIMARY KEY,
     prediction_id BIGINT NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,
     horizon_hours INTEGER NOT NULL,
     checked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    price_at_horizon DOUBLE PRECISION NOT NULL,
-    pct_change_from_prediction DOUBLE PRECISION NOT NULL,
+    status TEXT NOT NULL DEFAULT 'ok' CHECK (status IN ('ok', 'unavailable')),
+    price_at_horizon DOUBLE PRECISION,
+    pct_change_from_prediction DOUBLE PRECISION,
     UNIQUE (prediction_id, horizon_hours)
 );
 
 -- Migration: an earlier version had a separate baseline column that always held the
 -- same value as pct_change_from_prediction (single asset: buy-and-hold IS the raw return).
 ALTER TABLE prediction_outcomes DROP COLUMN IF EXISTS baseline_pct_change;
-ALTER TABLE prediction_outcomes ALTER COLUMN price_at_horizon SET NOT NULL;
-ALTER TABLE prediction_outcomes ALTER COLUMN pct_change_from_prediction SET NOT NULL;
+-- Migration (pipeline 0.2.0): explicit 'unavailable' outcomes for missing target candles.
+ALTER TABLE prediction_outcomes ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'ok';
+ALTER TABLE prediction_outcomes ALTER COLUMN price_at_horizon DROP NOT NULL;
+ALTER TABLE prediction_outcomes ALTER COLUMN pct_change_from_prediction DROP NOT NULL;
 
 -- Migration (pipeline 0.2.0): explicit information cutoff and version stamps.
 -- Rows written before this existed were pipeline 0.1.0: their cutoff is derivable
