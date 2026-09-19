@@ -39,16 +39,23 @@ CREATE TABLE IF NOT EXISTS predictions (
 CREATE INDEX IF NOT EXISTS idx_predictions_as_of ON predictions (as_of);
 
 -- One row per (prediction, time horizon). Filled in later by the outcome tracker,
--- once enough real time has actually passed. baseline_pct_change is a plain
--- buy-and-hold comparison over the same window, so a rising market isn't mistaken
--- for the system actually having skill.
+-- once enough real time has actually passed. Only the raw price and return are
+-- stored -- whether a signal was "right" is decided at analysis time, not here.
+-- pct_change_from_prediction is also exactly what plain buy-and-hold would have
+-- earned over the window, which is the baseline needed to tell real skill apart
+-- from Bitcoin simply drifting up or down on its own.
 CREATE TABLE IF NOT EXISTS prediction_outcomes (
     id BIGSERIAL PRIMARY KEY,
     prediction_id BIGINT NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,
     horizon_hours INTEGER NOT NULL,
     checked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    price_at_horizon DOUBLE PRECISION,
-    pct_change_from_prediction DOUBLE PRECISION,
-    baseline_pct_change DOUBLE PRECISION,
+    price_at_horizon DOUBLE PRECISION NOT NULL,
+    pct_change_from_prediction DOUBLE PRECISION NOT NULL,
     UNIQUE (prediction_id, horizon_hours)
 );
+
+-- Migration: an earlier version had a separate baseline column that always held the
+-- same value as pct_change_from_prediction (single asset: buy-and-hold IS the raw return).
+ALTER TABLE prediction_outcomes DROP COLUMN IF EXISTS baseline_pct_change;
+ALTER TABLE prediction_outcomes ALTER COLUMN price_at_horizon SET NOT NULL;
+ALTER TABLE prediction_outcomes ALTER COLUMN pct_change_from_prediction SET NOT NULL;

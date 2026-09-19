@@ -5,6 +5,7 @@ the one file that would need to change.
 """
 
 import dataclasses
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -80,3 +81,34 @@ def save_prediction(prediction: Prediction) -> Optional[int]:
         conn.commit()
 
     return row[0] if row else None  # None means a prediction for this hour already existed
+
+
+def predictions_awaiting_outcome(horizon_hours: int, now: datetime) -> list[tuple[int, datetime, float]]:
+    """Predictions old enough to be graded at this horizon that haven't been graded yet."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT p.id, p.as_of, p.close_price
+            FROM predictions p
+            LEFT JOIN prediction_outcomes o
+                   ON o.prediction_id = p.id AND o.horizon_hours = %s
+            WHERE o.id IS NULL
+              AND p.as_of + make_interval(hours => %s) + interval '1 hour' <= %s
+            ORDER BY p.as_of
+            """,
+            (horizon_hours, horizon_hours, now),
+        )
+        return [(row[0], row[1], float(row[2])) for row in cur.fetchall()]
+
+
+def save_outcome(prediction_id: int, horizon_hours: int, price_at_horizon: float, pct_change: float) -> None:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO prediction_outcomes (prediction_id, horizon_hours, price_at_horizon, pct_change_from_prediction)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (prediction_id, horizon_hours) DO NOTHING
+            """,
+            (prediction_id, horizon_hours, price_at_horizon, pct_change),
+        )
+        conn.commit()
