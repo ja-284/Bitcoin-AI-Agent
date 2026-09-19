@@ -1,0 +1,46 @@
+# The hourly schedule. GitHub runs this on its own servers -- nothing on your
+# computer needs to be on. Secrets (API keys, database URL) are added once in the
+# repo's Settings -> Secrets and variables -> Actions, never written into this file.
+
+name: Hourly Bitcoin analysis
+
+on:
+  schedule:
+    # :17 past every hour. Deliberately NOT :00 -- that's when everyone's jobs fire and
+    # GitHub's queue is slowest (see the plan: delays of 5-30 min are common at :00).
+    - cron: "17 * * * *"
+  workflow_dispatch: # also lets you trigger a run by hand from the Actions tab
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
+      HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run hourly analysis
+        run: python run.py
+
+      - name: Grade past predictions
+        run: python -m agent.outcome_tracker
+
+      # Only reached if every step above succeeded. If the heartbeat service doesn't
+      # hear from us within its grace window, it emails you -- catching the case where
+      # GitHub silently skips a scheduled run (which does happen under heavy load).
+      - name: Heartbeat ping
+        if: env.HEARTBEAT_URL != ''
+        run: curl -fsS -m 10 --retry 3 "$HEARTBEAT_URL" > /dev/null

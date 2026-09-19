@@ -48,13 +48,15 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 
 - **Language**: Python — best-fit ecosystem for data handling, indicators, and AI glue code; no performance need to justify anything else.
 - **Scheduling**: GitHub Actions scheduled workflow (hourly, off-peak minute) + a free heartbeat/dead-man's-switch alert (e.g. healthchecks.io) to catch silently-skipped runs. Repo recommended public (unlimited free Actions minutes, and there's nothing proprietary to protect); user may choose private instead — their call.
-- **Market data**: CoinGecko (primary) + Binance public API (automatic backup) — aggregated price beats a single exchange, and price data is critical enough to need a fallback (missing it blocks the whole hourly run).
+- **Market data**: Binance public API (primary) + CoinGecko (automatic backup). The plan originally had these the other way round; swapped during the build because CoinGecko's free tier gives no true per-hour volume, and volume is a required analysis category. Binance is reached via its public data mirror (`data-api.binance.vision`) first, because the main API refuses US addresses and GitHub's job runners are US-based. Price data is critical enough to need a fallback: missing it blocks the whole hourly run.
 - **News**: Free RSS feeds from reputable outlets (e.g. CoinDesk, Cointelegraph). CryptoPanic's API turned out to be paid-only now (checked, not assumed). Headline + short snippet only, no full-article scraping; de-duplicate stories that appear on multiple feeds.
 - **Database**: Supabase (hosted Postgres) — reachable from a cloud job, comfortably covers Phase 1 data volume on the free tier, and is the natural fit for the future Lovable frontend. Watch item: free projects auto-pause after 7 days idle; hourly writes should prevent this, but verify in practice during the first couple of weeks.
 - **AI**: Claude, used in exactly two narrow, structured calls per run — never a free-roaming autonomous agent. (1) News headlines → a structured sentiment/relevance score (Haiku 4.5). (2) Final plain-English explanation, generated *after* the decision is already made by deterministic scoring — it narrates the result, it never judges or restates confidence. Estimated cost: well under $10/month at hourly cadence.
 - **Confidence**: calculated from (a) agreement between category scores and (b) data completeness — never AI-guessed. Individual components are logged, not just the final blended number. Labeled explicitly as "a consistency/completeness estimate, not yet a calibrated probability" until enough real outcome history exists to actually calibrate against.
 - **Indicators library**: pandas-ta-classic (the actively maintained community fork; the original pandas-ta looks at risk of going unmaintained).
 - **Chart patterns**: simple deterministic rules only in Phase 1 (e.g. moving-average crossovers, higher-highs/higher-lows structure) — no image-based pattern recognition yet.
+- **Backtests are technical-only and never touch the predictions table.** RSS has no archive, so past news is unknowable; backtests run with news absent (weight 0) and are labeled as such — not directly comparable to live runs. Results go to CSV files under `backtests/` (git-ignored), keeping live data pure. The no-lookahead rule is enforced by construction (each hour sees only `bars[:i+1]`) and checked by `tests/test_point_in_time.py`.
+- **Outcomes record raw prices and returns only.** Whether a signal was "right" is decided at analysis time (which horizon, what threshold, vs. buy-and-hold), never by the tracker. Horizons: 1h, 24h, 168h.
 - **Module map & build order**: see the full plan file — 13 build steps from project skeleton through to scheduled go-live, each module with a narrow, swappable interface (settings, market data, indicators, patterns, news, scoring, AI, decision/confidence, database, orchestrator, backtest runner, outcome tracker).
 
 ## Status
@@ -64,4 +66,16 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 - Implementation refinement vs. the original plan text: **Binance is the primary price source, CoinGecko is the backup** (swapped from the plan's initial framing). Reason found while building: CoinGecko's free OHLC endpoint doesn't actually include volume data, and volume is one of the required analysis categories. Binance's public endpoint gives true open/high/low/close/volume directly. Both sources are still used, exactly as planned — just swapped which one leads.
 - AI module and database are now built and working end-to-end. First real prediction saved to Supabase 2026-09-19. Anthropic API key and Supabase connection both live in `.env` (git-ignored).
 - Lesson worth keeping (rule 8 in action): the first AI-written explanation confidently described "agreement" as covering all five categories, when it actually covers only the independent ones. The prompt in `agent/ai/explainer.py` now states precisely what each confidence component measures and passes each category's independence flag. A convincing explanation was wrong about our own math — worth re-checking whenever the explainer prompt or confidence formula changes.
-- Still to build: the backtest runner, the outcome tracker, and scheduling/go-live (GitHub Actions + heartbeat alert).
+- Outcome tracker, backtest runner (with point-in-time guard test), and the GitHub Actions hourly workflow (`.github/workflows/hourly.yml`, runs at :17 past each hour) are built. First real outcome row recorded 2026-09-19.
+- First 30-day backtest of scoring v0.1.0 (2026-08-20 → 2026-09-19, technical-only): **no measurable edge.** BUY hours averaged +0.33% over 24h vs. +0.33% for all hours; SELL hours averaged +0.52%. Expected for a first formula. Do not tune weights against this window (rule 4) — collect live outcomes first, and keep a held-out period untouched when tuning does begin.
+- Remaining for go-live: push to GitHub, add the four secrets (ANTHROPIC_API_KEY, DATABASE_URL, COINGECKO_API_KEY optional, HEARTBEAT_URL optional), set up a healthchecks.io check, trigger one manual run from the Actions tab, then watch the first few scheduled runs and confirm Supabase doesn't auto-pause.
+
+## How to run things
+
+All commands from the project folder, using the virtual environment (`.venv\Scripts\python.exe` on Windows):
+
+- `python run.py` — one full analysis, saved to the database. `--no-save` to skip saving.
+- `python -m agent.outcome_tracker` — grade past predictions that are old enough.
+- `python -m agent.backtest.runner --days 30` — technical-only backtest; CSV lands in `backtests/`.
+- `python -m pytest tests/` — run the tests (no network or database needed).
+- Fresh database: `python -c "from agent.database.db import init_schema; init_schema()"` (safe to re-run; also applies migrations at the bottom of `schema.sql`).
