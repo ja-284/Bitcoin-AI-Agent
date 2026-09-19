@@ -72,13 +72,30 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 - Phase 1 scope is complete. The signal itself is NOT good yet (see backtest above) — "live" means the measuring instrument is switched on and collecting real outcomes, not that the analysis is finished. Improving the scoring is the next phase, done against accumulated live outcomes + a held-out period, never against a single backtest window.
 - Watch items for the first weeks: (1) confirm scheduled runs actually fire (Actions tab; GitHub can delay or skip) — optional heartbeat via healthchecks.io + HEARTBEAT_URL secret not yet set up; (2) confirm Supabase doesn't auto-pause; (3) GitHub disables scheduled workflows on public repos after 60 days with no commits — any commit resets the clock, and GitHub emails a warning first.
 - An older branch `claude/sleepy-fermat-wmrosq` on GitHub (2026-09-18, a first CLAUDE.md from a web session) is superseded and can be deleted.
+- **2026-09-19 evening — correctness phase (pipeline 0.2.0).** Inspection report found and the fixes addressed: GitHub skipped 6 of the first 7 hourly slots (now two slots/hour + self-check + watchdog); news leaked past the reference candle's close (now an explicit `cutoff_at`, news limited to it, undated items excluded); backtest outcomes were found by row count not timestamp (fixed; gaps → unavailable); backtest used a growing window unlike live (fixed: exactly 250 bars); fallback volume was scored on a rolling-24h figure (now unavailable); no candle validation (added; gaps flagged, never filled); outcome tracker guards and `unavailable` status. Full list in `CHANGELOG.md`. 43 tests. Predictions 1–4 are pipeline 0.1.0 (news not cutoff-limited).
+
+## Research phase — rules and decisions (2026-09-19)
+
+The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
+
+- **Time split** is defined in `research/EXPERIMENTS.md`. The **final holdout (2025-07-01 → 2026-08-19) is sealed** — never inspected, tuned on, or used to pick anything; evaluated once at the very end. The 30 days before go-live are a contaminated buffer (seen once). The live record from 2026-09-19 is the ultimate test.
+- **Primary horizon is NOT decided.** Evaluate 1h, 6h, 24h (and 72h, 168h) with one consistent framework; choose on evidence.
+- **Targets:** both binary direction (UP/DOWN) and three-class (UP/NEUTRAL/DOWN) with an explicit, configurable, documented definition (reference = close at cutoff; outcome = close of the candle opening at as_of+H; threshold fixed-% vs volatility-scaled to be tested, not assumed).
+- **Free data only.** Anything paid, revised-after-the-fact, or without trustworthy historical timestamps is UNAVAILABLE/UNSAFE — never fabricated. Historical news is UNAVAILABLE (no archive; an LLM's training knowledge would leak).
+- **Feature-group order** (after the baseline is evaluated, one at a time): volatility → regime → derivatives → macro → on-chain → news → microstructure → social; data quality overrides the order.
+- **Experiment log:** `research/EXPERIMENTS.md` + one JSON per experiment in `research/experiments/`. Exploratory vs confirmatory is always stated.
+- **Do not change** scoring formulas, weights, thresholds, or prompts until the corrected baseline (pipeline 0.2.0, scoring 0.1.0) has been evaluated against simple baselines with uncertainty, per year and per regime. Scoring 0.1.0 is the thing under test.
+- **Confidence** stays a labelled heuristic until calibrated on validation data (Brier, log loss, reliability buckets with intervals) — never presented as a probability before then.
+- **Overlapping outcome windows** (hourly predictions, multi-hour horizons) mean n hours ≠ n independent trials: use block bootstrap for uncertainty and an embargo ≥ horizon at any train/validation boundary once anything is fitted.
+- The AI's roles stay separated (news → structured score; explanation after the decision) and must themselves be tested (schema reliability, faithfulness of explanations, whether news adds information beyond simpler alternatives).
 
 ## How to run things
 
 All commands from the project folder, using the virtual environment (`.venv\Scripts\python.exe` on Windows):
 
-- `python run.py` — one full analysis, saved to the database. `--no-save` to skip saving.
+- `python run.py` — one full analysis, saved to the database (exits early if this hour is already saved). `--no-save` to skip saving.
 - `python -m agent.outcome_tracker` — grade past predictions that are old enough.
-- `python -m agent.backtest.runner --days 30` — technical-only backtest; CSV lands in `backtests/`.
+- `python -m agent.healthcheck --max-age-hours 2` — exit 1 if the newest prediction is stale (used by the workflows).
+- `python -m agent.backtest.runner --days 30` — technical-only backtest; CSV lands in `backtests/`. Never run it over the sealed holdout.
 - `python -m pytest tests/` — run the tests (no network or database needed).
 - Fresh database: `python -c "from agent.database.db import init_schema; init_schema()"` (safe to re-run; also applies migrations at the bottom of `schema.sql`).
