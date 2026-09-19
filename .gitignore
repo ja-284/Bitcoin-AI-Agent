@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .env
 *.log
+!research/HOLDOUT_ACCESS.log
 backtests/
 .pytest_cache/
 data/

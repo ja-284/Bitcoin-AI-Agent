@@ -1,15 +1,15 @@
 {
   "id": "E001",
   "date": "2026-09-19",
-  "git_commit": "(filled after run)",
+  "git_commit": "1fa0132",
   "status": "exploratory",
   "hypothesis": "Scoring 0.1.0 (technical categories only; news absent) contains predictive information beyond trivial baselines at at least one horizon among 1h, 6h, 24h, 72h, 168h.",
   "acceptance_criterion": "PRE-REGISTERED before running. For a horizon to count as 'information present': (a) the system's edge (mean forward return after BUY minus after SELL) is positive with a block-bootstrap 95% interval excluding zero in BOTH exploration and validation, AND (b) its three-class balanced accuracy (fixed 0.5% band) exceeds every trivial baseline's in BOTH periods. Anything less is reported as 'no evidence of information beyond baselines' for that horizon. No horizon is chosen as primary from this experiment alone.",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.1.0",
   "feature_version": "baseline categories trend/momentum/volume/chart_pattern; news absent",
-  "dataset": {"source": "binance BTCUSDT 1h via data-api.binance.vision", "snapshot": "(filled after run)", "range": "2017-08-17 -> 2025-06-30 (holdout excluded by loader)"},
-  "periods": {"exploration": "2017-08-17 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "dataset": {"source": "binance BTCUSDT 1h via data-api.binance.vision", "snapshot": "data/btcusdt_1h_2026-09-19.csv", "range": "2017-08-17 -> 2025-06-30 23:00 (holdout excluded by loader); 68,619 replayed hours"},
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31 (55,463 labelled hours at 1h)", "validation": "2024-01-01 -> 2025-06-30 (13,127)", "calibration": null, "holdout": "sealed, not read"},
   "horizons_hours": [1, 6, 24, 72, 168],
   "target": {
     "definition": "binary (UP if return > 0) and three-class",
@@ -21,11 +21,25 @@
   "hyperparameters": {"weights": "0.25/0.25/0.20/0.15 (news 0.15 absent)", "thresholds": "+/-0.15", "block_bootstrap": "block = max(48, 2H) hours, 500 resamples"},
   "calibration_method": null,
   "baselines": ["always_hold", "majority_label_from_exploration", "random_with_system_signal_mix_from_exploration", "momentum_24h", "ma_200h", "buy_and_hold_reference"],
-  "metrics": "(filled after run)",
-  "results": "(filled after run)",
-  "consistent_across_time": "(filled after run)",
-  "leakage_check": "labels by timestamp; vol-scaled threshold uses only completed returns (tests/test_labels.py); replay window = live (tests/test_backtest_matches_live.py); holdout truncated by loader (tests/test_research_guards.py)",
-  "overfitting_suspected": "(filled after run)",
-  "affected_design": "(filled after run)",
-  "notes": "The confidence heuristic is also checked here for the first time: reliability of `confidence` as a stated probability that the signal's direction is right, on acted hours."
+  "metrics": {
+    "signal_mix": {"exploration": "BUY 39% / HOLD 27% / SELL 34%", "validation": "BUY 40% / HOLD 30% / SELL 30%"},
+    "edge_pct_BUY_minus_SELL_with_95CI": {
+      "1h": {"exploration": "+0.01 [-0.01, +0.02]", "validation": "-0.00 [-0.03, +0.02]"},
+      "6h": {"exploration": "+0.09 [+0.00, +0.17]", "validation": "-0.01 [-0.13, +0.11]"},
+      "24h": {"exploration": "+0.18 [-0.13, +0.50]", "validation": "-0.10 [-0.49, +0.32]"},
+      "72h": {"exploration": "+0.75 [-0.07, +1.54]", "validation": "-0.40 [-1.32, +0.56]"},
+      "168h": {"exploration": "+1.20 [-0.36, +2.85]", "validation": "-1.08 [-2.67, +0.55]"}
+    },
+    "balanced_accuracy_3class_fixed_0.5pct": {"system": "0.32-0.35 all horizons/periods", "trivial_baselines": "0.31-0.34", "chance": 0.333},
+    "acted_direction_accuracy_binary": {"system": "0.47-0.50", "always_UP_majority": "0.51-0.56 (BTC rose more often than it fell)"},
+    "confidence_reliability": {"stated": "0.68-0.91", "observed_hit_rate": "0.42-0.50 in every bucket, every horizon, both periods", "ECE": "0.36-0.39"},
+    "brier_of_naive_probability_0.5_plus_half_score": "0.278-0.285 vs 0.250 for a constant 0.5 (worse than knowing nothing)",
+    "per_year_edge_24h_pct": {"2017": -0.57, "2018": 0.13, "2019": 0.12, "2020": 0.31, "2021": -0.12, "2022": -0.23, "2023": 0.26, "2024": -0.02, "2025": -0.30}
+  },
+  "results": "CRITERION NOT MET AT ANY HORIZON. (a) No horizon has a validation edge whose interval excludes zero on the positive side; validation point estimates are negative at every horizon >= 6h. Exploration edges at 72h/168h look large (+0.75%, +1.20%) but their intervals include zero and they track buy-and-hold drift (+0.51%, +1.23%): BUY hours simply ride the market. (b) Balanced accuracy is at chance (0.33) for system and baselines alike; the 1h value of 0.35 is a hair above chance and not accompanied by any edge. Direction accuracy on acted hours is 47-50%, below the always-UP baseline. Confidence carries no information: hours labelled 90% confident were right 47-50% of the time, exactly like hours labelled 70%. A naive score-to-probability mapping is worse than saying 50% every time.",
+  "consistent_across_time": "No. Sign of the 24h edge flips year to year (positive 2018-20, 2023; negative 2017, 2021-22, 2024-25). Same pattern at 72h/168h.",
+  "leakage_check": "labels by timestamp; vol-scaled threshold uses only completed returns (tests/test_labels.py); replay window = live (tests/test_backtest_matches_live.py); holdout truncated by loader (tests/test_research_guards.py). No leakage suspected -- results are consistent with NO information, which leakage would inflate, not deflate.",
+  "overfitting_suspected": "no -- nothing was tuned; weights and thresholds were fixed a priori",
+  "affected_design": "Yes. (1) Scoring 0.1.0 has no demonstrated predictive value; it is not worth tuning weights or thresholds. (2) The confidence heuristic must be retired as a stated number once a replacement exists; until then it is a heuristic label only. (3) Next: per-category diagnosis (Part G) and ablation (Part H) to learn whether ANY component carries information, or whether the categories are all noise/drift; then feature groups in the agreed order.",
+  "notes": "Effective sample sizes are far smaller than the hour counts (overlapping windows; block bootstrap used). The volatility-scaled three-class results are in results.json but were not part of the criterion."
 }
