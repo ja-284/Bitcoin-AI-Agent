@@ -1,0 +1,31 @@
+{
+  "id": "E001",
+  "date": "2026-09-19",
+  "git_commit": "(filled after run)",
+  "status": "exploratory",
+  "hypothesis": "Scoring 0.1.0 (technical categories only; news absent) contains predictive information beyond trivial baselines at at least one horizon among 1h, 6h, 24h, 72h, 168h.",
+  "acceptance_criterion": "PRE-REGISTERED before running. For a horizon to count as 'information present': (a) the system's edge (mean forward return after BUY minus after SELL) is positive with a block-bootstrap 95% interval excluding zero in BOTH exploration and validation, AND (b) its three-class balanced accuracy (fixed 0.5% band) exceeds every trivial baseline's in BOTH periods. Anything less is reported as 'no evidence of information beyond baselines' for that horizon. No horizon is chosen as primary from this experiment alone.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0",
+  "feature_version": "baseline categories trend/momentum/volume/chart_pattern; news absent",
+  "dataset": {"source": "binance BTCUSDT 1h via data-api.binance.vision", "snapshot": "(filled after run)", "range": "2017-08-17 -> 2025-06-30 (holdout excluded by loader)"},
+  "periods": {"exploration": "2017-08-17 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "target": {
+    "definition": "binary (UP if return > 0) and three-class",
+    "threshold": "three-class: fixed 0.5% band, and volatility-scaled 0.5 x median |return_H| over the prior 720h of COMPLETED returns",
+    "reference": "close of reference candle (price at cutoff)",
+    "outcome": "close of the candle opening at as_of + H, by timestamp; missing -> no label"
+  },
+  "features": ["trend", "momentum", "volume", "chart_pattern"],
+  "hyperparameters": {"weights": "0.25/0.25/0.20/0.15 (news 0.15 absent)", "thresholds": "+/-0.15", "block_bootstrap": "block = max(48, 2H) hours, 500 resamples"},
+  "calibration_method": null,
+  "baselines": ["always_hold", "majority_label_from_exploration", "random_with_system_signal_mix_from_exploration", "momentum_24h", "ma_200h", "buy_and_hold_reference"],
+  "metrics": "(filled after run)",
+  "results": "(filled after run)",
+  "consistent_across_time": "(filled after run)",
+  "leakage_check": "labels by timestamp; vol-scaled threshold uses only completed returns (tests/test_labels.py); replay window = live (tests/test_backtest_matches_live.py); holdout truncated by loader (tests/test_research_guards.py)",
+  "overfitting_suspected": "(filled after run)",
+  "affected_design": "(filled after run)",
+  "notes": "The confidence heuristic is also checked here for the first time: reliability of `confidence` as a stated probability that the signal's direction is right, on acted hours."
+}

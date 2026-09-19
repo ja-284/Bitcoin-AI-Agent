@@ -2,21 +2,26 @@
 # computer needs to be on. Secrets (API keys, database URL) are added once in the
 # repo's Settings -> Secrets and variables -> Actions, never written into this file.
 #
-# Reliability notes (learned on go-live day, 2026-09-19): GitHub's scheduler skipped
-# the first three slots outright and ran the fourth 37 minutes late. So:
-#   - two slots per hour: :47 is a free retry if :17 was skipped or badly delayed
-#     (the orchestrator exits early, before any AI call, if this hour is already saved)
+# Reliability notes (learned on go-live day, 2026-09-19): GitHub's scheduler ran only
+# 2 of the first 8 hourly slots for this repository, each 20-40 minutes late -- the
+# behaviour widely reported for new, low-activity repos. So:
+#   - four slots per hour: any one of them that fires does the hour's work; the rest
+#     exit early before any AI call (the orchestrator checks whether the hour is saved)
 #   - never exactly :00, when GitHub's queue is slowest
 #   - a self-check step fails the job if no row landed, so a miss produces a failure
 #     email instead of silence (see also watchdog.yml)
+#   - workflow_dispatch lets an OUTSIDE scheduler trigger the job through GitHub's
+#     API, which is the reliable path (see docs/ops/external_trigger.md)
 
 name: Hourly Bitcoin analysis
 
 on:
   schedule:
-    - cron: "17 * * * *"
-    - cron: "47 * * * *"
-  workflow_dispatch: # also lets you trigger a run by hand from the Actions tab
+    - cron: "7 * * * *"
+    - cron: "22 * * * *"
+    - cron: "37 * * * *"
+    - cron: "52 * * * *"
+  workflow_dispatch: # manual runs from the Actions tab, and external triggers via the API
 
 concurrency:
   group: hourly-analysis
