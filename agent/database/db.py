@@ -31,6 +31,19 @@ def init_schema() -> None:
         conn.commit()
 
 
+def prediction_exists(as_of: datetime) -> bool:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM predictions WHERE as_of = %s LIMIT 1", (as_of,))
+        return cur.fetchone() is not None
+
+
+def latest_prediction_as_of() -> Optional[datetime]:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT max(as_of) FROM predictions")
+        row = cur.fetchone()
+        return row[0] if row else None
+
+
 def save_prediction(prediction: Prediction) -> Optional[int]:
     category_scores_json = [dataclasses.asdict(c) for c in prediction.category_scores]
 

@@ -1,15 +1,26 @@
 # The hourly schedule. GitHub runs this on its own servers -- nothing on your
 # computer needs to be on. Secrets (API keys, database URL) are added once in the
 # repo's Settings -> Secrets and variables -> Actions, never written into this file.
+#
+# Reliability notes (learned on go-live day, 2026-09-19): GitHub's scheduler skipped
+# the first three slots outright and ran the fourth 37 minutes late. So:
+#   - two slots per hour: :47 is a free retry if :17 was skipped or badly delayed
+#     (the orchestrator exits early, before any AI call, if this hour is already saved)
+#   - never exactly :00, when GitHub's queue is slowest
+#   - a self-check step fails the job if no row landed, so a miss produces a failure
+#     email instead of silence (see also watchdog.yml)
 
 name: Hourly Bitcoin analysis
 
 on:
   schedule:
-    # :17 past every hour. Deliberately NOT :00 -- that's when everyone's jobs fire and
-    # GitHub's queue is slowest (see the plan: delays of 5-30 min are common at :00).
     - cron: "17 * * * *"
+    - cron: "47 * * * *"
   workflow_dispatch: # also lets you trigger a run by hand from the Actions tab
+
+concurrency:
+  group: hourly-analysis
+  cancel-in-progress: false # let a late run finish; the next one exits early anyway
 
 jobs:
   analyze:
@@ -38,9 +49,12 @@ jobs:
       - name: Grade past predictions
         run: python -m agent.outcome_tracker
 
+      - name: Self-check that this hour's prediction was saved
+        run: python -m agent.healthcheck --max-age-hours 2
+
       # Only reached if every step above succeeded. If the heartbeat service doesn't
-      # hear from us within its grace window, it emails you -- catching the case where
-      # GitHub silently skips a scheduled run (which does happen under heavy load).
+      # hear from us within its grace window, it emails you -- an alarm that lives
+      # outside GitHub entirely, so it also catches GitHub itself being down.
       - name: Heartbeat ping
         if: env.HEARTBEAT_URL != ''
         run: curl -fsS -m 10 --retry 3 "$HEARTBEAT_URL" > /dev/null

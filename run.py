@@ -20,6 +20,9 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
     prediction = run_once(save=not args.no_save)
+    if prediction is None:
+        print("A prediction for this hour is already saved -- nothing to do.")
+        return
 
     print()
     print(f"As of (last closed hour): {prediction.as_of.isoformat()}")

@@ -1,0 +1,28 @@
+# Independent alarm: every three hours, check that the live record isn't stale.
+# If the hourly job has been silently skipped, this job fails -- and GitHub emails
+# the repository owner about failed scheduled jobs. Costs nothing, needs no external
+# service. (Runs on GitHub's scheduler too, so it isn't a *complete* substitute for an
+# outside heartbeat check, but two independent schedules rarely both go quiet.)
+
+name: Watchdog
+
+on:
+  schedule:
+    - cron: "33 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Newest prediction must be less than 3 hours old
+        run: python -m agent.healthcheck --max-age-hours 3

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 
 from agent.ai import explainer, news_scorer
 from agent.data_providers.market_data import get_hourly_bars
-from agent.database.db import save_prediction
+from agent.database.db import prediction_exists, save_prediction
 from agent.decision.decision import compute_confidence, decide_signal
 from agent.indicators.engine import compute_indicators
 from agent.news.news_service import get_recent_news
@@ -28,10 +28,19 @@ logger = logging.getLogger(__name__)
 HISTORY_HOURS = 250  # enough to cover the longest indicator warm-up (the 200h moving average)
 
 
-def run_once(save: bool = True) -> Prediction:
+def run_once(save: bool = True) -> Prediction | None:
+    """
+    One full analysis cycle. Returns None when a saved run for this hour already exists:
+    the schedule fires twice an hour so a late or skipped slot can be retried, and the
+    retry must cost nothing (no AI calls) when the first attempt already succeeded.
+    """
     fetched_at = datetime.now(tz=timezone.utc)
 
     bars = get_hourly_bars(HISTORY_HOURS)
+    if save and prediction_exists(bars[-1].as_of):
+        logger.info("Prediction for %s already exists -- nothing to do.", bars[-1].as_of.isoformat())
+        return None
+
     indicators = compute_indicators(bars)
     patterns = detect_patterns(bars, indicators)
 
