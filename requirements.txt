@@ -1,0 +1,7 @@
+requests
+pandas
+pandas-ta-classic
+feedparser
+python-dotenv
+anthropic
+psycopg[binary]
