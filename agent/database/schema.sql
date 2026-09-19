@@ -7,9 +7,12 @@
 CREATE TABLE IF NOT EXISTS predictions (
     id BIGSERIAL PRIMARY KEY,
 
-    as_of TIMESTAMPTZ NOT NULL,              -- the hour this analysis is about
-    fetched_at TIMESTAMPTZ NOT NULL,         -- when the underlying data was actually fetched
+    as_of TIMESTAMPTZ NOT NULL,              -- open time of the reference candle (last fully-closed hour)
+    cutoff_at TIMESTAMPTZ,                   -- information cutoff = close of the reference candle (as_of + 1h)
+    fetched_at TIMESTAMPTZ NOT NULL,         -- when the underlying data was actually fetched (>= cutoff_at)
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    pipeline_version TEXT,                   -- see agent/version.py; distinguishes the original 0.1.0 baseline from corrected runs
+    run_meta JSONB,                          -- news exclusion counts, data-quality flags, lag: how much to trust this run
 
     close_price DOUBLE PRECISION NOT NULL,
     price_source TEXT NOT NULL,
@@ -59,3 +62,12 @@ CREATE TABLE IF NOT EXISTS prediction_outcomes (
 ALTER TABLE prediction_outcomes DROP COLUMN IF EXISTS baseline_pct_change;
 ALTER TABLE prediction_outcomes ALTER COLUMN price_at_horizon SET NOT NULL;
 ALTER TABLE prediction_outcomes ALTER COLUMN pct_change_from_prediction SET NOT NULL;
+
+-- Migration (pipeline 0.2.0): explicit information cutoff and version stamps.
+-- Rows written before this existed were pipeline 0.1.0: their cutoff is derivable
+-- (as_of + 1h) but their news was NOT limited to it -- see agent/version.py.
+ALTER TABLE predictions ADD COLUMN IF NOT EXISTS cutoff_at TIMESTAMPTZ;
+ALTER TABLE predictions ADD COLUMN IF NOT EXISTS pipeline_version TEXT;
+ALTER TABLE predictions ADD COLUMN IF NOT EXISTS run_meta JSONB;
+UPDATE predictions SET cutoff_at = as_of + interval '1 hour' WHERE cutoff_at IS NULL;
+UPDATE predictions SET pipeline_version = '0.1.0' WHERE pipeline_version IS NULL;

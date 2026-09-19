@@ -28,7 +28,7 @@ class NewsItem:
     headline: str
     source: str  # name of the outlet, e.g. "CoinDesk"
     url: str
-    published_at: datetime  # UTC
+    published_at: Optional[datetime]  # UTC availability time (later of published/updated); None = undated, never assumed fresh
     summary: Optional[str] = None
 
 
@@ -59,8 +59,9 @@ class ConfidenceBreakdown:
 class Prediction:
     """Everything about one hourly run, in the shape the database module stores as-is."""
 
-    as_of: datetime  # UTC. The point in time this analysis is about.
-    fetched_at: datetime  # UTC. When the data behind this analysis was actually fetched.
+    as_of: datetime  # UTC. Open time of the reference candle (the last fully-closed hour).
+    cutoff_at: datetime  # UTC. Information cutoff = close of the reference candle. Nothing after this may be used.
+    fetched_at: datetime  # UTC. When the data was actually pulled (always >= cutoff_at; the gap is the run's lag).
     close_price: float
     price_source: str
     price_is_synthetic: bool
@@ -69,8 +70,10 @@ class Prediction:
     confidence: ConfidenceBreakdown
     category_scores: list[CategoryScore]
     scoring_version: str
+    pipeline_version: str
     news_items: list[NewsItem] = field(default_factory=list)
     raw_indicators: dict = field(default_factory=dict)  # full indicator snapshot, kept for debugging/backtesting
+    run_meta: dict = field(default_factory=dict)  # news exclusion counts, data-quality flags, lag -- anything a reader needs to judge the run
     ai_model_news: Optional[str] = None  # which model produced the news score, if any
     ai_model_explanation: Optional[str] = None  # which model wrote the explanation, if any
     explanation: Optional[str] = None

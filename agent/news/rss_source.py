@@ -3,11 +3,22 @@ Fetches recent headlines from a fixed list of reputable, free, public RSS feeds 
 no account or API key required. Only headlines and short summaries are collected;
 this project deliberately doesn't scrape full article text (more brittle, and not
 needed for a sentiment/relevance read).
+
+Timestamp rule (matters for point-in-time correctness):
+- An item's availability time is the LATER of its published and updated timestamps.
+  The text we read is the latest version, and if that version was produced after a
+  prediction's cutoff it may contain information from after the cutoff -- so the
+  conservative choice is to date the item by its last change.
+- An item with neither timestamp gets published_at=None. It is never assumed to be
+  fresh; news_service excludes it from time-sensitive use and counts the exclusion.
+- These are publisher-reported times, not first-seen times. The first-seen time for
+  the archive is the run's fetched_at, stored alongside every prediction.
 """
 
 import logging
+from calendar import timegm
 from datetime import datetime, timezone
-from email.utils import parsedate_to_datetime
+from typing import Optional
 
 import feedparser
 
@@ -22,17 +33,20 @@ FEEDS = {
 }
 
 
-def _parse_published(entry) -> datetime:
-    raw = entry.get("published") or entry.get("updated")
-    if raw:
-        try:
-            dt = parsedate_to_datetime(raw)
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
-            return dt.astimezone(timezone.utc)
-        except (TypeError, ValueError):
-            pass
-    return datetime.now(tz=timezone.utc)
+def _struct_to_utc(value) -> Optional[datetime]:
+    if value is None:
+        return None
+    return datetime.fromtimestamp(timegm(value), tz=timezone.utc)
+
+
+def availability_time(entry) -> Optional[datetime]:
+    """Later of published/updated (feedparser gives both as UTC struct_time), or None."""
+    candidates = [
+        _struct_to_utc(entry.get("published_parsed")),
+        _struct_to_utc(entry.get("updated_parsed")),
+    ]
+    known = [c for c in candidates if c is not None]
+    return max(known) if known else None
 
 
 def fetch_feed(source_name: str, url: str) -> list[NewsItem]:
@@ -44,7 +58,7 @@ def fetch_feed(source_name: str, url: str) -> list[NewsItem]:
             headline=entry.get("title", "").strip(),
             source=source_name,
             url=entry.get("link", ""),
-            published_at=_parse_published(entry),
+            published_at=availability_time(entry),
             summary=(entry.get("summary") or "").strip() or None,
         )
         for entry in parsed.entries

@@ -50,19 +50,21 @@ def save_prediction(prediction: Prediction) -> Optional[int]:
     news_items_json = []
     for item in prediction.news_items:
         d = dataclasses.asdict(item)
-        d["published_at"] = d["published_at"].isoformat()
+        d["published_at"] = d["published_at"].isoformat() if d["published_at"] else None
         news_items_json.append(d)
 
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
             """
             INSERT INTO predictions (
-                as_of, fetched_at, close_price, price_source, price_is_synthetic,
+                as_of, cutoff_at, fetched_at, pipeline_version, run_meta,
+                close_price, price_source, price_is_synthetic,
                 overall_score, signal, agreement_score, completeness_score, overall_confidence,
                 scoring_version, ai_model_news, ai_model_explanation, explanation,
                 category_scores, news_items, raw_indicators
             ) VALUES (
                 %s, %s, %s, %s, %s,
+                %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s,
                 %s, %s, %s
@@ -72,7 +74,10 @@ def save_prediction(prediction: Prediction) -> Optional[int]:
             """,
             (
                 prediction.as_of,
+                prediction.cutoff_at,
                 prediction.fetched_at,
+                prediction.pipeline_version,
+                Jsonb(prediction.run_meta),
                 prediction.close_price,
                 prediction.price_source,
                 prediction.price_is_synthetic,

@@ -25,7 +25,11 @@ def main() -> None:
         return
 
     print()
-    print(f"As of (last closed hour): {prediction.as_of.isoformat()}")
+    print(f"Reference candle:         {prediction.as_of.isoformat()}")
+    print(f"Information cutoff:       {prediction.cutoff_at.isoformat()}")
+    print(f"Fetched at:               {prediction.fetched_at.isoformat()} "
+          f"(lag {prediction.run_meta.get('lag_seconds_after_cutoff', 0) / 60:.0f} min after cutoff)")
+    print(f"Pipeline / scoring:       {prediction.pipeline_version} / {prediction.scoring_version}")
     print(f"Price source:             {prediction.price_source} (synthetic={prediction.price_is_synthetic})")
     print(f"Close price:              ${prediction.close_price:,.2f}")
     print()
@@ -42,7 +46,13 @@ def main() -> None:
         f"completeness={prediction.confidence.completeness_score:.0%})"
     )
     print()
-    print(f"News items used: {len(prediction.news_items)}")
+    news_meta = prediction.run_meta.get("news")
+    if news_meta:
+        print(f"News: {news_meta['used']} used of {news_meta['fetched']} fetched "
+              f"(excluded: {news_meta['excluded_after_cutoff']} after cutoff, {news_meta['excluded_undated']} undated, "
+              f"{news_meta['excluded_too_old']} too old, {news_meta['excluded_duplicate']} duplicates)")
+    else:
+        print(f"News items used: {len(prediction.news_items)}")
     print()
     print("Explanation:")
     print(prediction.explanation or "  (none -- the explanation step failed this run)")
