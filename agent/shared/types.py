@@ -57,11 +57,20 @@ class ConfidenceBreakdown:
 
 @dataclass
 class Prediction:
+    """Everything about one hourly run, in the shape the database module stores as-is."""
+
     as_of: datetime  # UTC. The point in time this analysis is about.
     fetched_at: datetime  # UTC. When the data behind this analysis was actually fetched.
+    close_price: float
+    price_source: str
+    price_is_synthetic: bool
     overall_score: float  # -1.0 to +1.0
     signal: str  # "BUY" | "HOLD" | "SELL"
     confidence: ConfidenceBreakdown
     category_scores: list[CategoryScore]
     scoring_version: str
+    news_items: list[NewsItem] = field(default_factory=list)
+    raw_indicators: dict = field(default_factory=dict)  # full indicator snapshot, kept for debugging/backtesting
+    ai_model_news: Optional[str] = None  # which model produced the news score, if any
+    ai_model_explanation: Optional[str] = None  # which model wrote the explanation, if any
     explanation: Optional[str] = None

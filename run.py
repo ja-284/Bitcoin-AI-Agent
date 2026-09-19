@@ -1,57 +1,48 @@
 """
-Manual dry run of everything built so far: real price data -> indicators -> chart
-patterns -> real news -> scoring -> decision. This intentionally stops short of the
-AI explanation step and the database (those need an Anthropic API key and a Supabase
-project, which aren't set up yet) -- everything else is real, live, and working.
+Runs one full analysis cycle by hand and prints the result. Same code path the hourly
+schedule will use -- this is just the manual entry point.
+
+    python run.py            # run and save to the database
+    python run.py --no-save  # run without writing anything
 """
 
-from datetime import datetime, timezone
+import argparse
+import logging
 
-from agent.data_providers.market_data import get_hourly_bars
-from agent.decision.decision import compute_confidence, decide_signal
-from agent.indicators.engine import compute_indicators
-from agent.news.news_service import get_recent_news
-from agent.patterns.rules import detect_patterns
-from agent.scoring.scorer import score_all
-
-HISTORY_HOURS = 250  # enough for every indicator's warm-up period (the 200h SMA is the longest)
+from agent.orchestrator import run_once
 
 
 def main() -> None:
-    fetched_at = datetime.now(tz=timezone.utc)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no-save", action="store_true", help="run the analysis without writing to the database")
+    args = parser.parse_args()
 
-    bars = get_hourly_bars(HISTORY_HOURS)
-    indicators = compute_indicators(bars)
-    patterns = detect_patterns(bars, indicators)
-    news = get_recent_news()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
-    result = score_all(bars, indicators, patterns, news_score=None)
-    signal = decide_signal(result.overall_score)
-    confidence = compute_confidence(result)
+    prediction = run_once(save=not args.no_save)
 
-    print(f"As of (last closed hour): {bars[-1].as_of.isoformat()}")
-    print(f"Fetched at:               {fetched_at.isoformat()}")
-    print(f"Price data source:        {bars[-1].source} (synthetic={bars[-1].is_synthetic})")
-    print(f"Close price:              ${indicators.close:,.2f}")
+    print()
+    print(f"As of (last closed hour): {prediction.as_of.isoformat()}")
+    print(f"Price source:             {prediction.price_source} (synthetic={prediction.price_is_synthetic})")
+    print(f"Close price:              ${prediction.close_price:,.2f}")
     print()
     print("Category scores:")
-    for c in result.category_scores:
-        flag = "" if c.weight > 0 else "  (no data this run)"
-        print(f"  {c.name:15s} score={c.score:+.2f}  weight={c.weight:.2f}  independent={c.is_independent}{flag}")
-    if indicators.insufficient_history:
-        print("\nIndicators skipped due to insufficient history:")
-        for note in indicators.insufficient_history:
-            print(f"  - {note}")
+    for c in prediction.category_scores:
+        suffix = "  (no data this run)" if c.weight == 0 else ""
+        print(f"  {c.name:15s} score={c.score:+.2f}  weight={c.weight:.2f}  independent={c.is_independent}{suffix}")
     print()
-    print(f"Overall score:  {result.overall_score:+.3f}")
-    print(f"Signal:         {signal}")
-    print(f"Confidence:     {confidence.overall_confidence:.0%}  "
-          f"(agreement={confidence.agreement_score:.0%}, completeness={confidence.completeness_score:.0%})")
+    print(f"Overall score:  {prediction.overall_score:+.3f}")
+    print(f"Signal:         {prediction.signal}")
+    print(
+        f"Confidence:     {prediction.confidence.overall_confidence:.0%}  "
+        f"(agreement={prediction.confidence.agreement_score:.0%}, "
+        f"completeness={prediction.confidence.completeness_score:.0%})"
+    )
     print()
-    print(f"News: {len(news.items)} recent items, "
-          f"{news.completeness:.0%} of sources reachable (failed: {news.sources_failed or 'none'})")
-    for item in news.items[:5]:
-        print(f"  - [{item.source}] {item.headline}")
+    print(f"News items used: {len(prediction.news_items)}")
+    print()
+    print("Explanation:")
+    print(prediction.explanation or "  (none -- the explanation step failed this run)")
 
 
 if __name__ == "__main__":

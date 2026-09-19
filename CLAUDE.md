@@ -59,4 +59,9 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 
 ## Status
 
-- Phase 1 plan approved 2026-09-19. Implementation starting, following the approved build order.
+- Phase 1 plan approved 2026-09-19. Implementation started same day.
+- Built and tested against real live data: market data (Binance primary, CoinGecko backup), indicators, chart patterns, news (RSS), scoring, and the decision/confidence step. Verified end-to-end with `run.py`. Committed locally to git (not yet pushed to GitHub).
+- Implementation refinement vs. the original plan text: **Binance is the primary price source, CoinGecko is the backup** (swapped from the plan's initial framing). Reason found while building: CoinGecko's free OHLC endpoint doesn't actually include volume data, and volume is one of the required analysis categories. Binance's public endpoint gives true open/high/low/close/volume directly. Both sources are still used, exactly as planned — just swapped which one leads.
+- AI module and database are now built and working end-to-end. First real prediction saved to Supabase 2026-09-19. Anthropic API key and Supabase connection both live in `.env` (git-ignored).
+- Lesson worth keeping (rule 8 in action): the first AI-written explanation confidently described "agreement" as covering all five categories, when it actually covers only the independent ones. The prompt in `agent/ai/explainer.py` now states precisely what each confidence component measures and passes each category's independence flag. A convincing explanation was wrong about our own math — worth re-checking whenever the explainer prompt or confidence formula changes.
+- Still to build: the backtest runner, the outcome tracker, and scheduling/go-live (GitHub Actions + heartbeat alert).
