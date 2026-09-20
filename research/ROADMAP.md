@@ -14,7 +14,7 @@ every new phase.
 - [x] **PHASE 4 — Baseline evaluation** (E001: scoring 0.1.0 vs random / majority / always-HOLD / momentum / MA / buy-and-hold, five horizons, block-bootstrap CIs, per year, per regime, confidence reliability. Criterion not met anywhere.)
 - [x] **PHASE 5 — Current feature diagnosis** (E002: per-category rank correlations both periods, decile shapes, regime slices, redundancy)
 - [x] **PHASE 7 — Feature ablation** (E002: leave-one-out on the stored replay — see adjustment 1)
-- [ ] **PHASE 8 — New feature groups**, one at a time, pre-registered criteria, fit-free
+- [x] **PHASE 8 — New feature groups** (complete 2026-09-20 except 8.6, deferred until the live news archive is large enough; 8.8 unavailable). Outcome: 47 candidate features across 6 groups; **no directional feature meets the criterion with a usable size**; one consistent tiny *reversal* family at 1–6h (momentum, volume, taker-buy share; |ρ| ≤ 0.05); **two strong move-size predictors** (recent volatility, trade intensity) plus a time-of-day effect. Watch list for live re-tests: funding (24h contrarian), dollar/yield 5-day (168h negative).
   - [x] 8.1 Volatility (E003 — magnitude information strong at 1–24h; no directional signal; `tr_mean_14_rel` adopted as the uncertainty input, vol-scaled bands justified)
   - [x] 8.2 Market regime / long-horizon trend (E004 — no consistent directional information; first run caught a harness name-collision bug, now guarded by tests and a tripwire)
   - [x] 8.3 Derivatives (E005 — funding/premium usable, OI/liquidations UNAVAILABLE; contrarian sign consistent 2019–23 but absent 2024–25 → not adopted, on the live watch list)

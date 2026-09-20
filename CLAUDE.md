@@ -91,6 +91,8 @@ The user's research brief (from ChatGPT, reviewed and adopted) governs everythin
 - **Overlapping outcome windows** (hourly predictions, multi-hour horizons) mean n hours ≠ n independent trials: use block bootstrap for uncertainty and an embargo ≥ horizon at any train/validation boundary once anything is fitted.
 - The AI's roles stay separated (news → structured score; explanation after the decision) and must themselves be tested (schema reliability, faithfulness of explanations, whether news adds information beyond simpler alternatives).
 
+**Research state (2026-09-20, E000–E009; details in `research/ROADMAP.md`, `research/EXPERIMENTS.md`):** Phases 1–5, 7, 8, 8A complete. 47 candidate features tested fit-free across volatility, regime, derivatives, macro, on-chain and microstructure: **no directional feature is usable**; a consistent but tiny 1–6h *reversal* family exists (momentum, volume, taker-buy share; |ρ| ≤ 0.05); **move size is predictable** (recent volatility ρ up to 0.45, trade intensity up to 0.30, plus a time-of-day effect). Live watch list for confirmatory re-tests: funding rate (24h contrarian, held 2019–23), dollar/yield 5-day changes (168h negative). AI components verified (E009): news scorer reliable with a small order-sensitivity bias; explainer faithful and provably decision-neutral. Next: Phase 6 (walk-forward with embargo) → Phase 9 (one pre-registered fitted-model test for direction; an uncertainty model for move size) → Phase 11 (calibration). The honest deliverable is shaping up as calibrated *uncertainty* plus HOLD-heavy signals, unless Phase 9 finds a combinable directional signal.
+
 ## How to run things
 
 All commands from the project folder, using the virtual environment (`.venv\Scripts\python.exe` on Windows):
