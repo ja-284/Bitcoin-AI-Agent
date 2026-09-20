@@ -17,7 +17,7 @@ every new phase.
 - [ ] **PHASE 8 — New feature groups**, one at a time, pre-registered criteria, fit-free
   - [x] 8.1 Volatility (E003 — magnitude information strong at 1–24h; no directional signal; `tr_mean_14_rel` adopted as the uncertainty input, vol-scaled bands justified)
   - [x] 8.2 Market regime / long-horizon trend (E004 — no consistent directional information; first run caught a harness name-collision bug, now guarded by tests and a tripwire)
-  - [ ] 8.3 Derivatives (funding, open interest — availability check first)
+  - [x] 8.3 Derivatives (E005 — funding/premium usable, OI/liquidations UNAVAILABLE; contrarian sign consistent 2019–23 but absent 2024–25 → not adopted, on the live watch list)
   - [ ] 8.4 Macro / cross-market (market-hours alignment)
   - [ ] 8.5 On-chain (free daily series only)
   - [ ] 8.6 News improvements (live archive only)

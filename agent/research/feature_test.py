@@ -23,11 +23,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from agent.research.derivatives import DERIVATIVES_FEATURES, derivatives_features, load_funding, load_premium
 from agent.research.diagnose import _spearman_stat, spearman
 from agent.research.evaluate import HORIZONS, N_BOOT
-from agent.research.features import REGIME_FEATURES, RESERVED_PREFIXES, VOLATILITY_FEATURES, all_features
+from agent.research.features import REGIME_FEATURES, RESERVED_PREFIXES, VOLATILITY_FEATURES, all_features, bars_to_frame
 from agent.research.history import load_bars
 from agent.research.labels import forward_returns
+from agent.research.macro import MACRO_FEATURES, load_macro, macro_features
 from agent.research.metrics import block_bootstrap
 from agent.research.periods import HOLDOUT, period_of
 from agent.research.regimes import trend_regime
@@ -39,7 +41,20 @@ logger = logging.getLogger(__name__)
 
 MAGNITUDE_FLOOR = 0.10
 TRIPWIRE_RHO = 0.5  # no honest candle-derived feature correlates this strongly with the future; stop and investigate
-GROUPS = {"volatility": VOLATILITY_FEATURES, "regime": REGIME_FEATURES}
+GROUPS = {"volatility": VOLATILITY_FEATURES, "regime": REGIME_FEATURES, "derivatives": DERIVATIVES_FEATURES, "macro": MACRO_FEATURES}
+
+
+def compute_group_features(group: str, bars) -> pd.DataFrame:
+    """Every group's features on the same complete hourly grid, indexed by reference hour."""
+    if group in ("volatility", "regime"):
+        return all_features(bars)
+    if group == "derivatives":
+        grid = bars_to_frame(bars).index
+        return derivatives_features(grid, load_funding(), load_premium())
+    if group == "macro":
+        grid = bars_to_frame(bars).index
+        return macro_features(grid, load_macro())
+    raise ValueError(group)
 
 
 class SuspiciousResultError(RuntimeError):
@@ -78,7 +93,7 @@ def _verdict(e: dict, v: dict, floor: float = 0.0) -> str:
 def run(experiment: str, group: str) -> Path:
     feature_names = GROUPS[group]
     bars, quality, snapshot = load_bars(end=HOLDOUT.start)
-    feats = all_features(bars)
+    feats = compute_group_features(group, bars)
     rows = replay_cached(bars, snapshot)
     df = pd.DataFrame(rows)
     df["as_of"] = pd.to_datetime(df["as_of"])

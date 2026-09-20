@@ -1,0 +1,31 @@
+{
+  "id": "E006",
+  "date": "2026-09-20",
+  "git_commit": "(filled after run)",
+  "status": "exploratory",
+  "hypothesis": "Recent moves in traditional markets -- US stocks (S&P 500, Nasdaq), the US dollar index, gold, oil and the 10-year Treasury yield -- carry DIRECTIONAL information about Bitcoin's forward returns, in the direction of co-movement for stocks (positive), negative for the dollar, ambiguous for gold/oil/yields. Expected signs stated in advance: stocks +, dollar -, others unspecified.",
+  "acceptance_criterion": "PRE-REGISTERED before running. Direction: Spearman(feature, return_H) block-bootstrap 95% interval excludes zero with the same sign in BOTH exploration and validation. Magnitude: same, plus |rho| >= 0.10 both periods.",
+  "availability_check": {
+    "source": "Yahoo Finance chart API (free, no key), daily bars, 10+ years for ^GSPC, ^IXIC, DX-Y.NYB, GC=F, CL=F, ^TNX; exchange timezone reported per series. Values for indices are not revised; futures continuous contracts (GC=F, CL=F) are the front month as Yahoo serves it today (a minor reconstruction caveat, noted).",
+    "point_in_time_rule": "a daily bar for trading date D is treated as known from D 22:00 UTC -- after the NYSE close (20:00/21:00 UTC depending on daylight time) and after CME daily settlements. Conservative by 1-3 hours. Weekends/holidays keep the last known value (staleness is itself recorded as a feature).",
+    "unavailable": "intraday history for these series is not free beyond ~2 years; not used. Macro EVENT calendars (CPI, FOMC) with trustworthy release timestamps: not available free with history -> UNAVAILABLE."
+  },
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "feature_version": "macro v1: for each of spx, ndq, dxy, gold, oil, tnx: <name>_ret_1d (last known close vs the one before) and <name>_ret_5d; plus macro_staleness_h (hours since the last known close)",
+  "dataset": {"source": "data/macro_<date>.csv + spot snapshot", "snapshot": "(filled after run)", "range": "2017-08 -> 2025-06-30 (holdout excluded)"},
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "target": {"definition": "signed forward return (direction) and absolute forward return (magnitude)", "reference": "close at cutoff", "outcome": "close of candle opening at as_of+H"},
+  "features": ["spx_ret_1d", "spx_ret_5d", "ndq_ret_1d", "ndq_ret_5d", "dxy_ret_1d", "dxy_ret_5d", "gold_ret_1d", "gold_ret_5d", "oil_ret_1d", "oil_ret_5d", "tnx_chg_1d", "tnx_chg_5d", "macro_staleness_h"],
+  "point_in_time": "for reference hour t (cutoff t+1h), only bars with availability time <= cutoff; tested with a garbled-future test and an explicit 'bar for today is invisible before 22:00 UTC' test",
+  "hyperparameters": {"block_bootstrap": "block = max(48, 2H), 500 resamples"},
+  "calibration_method": null,
+  "metrics": "(filled after run)",
+  "results": "(filled after run)",
+  "consistent_across_time": "(filled after run)",
+  "leakage_check": "(filled after run)",
+  "overfitting_suspected": "(filled after run)",
+  "affected_design": "(filled after run)",
+  "notes": "13 features x 5 horizons = 65 direction tests; the both-periods rule is the guard. Bitcoin's correlation with stocks is known to have risen after 2020, so a validation-only effect is plausible and would be reported as inconsistent."
+}

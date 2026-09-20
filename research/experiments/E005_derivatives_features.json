@@ -1,0 +1,39 @@
+{
+  "id": "E005",
+  "date": "2026-09-20",
+  "git_commit": "(committed with results)",
+  "status": "exploratory",
+  "hypothesis": "Perpetual-futures positioning measures -- the settled funding rate and the hourly premium index -- carry DIRECTIONAL information about forward returns, with a NEGATIVE sign (crowded longs precede lower returns), most visibly at 24h-168h. Expected sign stated in advance.",
+  "acceptance_criterion": "PRE-REGISTERED before running. Direction: Spearman(feature, return_H) block-bootstrap 95% interval excludes zero with the same sign in BOTH exploration and validation. Magnitude: same, plus |rho| >= 0.10 both periods.",
+  "availability_check": {
+    "funding_rate": "Binance USDT-M BTCUSDT perpetual: 7,702 settlements 2019-09-10 -> 2026-09-20, every 8h, not revised. A few settlement timestamps carry a +1 ms offset (parsed as ISO8601); it can only delay visibility, never advance it. USABLE.",
+    "premium_index_klines": "59,093 hourly candles 2019-12-24 -> 2026-09-20. USABLE.",
+    "open_interest_history": "last 30 days only. UNAVAILABLE historically.",
+    "liquidations": "no free history. UNAVAILABLE.",
+    "options_iv_skew": "Deribit DVOL history exists from 2021; deferred.",
+    "live_use_caveat": "fapi.binance.com expected to refuse US IPs; the data mirror does not serve futures."
+  },
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "feature_version": "derivatives v1: funding_last, funding_mean_3, funding_sum_21, premium_close, premium_mean_24, premium_mean_168",
+  "dataset": {"source": "data/btcusdt_1h_2026-09-19.csv + data/funding_btcusdt_2026-09-20.csv + data/premium_btcusdt_1h_2026-09-20.csv", "snapshot": "2026-09-20", "range": "features available from 2019-09 (funding) / 2019-12 (premium); 70-74% of replay hours"},
+  "periods": {"exploration": "effective 2019-09 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "target": {"definition": "signed forward return (direction) and absolute forward return (magnitude)", "reference": "close at cutoff", "outcome": "close of candle opening at as_of+H"},
+  "features": ["funding_last", "funding_mean_3", "funding_sum_21", "premium_close", "premium_mean_24", "premium_mean_168"],
+  "point_in_time": "settlements with fundingTime <= cutoff only; premium candle with as_of <= t; 5 tests in tests/test_derivatives_features.py (settlement exactly at the cutoff visible, one second later invisible; window arithmetic; garbled-future)",
+  "hyperparameters": {"block_bootstrap": "block = max(48, 2H), 500 resamples"},
+  "calibration_method": null,
+  "metrics": {
+    "direction_passes": "none of 30",
+    "direction_pattern": "funding_last at 24h: exploration -0.045 [-0.087, -0.003] (the predicted contrarian sign, interval excludes zero); validation -0.006 [-0.082, +0.057]. Per year at 24h the sign is NEGATIVE in every year 2019-2023 (-0.05 to -0.11) for all six features, then ~0 in 2024 and 2025.",
+    "magnitude": "weak positive (0.06-0.13), consistent in sign but below the 0.10 floor in validation for all; high funding/premium coincide with volatile periods -- E003's volatility measures capture this better",
+    "redundancy": "all six features 0.77-0.95 correlated: effectively one signal (positioning level)"
+  },
+  "results": "NO PASS. The contrarian relationship the literature describes -- crowded longs, then lower returns -- is visible with the predicted sign in every single year from 2019 to 2023, and absent in 2024-2025. Under the pre-registered rule this is 'no evidence', and it is not adopted. It is the most consistent directional pattern the programme has seen so far (five years, same sign, right sign), which makes it a live-monitoring candidate: if it reappears in the live record it should be re-tested as a confirmatory experiment, not assumed.",
+  "consistent_across_time": "Consistent 2019-2023, absent 2024-2025.",
+  "leakage_check": "alignment tests pass; effect sizes small; a positioning feature leaking the future would produce far larger correlations than -0.05",
+  "overfitting_suspected": "no -- nothing fitted; expected sign stated in advance and matched where present",
+  "affected_design": "No feature adopted. Add 'funding_last (24h contrarian)' to the live-monitoring watch list (Phase 13) as a hypothesis to re-test when >= 6 months of live data exist. Live integration would additionally need a US-reachable source.",
+  "notes": "Because the validation period is one bull run in which funding stayed positive most of the time, the feature had little variation to work with there -- a limitation of the period, not proof the effect is gone."
+}
