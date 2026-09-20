@@ -1,0 +1,45 @@
+{
+  "id": "E008",
+  "date": "2026-09-20",
+  "git_commit": "(committed with results)",
+  "status": "exploratory",
+  "hypothesis": "Order-flow imbalance (share of each hour's volume that was aggressive taker buying) carries POSITIVE directional information at 1h-24h; trade intensity (trades per hour vs its recent average) carries magnitude information and no clear direction. Expected signs stated in advance.",
+  "acceptance_criterion": "PRE-REGISTERED before running. Direction: Spearman(feature, return_H) block-bootstrap 95% interval excludes zero with the same sign in BOTH exploration and validation. Magnitude: same, plus |rho| >= 0.10 both periods.",
+  "availability_check": {
+    "source": "Binance spot 1h klines fields 8 (number of trades) and 9 (taker buy base volume), 2017-08-17 ->, snapshot data/klines_extra_btcusdt_1h_2026-09-20.csv; validated (taker-buy volume never exceeds total volume, no negatives)",
+    "point_in_time_rule": "part of the closed candle (complete at the cutoff)",
+    "unavailable": "order-book depth, bid/ask spread, liquidity: no free history"
+  },
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "feature_version": "microstructure v1: taker_buy_share_1h/6h/24h, trades_rel_24h, trades_rel_168h (the hour is excluded from its own baseline)",
+  "dataset": {"source": "klines_extra snapshot + spot snapshot", "snapshot": "2026-09-20", "range": "2017-08-27 -> 2025-06-30 (holdout excluded); 94-100% availability"},
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "target": {"definition": "signed forward return (direction) and absolute forward return (magnitude)", "reference": "close at cutoff", "outcome": "close of candle opening at as_of+H"},
+  "features": ["taker_buy_share_1h", "taker_buy_share_6h", "taker_buy_share_24h", "trades_rel_24h", "trades_rel_168h"],
+  "point_in_time": "5 tests in tests/test_microstructure_features.py (known values, baseline excludes current hour, gap blanking, garbled-future)",
+  "hyperparameters": {"block_bootstrap": "block = max(48, 2H), 500 resamples"},
+  "calibration_method": null,
+  "metrics": {
+    "direction_passes": {
+      "taker_buy_share_1h at 1h": "-0.036 [-0.045, -0.028] / -0.054 [-0.070, -0.040] -> information (NEGATIVE)",
+      "taker_buy_share_1h at 6h": "-0.019 [-0.031, -0.008] / -0.042 [-0.063, -0.022] -> information (NEGATIVE)",
+      "taker_buy_share_6h at 1h": "-0.020 [-0.028, -0.012] / -0.039 [-0.056, -0.025] -> information (NEGATIVE)",
+      "everything else": "no evidence (24h+ ~0; trade intensity direction ~0)"
+    },
+    "magnitude_passes": {
+      "trades_rel_168h at 1h": "+0.170 / +0.295 -> PASS",
+      "trades_rel_168h at 6h": "+0.125 / +0.230 -> PASS",
+      "trades_rel_168h at 24h": "+0.079 / +0.135 -> consistent but below floor (exploration)",
+      "trades_rel_24h": "consistent positive at 1-72h, below the floor in exploration (0.04-0.09)"
+    },
+    "per_year_24h": "taker-buy share direction flips sign year to year at 24h (no 24h effect); the 1-6h effect is not broken down by year in this harness"
+  },
+  "results": "DIRECTION: the hypothesis was WRONG in sign, and the opposite is consistent. Hours dominated by aggressive buying are followed by slightly LOWER returns over the next 1-6 hours, in both periods, with intervals excluding zero (|rho| 0.02-0.05). This is the third appearance of the same short-horizon reversal family (E002 momentum and volume; E003 interaction) -- real, consistent, and too small to build a signal on alone. MAGNITUDE: trade intensity relative to the prior week strongly predicts the size of the next 1-6h move (rho 0.17-0.30), a second uncertainty input alongside recent volatility (E003); their overlap must be measured when the uncertainty model is built.",
+  "consistent_across_time": "Direction (1-6h reversal): consistent across the two periods. Magnitude: consistent, stronger in validation.",
+  "leakage_check": "candle-level fields; garbled-future test passes; effect sizes small for direction, moderate for magnitude (as expected: activity clusters like volatility)",
+  "overfitting_suspected": "no -- nothing fitted; the direction result contradicts the pre-stated hypothesis, which is not what fitting produces",
+  "affected_design": "(1) Add trades_rel_168h as a candidate input for the Phase 11 uncertainty model (with tr_mean_14_rel and hour-of-day); test incremental value then. (2) The short-horizon reversal family (momentum, volume, taker-buy share at 1-6h) is now the only consistent directional pattern in the data; Phase 9 will test whether a fitted, regularised model combining these weak inputs beats baselines out-of-sample under walk-forward validation -- one pre-registered experiment, not a search.",
+  "notes": "Roadmap correction recorded: 8.7 was expected UNAVAILABLE; candle-level aggregates made a clean test possible."
+}

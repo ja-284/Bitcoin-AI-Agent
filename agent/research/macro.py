@@ -1,4 +1,4 @@
-"""
+﻿"""
 Macro / cross-market data for research (Phase 8.4): daily closes of US stocks, the
 dollar index, gold, oil and the 10-year yield, from Yahoo Finance's free chart API.
 
@@ -101,7 +101,7 @@ def macro_features(grid: pd.DatetimeIndex, daily: pd.DataFrame) -> pd.DataFrame:
             out[f"{name}_ret_1d"] = last / prev1 - 1
             out[f"{name}_ret_5d"] = last / prev5 - 1
         if name == "spx":
-            known_at = np.where(pos >= 0, avail[p], np.datetime64("NaT"))
+            known_at = np.where(pos >= 0, avail[p], np.datetime64("NaT", "ns"))
             staleness = (cutoff - known_at) / np.timedelta64(1, "h")
     out["macro_staleness_h"] = staleness
     return out

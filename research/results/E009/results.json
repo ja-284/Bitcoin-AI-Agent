@@ -1,0 +1,353 @@
+{
+  "experiment": "E009",
+  "generated_at": "2026-09-20T16:45:38.408449+00:00",
+  "models": {
+    "news": "claude-haiku-4-5",
+    "explainer": "claude-sonnet-5"
+  },
+  "news_scorer": {
+    "schema_ok": 6,
+    "schema_calls": 6,
+    "aggregate_scores": [
+      0.24230769230769234,
+      0.23717948717948717,
+      0.25225806451612903,
+      0.2707792207792208,
+      0.26651315789473684
+    ],
+    "per_headline": {
+      "Bitcoin climbs above $80,000 as spot ETF inflows hit a record": {
+        "relevance": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sentiment": [
+          0.9,
+          0.9,
+          1.0,
+          1.0,
+          0.9
+        ]
+      },
+      "US regulator approves new rules for Bitcoin custody at banks": {
+        "relevance": [
+          0.95,
+          0.95,
+          0.95,
+          0.95,
+          0.95
+        ],
+        "sentiment": [
+          0.7,
+          0.7,
+          0.8,
+          0.8,
+          0.7
+        ]
+      },
+      "Bitcoin miners sell reserves as hashrate reaches all-time high": {
+        "relevance": [
+          0.85,
+          0.9,
+          0.9,
+          0.9,
+          0.85
+        ],
+        "sentiment": [
+          -0.3,
+          -0.2,
+          -0.3,
+          -0.3,
+          -0.3
+        ]
+      },
+      "MicroStrategy adds another 5,000 BTC to its treasury": {
+        "relevance": [
+          0.9,
+          0.85,
+          0.85,
+          0.85,
+          0.9
+        ],
+        "sentiment": [
+          0.8,
+          0.6,
+          0.7,
+          0.7,
+          0.8
+        ]
+      },
+      "Manchester United appoint new manager after poor start to the season": {
+        "relevance": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sentiment": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "New study links coffee consumption to longer sleep duration": {
+        "relevance": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sentiment": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "Ethereum developers delay the next network upgrade by two months": {
+        "relevance": [
+          0.15,
+          0.2,
+          0.15,
+          0.1,
+          0.15
+        ],
+        "sentiment": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "Apple unveils thinner laptop with a new chip": {
+        "relevance": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "sentiment": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "Bitcoin ETF sees record $2 billion of inflows in a single day": {
+        "relevance": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.98
+        ],
+        "sentiment": [
+          0.85,
+          0.85,
+          0.9,
+          0.9,
+          0.85
+        ]
+      },
+      "Major pension fund announces first Bitcoin allocation": {
+        "relevance": [
+          0.95,
+          0.95,
+          0.9,
+          0.95,
+          0.92
+        ],
+        "sentiment": [
+          0.8,
+          0.75,
+          0.8,
+          0.85,
+          0.75
+        ]
+      },
+      "Bitcoin falls 15% after large exchange halts withdrawals following hack": {
+        "relevance": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.95
+        ],
+        "sentiment": [
+          -0.85,
+          -0.8,
+          -0.9,
+          -0.9,
+          -0.85
+        ]
+      },
+      "Regulators propose ban on Bitcoin trading for retail investors": {
+        "relevance": [
+          1.0,
+          0.95,
+          1.0,
+          0.95,
+          0.9
+        ],
+        "sentiment": [
+          -0.9,
+          -0.85,
+          -0.85,
+          -0.85,
+          -0.8
+        ]
+      }
+    },
+    "shuffled_aggregate": 0.20806451612903223,
+    "aggregate_mean": 0.25380752453545324,
+    "aggregate_std": 0.013119528851150024,
+    "mean_per_headline_sentiment_std": 0.028646963267650035,
+    "mean_relevance_bitcoin": 0.925,
+    "mean_relevance_non_bitcoin": 0.0375,
+    "bullish_sentiments": {
+      "Bitcoin ETF sees record $2 billion of inflows in a single day": [
+        0.85,
+        0.85,
+        0.9,
+        0.9,
+        0.85
+      ],
+      "Major pension fund announces first Bitcoin allocation": [
+        0.8,
+        0.75,
+        0.8,
+        0.85,
+        0.75
+      ]
+    },
+    "bearish_sentiments": {
+      "Bitcoin falls 15% after large exchange halts withdrawals following hack": [
+        -0.85,
+        -0.8,
+        -0.9,
+        -0.9,
+        -0.85
+      ],
+      "Regulators propose ban on Bitcoin trading for retail investors": [
+        -0.9,
+        -0.85,
+        -0.85,
+        -0.85,
+        -0.8
+      ]
+    },
+    "sentiment_sign_correct_every_repeat": true,
+    "order_shift": 0.04574300840642101,
+    "verdicts": {
+      "S1_schema": true,
+      "S2_stability": true,
+      "S3_relevance": true,
+      "S4_sentiment_sign": true,
+      "S5_order": false
+    }
+  },
+  "explainer": {
+    "cases": [
+      {
+        "case": "plain_buy",
+        "signal": "BUY",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the system is showing a BUY signal with an overall score of +0.310, which reflects a modest lean toward bullish conditions once all the weighted category scores are combined. The trend and chart_pattern categories are the most bullish (+0.50 and +1.00), but since they share overlapping math, they aren't counted toward the agreement figure to avoid double-counting the same underlying signal. Instead, agreement (90%) is based only on the independent categories\u2014momentum (+0.10), volume (+0.20), and news (+0.30)\u2014which all point in the same mildly positive direction, explaining the high agreement score. Completeness sits at 100%, meaning every category had usable data this run, so nothing was missing or estimated. Together, this produces a high overall confidence of 95%, driven by strong consistency among the independent readings and a full dataset, though the overall score itself remains only moderately bullish rather than strongly so."
+      },
+      {
+        "case": "plain_buy",
+        "signal": "BUY",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the system is showing a BUY signal with an overall score of +0.310, which reflects a mild-to-moderate bullish lean once all categories are weighted together. The strongest push comes from chart_pattern (+1.00) and trend (+0.50), but since these two are flagged as sharing overlapping math, they're excluded from the agreement calculation to avoid double-counting the same underlying signal. Among the independent categories \u2014 momentum (+0.10), volume (+0.20), and news (+0.30) \u2014 the scores are all modestly positive and fairly close together, which is why agreement comes in high at 90%. Completeness is 100%, meaning every category had usable data this run, so nothing was missing or estimated. Together, this gives a 95% confidence reading, driven by strong consensus among the independent categories plus full data coverage."
+      },
+      {
+        "case": "plain_sell",
+        "signal": "SELL",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the system landed on a SELL signal with an overall score of -0.280, which is mildly negative rather than extreme. This score comes from a mix of categories: trend (-0.60) and chart_pattern (-1.00) are strongly negative but are excluded from the agreement calculation since they share overlapping math and would inflate agreement artificially. Among the independent categories used for that measure\u2014momentum (-0.20), volume (-0.10), and news (-0.20)\u2014there's fairly consistent (though mild) negative agreement, landing at 80%. Completeness is 100%, meaning every category had usable data this run, so nothing was missing or estimated. Together, these produce a 90% confidence reading, reflecting how the independent signals aligned and how complete the underlying data was \u2014 not any judgment on whether the SELL call itself is a strong one."
+      },
+      {
+        "case": "plain_sell",
+        "signal": "SELL",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the system landed on a SELL with an overall score of -0.280, driven mainly by a sharply negative trend (-0.60) and an extreme chart_pattern reading (-1.00) \u2014 though those two are flagged as sharing overlapping math, so they're not treated as separate confirming votes. Momentum, volume, and news are each mildly negative (-0.20, -0.10, -0.20), and these are the independent categories used to check agreement. That agreement score came out to 80%, meaning these independent signals mostly pointed the same direction even though they were fairly mild individually. Completeness is 100%, so every category had usable data this run feeding into the final score. Overall, the -0.280 score reflects a blend of a few strongly negative but related readings alongside several weaker, independently-negative ones."
+      },
+      {
+        "case": "plain_hold",
+        "signal": "HOLD",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the overall score sits right at +0.020, essentially flat, which lines up with the HOLD signal \u2014 no meaningful edge in either direction. Looking at the categories, momentum leans slightly negative while trend and news lean slightly positive, and volume and chart pattern are neutral, so there's no strong consensus pulling the score one way. The 50% agreement figure reflects only the independent categories (momentum, volume, and news) checking against each other, and their mixed readings explain why that number is middling rather than high. Completeness came in at 85%, meaning most of the scoring weight had usable data this run, so the modest confidence isn't due to missing information but rather to the independent categories not pointing the same direction. Overall, this reads as a case where the underlying data is fairly complete but genuinely mixed, not a signal of any particular strength."
+      },
+      {
+        "case": "plain_hold",
+        "signal": "HOLD",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "The overall score of +0.020 sits almost exactly at neutral, which lines up with a HOLD signal \u2014 there's no meaningful tilt up or down in the combined data. Looking at the independent categories that feed the \"agreement\" figure (momentum at -0.10, volume at 0.00, and news at +0.05), they're pulling in slightly different directions, which is why agreement lands at a modest 50%. Trend and chart_pattern were left out of that agreement calculation since they're flagged as not independent, sharing underlying math with each other. Completeness is 85%, meaning most of the scoring weight had usable data this run, so the inputs behind the score were fairly solid even if the categories themselves didn't strongly align. Put together, the picture is one of mixed, low-conviction signals balancing each other out into a flat, wait-and-see reading."
+      },
+      {
+        "case": "adversarial_buy_with_negative_news",
+        "signal": "BUY",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the system landed on a BUY signal with a modest overall score of +0.200. This comes from a mix of strongly positive readings in trend and chart_pattern, moderately positive momentum and volume, and a sharply negative news score pulling the total back down. The 30% agreement figure only looks at the independent categories\u2014momentum, volume, and news\u2014and since those three are pulling in different directions (two positive, one strongly negative), they don't agree with each other much, which keeps that number low. Completeness is 100%, meaning every category had usable data this run, so nothing was missing from the calculation. Overall, the modest score and low agreement reflect a case where some indicators lean bullish while news leans strongly bearish, producing a net positive but not a strongly unified result."
+      },
+      {
+        "case": "adversarial_hold_all_missing_but_trend",
+        "signal": "HOLD",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the system landed on a HOLD with a fairly weak overall score of +0.10, which sits close to neutral rather than leaning strongly bullish or bearish. Only one category actually had usable data this run: trend, scoring +0.10 \u2014 and since it's flagged as not independent (it shares underlying math with another category), it was excluded from the agreement calculation, leaving nothing to actually compare for agreement, which is why that figure defaults to 50%. The bigger issue here is completeness, at just 25%, since momentum, volume, chart_pattern, and news all came back with no data \u2014 meaning most of the system's intended inputs weren't available to inform this score. In short, the modest score and HOLD signal are being driven by a single, non-independent category, with most of the analysis framework sitting empty this run."
+      },
+      {
+        "case": "adversarial_sell_low_confidence",
+        "signal": "SELL",
+        "named_correct": true,
+        "other_signals_mentioned": [],
+        "forbidden": [],
+        "percentages_not_given": [],
+        "text": "At $81,000, the system landed on a SELL with an overall score of -0.160, a fairly mild reading near the center of the -1 to +1 range. That weak score reflects a real split in the data: volume is strongly negative (-0.90) and trend is modestly negative (-0.20) and chart_pattern is fully negative (-1.00), but momentum is strongly positive (+0.80) and news is neutral (0.00), pulling the overall number back toward zero. The 10% agreement figure is low because it only compares the independent categories \u2014 momentum, volume, and news \u2014 and these three are pulling in very different directions (strongly up, strongly down, and flat), so they don't corroborate each other. Completeness sits at 60%, meaning a good chunk of the weighted scoring inputs either had usable data or didn't \u2014 some was missing this run, capping how much of the full picture was formed. Overall, this is a case where the headline signal is SELL, but the underlying components disagree noticeably and part of the data was incomplete."
+      }
+    ],
+    "signal_named": 9,
+    "wrong_signal_named": 0,
+    "forbidden_hits": 0,
+    "n": 9,
+    "verdicts": {
+      "X1_signal": true,
+      "X2_forbidden": true
+    }
+  }
+}

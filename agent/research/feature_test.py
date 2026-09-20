@@ -31,6 +31,8 @@ from agent.research.history import load_bars
 from agent.research.labels import forward_returns
 from agent.research.macro import MACRO_FEATURES, load_macro, macro_features
 from agent.research.metrics import block_bootstrap
+from agent.research.microstructure import MICROSTRUCTURE_FEATURES, load_klines_extra, microstructure_features
+from agent.research.onchain import ONCHAIN_FEATURES, load_difficulty, load_onchain, onchain_features
 from agent.research.periods import HOLDOUT, period_of
 from agent.research.regimes import trend_regime
 from agent.research.replay import replay_cached
@@ -41,7 +43,14 @@ logger = logging.getLogger(__name__)
 
 MAGNITUDE_FLOOR = 0.10
 TRIPWIRE_RHO = 0.5  # no honest candle-derived feature correlates this strongly with the future; stop and investigate
-GROUPS = {"volatility": VOLATILITY_FEATURES, "regime": REGIME_FEATURES, "derivatives": DERIVATIVES_FEATURES, "macro": MACRO_FEATURES}
+GROUPS = {
+    "volatility": VOLATILITY_FEATURES,
+    "regime": REGIME_FEATURES,
+    "derivatives": DERIVATIVES_FEATURES,
+    "macro": MACRO_FEATURES,
+    "onchain": ONCHAIN_FEATURES,
+    "microstructure": MICROSTRUCTURE_FEATURES,
+}
 
 
 def compute_group_features(group: str, bars) -> pd.DataFrame:
@@ -54,6 +63,12 @@ def compute_group_features(group: str, bars) -> pd.DataFrame:
     if group == "macro":
         grid = bars_to_frame(bars).index
         return macro_features(grid, load_macro())
+    if group == "onchain":
+        grid = bars_to_frame(bars).index
+        return onchain_features(grid, load_onchain(), load_difficulty())
+    if group == "microstructure":
+        grid = bars_to_frame(bars).index
+        return microstructure_features(grid, load_klines_extra())
     raise ValueError(group)
 
 

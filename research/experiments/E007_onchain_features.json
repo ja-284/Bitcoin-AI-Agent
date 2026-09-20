@@ -1,0 +1,38 @@
+{
+  "id": "E007",
+  "date": "2026-09-20",
+  "git_commit": "(committed with results)",
+  "status": "exploratory",
+  "hypothesis": "Growth in on-chain activity (active addresses, transaction count) over the prior 7 and 30 days carries POSITIVE directional information about forward returns at the longer horizons (72h, 168h); hash-rate growth and fee growth weaker/ambiguous; last difficulty adjustment unspecified.",
+  "acceptance_criterion": "PRE-REGISTERED before running. Direction: Spearman(feature, return_H) block-bootstrap 95% interval excludes zero with the same sign in BOTH exploration and validation. Magnitude: same, plus |rho| >= 0.10 both periods.",
+  "availability_check": {
+    "blockchain_info_charts": "daily points from 2009 (6,433-6,459 per series) via sampled=false; timestamp = 00:00 UTC of the day covered. Used: hash-rate, n-transactions, n-unique-addresses, transaction-fees-usd.",
+    "point_in_time_rule": "day D known from D+1 06:00 UTC (tested); last known value persists; staleness recorded",
+    "difficulty_adjustments": "466 adjustments with block timestamps (mempool.space); known from the block time (tested)",
+    "unsafe": "estimated-transaction-volume-usd (re-computed estimate); mempool-size (ambiguous sampling)",
+    "unavailable": "exchange flows, holder-age, realised-cap metrics (paid)"
+  },
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "feature_version": "onchain v1 (10 features)",
+  "dataset": {"source": "data/onchain_2026-09-20.csv + data/difficulty_adjustments_2026-09-20.csv + spot snapshot", "snapshot": "2026-09-20", "range": "2017-08-27 -> 2025-06-30 (holdout excluded); 100% availability"},
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "target": {"definition": "signed forward return (direction) and absolute forward return (magnitude)", "reference": "close at cutoff", "outcome": "close of candle opening at as_of+H"},
+  "features": ["hashrate_chg_7d", "hashrate_chg_30d", "txcount_chg_7d", "txcount_chg_30d", "addr_chg_7d", "addr_chg_30d", "fees_chg_7d", "fees_chg_30d", "difficulty_adj_last_pct", "onchain_staleness_h"],
+  "point_in_time": "4 tests in tests/test_onchain_features.py pass (visibility before/after D+1 06:00; difficulty block time; garbled-future)",
+  "hyperparameters": {"block_bootstrap": "block = max(48, 2H), 500 resamples"},
+  "calibration_method": null,
+  "metrics": {
+    "direction_passes": "none of 50",
+    "direction_pattern": "addr_chg_7d and txcount_chg_7d: POSITIVE in exploration with intervals excluding zero at 6-72h (addr 24h +0.039 [+0.008, +0.071]; 72h +0.049 [+0.010, +0.096]) but NEGATIVE in validation (-0.042, -0.078). Hash rate, fees, 30-day changes, difficulty: nothing in either period.",
+    "magnitude": "only onchain_staleness_h at 6h: -0.043 / -0.075 (consistent, below floor). Staleness = hours since 06:00 UTC, i.e. time of day: |returns| are larger in the hours after the daily value is fresh (US session). Not an on-chain effect.",
+    "redundancy": "addr_chg_7d ~ txcount_chg_7d high (activity measures move together)"
+  },
+  "results": "NO PASS. Activity growth (addresses, transactions) leans the expected way in 2017-2023 and the opposite way in 2024-2025 -- the same pattern as long-horizon trend (E004): a relationship that held in the older period did not survive the recent one. Hash rate, fees and difficulty carry nothing. Side-observation: a time-of-day effect on move SIZE exists (via the staleness feature); it belongs to the uncertainty model, not to on-chain data.",
+  "consistent_across_time": "No (sign flip between periods for the only candidates).",
+  "leakage_check": "visibility rules tested; small effect sizes; no suspicious values",
+  "overfitting_suspected": "no -- nothing fitted; 50 tests, 0 passes",
+  "affected_design": "No feature adopted. Note for Phase 11: consider hour-of-day (UTC) as an input to the move-size / uncertainty model, with its own pre-registered test.",
+  "notes": "Daily-resolution features repeated over 24 hourly rows; block bootstrap (>= 48h) accounts for the dependence."
+}

@@ -19,11 +19,11 @@ every new phase.
   - [x] 8.2 Market regime / long-horizon trend (E004 — no consistent directional information; first run caught a harness name-collision bug, now guarded by tests and a tripwire)
   - [x] 8.3 Derivatives (E005 — funding/premium usable, OI/liquidations UNAVAILABLE; contrarian sign consistent 2019–23 but absent 2024–25 → not adopted, on the live watch list)
   - [x] 8.4 Macro / cross-market (E006 — daily bars visible from 22:00 UTC; no pass; dollar/yield weekly negative sign a near-miss → live watch list)
-  - [ ] 8.5 On-chain (free daily series only)
-  - [ ] 8.6 News improvements (live archive only)
-  - [ ] 8.7 Microstructure — expected UNAVAILABLE historically
-  - [ ] 8.8 Social — expected UNAVAILABLE/UNSAFE
-- [ ] **PHASE 8A — AI component tests** (inserted, see adjustment 4): news-scorer schema reliability, reproducibility, relevance/sentiment behaviour, duplicate/missing handling; explainer faithfulness to the numbers and zero influence on the decision
+  - [x] 8.5 On-chain (E007 — daily series usable with a D+1 06:00 UTC rule; no pass; sign flip between periods)
+  - [ ] 8.6 News improvements — **deferred**: only the live archive is usable (no history; LLM-knowledge leakage), and it is far too small (tens of hours). Re-opens when ≥ 500 live hours with news exist (~3 weeks after go-live).
+  - [x] 8.7 Microstructure (E008 — taker-buy share: consistent *reversal* at 1–6h, tiny; trade intensity: strong move-size predictor; depth/spread UNAVAILABLE)
+  - [ ] 8.8 Social — UNAVAILABLE/UNSAFE (no free, timestamped, reproducible history); no experiment
+- [x] **PHASE 8A — AI component tests** (E009 — 8 of 9 criteria pass; news scorer reliable/stable/discriminating with a small order-sensitivity bias recorded; explainer faithful and provably decision-neutral; "does news add information" deferred to 8.6)
 - [ ] **PHASE 6 — Walk-forward / time-series validation** (moved: built immediately before the first fitted model — see adjustment 2)
 - [ ] **PHASE 9 — Model architecture research**
 - [ ] **PHASE 10 — Weight and threshold optimisation**
