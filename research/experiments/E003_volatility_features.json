@@ -1,0 +1,37 @@
+{
+  "id": "E003",
+  "date": "2026-09-20",
+  "git_commit": "e69f478 (+ features.py/feature_test.py committed with results)",
+  "status": "exploratory",
+  "hypothesis": "Volatility features computed from past candles carry (a) little or no DIRECTIONAL information about forward returns, but (b) substantial information about the MAGNITUDE of forward moves, and (c) may condition the weak 1h mean-reversion effect seen in E002 (momentum/volume). (b) matters for the neutral band and for calibrated uncertainty even if (a) is absent.",
+  "acceptance_criterion": "PRE-REGISTERED before running. Directional information: Spearman(feature, return_H) block-bootstrap 95% interval excludes zero with the same sign in BOTH exploration and validation. Magnitude information: Spearman(feature, |return_H|) interval excludes zero with the same sign in both periods AND |rho| >= 0.10 in both. Interaction (c) descriptive.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "feature_version": "research features v1 (agent/research/features.py)",
+  "dataset": {"source": "data/btcusdt_1h_2026-09-19.csv", "snapshot": "btcusdt_1h_2026-09-19.csv", "range": "2017-08-17 -> 2025-06-30 (holdout excluded); 68,619 hours"},
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "target": {"definition": "signed forward return (direction) and absolute forward return (magnitude)", "reference": "close at cutoff", "outcome": "close of candle opening at as_of+H"},
+  "features": ["rv_24", "rv_168", "rv_720", "vol_ratio_24_168", "tr_mean_14_rel", "bb_width_20", "parkinson_24", "vol_pct_720"],
+  "point_in_time": "trailing windows on a complete hourly grid, gaps blank the window; tests/test_features_point_in_time.py (garbled-future, gap, known-value tests) pass",
+  "hyperparameters": {"block_bootstrap": "block = max(48, 2H), 500 resamples", "vol terciles": "from exploration rv_24: cuts 0.00418 / 0.00701"},
+  "calibration_method": null,
+  "metrics": {
+    "magnitude_passes": {
+      "1h_and_6h": "all 8 features pass (rho 0.10-0.45 exploration, 0.10-0.28 validation)",
+      "24h": "rv_24 0.30/0.13, rv_168 0.35/0.13, tr_mean_14_rel 0.34/0.17, bb_width_20 0.29/0.13, parkinson_24 0.32/0.14 pass; rv_720, vol_ratio, vol_pct consistent but below the 0.10 floor in validation",
+      "72h_168h": "no passes: validation intervals include zero (validation period is calmer and shorter)"
+    },
+    "magnitude_shape_24h_exploration": "monotonic: mean |24h return| rises from 1.2-1.4% in the lowest decile to 4.1-5.2% in the highest for rv_24 / tr_mean_14_rel / parkinson_24 / bb_width_20 / rv_168",
+    "direction_passes": "rv_24, tr_mean_14_rel, bb_width_20, parkinson_24, vol_pct_720 at 1h and 6h, all POSITIVE, rho 0.01-0.03 exploration and 0.02-0.05 validation; nothing at 24h+ (exploration intervals include zero)",
+    "direction_by_year": "2017 negative for every feature; 2018-2025 mostly positive, largest in 2025",
+    "interaction": "E002's 1h mean reversion is strongest in LOW volatility (momentum: -0.056 low / -0.042 mid / -0.026 high in exploration; -0.042 / -0.034 / -0.031 in validation); same ordering for volume",
+    "redundancy": "rv_24, tr_mean_14_rel, parkinson_24 are 0.92-0.97 correlated (one signal); rv_168/rv_720 are slower versions (0.78/0.61 with rv_24); vol_ratio_24_168 and vol_pct_720 are 'relative' measures nearly uncorrelated with rv_168/rv_720"
+  },
+  "results": "MAGNITUDE: strong, consistent, first genuinely useful finding of the programme. Recent realised volatility (any of the short-window measures) predicts the SIZE of the move over the next 1-24 hours with rank correlations of 0.13-0.45, in both periods, with a clean monotonic decile shape. This is the well-known volatility-clustering effect and it is exactly what a calibrated uncertainty estimate needs. Beyond 24h the validation evidence fades. DIRECTION: five (highly correlated -> effectively one) features pass the pre-registered rule at 1h and 6h with a small POSITIVE sign: after volatile hours, the next 1-6 hours lean very slightly upward. Statistically consistent, economically negligible (|rho| <= 0.05, one bad year in 2017): NOT a basis for a signal. INTERACTION: the weak 1h give-back effect of momentum/volume is largest in calm markets and shrinks as volatility rises, consistently in both periods -- descriptive, no action.",
+  "consistent_across_time": "Magnitude: yes at 1-24h (every year positive, validation weaker than exploration but well above the floor for the short-window measures). Direction: 2017 is the exception; otherwise same sign.",
+  "leakage_check": "rv_* use returns up to t; |ret_H| uses t..t+H: no shared candle. Point-in-time tests pass. Volatility clustering is a textbook effect, so a strong magnitude result is expected rather than suspicious; a strong DIRECTION result would have been suspicious -- and there is none.",
+  "overfitting_suspected": "no -- nothing fitted; thresholds/floors set in advance. Effective number of independent tests is small because the features are highly correlated, and the passes all share one sign.",
+  "affected_design": "YES. (1) Adopt ONE short-window volatility measure as the system's uncertainty input: tr_mean_14_rel (highest magnitude rho, 14-hour window so it fits the live 250-bar window unchanged). (2) The three-class neutral band should scale with current volatility (E003 supports vol_scaled over fixed): a fixed 0.5% band means NEUTRAL is common in calm markets and rare in wild ones, which distorts the label. (3) Phase 11 calibration must condition on volatility: P(|move| > band) is predictable even when direction is not. (4) No directional feature adopted from this group.",
+  "notes": "Two features (rv_720, vol_pct_720) need 720h of history and would require widening the live window; not adopted, so no live change. 4 new tests (features point-in-time, gaps, known values)."
+}
