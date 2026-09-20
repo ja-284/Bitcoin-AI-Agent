@@ -1,0 +1,35 @@
+{
+  "id": "E002",
+  "date": "2026-09-20",
+  "git_commit": "7a7d349",
+  "status": "exploratory",
+  "hypothesis": "At least one of the four technical categories (trend, momentum, volume, chart_pattern) carries information about forward returns on its own, even though the weighted combination (E001) does not.",
+  "acceptance_criterion": "PRE-REGISTERED before running. A category 'carries information at horizon H' only if the Spearman rank correlation between its score and the H-hour forward return has a block-bootstrap 95% interval that excludes zero with the SAME sign in BOTH exploration and validation. Sign is reported as-is: a consistently NEGATIVE correlation means the category points the wrong way for that horizon (a finding, not a pass). Ablation and redundancy results are descriptive (no criterion) and feed the next experiment's design only.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0",
+  "feature_version": "baseline categories; news absent",
+  "dataset": {"source": "cached replay of data/btcusdt_1h_2026-09-19.csv", "snapshot": "btcusdt_1h_2026-09-19.csv", "range": "2017-08-27 -> 2025-06-30 (holdout excluded); 68,619 hours"},
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "calibration": null, "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "target": {"definition": "forward return (continuous) for correlation; three-class fixed 0.5% band for ablation balanced accuracy", "reference": "close at cutoff", "outcome": "close of candle opening at as_of+H"},
+  "features": ["trend", "momentum", "volume", "chart_pattern"],
+  "hyperparameters": {"thresholds": "+/-0.15 (unchanged)", "block_bootstrap": "block = max(48, 2H), 500 resamples"},
+  "calibration_method": null,
+  "metrics": {
+    "criterion_passes_positive": "none of 20 (4 categories x 5 horizons)",
+    "criterion_passes_negative": {
+      "momentum_1h": "rho -0.036 [-0.046, -0.028] exploration; -0.033 [-0.049, -0.018] validation",
+      "volume_1h": "rho -0.020 [-0.029, -0.010] exploration; -0.029 [-0.046, -0.010] validation"
+    },
+    "largest_positive_point_estimates": "trend 72h/168h exploration +0.035/+0.029, but validation -0.043/-0.053 (opposite sign)",
+    "redundancy_pearson": {"trend~chart_pattern": 0.69, "momentum~volume": 0.48, "trend~momentum": 0.24, "others": "0.15-0.25"},
+    "ablation": "no leave-one-out variant produces a validation edge whose interval excludes zero; removing chart_pattern raises 3-class balanced accuracy to 0.36-0.38 only because HOLD rises to 50% and NEUTRAL is the majority label at short horizons",
+    "per_year_edge_24h": "every category flips sign across years"
+  },
+  "results": "NO CATEGORY CARRIES POSITIVE INFORMATION at any horizon. Two categories carry a small, consistent NEGATIVE relationship at the 1-hour horizon: momentum and volume scores are slightly anti-correlated with the next hour's return in both periods (|rho| 0.02-0.04) -- i.e. after an hour that looks strong on RSI/MACD or on above-average volume with a rising price, the next hour tends very slightly to give some back (short-term mean reversion). This explains E001's 'SELL hours went up' clue. The effect is real but far too weak to make a usable signal (a correlation of 0.03 explains about 0.1% of the variance). Trend and chart_pattern are 69% correlated (built from the same moving averages) and neither relates to future returns consistently. The exploration-period decile shape for trend (top deciles earn more at 24h) does not survive validation.",
+  "consistent_across_time": "No positive relationship is consistent. The 1h negative relationship for momentum and volume IS consistent across both periods.",
+  "leakage_check": "uses only the E001 replay (point-in-time by construction) and timestamp-based forward returns; a negative finding is not what leakage produces",
+  "overfitting_suspected": "no -- nothing tuned. Note: 20 tests were run; two passed with a negative sign and consistent across periods, which is more than the ~1 expected by chance, but the effect size is tiny.",
+  "affected_design": "Yes: (1) the existing technical categories are not a foundation to build on -- new information sources are needed, not re-weighting; (2) flipping momentum's sign is NOT done: it would be fitting to the data we just looked at, and at |rho|~0.03 it would not produce a usable signal anyway; recorded as a finding only; (3) chart_pattern is redundant with trend and could be dropped for simplicity when scoring is next revised -- not now (baseline stays frozen).",
+  "notes": "Next per the brief: feature groups in order, starting with volatility and regime, each with a pre-registered criterion and the same bench. Also the AI-component tests (Part M) are still pending."
+}
