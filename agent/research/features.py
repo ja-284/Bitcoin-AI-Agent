@@ -16,8 +16,13 @@ Groups:
               bb_width_20               Bollinger band width (2 sigma) relative to the middle band
               parkinson_24              high/low-based volatility estimator over 24h
               vol_pct_720               percentile rank of rv_24 within its own trailing 720h
-  regime      ret_168h / ret_720h / ret_2160h   trailing 7-day / 30-day / 90-day return
+  regime      trail_ret_168h / _720h / _2160h   trailing 7-day / 30-day / 90-day return
               dist_sma_1200 / dist_sma_4800     close vs 50-day / 200-day hourly-candle average
+
+Naming rule: feature names never start with "ret_" or "fwd_" -- those prefixes belong to
+the forward-return (target) columns in the test harness. A name collision once let the
+target overwrite a feature and produced a perfect "correlation" with the future (E004,
+first run). The harness now refuses such names.
 """
 
 import numpy as np
@@ -26,7 +31,8 @@ import pandas as pd
 from agent.shared.types import PriceBar
 
 VOLATILITY_FEATURES = ["rv_24", "rv_168", "rv_720", "vol_ratio_24_168", "tr_mean_14_rel", "bb_width_20", "parkinson_24", "vol_pct_720"]
-REGIME_FEATURES = ["ret_168h", "ret_720h", "ret_2160h", "dist_sma_1200", "dist_sma_4800"]
+REGIME_FEATURES = ["trail_ret_168h", "trail_ret_720h", "trail_ret_2160h", "dist_sma_1200", "dist_sma_4800"]
+RESERVED_PREFIXES = ("ret_", "fwd_")  # target columns in the harness; never use for features
 
 
 def bars_to_frame(bars: list[PriceBar]) -> pd.DataFrame:
@@ -74,7 +80,7 @@ def volatility_features(df: pd.DataFrame) -> pd.DataFrame:
 def regime_features(df: pd.DataFrame) -> pd.DataFrame:
     out = pd.DataFrame(index=df.index)
     for w in (168, 720, 2160):
-        out[f"ret_{w}h"] = df["close"] / df["close"].shift(w) - 1
+        out[f"trail_ret_{w}h"] = df["close"] / df["close"].shift(w) - 1
     for w in (1200, 4800):
         out[f"dist_sma_{w}"] = df["close"] / df["close"].rolling(w, min_periods=w).mean() - 1
     return out

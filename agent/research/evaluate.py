@@ -12,8 +12,9 @@ Writes research/results/<experiment>/results.json and summary.md.
 import argparse
 import json
 import logging
+import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -159,7 +160,7 @@ def run(experiment: str, processes: int | None) -> Path:
 
     results: dict = {
         "experiment": experiment,
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "pipeline_version": PIPELINE_VERSION,
         "scoring_version": SCORING_VERSION,
         "snapshot": snapshot.name,
@@ -254,4 +255,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     out = run(args.experiment, args.processes)
     print(f"Results written to {out}")
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print((out / "summary.md").read_text(encoding="utf-8"))

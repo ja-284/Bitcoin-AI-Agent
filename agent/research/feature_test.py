@@ -16,7 +16,8 @@ fitted and no threshold is chosen by looking at outcomes.
 import argparse
 import json
 import logging
-from datetime import datetime
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -24,7 +25,7 @@ import pandas as pd
 
 from agent.research.diagnose import _spearman_stat, spearman
 from agent.research.evaluate import HORIZONS, N_BOOT
-from agent.research.features import REGIME_FEATURES, VOLATILITY_FEATURES, all_features
+from agent.research.features import REGIME_FEATURES, RESERVED_PREFIXES, VOLATILITY_FEATURES, all_features
 from agent.research.history import load_bars
 from agent.research.labels import forward_returns
 from agent.research.metrics import block_bootstrap
@@ -37,7 +38,20 @@ from agent.version import PIPELINE_VERSION
 logger = logging.getLogger(__name__)
 
 MAGNITUDE_FLOOR = 0.10
+TRIPWIRE_RHO = 0.5  # no honest candle-derived feature correlates this strongly with the future; stop and investigate
 GROUPS = {"volatility": VOLATILITY_FEATURES, "regime": REGIME_FEATURES}
+
+
+class SuspiciousResultError(RuntimeError):
+    """A result too good to be true. The brief's rule: investigate before believing."""
+
+
+def check_feature_names(feature_names: list[str], frame_columns) -> None:
+    for name in feature_names:
+        if name.startswith(RESERVED_PREFIXES):
+            raise ValueError(f"feature {name!r} uses a reserved target prefix {RESERVED_PREFIXES}; rename it")
+        if name in frame_columns:
+            raise ValueError(f"feature {name!r} collides with an existing column of the replay frame")
 
 
 def _corr_with_ci(x: np.ndarray, y: np.ndarray, block: int, seed: int) -> dict:
@@ -72,14 +86,15 @@ def run(experiment: str, group: str) -> Path:
     df["period"] = [period_of(t.to_pydatetime()) for t in df.index]
     df["year"] = df.index.year
     df["trend_regime"] = trend_regime(rows)
+    check_feature_names(feature_names, df.columns)
     for col in feature_names:
         df[col] = feats[col].reindex(df.index).to_numpy()
     for h in HORIZONS:
-        df[f"ret_{h}h"] = forward_returns(bars, h).reindex(df.index).to_numpy()
+        df[f"fwd_{h}h"] = forward_returns(bars, h).reindex(df.index).to_numpy()
 
     periods = {"exploration": (df["period"] == "exploration").to_numpy(), "validation": (df["period"] == "validation").to_numpy()}
     results: dict = {
-        "experiment": experiment, "group": group, "generated_at": datetime.utcnow().isoformat() + "Z",
+        "experiment": experiment, "group": group, "generated_at": datetime.now(timezone.utc).isoformat(),
         "pipeline_version": PIPELINE_VERSION, "scoring_version": SCORING_VERSION, "snapshot": snapshot.name,
         "hours": len(df), "magnitude_floor": MAGNITUDE_FLOOR, "features": {}, "interaction": {},
         "feature_availability": {c: float(df[c].notna().mean()) for c in feature_names},
@@ -90,13 +105,19 @@ def run(experiment: str, group: str) -> Path:
         x = df[col].to_numpy(dtype=float)
         entry: dict = {}
         for h in HORIZONS:
-            ret = df[f"ret_{h}h"].to_numpy(dtype=float)
+            ret = df[f"fwd_{h}h"].to_numpy(dtype=float)
             block = max(48, 2 * h)
             hz: dict = {"direction": {}, "magnitude": {}}
             for pname, pmask in periods.items():
                 xm, rm = np.where(pmask, x, np.nan), np.where(pmask, ret, np.nan)
                 hz["direction"][pname] = _corr_with_ci(xm, rm, block, seed=21)
                 hz["magnitude"][pname] = _corr_with_ci(xm, np.abs(rm), block, seed=22)
+                rho = hz["direction"][pname]["point"]
+                if not np.isnan(rho) and abs(rho) > TRIPWIRE_RHO:
+                    raise SuspiciousResultError(
+                        f"{col} at {h}h ({pname}): direction rho={rho:+.3f} exceeds {TRIPWIRE_RHO}. "
+                        "This is not credible for a past-only feature -- check for leakage or a column mix-up."
+                    )
             hz["direction"]["verdict"] = _verdict(hz["direction"]["exploration"], hz["direction"]["validation"])
             hz["magnitude"]["verdict"] = _verdict(hz["magnitude"]["exploration"], hz["magnitude"]["validation"], MAGNITUDE_FLOOR)
             m = periods["exploration"] & ~np.isnan(x) & ~np.isnan(ret)
@@ -118,7 +139,7 @@ def run(experiment: str, group: str) -> Path:
         expl_rv = rv[periods["exploration"] & ~np.isnan(rv)]
         lo_cut, hi_cut = np.percentile(expl_rv, [33.3, 66.7])
         results["interaction"]["rv_24_tercile_cuts_from_exploration"] = [float(lo_cut), float(hi_cut)]
-        ret1 = df["ret_1h"].to_numpy(dtype=float)
+        ret1 = df["fwd_1h"].to_numpy(dtype=float)
         for cat in ("momentum", "volume"):
             s = df[f"{cat}_score"].to_numpy(dtype=float)
             results["interaction"][f"{cat}_1h_by_vol_tercile"] = {}
@@ -132,7 +153,7 @@ def run(experiment: str, group: str) -> Path:
     if group == "regime":
         # Mean forward return by 30-day trend regime (descriptive): does the regime itself lean one way?
         for h in (24, 168):
-            ret = df[f"ret_{h}h"].to_numpy(dtype=float)
+            ret = df[f"fwd_{h}h"].to_numpy(dtype=float)
             results["interaction"][f"mean_return_{h}h_by_trend_regime"] = {}
             for pname, pmask in periods.items():
                 per = {}
@@ -197,4 +218,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     out = run(args.experiment, args.group)
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print((out / "summary.md").read_text(encoding="utf-8"))

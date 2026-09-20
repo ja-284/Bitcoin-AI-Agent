@@ -61,8 +61,8 @@ def test_known_values():
     start = datetime(2026, 1, 1, tzinfo=timezone.utc)
     bars = [PriceBar(start + timedelta(hours=i), 100.0, 100.0, 100.0, 100.0, 1.0, "t") for i in range(N)]
     feats = all_features(bars).iloc[-1]
-    for col in ("rv_24", "rv_168", "rv_720", "tr_mean_14_rel", "bb_width_20", "parkinson_24", "ret_168h", "ret_720h", "ret_2160h", "dist_sma_1200", "dist_sma_4800"):
+    for col in ("rv_24", "rv_168", "rv_720", "tr_mean_14_rel", "bb_width_20", "parkinson_24", "trail_ret_168h", "trail_ret_720h", "trail_ret_2160h", "dist_sma_1200", "dist_sma_4800"):
         assert feats[col] == pytest.approx(0.0, abs=1e-12), col
-    # A steady 1%/hour rise: 168h return = 1.01**168 - 1.
+    # A steady 1%/hour rise: trailing 168h return = 1.01**168 - 1.
     bars = [PriceBar(start + timedelta(hours=i), 100 * 1.01**i, 100 * 1.01**i, 100 * 1.01**i, 100 * 1.01**i, 1.0, "t") for i in range(N)]
-    assert all_features(bars).iloc[-1]["ret_168h"] == pytest.approx(1.01**168 - 1)
+    assert all_features(bars).iloc[-1]["trail_ret_168h"] == pytest.approx(1.01**168 - 1)

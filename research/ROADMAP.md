@@ -16,7 +16,7 @@ every new phase.
 - [x] **PHASE 7 — Feature ablation** (E002: leave-one-out on the stored replay — see adjustment 1)
 - [ ] **PHASE 8 — New feature groups**, one at a time, pre-registered criteria, fit-free
   - [x] 8.1 Volatility (E003 — magnitude information strong at 1–24h; no directional signal; `tr_mean_14_rel` adopted as the uncertainty input, vol-scaled bands justified)
-  - [ ] 8.2 Market regime / long-horizon trend (E004)
+  - [x] 8.2 Market regime / long-horizon trend (E004 — no consistent directional information; first run caught a harness name-collision bug, now guarded by tests and a tripwire)
   - [ ] 8.3 Derivatives (funding, open interest — availability check first)
   - [ ] 8.4 Macro / cross-market (market-hours alignment)
   - [ ] 8.5 On-chain (free daily series only)

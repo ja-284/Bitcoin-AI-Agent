@@ -16,7 +16,8 @@ Nothing is tuned. Outputs research/results/<experiment>/{results.json, summary.m
 import argparse
 import json
 import logging
-from datetime import datetime
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -76,7 +77,7 @@ def run(experiment: str) -> Path:
 
     results: dict = {
         "experiment": experiment,
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "pipeline_version": PIPELINE_VERSION,
         "scoring_version": SCORING_VERSION,
         "snapshot": snapshot.name,
@@ -217,4 +218,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     out = run(args.experiment)
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print((out / "summary.md").read_text(encoding="utf-8"))
