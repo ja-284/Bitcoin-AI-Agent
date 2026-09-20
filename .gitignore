@@ -7,3 +7,7 @@ __pycache__/
 backtests/
 .pytest_cache/
 data/
+
+# Per-hour out-of-sample prediction dumps (2-4 MB each) are regenerable from the commands
+# recorded in research/experiments/*.json and research/ROADMAP.md; the summaries are committed.
+research/results/**/*_oos_predictions.csv

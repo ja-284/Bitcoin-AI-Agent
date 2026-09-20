@@ -18,6 +18,9 @@ Groups:
               vol_pct_720               percentile rank of rv_24 within its own trailing 720h
   regime      trail_ret_168h / _720h / _2160h   trailing 7-day / 30-day / 90-day return
               dist_sma_1200 / dist_sma_4800     close vs 50-day / 200-day hourly-candle average
+  calendar    hour_sin / hour_cos       hour of day (UTC) on a circle, so 23:00 sits next to 00:00
+              is_weekend                Saturday/Sunday flag (UTC) -- known only from the clock,
+                                        so trivially point-in-time safe; a move-SIZE input (E007/E008)
 
 Naming rule: feature names never start with "ret_" or "fwd_" -- those prefixes belong to
 the forward-return (target) columns in the test harness. A name collision once let the
@@ -32,6 +35,7 @@ from agent.shared.types import PriceBar
 
 VOLATILITY_FEATURES = ["rv_24", "rv_168", "rv_720", "vol_ratio_24_168", "tr_mean_14_rel", "bb_width_20", "parkinson_24", "vol_pct_720"]
 REGIME_FEATURES = ["trail_ret_168h", "trail_ret_720h", "trail_ret_2160h", "dist_sma_1200", "dist_sma_4800"]
+CALENDAR_FEATURES = ["hour_sin", "hour_cos", "is_weekend"]
 RESERVED_PREFIXES = ("ret_", "fwd_")  # target columns in the harness; never use for features
 
 
@@ -86,6 +90,17 @@ def regime_features(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+def calendar_features(df: pd.DataFrame) -> pd.DataFrame:
+    out = pd.DataFrame(index=df.index)
+    hour = df.index.hour.to_numpy(dtype=float)
+    out["hour_sin"] = np.sin(2 * np.pi * hour / 24)
+    out["hour_cos"] = np.cos(2 * np.pi * hour / 24)
+    out["is_weekend"] = (df.index.dayofweek >= 5).astype(float)
+    # The clock is always known, but an hour with no candle is not a usable reference hour:
+    # keep the invariant "no candle -> no feature row" so gaps stay visibly blank everywhere.
+    return out.where(df["close"].notna())
+
+
 def all_features(bars: list[PriceBar]) -> pd.DataFrame:
     df = bars_to_frame(bars)
-    return pd.concat([volatility_features(df), regime_features(df)], axis=1)
+    return pd.concat([volatility_features(df), regime_features(df), calendar_features(df)], axis=1)

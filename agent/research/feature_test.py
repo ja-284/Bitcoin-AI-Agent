@@ -26,7 +26,7 @@ import pandas as pd
 from agent.research.derivatives import DERIVATIVES_FEATURES, derivatives_features, load_funding, load_premium
 from agent.research.diagnose import _spearman_stat, spearman
 from agent.research.evaluate import HORIZONS, N_BOOT
-from agent.research.features import REGIME_FEATURES, RESERVED_PREFIXES, VOLATILITY_FEATURES, all_features, bars_to_frame
+from agent.research.features import CALENDAR_FEATURES, REGIME_FEATURES, RESERVED_PREFIXES, VOLATILITY_FEATURES, all_features, bars_to_frame
 from agent.research.history import load_bars
 from agent.research.labels import forward_returns
 from agent.research.macro import MACRO_FEATURES, load_macro, macro_features
@@ -50,12 +50,13 @@ GROUPS = {
     "macro": MACRO_FEATURES,
     "onchain": ONCHAIN_FEATURES,
     "microstructure": MICROSTRUCTURE_FEATURES,
+    "calendar": CALENDAR_FEATURES,
 }
 
 
 def compute_group_features(group: str, bars) -> pd.DataFrame:
     """Every group's features on the same complete hourly grid, indexed by reference hour."""
-    if group in ("volatility", "regime"):
+    if group in ("volatility", "regime", "calendar"):
         return all_features(bars)
     if group == "derivatives":
         grid = bars_to_frame(bars).index

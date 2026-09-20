@@ -25,9 +25,9 @@ every new phase.
   - [ ] 8.8 Social — UNAVAILABLE/UNSAFE (no free, timestamped, reproducible history); no experiment
 - [x] **PHASE 8A — AI component tests** (E009 — 8 of 9 criteria pass; news scorer reliable/stable/discriminating with a small order-sensitivity bias recorded; explainer faithful and provably decision-neutral; "does news add information" deferred to 8.6)
 - [x] **PHASE 6 — Walk-forward / time-series validation** (2026-09-20; `agent/research/walkforward.py`, 8 unit tests + E010 on real data. Design: purge = horizon, embargo 24h, quarterly test blocks, ≥ 365 training days, expanding primary / rolling 730d robustness, optional purged calibration slice. E010: all five pre-registered checks pass — a memorising model scores exactly chance, a last-label model gets no head start, expanding/rolling test blocks identical, scoring 0.1.0 reproduces its E001 character (0.478) on the same 59,775 rows.)
-- [ ] **PHASE 9 — Model architecture research**
-- [ ] **PHASE 10 — Weight and threshold optimisation**
-- [ ] **PHASE 11 — Probability calibration**
+- [~] **PHASE 9 — Model architecture research** — both experiments run and recorded 2026-09-20; **phase report + quality gate still to be done at resume** (see "Paused" below). E011 (direction, 15 runs): no pass anywhere — no combinable directional signal in the free data; the 1h reversal family gives ~+2 points of accuracy with zero return edge. E012 (move size, 6 runs): **pass at 1h** (Brier −15%/−9%, ρ 0.45/0.36, accuracy +15/+10 points), 6h near-miss, 24h no pass.
+- [ ] **PHASE 10 — Weight and threshold optimisation** — decision pending at resume; E011's recorded consequence is that there is nothing to re-weight scoring 0.1.0 towards (standing finding below)
+- [ ] **PHASE 11 — Probability calibration** — next: calibrate the E012 1h move-size model on a purged calibration slice (raw vs Platt vs isotonic; reliability buckets with intervals); state the direction probability honestly as ≈ base rate
 - [ ] **PHASE 12 — Final untouched holdout evaluation** (once)
 - [ ] **PHASE 13 — Live / paper research monitoring** (partly running: hourly predictions + outcomes since 2026-09-19; weekly report not yet built)
 
@@ -44,3 +44,18 @@ every new phase.
 - Scoring 0.1.0 has no predictive value (E001) and none of its four categories does alone (E002). Re-weighting it (Phase 10) is pointless unless a feature with signal is found in Phase 8. If none is, Phase 10 collapses to "drop redundant categories" and the honest deliverable is calibrated *uncertainty* rather than direction.
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.
 - Historical news is UNAVAILABLE; news is evaluated on the live archive only, once it is large enough (hundreds of hours).
+
+## Paused 2026-09-20 (evening) — exact resume point
+
+**Where work stopped.** Phase 9's two pre-registered experiments (E011 direction, E012 move size) have been run, evaluated against their written criteria, and recorded (`research/experiments/E011_*.json`, `E012_*.json`, `research/results/E011/summary.md`, `research/results/E012/summary.md`, all committed). Tests: 120 pass. Live system untouched and healthy (25 predictions, no missed hours since the 08:12 UTC trigger fix).
+
+**Not yet done for Phase 9 (do these first on resume, in order):**
+1. Quality gate (tests, live-run check, git clean) — the standard one.
+2. Phase 9 completion report in the fixed structure (PHASE COMPLETED / STATUS / WHAT I DID / … / NEXT).
+3. Record the Phase 10 decision in this file with a reason (E011 found nothing to re-weight towards; the standing finding already says Phase 10 then collapses to "drop redundant categories", which is a live-scoring change and therefore NOT done from research results).
+4. Then Phase 11 = E013: calibrate the **1h** E012 model only (6h/24h did not pass): same bench with `calib_days=90` (purged slice), compare raw logistic vs Platt vs isotonic on validation reliability (buckets with intervals, ECE, Brier); pre-register the criterion before running. Tooling already exists: `WalkForwardSpec(calib_days=...)`, `run_walk_forward(make_calibrator=...)`; `model_test.py` needs a `--calibrator` option.
+
+**Commands that reproduce E011/E012** (per-hour CSV dumps are git-ignored; summaries are committed):
+`python -m agent.research.model_test --experiment E012 --model logistic --target large_move --threshold 0.0025 --horizon 1 --features tr_mean_14_rel,rv_24,rv_168,vol_ratio_24_168,trades_rel_24h,trades_rel_168h,hour_sin,hour_cos,is_weekend --log-features tr_mean_14_rel,rv_24,rv_168,vol_ratio_24_168,trades_rel_24h,trades_rel_168h --scheme expanding --tag size_expanding_1h` (6h: threshold 0.0075; 24h: 0.015; `--scheme rolling` for robustness). E011: `--features` set A/B lists in its JSON, `--target direction` (default).
+
+**Small code facts worth knowing on resume:** a `calendar` feature group (hour_sin, hour_cos, is_weekend) was added to `agent/research/features.py` and is blanked in candle gaps like every other feature (this masking was added after E012 ran; it cannot change E012 because the replay index contains only real candle hours). The reliability-bucket flag in result JSONs is `enough_rows` (n ≥ 100), not a calibration statement.

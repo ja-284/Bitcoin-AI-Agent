@@ -1,0 +1,144 @@
+{
+  "id": "E012",
+  "date": "2026-09-20",
+  "git_commit": "(this commit)",
+  "status": "exploratory (pre-registered criterion; one fitted model for move SIZE)",
+  "hypothesis": "The size of the coming move is predictable where its direction is not (E003, E008, E007 side-finding). A small L2 logistic regression on recent volatility, trade intensity and the clock predicts whether |return over H| will exceed a fixed threshold, stably out-of-sample under walk-forward validation, and its stated probabilities carry rank information about the realised move size.",
+  "acceptance_criterion": "PRE-REGISTERED. On the concatenated out-of-sample predictions of the expanding walk-forward (purge = H, embargo 24h, quarterly test blocks, >= 365 training days), the model 'predicts move size at horizon H' only if ALL hold in BOTH exploration-OOS (before 2024) and validation-OOS (2024-01 -> 2025-06): (1) Brier at least 5% below the period's own base-rate Brier (a hindsight benchmark, therefore strict); (2) large/small call accuracy at least 5 percentage points above the naive rate max(base, 1-base); (3) Spearman rank correlation between the stated probability and the realised |return| >= 0.10 with the block-bootstrap 95% interval excluding zero. Reported but NOT a pass condition: ECE and the reliability table (calibration is Phase 11's job). Three horizons = three separate tests (1h, 6h, 24h), not a search. Rolling layout is a robustness check, never used to choose. TRIPWIRE: accuracy > 0.80 or rho > 0.60 is treated as suspicious (E003's strongest fit-free value was 0.45) and investigated before being recorded.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "model": {
+    "type": "logistic regression, L2 penalty, C = 0.1 (fixed in advance, same as E011, no search)",
+    "preprocessing": "log-transform of the six positive ratio inputs (a value of exactly 0 -- a candle with no trades -- is treated as missing), then StandardScaler fitted on each fold's training rows only",
+    "library": "scikit-learn 1.9.1"
+  },
+  "features": [
+    "tr_mean_14_rel",
+    "rv_24",
+    "rv_168",
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h",
+    "hour_sin",
+    "hour_cos",
+    "is_weekend"
+  ],
+  "log_features": [
+    "tr_mean_14_rel",
+    "rv_24",
+    "rv_168",
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h"
+  ],
+  "target": {
+    "definition": "large_move: 1 if |return over H| > threshold_H, else 0 (sign ignored)",
+    "thresholds": {
+      "1h": 0.0025,
+      "6h": 0.0075,
+      "24h": 0.015
+    },
+    "how_thresholds_were_fixed": "round numbers near the exploration-period median |return| (0.272% / 0.666% / 1.625%), written down before any model was run; the validation base rate is lower (0.475 / 0.408 / 0.452 vs 0.528 / 0.461 / 0.525) because 2024-25 is calmer -- a test of whether the model follows the regime",
+    "reference": "close at cutoff",
+    "outcome": "close of candle opening at as_of+H"
+  },
+  "dataset": {
+    "source": "E001 replay index + candle-derived features (volatility, microstructure, calendar)",
+    "snapshot": "btcusdt_1h_2026-09-19.csv",
+    "range": "2017-08-27 -> 2025-06-30 (holdout excluded)"
+  },
+  "periods": {
+    "exploration": "OOS test blocks before 2024-01-01",
+    "validation": "OOS test blocks 2024-01-01 -> 2025-06-30",
+    "calibration": "none in this experiment (Phase 11)",
+    "holdout": "sealed, not read"
+  },
+  "horizons_hours": [
+    1,
+    6,
+    24
+  ],
+  "validation_design": "expanding walk-forward, min_train 365d, test blocks 90d, purge H, embargo 24h; rolling 730d as robustness",
+  "hyperparameters": {
+    "C": 0.1,
+    "max_iter": 2000,
+    "block_bootstrap": "block = max(48, 2H), 500 resamples"
+  },
+  "calibration_method": null,
+  "metrics": {
+    "1h_expanding": {
+      "n": 56309,
+      "folds": 28,
+      "exploration": {
+        "brier": 0.2128,
+        "brier_base": 0.25,
+        "rel_gain": "+14.9%",
+        "acc": 0.656,
+        "naive": 0.506,
+        "rho": "+0.446 [+0.427,+0.465]",
+        "ece": 0.013,
+        "size_edge_pct": "+0.331"
+      },
+      "validation": {
+        "brier": 0.2261,
+        "brier_base": 0.2494,
+        "rel_gain": "+9.3%",
+        "acc": 0.625,
+        "naive": 0.525,
+        "rho": "+0.363 [+0.338,+0.388]",
+        "ece": 0.04,
+        "size_edge_pct": "+0.261"
+      },
+      "pass": true
+    },
+    "1h_rolling": {
+      "exploration": "brier +14.9%, acc +15.1pp, rho +0.445",
+      "validation": "brier +9.6%, acc +10.5pp, rho +0.371",
+      "pass": true
+    },
+    "6h_expanding": {
+      "exploration": "brier +11.8%, acc +7.7pp, rho +0.391 [+0.368,+0.413]",
+      "validation": "brier +8.1%, acc +4.6pp (needs +5.0), rho +0.332 [+0.296,+0.364]",
+      "pass": false,
+      "note": "fails criterion (2) in validation by 0.4 points; everything else passes"
+    },
+    "6h_rolling": {
+      "validation": "acc +4.7pp (needs +5.0); brier +8.8%, rho +0.343",
+      "pass": false
+    },
+    "24h_expanding": {
+      "exploration": "brier +7.9%, acc +10.5pp, rho +0.335",
+      "validation": "brier +3.0% (needs 5%), acc +2.4pp (needs 5), rho +0.210 [+0.163,+0.261]",
+      "pass": false
+    },
+    "24h_rolling": {
+      "validation": "brier +2.9%, acc +2.6pp, rho +0.203",
+      "pass": false
+    },
+    "coefficients_1h_expanding_last_fold": {
+      "tr_mean_14_rel": "+0.568 (same sign 100% of folds)",
+      "rv_168": "+0.209 (100%)",
+      "trades_rel_24h": "+0.162 (89%)",
+      "rv_24": "+0.141 (100%)",
+      "hour_cos": "-0.092 (96%)"
+    },
+    "by_year_acc_minus_naive_pp_1h": {
+      "2018": 13.4,
+      "2019": 11.0,
+      "2020": 13.3,
+      "2021": -1.7,
+      "2022": 12.6,
+      "2023": 3.4,
+      "2024": 10.7,
+      "2025": 8.6
+    },
+    "tripwire_fired": false,
+    "non_positive_trade_ratios_treated_missing": 4
+  },
+  "results": "PASS at 1h (both layouts), NO PASS at 6h and 24h. 1h: the model's stated probability of a >0.25% move has rank correlation 0.45 (exploration) / 0.36 (validation) with the realised move size, Brier 15% / 9% better than the base rate, large/small calls right 65.6% / 62.5% of the time vs 50.6% / 52.5% naive; ECE 0.013 / 0.040 before any calibration. 6h is a near-miss (fails only the +5-point accuracy bar in validation, by 0.4 points; Brier +8%, rho 0.33) -- recorded as no pass, not re-tested. 24h weakens clearly in validation (Brier +3%, accuracy +2.4 pp) though rho stays positive (0.21).",
+  "consistent_across_time": "1h: accuracy beats naive in 7 of 8 years by +3 to +13 points; 2021 is the one negative year (-1.7) in every run and horizon -- the year the threshold label's base rate was highest (persistently volatile), so the hindsight naive rate is hard to beat. Validation (2024-25, calmer) is weaker than exploration everywhere but still passes at 1h.",
+  "leakage_check": "Bench verified in E010; fold gaps = H + 24 + 1 on every fold except where a data hole widens them. rho 0.45 equals E003's fit-free value for tr_mean_14_rel alone (0.45), so the fitted model adds little beyond the strongest single input -- consistent with no leak and with a genuine, well-known volatility-clustering effect.",
+  "overfitting_suspected": "Low: 9 inputs, C = 0.1, 56k rows, coefficient signs stable in 89-100% of folds for the five largest; performance degrades gracefully with horizon rather than collapsing.",
+  "affected_design": "Phase 11 calibrates the 1h move-size model on a purged calibration slice (raw vs Platt vs isotonic, reliability with intervals). 6h and 24h stay reported near-miss/no-pass; not calibrated. This is an UNCERTAINTY output (how big the next move may be), never a direction.",
+  "notes": "Six runs (3 horizons x expanding/rolling), all reported. If this passes, Phase 11 calibrates it on a purged calibration slice; if it fails, the honest output is 'no calibrated uncertainty either'. Nothing about the live system changes regardless of outcome."
+}

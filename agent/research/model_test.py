@@ -29,10 +29,11 @@ import pandas as pd
 from agent.research.derivatives import DERIVATIVES_FEATURES
 from agent.research.evaluate import N_BOOT
 from agent.research.feature_test import GROUPS, compute_group_features
-from agent.research.features import REGIME_FEATURES, VOLATILITY_FEATURES
+from agent.research.features import CALENDAR_FEATURES, REGIME_FEATURES, VOLATILITY_FEATURES
 from agent.research.history import load_bars
 from agent.research.labels import LabelSpec, make_labels
 from agent.research.macro import MACRO_FEATURES
+from agent.research.diagnose import spearman
 from agent.research.metrics import block_bootstrap, brier_score, log_loss, reliability_table, signal_edge
 from agent.research.microstructure import MICROSTRUCTURE_FEATURES
 from agent.research.onchain import ONCHAIN_FEATURES
@@ -46,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 ALL_FEATURE_GROUPS = {
     "volatility": VOLATILITY_FEATURES, "regime": REGIME_FEATURES, "derivatives": DERIVATIVES_FEATURES,
-    "macro": MACRO_FEATURES, "onchain": ONCHAIN_FEATURES, "microstructure": MICROSTRUCTURE_FEATURES,
+    "macro": MACRO_FEATURES, "onchain": ONCHAIN_FEATURES, "microstructure": MICROSTRUCTURE_FEATURES, "calendar": CALENDAR_FEATURES,
 }
 BASELINE_CATEGORY_SCORES = ["trend_score", "momentum_score", "volume_score", "chart_pattern_score"]
 
@@ -101,21 +102,59 @@ MODELS = {"memorise": MemoriseModel, "last_label": LastLabelModel, "base_rate": 
 
 
 # ---------------------------------------------------------------- data
-def build_frame(horizon: int, groups: list[str]) -> tuple[pd.DataFrame, list[str]]:
+def groups_for(features: list[str]) -> list[str]:
+    """The feature groups that must be computed to supply `features` (category scores need none)."""
+    needed = []
+    for f in features:
+        if f in BASELINE_CATEGORY_SCORES:
+            continue
+        owners = [g for g, cols in GROUPS.items() if f in cols]
+        if not owners:
+            raise ValueError(f"unknown feature {f!r}")
+        if owners[0] not in needed:
+            needed.append(owners[0])
+    return needed
+
+
+def build_frame(horizon: int, groups: list[str], features: list[str] | None = None,
+                target: str = "direction", threshold: float | None = None) -> tuple[pd.DataFrame, list[str]]:
+    """
+    Replay rows (category scores) + the requested feature groups + labels, indexed by
+    reference hour. With `features`, only those columns are kept as model inputs (an explicit,
+    pre-registered list) and the groups that supply them are computed automatically.
+
+    target = "direction":  y = 1 if the H-hour return is > 0 (UP)
+    target = "large_move": y = 1 if |H-hour return| > threshold (a move-SIZE label; the sign
+                           is ignored). `threshold` is a fraction, fixed in advance per horizon.
+    """
     bars, quality, snapshot = load_bars(end=HOLDOUT.start)
     rows = replay_cached(bars, snapshot)
     df = pd.DataFrame(rows)
     df["as_of"] = pd.to_datetime(df["as_of"])
     df = df.set_index("as_of").sort_index()
+    if features:
+        groups = groups_for(features)
     feature_cols: list[str] = []
     for g in groups:
         feats = compute_group_features(g, bars)
         for col in GROUPS[g]:
             df[col] = feats[col].reindex(df.index).to_numpy()
             feature_cols.append(col)
+    if features:
+        feature_cols = list(features)
     lab = make_labels(bars, LabelSpec(horizon, "binary")).set_index("as_of")
-    df[f"fwd_{horizon}h"] = lab["ret"].reindex(df.index).to_numpy()
-    df["y"] = (lab["label"].reindex(df.index) == "UP").astype(float).where(lab["label"].reindex(df.index).notna())
+    ret = lab["ret"].reindex(df.index)
+    df[f"fwd_{horizon}h"] = ret.to_numpy()
+    if target == "direction":
+        df["y"] = (lab["label"].reindex(df.index) == "UP").astype(float).where(lab["label"].reindex(df.index).notna())
+    elif target == "large_move":
+        if threshold is None or threshold <= 0:
+            raise ValueError("large_move needs a positive threshold")
+        df["y"] = (ret.abs() > threshold).astype(float).where(ret.notna())
+    else:
+        raise ValueError(f"unknown target {target!r}")
+    df.attrs["target"] = target
+    df.attrs["threshold"] = threshold
     df["period"] = [period_of(t.to_pydatetime()) for t in df.index]
     df["year"] = df.index.year
     df.attrs["snapshot"] = snapshot.name
@@ -124,11 +163,20 @@ def build_frame(horizon: int, groups: list[str]) -> tuple[pd.DataFrame, list[str
 
 # ---------------------------------------------------------------- evaluation
 def evaluate_predictions(preds: pd.DataFrame, df: pd.DataFrame, horizon: int) -> dict:
+    """
+    For the direction target, "edge" is the mean forward return when the model says UP minus
+    when it says DOWN. For the large_move target the quantity that matters is size, so "edge"
+    becomes the mean |forward return| when the model says LARGE minus when it says SMALL, and
+    a rank correlation between the stated probability and the realised |return| is added.
+    """
     joined = preds.join(df[[f"fwd_{horizon}h", "period", "year", "signal"]], how="left")
-    out: dict = {"n": int(len(joined))}
+    out: dict = {"n": int(len(joined)), "target": df.attrs.get("target", "direction"), "threshold": df.attrs.get("threshold")}
+    size_target = out["target"] == "large_move"
     y = joined["y"].to_numpy(dtype=float)
     p = joined["p"].to_numpy(dtype=float)
     ret = joined[f"fwd_{horizon}h"].to_numpy(dtype=float)
+    if size_target:
+        ret = np.abs(ret)  # every "edge" below is then a difference in move size
 
     def stats(mask: np.ndarray, with_ci: bool) -> dict:
         yy, pp, rr = y[mask], p[mask], ret[mask]
@@ -152,6 +200,13 @@ def evaluate_predictions(preds: pd.DataFrame, df: pd.DataFrame, horizon: int) ->
         else:
             pt, lo, hi = signal_edge(sig, rr), float("nan"), float("nan")
         d["edge"] = {"point": pt, "ci_low": lo, "ci_high": hi}
+        if size_target:
+            pairs = np.column_stack([pp, rr])  # rank correlation: stated probability vs realised |return|
+            if with_ci and len(yy) >= 2 * block:
+                r_pt, r_lo, r_hi = block_bootstrap(pairs, lambda a: spearman(a[:, 0], a[:, 1]), block=block, n_boot=N_BOOT, seed=31)
+            else:
+                r_pt, r_lo, r_hi = spearman(pp, rr), float("nan"), float("nan")
+            d["rank_corr_p_vs_abs_return"] = {"point": r_pt, "ci_low": r_lo, "ci_high": r_hi}
         buckets, ece, mce = reliability_table(pp, yy)
         d["reliability"] = [b.__dict__ | {"enough_rows": b.reliable} for b in buckets]
         d["ece"] = ece
@@ -172,32 +227,49 @@ def evaluate_predictions(preds: pd.DataFrame, df: pd.DataFrame, horizon: int) ->
     return out
 
 
-def run(experiment: str, model_name: str, horizon: int, groups: list[str], scheme: str, calib_days: int, C: float) -> Path:
-    df, feature_cols = build_frame(horizon, groups)
+def run(experiment: str, model_name: str, horizon: int, groups: list[str], scheme: str, calib_days: int, C: float,
+        features: list[str] | None = None, tag: str | None = None, target: str = "direction", threshold: float | None = None,
+        log_features: list[str] | None = None) -> Path:
+    df, feature_cols = build_frame(horizon, groups, features, target, threshold)
+    for c in log_features or []:  # heavy-tailed positive inputs enter on a log scale (declared per experiment)
+        bad = int((df[c].dropna() <= 0).sum())
+        if bad:  # a ratio of exactly 0 (e.g. a candle with no trades) is not a real observation -> missing
+            logger.warning("%s: %d non-positive values treated as missing before log-transform", c, bad)
+        df[c] = np.log(df[c].where(df[c] > 0))
     spec = WalkForwardSpec(horizon_hours=horizon, scheme=scheme, min_train_days=365, test_block_days=90, embargo_hours=24, calib_days=calib_days)
+    fitted: list[LogisticModel] = []
     if model_name == "logistic":
-        make_model = lambda: LogisticModel(C=C)  # noqa: E731
+        def make_model():
+            m = LogisticModel(C=C)
+            fitted.append(m)  # every per-fold model is kept so coefficient signs can be checked across time
+            return m
         cols = feature_cols
     else:
         make_model = MODELS[model_name]
         cols = feature_cols or BASELINE_CATEGORY_SCORES  # controls ignore features; something must be present
-    folds = make_folds(df.index, spec)
+    # Folds are laid over the hours where every input exists (sources such as funding start late);
+    # the hourly grid itself is unchanged, so the first test block simply starts later.
+    fold_index = df[cols + ["y"]].dropna().index
+    folds = make_folds(fold_index, spec)
     preds, diag = run_walk_forward(df, cols, "y", make_model, spec, folds=folds)
     results = {
         "experiment": experiment, "generated_at": datetime.now(timezone.utc).isoformat(), "pipeline_version": PIPELINE_VERSION,
         "scoring_version": SCORING_VERSION, "snapshot": df.attrs["snapshot"], "model": model_name, "horizon": horizon, "groups": groups,
-        "features": cols, "spec": spec.__dict__, "folds": len(folds), "fold_diagnostics": diag,
+        "features": cols, "log_features": log_features or [], "target": target, "threshold": threshold,
+        "spec": spec.__dict__, "folds": len(folds), "fold_diagnostics": diag,
         "evaluation": evaluate_predictions(preds, df, horizon),
     }
     if model_name == "logistic":
-        last = make_model()
-        train = df[feature_cols + ["y"]].dropna()
-        train = train[train.index < folds[-1].train_end]
-        last.fit(train[feature_cols], train["y"].to_numpy(dtype=float))
-        results["coefficients_last_fold_training"] = last.coefficients(feature_cols)
+        per_fold = [m.coefficients(cols) for m in fitted]
+        results["coefficients_per_fold"] = per_fold
+        results["coefficients_last_fold_training"] = per_fold[-1]
+        # sign stability: share of folds in which each coefficient has the same sign as its median
+        results["coefficient_sign_agreement"] = {
+            c: float(np.mean([np.sign(pf[c]) == np.sign(np.median([q[c] for q in per_fold])) for pf in per_fold])) for c in cols
+        }
     out_dir = Path("research") / "results" / experiment
     out_dir.mkdir(parents=True, exist_ok=True)
-    tag = f"{model_name}_{scheme}_{horizon}h"
+    tag = tag or f"{model_name}_{scheme}_{horizon}h"
     (out_dir / f"{tag}.json").write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
     preds.to_csv(out_dir / f"{tag}_oos_predictions.csv")
     (out_dir / f"{tag}.md").write_text(render(results), encoding="utf-8")
@@ -209,13 +281,20 @@ def _fmt(d: dict) -> str:
         return "n=0"
     e = d["edge"]
     ci = f"[{e['ci_low'] * 100:+.2f}, {e['ci_high'] * 100:+.2f}]" if not np.isnan(e["ci_low"]) else ""
-    return (f"n={d['n']} acted={d['acted_share']:.2f} acc={d['acted_accuracy']:.3f} naive={d['naive_rate']:.3f} "
-            f"brier={d['brier']:.4f} (base {d['brier_base_rate']:.4f}) ece={d['ece']:.3f} edge={e['point'] * 100:+.2f}% {ci}")
+    s = (f"n={d['n']} acted={d['acted_share']:.2f} acc={d['acted_accuracy']:.3f} naive={d['naive_rate']:.3f} "
+         f"brier={d['brier']:.4f} (base {d['brier_base_rate']:.4f}) ece={d['ece']:.3f} edge={e['point'] * 100:+.2f}% {ci}")
+    if "rank_corr_p_vs_abs_return" in d:
+        r = d["rank_corr_p_vs_abs_return"]
+        rci = f"[{r['ci_low']:+.3f}, {r['ci_high']:+.3f}]" if not np.isnan(r["ci_low"]) else ""
+        s += f" rho(p,|ret|)={r['point']:+.3f} {rci}"
+    return s
 
 
 def render(res: dict) -> str:
     ev = res["evaluation"]
-    L = [f"# {res['experiment']} — {res['model']} · {res['spec']['scheme']} · {res['horizon']}h", "",
+    tgt = res.get("target", "direction")
+    tgt_s = "direction (UP/DOWN)" if tgt == "direction" else f"large move (|return| > {res['threshold'] * 100:.2f}%)"
+    L = [f"# {res['experiment']} — {res['model']} · {res['spec']['scheme']} · {res['horizon']}h · target: {tgt_s}", "",
          f"pipeline {res['pipeline_version']} / scoring {res['scoring_version']} · snapshot {res['snapshot']} · {res['folds']} folds · features: {len(res['features'])} ({', '.join(res['groups']) or 'none'})", "",
          f"- overall:     {_fmt(ev['overall'])}", f"- exploration: {_fmt(ev['exploration'])}", f"- validation:  {_fmt(ev['validation'])}", "",
          "Per year (acted accuracy / naive / edge %):"]
@@ -225,9 +304,10 @@ def render(res: dict) -> str:
     b = ev["baseline_0_1_0_same_rows"]
     L += ["", f"Baseline scoring 0.1.0 on the same rows: acted={b['acted_share']:.2f} acc={b['acted_accuracy']:.3f} edge={b['edge'] * 100:+.2f}%", ""]
     if "coefficients_last_fold_training" in res:
-        L += ["Coefficients (standardised features, last fold's training range):", ""]
+        L += ["Coefficients (standardised features, last fold's training range; sign agreement across folds):", ""]
+        agree = res.get("coefficient_sign_agreement", {})
         for k, v in sorted(res["coefficients_last_fold_training"].items(), key=lambda kv: -abs(kv[1])):
-            L.append(f"- {k}: {v:+.4f}")
+            L.append(f"- {k}: {v:+.4f}  (same sign in {agree.get(k, float('nan')):.0%} of folds)")
     L += ["", "Fold gaps (hours between last fitted row and test start): " + ", ".join(str(int(d["gap_hours_between_last_fit_row_and_test_start"])) for d in res["fold_diagnostics"][:6]) + " ..."]
     return "\n".join(L)
 
@@ -241,9 +321,17 @@ if __name__ == "__main__":
     parser.add_argument("--scheme", default="expanding", choices=["expanding", "rolling"])
     parser.add_argument("--calib-days", type=int, default=0)
     parser.add_argument("--C", type=float, default=0.1)
+    parser.add_argument("--features", default="", help="comma-separated explicit feature list (overrides --groups)")
+    parser.add_argument("--tag", default="", help="output file stem (default: model_scheme_horizon)")
+    parser.add_argument("--target", default="direction", choices=["direction", "large_move"])
+    parser.add_argument("--threshold", type=float, default=None, help="large_move: |return| threshold as a fraction, e.g. 0.005")
+    parser.add_argument("--log-features", default="", help="comma-separated inputs to log-transform before standardising")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     groups = [g for g in args.groups.split(",") if g]
-    path = run(args.experiment, args.model, args.horizon, groups, args.scheme, args.calib_days, args.C)
+    features = [f for f in args.features.split(",") if f] or None
+    log_features = [f for f in args.log_features.split(",") if f] or None
+    path = run(args.experiment, args.model, args.horizon, groups, args.scheme, args.calib_days, args.C, features, args.tag or None,
+               args.target, args.threshold, log_features)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print(path.read_text(encoding="utf-8"))
