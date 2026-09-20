@@ -18,7 +18,7 @@ every new phase.
   - [x] 8.1 Volatility (E003 — magnitude information strong at 1–24h; no directional signal; `tr_mean_14_rel` adopted as the uncertainty input, vol-scaled bands justified)
   - [x] 8.2 Market regime / long-horizon trend (E004 — no consistent directional information; first run caught a harness name-collision bug, now guarded by tests and a tripwire)
   - [x] 8.3 Derivatives (E005 — funding/premium usable, OI/liquidations UNAVAILABLE; contrarian sign consistent 2019–23 but absent 2024–25 → not adopted, on the live watch list)
-  - [ ] 8.4 Macro / cross-market (market-hours alignment)
+  - [x] 8.4 Macro / cross-market (E006 — daily bars visible from 22:00 UTC; no pass; dollar/yield weekly negative sign a near-miss → live watch list)
   - [ ] 8.5 On-chain (free daily series only)
   - [ ] 8.6 News improvements (live archive only)
   - [ ] 8.7 Microstructure — expected UNAVAILABLE historically
