@@ -110,7 +110,8 @@ class ReliabilityBucket:
 
     @property
     def reliable(self) -> bool:
-        return self.n >= 100  # below this, the interval is too wide to say anything
+        # "Enough rows to measure" (n >= 100) -- NOT a statement that the bucket is calibrated.
+        return self.n >= 100
 
 
 def reliability_table(p_up: np.ndarray, y_up: np.ndarray, edges: list[float] | None = None) -> tuple[list[ReliabilityBucket], float, float]:

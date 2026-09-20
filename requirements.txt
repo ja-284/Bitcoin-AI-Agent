@@ -6,3 +6,4 @@ python-dotenv
 anthropic
 psycopg[binary]
 pytest
+scikit-learn

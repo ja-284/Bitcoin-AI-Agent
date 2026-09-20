@@ -1,0 +1,29 @@
+{
+  "id": "E011",
+  "date": "2026-09-20",
+  "git_commit": "(filled after run)",
+  "status": "exploratory (pre-registered criterion; one controlled model change)",
+  "hypothesis": "A small L2-regularised logistic regression that combines the weak, individually consistent effects found in E002-E008 (short-horizon reversal in momentum, volume and taker-buy share; contrarian funding; dollar/yield 5-day changes; with volatility and trade intensity as conditioning inputs, plus the baseline category scores) produces a directional signal that is stable out-of-sample under walk-forward validation, where the fixed-weight scoring 0.1.0 does not.",
+  "acceptance_criterion": "PRE-REGISTERED. On the concatenated out-of-sample predictions of the expanding walk-forward (purge = H, embargo 24h, quarterly test blocks, >= 365 days of training), the model 'adds a stable signal at horizon H' only if ALL hold in BOTH the exploration-OOS (test blocks before 2024) and validation-OOS (2024-01 -> 2025-06) periods: (1) acted-direction accuracy > the naive rate max(base, 1-base) on the same rows; (2) the edge (mean forward return when p > 0.5 minus when p < 0.5) has a block-bootstrap 95% interval excluding zero; (3) Brier score below the base-rate Brier. Three horizons are tested as three fixed, separately reported tests (1h, 6h, 24h) -- not a search; a pass at one horizon is a finding for that horizon only. The rolling layout is a robustness check, reported, never used to choose. TRIPWIRE: acted accuracy > 0.60 or Brier < 0.24 at 24h is treated as suspicious and investigated before being recorded.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched; baseline evaluated on identical test rows)",
+  "model": {"type": "logistic regression, L2 penalty, C = 0.1 (fixed in advance, no search)", "preprocessing": "StandardScaler fitted on each fold's training rows only", "library": "scikit-learn 1.9.1"},
+  "feature_sets": {
+    "A_candle_only (full range from 2017-08)": ["trend_score", "momentum_score", "volume_score", "chart_pattern_score", "tr_mean_14_rel", "trades_rel_168h", "taker_buy_share_1h", "taker_buy_share_6h", "vol_pct_720"],
+    "B_all_sources (from 2019-12, when funding/premium exist)": ["trend_score", "momentum_score", "volume_score", "chart_pattern_score", "tr_mean_14_rel", "trades_rel_168h", "taker_buy_share_1h", "taker_buy_share_6h", "vol_pct_720", "funding_last", "premium_mean_24", "dxy_ret_5d", "tnx_chg_5d"]
+  },
+  "dataset": {"source": "E001 replay + research feature snapshots (2026-09-19/20)", "snapshot": "as recorded per group", "range": "2017-08-27 -> 2025-06-30 (holdout excluded); set B effectively 2019-12 ->"},
+  "periods": {"exploration": "OOS test blocks before 2024-01-01", "validation": "OOS test blocks 2024-01-01 -> 2025-06-30", "calibration": "none in this experiment (Phase 11)", "holdout": "sealed, not read"},
+  "horizons_hours": [1, 6, 24],
+  "target": {"definition": "binary direction (UP if return > 0)", "reference": "close at cutoff", "outcome": "close of candle opening at as_of+H"},
+  "validation_design": "expanding walk-forward, min_train 365d, test blocks 90d, purge H, embargo 24h; rolling 730d as robustness",
+  "hyperparameters": {"C": 0.1, "max_iter": 2000, "block_bootstrap": "block = max(48, 2H), 500 resamples"},
+  "calibration_method": null,
+  "metrics": "(filled after run)",
+  "results": "(filled after run)",
+  "consistent_across_time": "(filled after run)",
+  "leakage_check": "(filled after run)",
+  "overfitting_suspected": "(filled after run)",
+  "affected_design": "(filled after run)",
+  "notes": "Six runs total (2 feature sets x 3 horizons) on the primary layout, plus rolling robustness; all reported. Nothing about the live system changes regardless of outcome."
+}

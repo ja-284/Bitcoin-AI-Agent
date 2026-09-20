@@ -136,7 +136,7 @@ def confidence_reliability(df: pd.DataFrame, mask: np.ndarray, h: int) -> dict:
     if acted.sum():
         hit = np.array([SIGNAL_TO_LABEL[s] == t for s, t in zip(sig[acted], labels[acted])], dtype=float)
         buckets, ece, mce = reliability_table(conf[acted], hit, edges=[0.0, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1.0 + 1e-9])
-        out["reliability"] = [b.__dict__ | {"reliable": b.reliable} for b in buckets]
+        out["reliability"] = [b.__dict__ | {"enough_rows": b.reliable} for b in buckets]
         out["ece"] = ece
         out["mce"] = mce
         out["hit_rate"] = float(hit.mean())
@@ -239,7 +239,7 @@ def render_summary(res: dict) -> str:
                 lines.append("| stated conf. | n | observed hit rate | 95% interval |")
                 lines.append("|---|---|---|---|")
                 for bkt in c["reliability"]:
-                    flag = "" if bkt["reliable"] else " (too few)"
+                    flag = "" if bkt["enough_rows"] else " (too few)"
                     lines.append(f"| {bkt['lower']:.2f}–{bkt['upper']:.2f} (avg {bkt['mean_predicted']:.2f}) | {bkt['n']} | {bkt['observed']:.3f} | [{bkt['ci_low']:.3f}, {bkt['ci_high']:.3f}]{flag} |")
                 cp = c["candidate_probabilities"]
                 lines.append(f"Brier — constant 0.5: {cp['constant_0.5']['brier']:.4f} · base rate {cp['base_rate_of_slice']['p']:.3f}: {cp['base_rate_of_slice']['brier']:.4f} · naive 0.5+score/2: {cp['naive_0.5_plus_half_score']['brier']:.4f}")

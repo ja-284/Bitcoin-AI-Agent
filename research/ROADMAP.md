@@ -24,7 +24,7 @@ every new phase.
   - [x] 8.7 Microstructure (E008 — taker-buy share: consistent *reversal* at 1–6h, tiny; trade intensity: strong move-size predictor; depth/spread UNAVAILABLE)
   - [ ] 8.8 Social — UNAVAILABLE/UNSAFE (no free, timestamped, reproducible history); no experiment
 - [x] **PHASE 8A — AI component tests** (E009 — 8 of 9 criteria pass; news scorer reliable/stable/discriminating with a small order-sensitivity bias recorded; explainer faithful and provably decision-neutral; "does news add information" deferred to 8.6)
-- [ ] **PHASE 6 — Walk-forward / time-series validation** (moved: built immediately before the first fitted model — see adjustment 2)
+- [x] **PHASE 6 — Walk-forward / time-series validation** (2026-09-20; `agent/research/walkforward.py`, 8 unit tests + E010 on real data. Design: purge = horizon, embargo 24h, quarterly test blocks, ≥ 365 training days, expanding primary / rolling 730d robustness, optional purged calibration slice. E010: all five pre-registered checks pass — a memorising model scores exactly chance, a last-label model gets no head start, expanding/rolling test blocks identical, scoring 0.1.0 reproduces its E001 character (0.478) on the same 59,775 rows.)
 - [ ] **PHASE 9 — Model architecture research**
 - [ ] **PHASE 10 — Weight and threshold optimisation**
 - [ ] **PHASE 11 — Probability calibration**

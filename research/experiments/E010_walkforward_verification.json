@@ -1,0 +1,91 @@
+{
+  "id": "E010",
+  "date": "2026-09-20",
+  "git_commit": "(this commit)",
+  "status": "infrastructure verification (pre-registered checks)",
+  "hypothesis": "The walk-forward framework, applied to the real development data, produces chronological, non-overlapping test blocks with the required purge gap, and control models behave as leakage-free validation demands: a memorising model scores exactly chance, a last-label carry-forward model scores at the base rate, and a constant base-rate model reproduces the training prior.",
+  "acceptance_criterion": "PRE-REGISTERED. (F1) Folds cover the evaluation range exactly once, consecutive, chronological; every fold's gap between the last fitted row and the test start equals horizon + embargo + 1 hours. (F2) Memorising model: every out-of-sample prediction is exactly 0.5 (no test timestamp ever found in training). (F3) Last-label model: out-of-sample accuracy within 3 percentage points of the naive rate max(base rate, 1 - base rate) on the same rows, i.e. no head start from label overlap. (F4) Expanding and rolling layouts produce identical test blocks (so later comparisons are like-for-like). (F5) The scoring 0.1.0 baseline evaluated on the same test blocks reproduces its E001 character (acted-direction accuracy 0.47-0.50) -- a consistency check between the fit-free bench and the walk-forward bench.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "feature_version": "controls only (no real features)",
+  "dataset": {
+    "source": "E001 replay index + binary 24h labels from the spot snapshot",
+    "snapshot": "btcusdt_1h_2026-09-19.csv",
+    "range": "2017-08-27 -> 2025-06-30 (holdout excluded)"
+  },
+  "periods": {
+    "exploration": "2017-08-27 -> 2023-12-31",
+    "validation": "2024-01-01 -> 2025-06-30",
+    "calibration": "framework supports a calibration slice; not used in this verification",
+    "holdout": "sealed, not read"
+  },
+  "horizons_hours": [
+    24
+  ],
+  "target": {
+    "definition": "binary direction at 24h (UP if return > 0)",
+    "reference": "close at cutoff",
+    "outcome": "close of candle opening at as_of+24h"
+  },
+  "validation_design": {
+    "scheme_primary": "expanding",
+    "scheme_secondary": "rolling 730 days",
+    "min_train_days": 365,
+    "test_block_days": 90,
+    "purge_hours": "horizon (24)",
+    "embargo_hours": 24,
+    "reasoning": "labels overlap for H hours; the last H training hours before a test block have outcomes inside the test block; the purge removes them; the embargo adds a margin for serially correlated features and for volatility-scaled thresholds that use trailing completed returns. Test blocks of one quarter balance regime coverage against fold count (~27 folds)."
+  },
+  "metrics": {
+    "folds": 28,
+    "test_rows_total": 59775,
+    "first_test_block": "2018-08-29 13:00 -> 2018-11-27 12:00",
+    "last_test_block": "2025-04-24 13:00 -> 2025-06-29 23:00",
+    "gap_hours_last_fit_row_to_test_start": {
+      "27 folds": 49,
+      "fold 6 (test 2020-02-20)": 50
+    },
+    "memorise": {
+      "acted_share": 0.0,
+      "brier": 0.25,
+      "all_p_equal_0.5": true
+    },
+    "last_label": {
+      "acted_accuracy": 0.51,
+      "naive_rate": 0.523,
+      "exploration": "0.509 vs 0.520",
+      "validation": "0.513 vs 0.531",
+      "edge_pct": "+0.07 [-0.14, +0.29]"
+    },
+    "base_rate_expanding": {
+      "acted_accuracy": 0.523,
+      "naive_rate": 0.523,
+      "brier": 0.2497,
+      "brier_base": 0.2495,
+      "ece": 0.002
+    },
+    "base_rate_rolling": {
+      "acted_accuracy": 0.518,
+      "naive_rate": 0.523,
+      "brier": 0.2502,
+      "ece": 0.004,
+      "test_blocks_identical_to_expanding": true,
+      "train_lengths_days": [
+        364,
+        454,
+        544,
+        634,
+        724,
+        729
+      ]
+    },
+    "baseline_scoring_0.1.0_same_rows": {
+      "acted_share": 0.71,
+      "acted_accuracy": 0.478,
+      "edge_pct": "+0.11"
+    }
+  },
+  "results": "ALL FIVE CHECKS PASS. F1: 28 consecutive quarterly test blocks covering 2018-08-29 -> 2025-06-30 exactly once; 27 folds have exactly the required 49h gap; fold 6 has 50h because Binance has no candles 2020-02-19 12:00-15:00 UTC, so the 24h label of reference hour 2020-02-18 12:00 is unavailable and that row is (correctly) dropped -- the gap is never shorter than required. F2: the memorising model returned 0.5 for every one of 59,775 out-of-sample rows (Brier exactly 0.2500): no test hour was ever in its training table. F3: last-label model 0.510 vs naive 0.523 (1.3 points BELOW naive; within 3 points, and in the safe direction) -- the purge removes the head start it would get from overlapping labels. F4: expanding and rolling produce identical test blocks and identical row counts per block. F5: scoring 0.1.0 on the same 59,775 rows: acted-hour accuracy 0.478 (E001 character 0.47-0.50 reproduced), edge +0.11%.",
+  "affected_design": "The walk-forward bench (agent/research/walkforward.py + model_test.py) is trusted for Phase 9-11. Side finding worth remembering: a constant 'training base rate' model loses to the hindsight naive rate in bear years (2018: 0.462 vs 0.538; 2022: 0.469 vs 0.531) because the majority direction flips -- so the naive rate used in acceptance criteria is a hindsight benchmark and therefore a STRICT one. Reporting fix: the reliability-bucket flag was renamed 'reliable' -> 'enough_rows' because it only means n >= 100, not 'calibrated'.",
+  "notes": "This is verification, not research. Nothing is learned about Bitcoin here; what is learned is whether the bench can be trusted for Phase 9."
+}
