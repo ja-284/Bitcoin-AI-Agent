@@ -285,9 +285,9 @@ def fetch_shadow_rows() -> list[dict]:
         cur.execute("SELECT to_regclass('shadow_move_size')")
         if cur.fetchone()[0] is None:
             return []
-        cur.execute("""SELECT as_of, status, status_reason, live_close_match, p_calibrated, model_version, outcome_status, outcome_return, outcome_large
+        cur.execute("""SELECT as_of, status, status_reason, live_close_match, p_calibrated, model_version, outcome_status, outcome_return, outcome_large, features, fetched_at
                        FROM shadow_move_size ORDER BY as_of""")
-        return [dict(zip(["as_of", "status", "status_reason", "live_close_match", "p_calibrated", "model_version", "outcome_status", "outcome_return", "outcome_large"], r)) for r in cur.fetchall()]
+        return [dict(zip(["as_of", "status", "status_reason", "live_close_match", "p_calibrated", "model_version", "outcome_status", "outcome_return", "outcome_large", "features", "fetched_at"], r)) for r in cur.fetchall()]
 
 
 # ---------------------------------------------------------------- 4. watch list
@@ -335,6 +335,13 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "shadow_record": shadow_record(fetch_shadow_rows(), now),
         "watch_list": watch_list(preds, now),
     }
+    try:  # Backend Phase I: drift vs the frozen development reference
+        from agent.research.drift import report as drift_report
+
+        rep["drift"] = drift_report(fetch_shadow_rows(), [r for r in preds if r["pipeline_version"] == PIPELINE_VERSION])
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("drift section failed")
+        rep["drift"] = {"error": str(exc), "flags": []}
     try:  # Backend Phase A: re-analyse every live hour with the research replay and compare
         from agent.research.parity import run as parity_run
 
@@ -430,8 +437,27 @@ def render(rep: dict) -> str:
         L.append(f"**{pa.get('verdict')}** — {pa.get('compared', 0)} live hours re-analysed by the research replay on today's exchange candles; parity breaks: **{pa.get('parity_breaks', 0)}**; skipped: {len(pa.get('skipped', []))} ({dict(Counter(r for _, r in pa.get('skipped', [])))})")
         for b in pa.get("breaks", [])[:5]:
             L.append(f"- {b['as_of']}: " + "; ".join(f"{m[0]} live={m[1]} replay={m[2]}" for m in b["mismatches"][:4]))
+    dr = rep.get("drift", {})
+    L += ["", "## 5. Drift vs the development data (Backend Phase I)", ""]
+    if "error" in dr:
+        L.append(f"Could not run: {dr['error']}")
+    else:
+        L.append(f"Flags: **{', '.join(dr['flags']) if dr['flags'] else 'none'}** · shadow rows scored: {dr['missing_and_timing']['shadow_rows']}, unavailable share: {dr['missing_and_timing']['shadow_unavailable_share']}")
+        L += ["", "| input | n | dev median | live median | shift (dev IQR) | outside dev 1–99% | status |", "|---|---|---|---|---|---|---|"]
+        for k, v in dr["features"].items():
+            if v.get("n"):
+                L.append(f"| {k} | {v['n']} | {v['dev_median']:.4g} | {v['live_median']:.4g} | {v['median_shift_iqr']:+.2f} | {v['share_outside_dev_1_99']:.1%} | {v['status']} |")
+            else:
+                L.append(f"| {k} | 0 | {v['dev_median']:.4g} | | | | {v['status']} |")
+        pb, ob = dr["probability"], dr["outcomes"]
+        if pb.get("n"):
+            L.append(f"Calibrated probability: live median {pb['live_median']:.3f} vs validation {pb['dev_median']:.3f}; above validation q95: {pb['share_above_dev_q95']:.1%}, below q05: {pb['share_below_dev_q05']:.1%} — {pb['status']}")
+        if ob.get("n"):
+            L.append(f"Large-move share: live {ob['live_share']:.3f} [{ob['live_share_ci95'][0]:.3f}, {ob['live_share_ci95'][1]:.3f}] vs validation {ob['validation_share']:.3f} / development {ob['dev_share']:.3f} — {ob['status']}")
+        L.append(f"Fetch delay by week (median min): {dr['missing_and_timing']['fetch_delay_by_week_median_min']}")
+        L += ["", f"*{dr['note']}*"]
     wl = rep["watch_list"]
-    L += ["", "## 5. Watch list", "",
+    L += ["", "## 6. Watch list", "",
           f"- News evaluation (roadmap 8.6): {wl['news_hours']['have']} of {wl['news_hours']['need']} live hours with news — {'READY' if wl['news_hours']['ready'] else 'waiting'}",
           f"- Confirmatory re-tests on live data (funding 24h; dollar/yield 168h): {wl['live_months']['have']} of {wl['live_months']['need']} months — {'READY' if wl['live_months']['ready'] else 'waiting'}",
           "", "Reminders: healthchecks.io heartbeat not set up; GitHub token `supabase-dispatch` expires 2027-09-20; scheduled workflows on a public repo pause after 60 days without a commit."]
