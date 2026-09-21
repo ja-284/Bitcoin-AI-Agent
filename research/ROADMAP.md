@@ -70,6 +70,18 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.
 - Historical news is UNAVAILABLE; news is evaluated on the live archive only, once it is large enough (hundreds of hours).
 
+## Paused 2026-09-21 19:58 UTC — exact resume point
+
+**State.** Everything in the "Backend hardening roadmap" above is recorded as done except the calendar-bound stages (Phase 13 continuing; H, J, K continuing/deferred; L nothing justified; the final holdout decision). Last commit `2fdf7bb` (readiness gate, pinned requirements, README); tree clean, `main` = `origin/main`. Tests: 185 pass + 7 opt-in integration. Holdout: **sealed** (`research/HOLDOUT_ACCESS.log` does not exist). Live system: healthy; shadow record running from GitHub since 19:12 UTC (rows for 17:00 and 18:00 UTC; the 17:00 row graded).
+
+**Pending external verification (not yet seen — do this FIRST on resume):**
+1. The **20:12 UTC hourly run (2026-09-21) is the first to install the exactly-pinned `requirements.txt` and to carry `permissions: contents: read`** (commits `4597904`, `2fdf7bb`). Check it: GitHub Actions run list (public API `repos/ja-284/Bitcoin-AI-Agent/actions/runs`) → conclusion must be `success`; then `predictions` must have `as_of = 2026-09-21 19:00 UTC` with `run_meta.code_commit = 2fdf7bb…`, and `shadow_move_size` a row for 19:00 UTC. If the run failed on `pip install` (a pinned wheel missing on Linux), fix the pin(s), commit, re-dispatch, and verify — nothing else about the pins is negotiable.
+2. Confirm the 18:00 UTC shadow row was graded by the 20:12 run (outcome_status `ok`) and equals the live tracker's 1h return.
+
+**Then:** run `python -m agent.research.weekly_report` (it is the weekly audit; §1 health, §3 shadow, §4 parity, §5 drift) and commit the report. After that the project is in its monitoring rhythm: weekly report + audit; Phase H checkpoints at 500 / 2,000 / 5,000 prospective shadow hours; Phase J when ≥ 500 live hours with news; watch-list re-tests at 6 months; the holdout decision only after those and only with the user. Open user actions: healthchecks.io heartbeat (`HEARTBEAT_URL` secret), least-privilege DB role, dispatch-PAT renewal before 2027-09-20; optional: a scheduled workflow that commits the weekly report (also resets GitHub's 60-day inactivity clock) — offered, not decided.
+
+**Do not** re-run completed phases, re-open E011/E012/E013, change scoring 0.1.0, or touch the holdout.
+
 ## Resumed 2026-09-21 — quality gate result
 
 Tests 120/120. Live system over the 22-hour pause: 22/22 hourly predictions, 0 missed, median fetch 12.5 min after candle close (Supabase :12 dispatch; GitHub's own cron fired 19 of 88 backup slots — still unreliable, still not needed), 0 failed Actions runs, 24/24 pg_cron runs succeeded (HTTP 204), 21/21 on Binance (0 synthetic), 0 timestamp-rule violations, news + explanation present every run, outcomes complete (45 @1h, 40 @6h, 22 @24h; none overdue, none graded early). No live change made. Signals 20 BUY / 1 HOLD — scoring 0.1.0 leaning BUY in an uptrend, as documented.
