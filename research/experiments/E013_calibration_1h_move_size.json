@@ -1,0 +1,165 @@
+{
+  "id": "E013",
+  "date": "2026-09-21",
+  "git_commit": "(this commit)",
+  "status": "exploratory (pre-registered criterion and choice rule; Phase 11 calibration of the one model that passed Phase 9)",
+  "hypothesis": "The E012 1h move-size model's stated probabilities are already close to honest (uncalibrated ECE 0.013 exploration / 0.040 validation). A calibrator fitted on a purged, most-recent 90-day slice of each fold's training range can correct the residual drift (2024-25 is calmer than the training years, so the raw model should over-state the chance of a large move) without destroying the model's ranking ability.",
+  "what_is_calibrated": "P(|return over the next 1h| > 0.25%) from the E012 1h model (same nine inputs, same log transforms, L2 logistic C = 0.1, expanding walk-forward). Direction is NOT calibrated: E011 found no directional signal, so the honest direction probability is the base rate, stated as such.",
+  "variants": {
+    "raw": "the model's own logistic output; the calibration slice is reserved but unused, so all three variants train on identical rows and are scored on identical test rows",
+    "platt": "1-parameter-pair logistic recalibration a*logit(p)+b fitted on the calibration slice",
+    "isotonic": "monotone step function fitted on the calibration slice (sklearn IsotonicRegression, clipped outside the fitted range)"
+  },
+  "validation_design": "expanding walk-forward, min_train 365d, calibration slice = the last 90 days of each training range, purge = 1h + 24h embargo on BOTH sides of the slice (fit rows | purge | calibration rows | purge | test block), quarterly test blocks, identical folds for all three variants (first test block therefore starts ~90 days later than in E012)",
+  "acceptance_criterion": "PRE-REGISTERED. Evaluated on the concatenated out-of-sample test rows. (C1) 'Calibrated' in the VALIDATION period (2024-01 -> 2025-06) means: ECE (10 equal-width buckets, size-weighted) <= 0.03 AND every bucket with >= 100 rows has |observed frequency - mean stated probability| <= 0.05. Exploration-period values are reported alongside. (C2) Ranking preserved: Spearman rho(p, realised |return|) in validation within 0.02 of the raw model's. (C3) CHOICE RULE, fixed in advance: among the variants meeting C1 and C2, take the SIMPLEST (raw, then Platt, then isotonic) unless a more complex one lowers validation Brier by at least 1% relative to the simpler one. If no variant meets C1, the output stays labelled 'uncalibrated heuristic' and this is recorded as a fail. The sealed holdout (2025-07 -> 2026-08) is not touched; it will judge the chosen variant once, in Phase 12.",
+  "tripwire": "Validation ECE < 0.005 for any variant, or a Brier improvement over raw larger than 5% relative, is treated as suspicious (a calibrator cannot add information; it can only re-map probabilities) and investigated before being recorded.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "features": [
+    "tr_mean_14_rel",
+    "rv_24",
+    "rv_168",
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h",
+    "hour_sin",
+    "hour_cos",
+    "is_weekend"
+  ],
+  "log_features": [
+    "tr_mean_14_rel",
+    "rv_24",
+    "rv_168",
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h"
+  ],
+  "target": {
+    "definition": "large_move: 1 if |return over 1h| > 0.0025",
+    "reference": "close at cutoff",
+    "outcome": "close of the candle opening at as_of + 1h"
+  },
+  "horizons_hours": [
+    1
+  ],
+  "dataset": {
+    "source": "E001 replay index + candle-derived features",
+    "snapshot": "btcusdt_1h_2026-09-19.csv",
+    "range": "2017-08-27 -> 2025-06-30 (holdout excluded)"
+  },
+  "periods": {
+    "exploration": "OOS test blocks before 2024-01-01",
+    "validation": "OOS test blocks 2024-01-01 -> 2025-06-30",
+    "calibration": "last 90 days of each fold's training range, purged on both sides",
+    "holdout": "sealed, not read"
+  },
+  "hyperparameters": {
+    "C": 0.1,
+    "calib_days": 90,
+    "embargo_hours": 24,
+    "platt": "LogisticRegression on logit(p), C = 1e6 (effectively unregularised), 2 parameters",
+    "isotonic": "IsotonicRegression(out_of_bounds='clip', y_min=0, y_max=1)"
+  },
+  "metrics": {
+    "folds": 27,
+    "oos_rows": 54472,
+    "first_test_block": "2018-11-27 15:00 (90 days later than E012, as pre-declared)",
+    "calibration_rows_per_fold": "1,584-2,160 (90 days minus hours blanked by the no-fill rule)",
+    "fold_gaps_hours": "26 on 25 folds; 29 and 85 on two folds with data holes (never below the required 26)",
+    "raw": {
+      "validation": {
+        "ece": 0.0425,
+        "max_bucket_gap": 0.06,
+        "brier": 0.2264,
+        "log_loss": 0.6433,
+        "rho": "+0.362 [+0.337,+0.387]",
+        "mean_p": 0.434,
+        "base_rate": 0.475,
+        "C1": false
+      },
+      "exploration": {
+        "ece": 0.014,
+        "max_bucket_gap": 0.04,
+        "brier": 0.2139,
+        "rho": "+0.440"
+      }
+    },
+    "platt": {
+      "validation": {
+        "ece": 0.0139,
+        "max_bucket_gap": 0.029,
+        "brier": 0.2249,
+        "log_loss": 0.6402,
+        "rho": "+0.360 [+0.334,+0.385]",
+        "mean_p": 0.471,
+        "base_rate": 0.475,
+        "C1": true,
+        "C2": true,
+        "brier_vs_raw": "+0.70% relative"
+      },
+      "exploration": {
+        "ece": 0.0044,
+        "max_bucket_gap": 0.019,
+        "brier": 0.2136,
+        "rho": "+0.440"
+      },
+      "params_a_b_first_last_folds": "(1.13,-0.20) ... (0.98,+0.17)"
+    },
+    "isotonic": {
+      "validation": {
+        "ece": 0.0135,
+        "max_bucket_gap": 0.1,
+        "brier": 0.2258,
+        "log_loss": 0.6582,
+        "rho": "+0.356",
+        "C1": false,
+        "brier_vs_raw": "+0.31% relative"
+      },
+      "exploration": {
+        "ece": 0.0237,
+        "max_bucket_gap": 0.145,
+        "log_loss": 0.7585
+      }
+    },
+    "per_year_ece": {
+      "raw": {
+        "2018": 0.032,
+        "2019": 0.021,
+        "2020": 0.017,
+        "2021": 0.04,
+        "2022": 0.026,
+        "2023": 0.022,
+        "2024": 0.042,
+        "2025": 0.045
+      },
+      "platt": {
+        "2018": 0.029,
+        "2019": 0.014,
+        "2020": 0.012,
+        "2021": 0.008,
+        "2022": 0.022,
+        "2023": 0.015,
+        "2024": 0.013,
+        "2025": 0.019
+      },
+      "isotonic": {
+        "2018": 0.042,
+        "2019": 0.042,
+        "2020": 0.049,
+        "2021": 0.029,
+        "2022": 0.028,
+        "2023": 0.024,
+        "2024": 0.018,
+        "2025": 0.018
+      }
+    },
+    "tripwire_fired": false
+  },
+  "results": "Raw FAILS C1 in validation (ECE 0.043, one bucket 0.06 off): in 2024-25 the raw model UNDER-states the chance of a large move (mean stated 0.434 vs observed 0.475) -- the opposite direction from the hypothesis. PLATT PASSES C1 and C2 (validation ECE 0.014, every bucket with >= 100 rows within 0.03; rho 0.360 vs raw 0.362); its intercept drifts from about -0.2 in early folds to +0.2 in the latest, i.e. it tracks the regime shift the raw model misses. ISOTONIC FAILS C1 (worst bucket 0.10 off in validation, 0.145 in exploration; log loss much worse because it emits exact 0/1 from a 90-day slice). Brier: Platt 0.7% better than raw in validation, isotonic 0.3% -- both under the 1% 'complexity justified' bar, which does not matter here because raw fails C1 outright.",
+  "chosen_variant": "PLATT -- by the pre-registered rule: the simplest variant meeting C1 and C2 (raw fails C1; isotonic fails C1). Per-year ECE <= 0.03 in all 8 years (0.008-0.029).",
+  "consistent_across_time": "Platt has the lowest ECE in 7 of 8 years and is within 0.001 of the best in the 8th; raw's ECE is worst in exactly the regime-shift years (2021, 2024, 2025). Ranking ability (rho) is unchanged by calibration in every period, as it must be.",
+  "leakage_check": "Calibrator sees only the purged 90-day slice (unit test with a recording calibrator); fit rows | 25h | calibration rows | 25h | test rows on every fold; test blocks identical across the three variants; the tripwires (ECE < 0.005 in validation, Brier gain > 5%) did not fire. Exploration ECE of 0.0044 for Platt is an average over 41k rows and 23 folds, consistent with an honest re-map, not with information leaking in.",
+  "overfitting_suspected": "Isotonic: yes (step function on ~2,000 rows produces extreme buckets and exact 0/1 outputs) -- rejected by the rule. Platt: 2 parameters per fold, stable (a 0.89-1.13, b -0.21 to +0.22): no.",
+  "affected_design": "The research deliverable is now: P(|next-hour move| > 0.25%) = Platt(E012 logistic), refit quarterly with a purged 90-day calibration slice. This is what Phase 12 will judge once on the sealed holdout. The live system's confidence number stays the labelled heuristic; wiring the calibrated probability into it is a separate decision after Phase 12/13, never a research side-effect.",
+  "notes": "Three runs (raw / platt / isotonic), all reported. Whatever is chosen is a research artefact: the live system's confidence stays the labelled heuristic until a separate, validated decision wires the move-size probability into it."
+}

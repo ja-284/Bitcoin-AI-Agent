@@ -25,9 +25,9 @@ every new phase.
   - [ ] 8.8 Social — UNAVAILABLE/UNSAFE (no free, timestamped, reproducible history); no experiment
 - [x] **PHASE 8A — AI component tests** (E009 — 8 of 9 criteria pass; news scorer reliable/stable/discriminating with a small order-sensitivity bias recorded; explainer faithful and provably decision-neutral; "does news add information" deferred to 8.6)
 - [x] **PHASE 6 — Walk-forward / time-series validation** (2026-09-20; `agent/research/walkforward.py`, 8 unit tests + E010 on real data. Design: purge = horizon, embargo 24h, quarterly test blocks, ≥ 365 training days, expanding primary / rolling 730d robustness, optional purged calibration slice. E010: all five pre-registered checks pass — a memorising model scores exactly chance, a last-label model gets no head start, expanding/rolling test blocks identical, scoring 0.1.0 reproduces its E001 character (0.478) on the same 59,775 rows.)
-- [~] **PHASE 9 — Model architecture research** — both experiments run and recorded 2026-09-20; **phase report + quality gate still to be done at resume** (see "Paused" below). E011 (direction, 15 runs): no pass anywhere — no combinable directional signal in the free data; the 1h reversal family gives ~+2 points of accuracy with zero return edge. E012 (move size, 6 runs): **pass at 1h** (Brier −15%/−9%, ρ 0.45/0.36, accuracy +15/+10 points), 6h near-miss, 24h no pass.
-- [ ] **PHASE 10 — Weight and threshold optimisation** — decision pending at resume; E011's recorded consequence is that there is nothing to re-weight scoring 0.1.0 towards (standing finding below)
-- [ ] **PHASE 11 — Probability calibration** — next: calibrate the E012 1h move-size model on a purged calibration slice (raw vs Platt vs isotonic; reliability buckets with intervals); state the direction probability honestly as ≈ base rate
+- [x] **PHASE 9 — Model architecture research** (experiments 2026-09-20; gate + report 2026-09-21). E011 (direction, 15 runs): no pass anywhere — no combinable directional signal in the free data; the 1h reversal family gives ~+2 points of accuracy with zero return edge. E012 (move size, 6 runs): **pass at 1h** (Brier −15%/−9%, ρ 0.45/0.36, accuracy +15/+10 points), 6h near-miss, 24h no pass.
+- [x] **PHASE 10 — Weight and threshold optimisation** — **closed without optimisation (decision recorded 2026-09-21, see adjustment 6).** E001/E002 showed none of the four categories carries direction; E011 showed a fitted combination of them plus every usable candidate input still has zero return edge. There is nothing to re-weight towards, so any weight/threshold search would only fit noise (rule 4). Not revisited unless a later pre-registered test finds a directional input.
+- [x] **PHASE 11 — Probability calibration** (E013, 2026-09-21: Platt scaling on a purged 90-day slice, chosen by the pre-registered rule; validation ECE 0.014, ≤ 0.03 every year since 2018, ranking preserved; raw and isotonic fail. Direction probability stays ≈ base rate, stated as such — nothing to calibrate there. Tests: `tests/test_calibration.py` (calibrator sees only the slice; over-confidence corrected; monotone; refused without a slice).)
 - [ ] **PHASE 12 — Final untouched holdout evaluation** (once)
 - [ ] **PHASE 13 — Live / paper research monitoring** (partly running: hourly predictions + outcomes since 2026-09-19; weekly report not yet built)
 
@@ -39,13 +39,19 @@ every new phase.
 4. **Phase 8A inserted — AI component tests.** The earlier brief (Part M) requires testing the two LLM components themselves; the 13-phase list omits it. Placed after the first two feature groups: it is independent of the numeric research, uses live data only (historical news is unavailable), and costs a few API calls.
 5. **Feature-group order kept**, but each group starts with an availability/timestamp check that can mark it UNAVAILABLE or UNSAFE before any code is written.
 
+6. **Phase 10 closed without running an optimisation (2026-09-21).** *What:* no weight or threshold search on scoring 0.1.0. *Why:* the inputs to such a search have been shown to carry no direction — fit-free (E001, E002, E003–E008) and fitted (E011: 15 walk-forward runs, zero return edge). *Problem this avoids:* a search over signal-free inputs always finds a "best" setting, and that setting is noise — exactly the overfitting rule 4 forbids. *Why appropriate:* the roadmap's own condition for Phase 10 ("only if justified") is not met; the live scoring stays 0.1.0, unchanged, as the frozen thing under test. *Re-opens if:* a pre-registered test on live data (funding 24h, dollar/yield 168h watch list; news at ≥ 500 live hours) finds a directional input.
+
 ## Standing findings that constrain later phases
 
 - Scoring 0.1.0 has no predictive value (E001) and none of its four categories does alone (E002). Re-weighting it (Phase 10) is pointless unless a feature with signal is found in Phase 8. If none is, Phase 10 collapses to "drop redundant categories" and the honest deliverable is calibrated *uncertainty* rather than direction.
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.
 - Historical news is UNAVAILABLE; news is evaluated on the live archive only, once it is large enough (hundreds of hours).
 
-## Paused 2026-09-20 (evening) — exact resume point
+## Resumed 2026-09-21 — quality gate result
+
+Tests 120/120. Live system over the 22-hour pause: 22/22 hourly predictions, 0 missed, median fetch 12.5 min after candle close (Supabase :12 dispatch; GitHub's own cron fired 19 of 88 backup slots — still unreliable, still not needed), 0 failed Actions runs, 24/24 pg_cron runs succeeded (HTTP 204), 21/21 on Binance (0 synthetic), 0 timestamp-rule violations, news + explanation present every run, outcomes complete (45 @1h, 40 @6h, 22 @24h; none overdue, none graded early). No live change made. Signals 20 BUY / 1 HOLD — scoring 0.1.0 leaning BUY in an uptrend, as documented.
+
+## Paused 2026-09-20 (evening) — resume point (history; steps 1–3 done 2026-09-21, step 4 = E013 in progress)
 
 **Where work stopped.** Phase 9's two pre-registered experiments (E011 direction, E012 move size) have been run, evaluated against their written criteria, and recorded (`research/experiments/E011_*.json`, `E012_*.json`, `research/results/E011/summary.md`, `research/results/E012/summary.md`, all committed). Tests: 120 pass. Live system untouched and healthy (25 predictions, no missed hours since the 08:12 UTC trigger fix).
 

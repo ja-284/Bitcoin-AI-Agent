@@ -101,6 +101,46 @@ class LogisticModel:
 MODELS = {"memorise": MemoriseModel, "last_label": LastLabelModel, "base_rate": BaseRateModel, "logistic": LogisticModel}
 
 
+# ---------------------------------------------------------------- calibrators (Phase 11)
+# A calibrator re-maps a model's stated probabilities using ONLY the fold's purged calibration
+# slice. It cannot add information -- only make the numbers honest.
+class PlattCalibrator:
+    """p -> sigmoid(a * logit(p) + b): two parameters, fitted by unregularised logistic regression."""
+
+    def fit(self, p, y):
+        from sklearn.linear_model import LogisticRegression
+
+        self.lr = LogisticRegression(C=1e6, max_iter=2000)
+        self.lr.fit(_logit(p).reshape(-1, 1), y)
+
+    def transform(self, p):
+        return self.lr.predict_proba(_logit(p).reshape(-1, 1))[:, 1]
+
+    def params(self):
+        return {"a": float(self.lr.coef_[0][0]), "b": float(self.lr.intercept_[0])}
+
+
+class IsotonicCalibrator:
+    """Monotone step function through the calibration slice; constant outside the fitted range."""
+
+    def fit(self, p, y):
+        from sklearn.isotonic import IsotonicRegression
+
+        self.iso = IsotonicRegression(out_of_bounds="clip", y_min=0.0, y_max=1.0)
+        self.iso.fit(np.asarray(p, float), np.asarray(y, float))
+
+    def transform(self, p):
+        return self.iso.predict(np.asarray(p, float))
+
+
+def _logit(p):
+    p = np.clip(np.asarray(p, float), 1e-6, 1 - 1e-6)
+    return np.log(p / (1 - p))
+
+
+CALIBRATORS = {"none": None, "platt": PlattCalibrator, "isotonic": IsotonicCalibrator}
+
+
 # ---------------------------------------------------------------- data
 def groups_for(features: list[str]) -> list[str]:
     """The feature groups that must be computed to supply `features` (category scores need none)."""
@@ -229,7 +269,9 @@ def evaluate_predictions(preds: pd.DataFrame, df: pd.DataFrame, horizon: int) ->
 
 def run(experiment: str, model_name: str, horizon: int, groups: list[str], scheme: str, calib_days: int, C: float,
         features: list[str] | None = None, tag: str | None = None, target: str = "direction", threshold: float | None = None,
-        log_features: list[str] | None = None) -> Path:
+        log_features: list[str] | None = None, calibrator: str = "none") -> Path:
+    if calibrator != "none" and not calib_days:
+        raise ValueError("a calibrator needs a calibration slice (--calib-days > 0)")
     df, feature_cols = build_frame(horizon, groups, features, target, threshold)
     for c in log_features or []:  # heavy-tailed positive inputs enter on a log scale (declared per experiment)
         bad = int((df[c].dropna() <= 0).sum())
@@ -251,14 +293,23 @@ def run(experiment: str, model_name: str, horizon: int, groups: list[str], schem
     # the hourly grid itself is unchanged, so the first test block simply starts later.
     fold_index = df[cols + ["y"]].dropna().index
     folds = make_folds(fold_index, spec)
-    preds, diag = run_walk_forward(df, cols, "y", make_model, spec, folds=folds)
+    calibrators: list = []
+    make_calibrator = None
+    if CALIBRATORS[calibrator] is not None:
+        def make_calibrator():
+            c = CALIBRATORS[calibrator]()
+            calibrators.append(c)
+            return c
+    preds, diag = run_walk_forward(df, cols, "y", make_model, spec, folds=folds, make_calibrator=make_calibrator)
     results = {
         "experiment": experiment, "generated_at": datetime.now(timezone.utc).isoformat(), "pipeline_version": PIPELINE_VERSION,
         "scoring_version": SCORING_VERSION, "snapshot": df.attrs["snapshot"], "model": model_name, "horizon": horizon, "groups": groups,
-        "features": cols, "log_features": log_features or [], "target": target, "threshold": threshold,
+        "features": cols, "log_features": log_features or [], "target": target, "threshold": threshold, "calibrator": calibrator,
         "spec": spec.__dict__, "folds": len(folds), "fold_diagnostics": diag,
         "evaluation": evaluate_predictions(preds, df, horizon),
     }
+    if calibrator == "platt":
+        results["platt_params_per_fold"] = [c.params() for c in calibrators]
     if model_name == "logistic":
         per_fold = [m.coefficients(cols) for m in fitted]
         results["coefficients_per_fold"] = per_fold
@@ -294,7 +345,8 @@ def render(res: dict) -> str:
     ev = res["evaluation"]
     tgt = res.get("target", "direction")
     tgt_s = "direction (UP/DOWN)" if tgt == "direction" else f"large move (|return| > {res['threshold'] * 100:.2f}%)"
-    L = [f"# {res['experiment']} — {res['model']} · {res['spec']['scheme']} · {res['horizon']}h · target: {tgt_s}", "",
+    cal = res.get("calibrator", "none")
+    L = [f"# {res['experiment']} — {res['model']} · {res['spec']['scheme']} · {res['horizon']}h · target: {tgt_s} · calibrator: {cal}", "",
          f"pipeline {res['pipeline_version']} / scoring {res['scoring_version']} · snapshot {res['snapshot']} · {res['folds']} folds · features: {len(res['features'])} ({', '.join(res['groups']) or 'none'})", "",
          f"- overall:     {_fmt(ev['overall'])}", f"- exploration: {_fmt(ev['exploration'])}", f"- validation:  {_fmt(ev['validation'])}", "",
          "Per year (acted accuracy / naive / edge %):"]
@@ -326,12 +378,13 @@ if __name__ == "__main__":
     parser.add_argument("--target", default="direction", choices=["direction", "large_move"])
     parser.add_argument("--threshold", type=float, default=None, help="large_move: |return| threshold as a fraction, e.g. 0.005")
     parser.add_argument("--log-features", default="", help="comma-separated inputs to log-transform before standardising")
+    parser.add_argument("--calibrator", default="none", choices=list(CALIBRATORS), help="re-map probabilities on the purged calibration slice")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     groups = [g for g in args.groups.split(",") if g]
     features = [f for f in args.features.split(",") if f] or None
     log_features = [f for f in args.log_features.split(",") if f] or None
     path = run(args.experiment, args.model, args.horizon, groups, args.scheme, args.calib_days, args.C, features, args.tag or None,
-               args.target, args.threshold, log_features)
+               args.target, args.threshold, log_features, args.calibrator)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print(path.read_text(encoding="utf-8"))
