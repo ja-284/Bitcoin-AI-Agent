@@ -11,11 +11,15 @@ model) instead of asking for free text and regexing a number out of it -- a frag
 pattern that breaks in ways that are annoying to debug.
 """
 
+import logging
+
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
 
 from agent.config.settings import AI_MAX_RETRIES, AI_TIMEOUT_S, ANTHROPIC_API_KEY
 from agent.shared.types import CategoryScore, NewsItem
+
+logger = logging.getLogger(__name__)
 
 MODEL = "claude-haiku-4-5"  # narrow, structured classification -- the cheapest current model is genuinely enough
 NEWS_WEIGHT = 0.15
@@ -56,6 +60,13 @@ def score_news(news_items: list[NewsItem]) -> CategoryScore:
         output_format=NewsAnalysis,
     )
     analysis = response.parsed_output
+    if analysis is None or not analysis.assessments:
+        # Schema-valid but empty is NOT "nothing relevant": it is a missing answer. Raising makes
+        # the run record news_error and give news weight 0 -- unavailable, not neutral.
+        raise ValueError("news model returned no assessments for %d headlines" % len(news_items))
+    count_mismatch = len(analysis.assessments) != len(news_items)
+    if count_mismatch:
+        logger.warning("news model assessed %d of %d headlines", len(analysis.assessments), len(news_items))
 
     total_relevance = sum(a.relevance_to_bitcoin for a in analysis.assessments)
     if total_relevance == 0:
@@ -80,6 +91,8 @@ def score_news(news_items: list[NewsItem]) -> CategoryScore:
         detail={
             "model": MODEL,
             "headlines_assessed": len(analysis.assessments),
+            "headlines_given": len(news_items),
+            "assessment_count_mismatch": count_mismatch,
             "avg_relevance": total_relevance / len(analysis.assessments),
             "assessments": [a.model_dump() for a in analysis.assessments],
         },
