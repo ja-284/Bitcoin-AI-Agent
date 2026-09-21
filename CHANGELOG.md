@@ -23,6 +23,9 @@ the weekly parity check reproduces every live hour before and after.
   **database connections** get a 15 s connect timeout.
 - `run_meta.code_commit` records the exact git commit that produced the row (GitHub runs).
 - Shadow record (Phase 13): `agent/shadow` — see `research/ROADMAP.md`.
+- **Database invariants (Phase E)**: NOT NULL on `cutoff_at`/`pipeline_version`; CHECKs for the
+  cutoff rule, fetch-after-cutoff, outcome status and status/values consistency; predictions
+  and outcomes are append-only (triggers); shadow rows immutable except a one-time outcome.
 
 ## pipeline 0.2.0 — 2026-09-19 (corrected, leakage-safe baseline)
 

@@ -137,3 +137,17 @@ def test_grade_stores_a_fraction_and_applies_the_threshold():
     assert ret == pytest.approx(0.003) and large is True
     ret, large = grade(100.0, 99.8, 0.0025)
     assert ret == pytest.approx(-0.002) and large is False
+
+
+# A model version is immutable. Any edit to the artefact must come with a new version name
+# AND a deliberate update of this pin -- both visible in git. (Backend Phase E/G)
+ARTEFACT_SHA256 = {"move_size_1h_v1": "8a80d203917c6fbaf8c18f6576cb470cf7147a3c398da711a6b4a84f006d703f"}  # of the canonical JSON (line endings do not matter)
+
+
+def test_frozen_artefacts_are_unchanged():
+    import hashlib
+
+    for version, expected in ARTEFACT_SHA256.items():
+        text = (Path("agent/shadow/models") / f"{version}.json").read_text(encoding="utf-8")
+        digest = hashlib.sha256(json.dumps(json.loads(text), sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        assert digest == expected, f"{version} was edited in place -- create a new version instead"

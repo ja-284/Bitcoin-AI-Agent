@@ -32,3 +32,30 @@ CREATE TABLE IF NOT EXISTS shadow_move_size (
     outcome_checked_at TIMESTAMPTZ
 );
 CREATE INDEX IF NOT EXISTS idx_shadow_move_size_as_of ON shadow_move_size (as_of);
+
+-- Backend Phase E: a shadow row's prediction part is immutable; only the outcome part may be
+-- filled, exactly once (from NULL). Deletes are refused.
+CREATE OR REPLACE FUNCTION shadow_guard_update() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF OLD.outcome_status IS NOT NULL THEN
+        RAISE EXCEPTION 'shadow_move_size row % already has an outcome: update refused', OLD.id;
+    END IF;
+    IF NEW.as_of IS DISTINCT FROM OLD.as_of OR NEW.cutoff_at IS DISTINCT FROM OLD.cutoff_at OR NEW.fetched_at IS DISTINCT FROM OLD.fetched_at
+       OR NEW.model_version IS DISTINCT FROM OLD.model_version OR NEW.pipeline_version IS DISTINCT FROM OLD.pipeline_version
+       OR NEW.code_commit IS DISTINCT FROM OLD.code_commit OR NEW.price_source IS DISTINCT FROM OLD.price_source
+       OR NEW.reference_close IS DISTINCT FROM OLD.reference_close OR NEW.live_close_match IS DISTINCT FROM OLD.live_close_match
+       OR NEW.status IS DISTINCT FROM OLD.status OR NEW.status_reason IS DISTINCT FROM OLD.status_reason
+       OR NEW.features IS DISTINCT FROM OLD.features OR NEW.p_raw IS DISTINCT FROM OLD.p_raw OR NEW.p_calibrated IS DISTINCT FROM OLD.p_calibrated
+       OR NEW.threshold IS DISTINCT FROM OLD.threshold OR NEW.horizon_hours IS DISTINCT FROM OLD.horizon_hours OR NEW.created_at IS DISTINCT FROM OLD.created_at THEN
+        RAISE EXCEPTION 'shadow_move_size row %: only the outcome columns may change', OLD.id;
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE OR REPLACE FUNCTION shadow_forbid_delete() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'shadow_move_size is append-only: delete refused (row id %)', OLD.id;
+END $$;
+DROP TRIGGER IF EXISTS shadow_move_size_guard_update ON shadow_move_size;
+CREATE TRIGGER shadow_move_size_guard_update BEFORE UPDATE ON shadow_move_size FOR EACH ROW EXECUTE FUNCTION shadow_guard_update();
+DROP TRIGGER IF EXISTS shadow_move_size_forbid_delete ON shadow_move_size;
+CREATE TRIGGER shadow_move_size_forbid_delete BEFORE DELETE ON shadow_move_size FOR EACH ROW EXECUTE FUNCTION shadow_forbid_delete();

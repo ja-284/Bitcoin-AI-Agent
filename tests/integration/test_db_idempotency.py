@@ -162,3 +162,49 @@ def test_shadow_rows_and_outcomes_are_duplicate_safe(scratch_db):
     with sdb.get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT p_calibrated, outcome_close, outcome_return FROM shadow_move_size WHERE id = %s", (first,))
         assert cur.fetchone() == (0.55, 100.3, 0.003)
+
+
+def test_record_is_append_only_and_invariants_are_enforced_by_the_database(scratch_db):
+    """Backend Phase E: the database itself refuses changes to the research record and rows that break the timestamp rules."""
+    import psycopg
+
+    db, sdb = scratch_db
+    as_of = datetime(2026, 1, 6, tzinfo=timezone.utc)
+    pid = db.save_prediction(_prediction(as_of))
+    db.save_outcome(pid, 1, 101.0, 0.01)
+
+    def refused(sql, params=()):
+        with pytest.raises(psycopg.Error):
+            with db.get_connection() as conn, conn.cursor() as cur:
+                cur.execute(sql, params)
+                conn.commit()
+
+    refused("UPDATE predictions SET signal = 'BUY' WHERE id = %s", (pid,))
+    refused("DELETE FROM predictions WHERE id = %s", (pid,))
+    refused("UPDATE prediction_outcomes SET pct_change_from_prediction = 0.5 WHERE prediction_id = %s", (pid,))
+    refused("DELETE FROM prediction_outcomes WHERE prediction_id = %s", (pid,))
+    # timestamp rules at insert time
+    bad = _prediction(datetime(2026, 1, 7, tzinfo=timezone.utc))
+    bad.fetched_at = bad.cutoff_at - timedelta(minutes=1)
+    with pytest.raises(psycopg.Error):
+        db.save_prediction(bad)
+    bad = _prediction(datetime(2026, 1, 8, tzinfo=timezone.utc))
+    bad.cutoff_at = bad.as_of + timedelta(hours=2)
+    with pytest.raises(psycopg.Error):
+        db.save_prediction(bad)
+    # an 'ok' outcome without numbers, or a bad status, cannot exist
+    refused("INSERT INTO prediction_outcomes (prediction_id, horizon_hours, status) VALUES (%s, 6, 'ok')", (pid,))
+    refused("INSERT INTO prediction_outcomes (prediction_id, horizon_hours, status, price_at_horizon, pct_change_from_prediction) VALUES (%s, 6, 'weird', 1, 1)", (pid,))
+    # shadow: the prediction part is immutable, the outcome is written once, deletes refused
+    s_as_of = datetime(2026, 1, 9, tzinfo=timezone.utc)
+    sid = sdb.save_shadow({"as_of": s_as_of, "cutoff_at": s_as_of + HOUR, "fetched_at": s_as_of + HOUR + timedelta(minutes=12), "model_version": "v", "pipeline_version": "0.2.0",
+                           "code_commit": None, "price_source": "binance", "reference_close": 100.0, "live_close_match": None, "status": "ok", "status_reason": None,
+                           "features": {}, "p_raw": 0.5, "p_calibrated": 0.5, "threshold": 0.0025, "horizon_hours": 1})
+    refused("UPDATE shadow_move_size SET p_calibrated = 0.9 WHERE id = %s", (sid,))
+    refused("DELETE FROM shadow_move_size WHERE id = %s", (sid,))
+    now = s_as_of + timedelta(hours=3)
+    sdb.save_shadow_outcome(sid, 100.3, 0.003, True, "ok", now)  # allowed once
+    refused("UPDATE shadow_move_size SET outcome_return = 0.9 WHERE id = %s", (sid,))  # and never again
+    with sdb.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT outcome_return FROM shadow_move_size WHERE id = %s", (sid,))
+        assert cur.fetchone()[0] == 0.003

@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS predictions (
     id BIGSERIAL PRIMARY KEY,
 
     as_of TIMESTAMPTZ NOT NULL,              -- open time of the reference candle (last fully-closed hour)
-    cutoff_at TIMESTAMPTZ,                   -- information cutoff = close of the reference candle (as_of + 1h)
+    cutoff_at TIMESTAMPTZ NOT NULL,          -- information cutoff = close of the reference candle (as_of + 1h)
     fetched_at TIMESTAMPTZ NOT NULL,         -- when the underlying data was actually fetched (>= cutoff_at)
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    pipeline_version TEXT,                   -- see agent/version.py; distinguishes the original 0.1.0 baseline from corrected runs
+    pipeline_version TEXT NOT NULL,          -- see agent/version.py; distinguishes the original 0.1.0 baseline from corrected runs
     run_meta JSONB,                          -- news exclusion counts, data-quality flags, lag: how much to trust this run
 
     close_price DOUBLE PRECISION NOT NULL,
@@ -76,3 +76,45 @@ ALTER TABLE predictions ADD COLUMN IF NOT EXISTS pipeline_version TEXT;
 ALTER TABLE predictions ADD COLUMN IF NOT EXISTS run_meta JSONB;
 UPDATE predictions SET cutoff_at = as_of + interval '1 hour' WHERE cutoff_at IS NULL;
 UPDATE predictions SET pipeline_version = '0.1.0' WHERE pipeline_version IS NULL;
+
+-- ---------------------------------------------------------------------------------
+-- Migration (Backend Phase E, 2026-09-21): the record's invariants live in the database
+-- too, not only in code. Every statement below is idempotent.
+-- ---------------------------------------------------------------------------------
+-- The migration columns are filled for every row (checked before this was written): make them mandatory.
+ALTER TABLE predictions ALTER COLUMN cutoff_at SET NOT NULL;
+ALTER TABLE predictions ALTER COLUMN pipeline_version SET NOT NULL;
+
+-- Timestamp rules: the cutoff is always the reference candle's close, and data is never
+-- fetched before the cutoff. A row that breaks either cannot be inserted at all.
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'predictions_cutoff_is_candle_close' AND conrelid = 'predictions'::regclass) THEN
+        ALTER TABLE predictions ADD CONSTRAINT predictions_cutoff_is_candle_close CHECK (cutoff_at = as_of + interval '1 hour');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'predictions_fetched_after_cutoff' AND conrelid = 'predictions'::regclass) THEN
+        ALTER TABLE predictions ADD CONSTRAINT predictions_fetched_after_cutoff CHECK (fetched_at >= cutoff_at);
+    END IF;
+    -- the CREATE TABLE has this CHECK, but databases that pre-date the status column got it via ADD COLUMN without one
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'prediction_outcomes_status_check' AND conrelid = 'prediction_outcomes'::regclass) THEN
+        ALTER TABLE prediction_outcomes ADD CONSTRAINT prediction_outcomes_status_check CHECK (status IN ('ok', 'unavailable'));
+    END IF;
+    -- an 'ok' outcome has its numbers; an 'unavailable' one has none
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'prediction_outcomes_status_consistent' AND conrelid = 'prediction_outcomes'::regclass) THEN
+        ALTER TABLE prediction_outcomes ADD CONSTRAINT prediction_outcomes_status_consistent CHECK (
+            (status = 'ok' AND price_at_horizon IS NOT NULL AND pct_change_from_prediction IS NOT NULL)
+            OR (status = 'unavailable' AND price_at_horizon IS NULL AND pct_change_from_prediction IS NULL)
+        );
+    END IF;
+END $$;
+
+-- Append-only research record: predictions and outcomes can be inserted, never changed or
+-- deleted, by any code path. A deliberate correction must disable the trigger explicitly
+-- (ALTER TABLE ... DISABLE TRIGGER), which is visible and reviewable, then re-enable it.
+CREATE OR REPLACE FUNCTION forbid_change() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION '% is append-only: % refused (row id %)', TG_TABLE_NAME, TG_OP, COALESCE(OLD.id, -1);
+END $$;
+DROP TRIGGER IF EXISTS predictions_append_only ON predictions;
+CREATE TRIGGER predictions_append_only BEFORE UPDATE OR DELETE ON predictions FOR EACH ROW EXECUTE FUNCTION forbid_change();
+DROP TRIGGER IF EXISTS prediction_outcomes_append_only ON prediction_outcomes;
+CREATE TRIGGER prediction_outcomes_append_only BEFORE UPDATE OR DELETE ON prediction_outcomes FOR EACH ROW EXECUTE FUNCTION forbid_change();
