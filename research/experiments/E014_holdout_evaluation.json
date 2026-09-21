@@ -1,0 +1,31 @@
+{
+  "id": "E014",
+  "date": "2026-09-21 (pre-registered; NOT yet run on the holdout)",
+  "git_commit": "(filled after the one-time run)",
+  "status": "CONFIRMATORY -- the one-time evaluation on the sealed holdout. Pre-registered here; the holdout is opened only with the user's explicit go-ahead, once, and never again.",
+  "why_once": "Every earlier decision (E001-E013) was made without looking at 2025-07-01 -> 2026-08-19. Once these candles are seen, they can never again serve as an untouched test. So the objects under test, the metrics and the pass rules are fixed here first, and the run happens exactly once. Any later idea is tested on live data (Phase 13), not on this period.",
+  "window": {"name": "holdout", "start": "2025-07-01 00:00 UTC", "end": "2026-08-20 00:00 UTC (exclusive)", "excluded": "the contaminated buffer 2026-08-20 -> 2026-09-19 and the live period are NOT part of this evaluation"},
+  "objects_under_test": {
+    "A": "scoring 0.1.0 -- the live signal, replayed with pipeline 0.2.0 (news absent, weight 0, as in E001). Direction at 1h/6h/24h/72h/168h. Prediction from E001: no information.",
+    "B": "E011 set-A direction model, 1h, expanding walk-forward (C = 0.1), refit each holdout quarter on data before it. Prediction from E011: no pass (zero return edge).",
+    "C": "E012 1h move-size model, raw output, expanding walk-forward with a reserved 90-day calibration slice (so C and D train on identical rows). Prediction from E012/E013: passes E012's criterion; likely NOT calibrated (E013 showed raw drifts).",
+    "D": "E012 1h move-size model + Platt scaling fitted on the purged 90-day slice -- THE chosen deliverable. Prediction from E012/E013: passes E012's criterion AND is calibrated."
+  },
+  "pass_rules_copied_unchanged": {
+    "A (E001)": "edge (mean forward return after BUY minus after SELL) > 0 with block-bootstrap 95% interval excluding zero AND fixed-band (0.5%) three-class balanced accuracy above every trivial baseline (always-HOLD, random mix, momentum 24h, MA 200h, majority), per horizon",
+    "B (E011)": "acted-direction accuracy > naive rate AND return edge 95% interval excludes zero AND Brier < base-rate Brier",
+    "C, D (E012)": "Brier >= 5% below the window's own base-rate Brier AND large/small accuracy >= naive + 5 points AND Spearman rho(p, realised |return|) >= 0.10 with 95% interval excluding zero",
+    "D (E013)": "ECE <= 0.03 AND every bucket with >= 100 rows within 0.05 of its observed frequency"
+  },
+  "what_counts_as_confirmation": "The programme's conclusions are CONFIRMED if A fails, B fails, and D passes both its rules. Any other pattern is reported exactly as it comes out: a pass for A or B on this single 13.5-month window would be recorded as 'unexpected, single window, not adopted' (one period cannot overturn eight years of nulls); a fail for D would be recorded as 'the move-size model did not survive the holdout' and the deliverable demoted back to 'uncalibrated heuristic'. No re-tuning, no second run, no alternative object may be substituted after the fact.",
+  "walk_forward_in_the_window": "test blocks of 90 days starting exactly 2025-07-01: 07-01, 09-29, 12-28, 2026-03-28, 06-26 (last block truncated at 08-20); each fitted on all usable rows before it minus purge (25h) and, for C/D, the 90-day calibration slice with its own purge -- i.e. what a deployed model refit quarterly would have produced",
+  "dry_run": "The same script is first run with --dry-run: candles stop at the holdout start and the (already seen) validation period is evaluated. This proves the code path, the fold layout and the output before anything is unsealed. Dry-run numbers are NOT new evidence (validation was used in E012/E013) and are stored separately under research/results/E014_dryrun/.",
+  "access_control": "Holdout candles enter only through load_bars(allow_holdout=True, reason=...) which appends to research/HOLDOUT_ACCESS.log; research/HOLDOUT_ACCESS.log does not exist at pre-registration time (never accessed).",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0",
+  "snapshot": "btcusdt_1h_2026-09-19.csv (spot), klines_extra_btcusdt_1h_2026-09-20.csv (trades / taker-buy) -- both already on disk; the loader truncated them at the holdout until now",
+  "metrics": "(filled after the one-time run)",
+  "results": "(filled after the one-time run)",
+  "affected_design": "(filled after the one-time run)",
+  "notes": "Nothing about the live system changes as a result of this run; wiring the calibrated move-size probability into the live output is a separate decision after Phase 13 monitoring."
+}

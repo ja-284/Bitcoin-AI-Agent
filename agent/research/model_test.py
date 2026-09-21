@@ -157,7 +157,8 @@ def groups_for(features: list[str]) -> list[str]:
 
 
 def build_frame(horizon: int, groups: list[str], features: list[str] | None = None,
-                target: str = "direction", threshold: float | None = None) -> tuple[pd.DataFrame, list[str]]:
+                target: str = "direction", threshold: float | None = None,
+                data: tuple[list, Path] | None = None) -> tuple[pd.DataFrame, list[str]]:
     """
     Replay rows (category scores) + the requested feature groups + labels, indexed by
     reference hour. With `features`, only those columns are kept as model inputs (an explicit,
@@ -166,8 +167,15 @@ def build_frame(horizon: int, groups: list[str], features: list[str] | None = No
     target = "direction":  y = 1 if the H-hour return is > 0 (UP)
     target = "large_move": y = 1 if |H-hour return| > threshold (a move-SIZE label; the sign
                            is ignored). `threshold` is a fraction, fixed in advance per horizon.
+
+    `data` = (bars, snapshot) lets the caller supply candles it has already loaded -- the
+    ONLY way holdout candles can enter, and only through load_bars(allow_holdout=True, reason=...),
+    which logs the access. Without it, candles stop at the sealed holdout.
     """
-    bars, quality, snapshot = load_bars(end=HOLDOUT.start)
+    if data is None:
+        bars, quality, snapshot = load_bars(end=HOLDOUT.start)
+    else:
+        bars, snapshot = data
     rows = replay_cached(bars, snapshot)
     df = pd.DataFrame(rows)
     df["as_of"] = pd.to_datetime(df["as_of"])
