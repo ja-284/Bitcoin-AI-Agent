@@ -96,3 +96,24 @@ def test_watch_list_thresholds():
     assert wl["news_hours"]["have"] == 50 and wl["news_hours"]["ready"] is False
     assert wl["live_months"]["ready"] is False
     assert watch_list(rows, T0 + timedelta(days=200))["live_months"]["ready"] is True
+
+
+def test_shadow_record_coverage_blanks_and_evaluation():
+    from agent.research.weekly_report import shadow_record
+
+    now = T0 + 12 * H + timedelta(minutes=40)
+    rows = []
+    for i in range(12):
+        if i == 4:
+            continue  # one missing hour
+        r = {"as_of": T0 + i * H, "status": "ok", "status_reason": None, "live_close_match": True, "p_calibrated": 0.4 + 0.02 * i,
+             "model_version": "move_size_1h_v1", "outcome_status": "ok" if i < 9 else None, "outcome_return": 0.004 if i % 2 else -0.001, "outcome_large": bool(i % 2)}
+        rows.append(r)
+    rows[2].update({"status": "unavailable", "status_reason": "missing inputs: rv_168", "p_calibrated": None, "outcome_status": None})
+    rows[5]["live_close_match"] = False
+    sh = shadow_record(rows, now)
+    assert sh["n"] == 11 and sh["expected_hours"] == 12 and [m[11:13] for m in sh["missing_hours"]] == ["13"]
+    assert sh["unavailable"] == 1 and sh["live_close_mismatch"] == 1
+    assert sh["outcomes"]["ok"] == 7 and sh["outcomes"]["pending"] == 3  # rows 9,10,11 ok+pending; row 2 unavailable excluded
+    assert sh["evaluation"]["n"] == 7 and "LIVE" in sh["evaluation"]["note"]
+    assert shadow_record([], now) == {"n": 0, "note": "no shadow rows yet"}

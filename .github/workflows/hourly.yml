@@ -57,6 +57,16 @@ jobs:
       - name: Self-check that this hour's prediction was saved
         run: python -m agent.healthcheck --max-age-hours 2
 
+      # Research SHADOW record (Phase 13): the frozen move-size model's probability for this
+      # hour, in its own table. It never touches the live decision. It runs after the live
+      # prediction is saved and self-checked, so a shadow failure can never cost an hour of
+      # the live record; the weekly report audits shadow coverage, so a failure is still seen.
+      - name: Shadow move-size probability
+        run: python -m agent.shadow.run
+
+      - name: Grade shadow rows
+        run: python -m agent.shadow.outcomes
+
       # Only reached if every step above succeeded. If the heartbeat service doesn't
       # hear from us within its grace window, it emails you -- an alarm that lives
       # outside GitHub entirely, so it also catches GitHub itself being down.

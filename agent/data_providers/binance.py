@@ -69,6 +69,19 @@ class BinanceProvider(MarketDataProvider):
         now_ms = datetime.now(tz=timezone.utc).timestamp() * 1000
         return _to_bars(_get_klines(params), now_ms)[-count:]
 
+    def get_hourly_klines_with_extras(self, count: int) -> tuple[list[PriceBar], list[tuple[datetime, float, int, float]]]:
+        """
+        The most recent `count` fully-closed hourly candles as PriceBars PLUS, from the same
+        response, the fields the candles alone do not carry: trade count and taker-buy volume
+        (kline fields 8 and 9). One request, one consistent view -- used by the shadow record.
+        """
+        params = {"symbol": SYMBOL, "interval": "1h", "limit": count + 1}
+        now_ms = datetime.now(tz=timezone.utc).timestamp() * 1000
+        raw = [k for k in _get_klines(params) if k[6] <= now_ms][-count:]
+        bars = _to_bars(raw, now_ms)
+        extras = [(datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc), float(k[5]), int(k[8]), float(k[9])) for k in raw]
+        return bars, extras
+
     def get_bar_at(self, as_of: datetime) -> PriceBar | None:
         """The fully-closed hourly candle that opened at `as_of` (UTC), or None if it hasn't closed yet."""
         open_ms = int(as_of.timestamp() * 1000) // HOUR_MS * HOUR_MS

@@ -10,9 +10,10 @@ Sections
   2. Signal      the live record of scoring 0.1.0 (the thing under test): signal mix, acted
                  accuracy vs the naive rate, return edge with a block-bootstrap interval once
                  there are enough hours, and whether the stated confidence means anything yet
-  3. Paper       the research deliverable (E012 + Platt, 1h move size) scored on the live
-                 hours AFTER THE FACT from point-in-time candle features -- a paper record,
-                 not a live shadow run; labelled as such
+  3. Shadow      the LIVE shadow record (agent/shadow): probabilities stored before their
+                 outcomes existed, plus coverage, honest blanks and the close cross-check
+  3b. Paper      the same model scored AFTER THE FACT on all live hours from point-in-time
+                 candle features -- covers hours before the shadow existed; labelled as such
   4. Watch list  how far the live record is from the thresholds that re-open deferred tests
 
 Everything that computes is a pure function of rows, so it is unit-tested on synthetic rows
@@ -229,6 +230,44 @@ def paper_section(now: datetime, outcome_rows: list[dict]) -> dict:
     return rec
 
 
+# ---------------------------------------------------------------- 3b. LIVE shadow record (agent/shadow)
+def shadow_record(rows: list[dict], now: datetime) -> dict:
+    """rows: dicts with as_of, status, status_reason, live_close_match, p_calibrated, model_version, outcome_status, outcome_return, outcome_large."""
+    if not rows:
+        return {"n": 0, "note": "no shadow rows yet"}
+    rows = sorted(rows, key=lambda r: r["as_of"])
+    first = rows[0]["as_of"]
+    expected = expected_hours(first, now)
+    got = {r["as_of"] for r in rows}
+    missing = [t for t in expected if t not in got]
+    graded = [r for r in rows if r["outcome_status"] == "ok" and r["status"] == "ok"]
+    out = {
+        "n": len(rows), "first_hour": first.isoformat(), "expected_hours": len(expected), "missing_hours": [t.isoformat() for t in missing],
+        "unavailable": sum(1 for r in rows if r["status"] == "unavailable"), "unavailable_reasons": dict(Counter(r["status_reason"] for r in rows if r["status"] == "unavailable")),
+        "live_close_mismatch": sum(1 for r in rows if r["live_close_match"] is False), "live_close_unchecked": sum(1 for r in rows if r["live_close_match"] is None),
+        "model_versions": dict(Counter(r["model_version"] for r in rows)),
+        "outcomes": {"ok": len(graded), "unavailable": sum(1 for r in rows if r["outcome_status"] == "unavailable"), "pending": sum(1 for r in rows if r["status"] == "ok" and r["outcome_status"] is None)},
+    }
+    if graded:
+        p = np.array([r["p_calibrated"] for r in graded], float)
+        y = np.array([1.0 if r["outcome_large"] else 0.0 for r in graded])
+        out["evaluation"] = paper_record(p, y, np.abs(np.array([r["outcome_return"] for r in graded], float)))
+        out["evaluation"]["note"] = "LIVE shadow record: probabilities were stored before their outcomes existed. Read intervals, not points, until n is in the thousands."
+    return out
+
+
+def fetch_shadow_rows() -> list[dict]:
+    from agent.database.db import get_connection
+
+    with get_connection() as c, c.cursor() as cur:
+        cur.execute("SELECT to_regclass('shadow_move_size')")
+        if cur.fetchone()[0] is None:
+            return []
+        cur.execute("""SELECT as_of, status, status_reason, live_close_match, p_calibrated, model_version, outcome_status, outcome_return, outcome_large
+                       FROM shadow_move_size ORDER BY as_of""")
+        return [dict(zip(["as_of", "status", "status_reason", "live_close_match", "p_calibrated", "model_version", "outcome_status", "outcome_return", "outcome_large"], r)) for r in cur.fetchall()]
+
+
 # ---------------------------------------------------------------- 4. watch list
 def watch_list(pred_rows: list[dict], now: datetime) -> dict:
     rows = [r for r in pred_rows if r["pipeline_version"] == PIPELINE_VERSION]
@@ -267,6 +306,7 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "health_last_7_days": health(preds, outs, now, max(week_ago, LIVE.start)),
         "health_since_go_live": health(preds, outs, now, LIVE.start),
         "signal_record": signal_record(preds, outs),
+        "shadow_record": shadow_record(fetch_shadow_rows(), now),
         "watch_list": watch_list(preds, now),
     }
     if with_paper:
@@ -309,8 +349,22 @@ def render(rep: dict) -> str:
         if cr:
             L += ["", f"Stated confidence vs hit rate at {k} (ECE {cr['ece']:.3f}): " + " · ".join(f"{b['mean_predicted']:.2f} → {b['observed']:.2f} [{b['ci_low']:.2f}, {b['ci_high']:.2f}] n={b['n']}{'' if b['enough_rows'] else ' (few)'}" for b in cr["buckets"])]
     L += ["", "*Read this table as a growing record, not a verdict: intervals appear only once there are enough hours, and one week of hours is far too few to overturn E001.*"]
+    sh = rep.get("shadow_record", {})
+    L += ["", "## 3. LIVE shadow record — E012 + Platt, P(next-hour move > 0.25%) (agent/shadow, own table, never touches the signal)", ""]
+    if not sh.get("n"):
+        L.append("No shadow rows yet.")
+    else:
+        L += [f"- Rows: {sh['n']} since {sh['first_hour'][:16]} · expected {sh['expected_hours']} · missing {len(sh['missing_hours'])} {sh['missing_hours'][:6]}",
+              f"- Unavailable (honest blanks): {sh['unavailable']} {sh['unavailable_reasons'] or ''} · reference close ≠ live prediction's: **{sh['live_close_mismatch']}** (unchecked: {sh['live_close_unchecked']}) · model versions: {sh['model_versions']}",
+              f"- Outcomes: {sh['outcomes']['ok']} graded · {sh['outcomes']['unavailable']} unavailable · {sh['outcomes']['pending']} pending"]
+        ev = sh.get("evaluation")
+        if ev:
+            L += [f"- Evaluation (n={ev['n']}): Brier {ev['brier']:.4f} vs base-rate {ev['brier_base_rate']:.4f} ({ev['brier_rel_gain'] * 100:+.1f}%) · accuracy {ev['accuracy']:.3f} vs naive {ev['naive_rate']:.3f} · ρ {ev['rank_corr_p_vs_abs_return']:+.3f} · ECE {ev['ece']:.3f}",
+                  "", "| stated | observed | 95% interval | n |", "|---|---|---|---|"]
+            L += [f"| {b['mean_predicted']:.2f} | {b['observed']:.2f} | [{b['ci_low']:.2f}, {b['ci_high']:.2f}] | {b['n']} |" for b in ev["reliability"]]
+            L += ["", f"*{ev['note']}*"]
     pr = rep.get("paper_move_size_1h")
-    L += ["", "## 3. Paper record — E012 + Platt, P(next-hour move > 0.25%)", ""]
+    L += ["", "## 3b. Paper record (after the fact) — same model on all live hours, from candle features", ""]
     if not pr:
         L.append("(not computed this run)")
     elif "error" in pr:
