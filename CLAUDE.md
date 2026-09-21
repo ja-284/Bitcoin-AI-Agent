@@ -112,4 +112,5 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 - `python -m agent.research.weekly_report` — the Phase 13 weekly live report (reads the database, small Binance fetch for the paper record; `--no-paper` skips that). Output in `research/monitoring/`. Never writes to live tables.
 - `python -m agent.research.holdout_eval --dry-run` — proves the Phase 12 script on the validation period. **`--unseal` opens the sealed holdout once and forever — only on the user's explicit go-ahead.**
 - `python -m pytest tests/` — run the tests (no network or database needed).
+- `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` — database idempotency tests against real Postgres in a scratch schema it creates and drops (skipped by default).
 - Fresh database: `python -c "from agent.database.db import init_schema; init_schema()"` (safe to re-run; also applies migrations at the bottom of `schema.sql`).
