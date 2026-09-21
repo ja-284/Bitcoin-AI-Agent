@@ -23,6 +23,10 @@ on:
     - cron: "52 * * * *"
   workflow_dispatch: # manual runs from the Actions tab, and external triggers via the API
 
+# Least privilege: the job only reads the repository. It never needs to write to GitHub.
+permissions:
+  contents: read
+
 concurrency:
   group: hourly-analysis
   cancel-in-progress: false # let a late run finish; the next one exits early anyway

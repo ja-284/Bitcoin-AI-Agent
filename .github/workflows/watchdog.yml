@@ -11,6 +11,10 @@ on:
     - cron: "33 */3 * * *"
   workflow_dispatch:
 
+# Least privilege: the job only reads the repository. It never needs to write to GitHub.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
