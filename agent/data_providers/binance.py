@@ -6,6 +6,7 @@ free tier actually provides (see coingecko.py).
 """
 
 import logging
+import time
 from datetime import datetime, timezone
 
 import requests
@@ -27,16 +28,54 @@ MAX_PER_REQUEST = 1000  # Binance's cap on candles per request
 HOUR_MS = 3_600_000
 
 
-def _get_klines(params: dict, timeout: int = 15) -> list:
+class KlineSchemaError(ValueError):
+    """The exchange answered, but not with candles in the documented shape."""
+
+
+def _check_kline_schema(payload) -> list:
+    """Binance klines are a list of 12-field lists: open time, o, h, l, c, v, close time, ... trades (8), taker buy base (9)."""
+    if isinstance(payload, dict):  # {"code": -1121, "msg": "Invalid symbol."} and friends
+        raise KlineSchemaError(f"exchange returned an error object: {payload}")
+    if not isinstance(payload, list):
+        raise KlineSchemaError(f"expected a list of candles, got {type(payload).__name__}")
+    for k in payload:
+        if not isinstance(k, (list, tuple)) or len(k) < 10:
+            raise KlineSchemaError(f"candle with unexpected shape: {k!r}")
+        try:
+            int(k[0]); int(k[6]); int(k[8])
+            for v in (k[1], k[2], k[3], k[4], k[5], k[9]):
+                float(v)
+        except (TypeError, ValueError) as exc:
+            raise KlineSchemaError(f"candle with non-numeric field: {k!r}") from exc
+    return payload
+
+
+def _get_klines(params: dict, timeout: int = 15, retries: int = 1, backoff_s: float = 2.0) -> list:
+    """
+    Fetch candles, trying each endpoint with one retry for transient errors (timeouts, 5xx,
+    connection resets). Rate-limit answers (429 / 418) are not retried on the same endpoint:
+    hammering a limiter makes the ban longer. A malformed body is a schema error, never data.
+    """
     last_error: Exception | None = None
     for url in BASE_URLS:
-        try:
-            resp = requests.get(url, params=params, timeout=timeout)
-            resp.raise_for_status()
-            return resp.json()
-        except requests.RequestException as exc:
-            logger.warning("Binance endpoint %s failed: %s", url, exc)
-            last_error = exc
+        for attempt in range(retries + 1):
+            try:
+                resp = requests.get(url, params=params, timeout=timeout)
+                if resp.status_code in (429, 418):
+                    logger.warning("Binance endpoint %s rate-limited (%s); not retrying it", url, resp.status_code)
+                    last_error = RuntimeError(f"{url}: rate limited ({resp.status_code})")
+                    break
+                resp.raise_for_status()
+                return _check_kline_schema(resp.json())
+            except KlineSchemaError as exc:
+                logger.warning("Binance endpoint %s returned a malformed body: %s", url, exc)
+                last_error = exc
+                break  # a wrong shape will not fix itself on retry
+            except (requests.RequestException, ValueError) as exc:  # ValueError: body was not JSON
+                logger.warning("Binance endpoint %s failed (attempt %d/%d): %s", url, attempt + 1, retries + 1, exc)
+                last_error = exc
+                if attempt < retries:
+                    time.sleep(backoff_s)
     raise RuntimeError(f"all Binance endpoints failed: {last_error}")
 
 

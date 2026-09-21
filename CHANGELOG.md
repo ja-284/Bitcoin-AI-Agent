@@ -5,6 +5,25 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## pipeline 0.2.0 — hardening 2026-09-21 (Backend Phase B; information rules unchanged, version kept)
+
+Robustness only. Nothing about what a prediction may know, or how it is scored, changed;
+the weekly parity check reproduces every live hour before and after.
+
+- **Exchange answers are schema-checked**: an error object or a wrongly shaped candle list is
+  a `KlineSchemaError` (→ fallback), never parsed as data. One retry per endpoint for
+  transient errors; rate-limit answers (429/418) are not retried on the same endpoint.
+- **Stale data is a provider failure**: the newest candle must be the last closed hour;
+  otherwise the provider is skipped (→ fallback), and if every provider is stale the run
+  fails loudly instead of predicting an old hour.
+- **Zero-volume candles are counted** in `run_meta.price_data.zero_volume_bars`.
+- **RSS downloads are bounded** (15 s timeout, explicit User-Agent); `feedparser.parse(url)`
+  had no timeout and could hang the job until the runner killed it.
+- **AI calls are bounded** (90 s timeout, 2 retries) instead of the SDK's 10-minute default;
+  **database connections** get a 15 s connect timeout.
+- `run_meta.code_commit` records the exact git commit that produced the row (GitHub runs).
+- Shadow record (Phase 13): `agent/shadow` — see `research/ROADMAP.md`.
+
 ## pipeline 0.2.0 — 2026-09-19 (corrected, leakage-safe baseline)
 
 Scoring formulas unchanged (still 0.1.0). Fixes only.

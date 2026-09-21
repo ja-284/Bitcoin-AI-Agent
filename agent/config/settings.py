@@ -16,3 +16,9 @@ COINGECKO_API_KEY = os.getenv("COINGECKO_API_KEY")  # optional: works without on
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 DATABASE_URL = os.getenv("DATABASE_URL")  # Supabase Postgres connection string
 HEARTBEAT_URL = os.getenv("HEARTBEAT_URL")  # optional: dead-man's-switch ping URL
+
+# Bounded external calls (Backend Phase B). The hourly job has a 15-minute budget; no single
+# call may consume it. Retries are few and only for transient failures.
+AI_TIMEOUT_S = 90.0
+AI_MAX_RETRIES = 2
+DB_CONNECT_TIMEOUT_S = 15

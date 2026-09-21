@@ -14,7 +14,7 @@ pattern that breaks in ways that are annoying to debug.
 from anthropic import Anthropic
 from pydantic import BaseModel, Field
 
-from agent.config.settings import ANTHROPIC_API_KEY
+from agent.config.settings import AI_MAX_RETRIES, AI_TIMEOUT_S, ANTHROPIC_API_KEY
 from agent.shared.types import CategoryScore, NewsItem
 
 MODEL = "claude-haiku-4-5"  # narrow, structured classification -- the cheapest current model is genuinely enough
@@ -45,7 +45,7 @@ def score_news(news_items: list[NewsItem]) -> CategoryScore:
     if not news_items:
         return CategoryScore("news", score=0.0, weight=0.0, is_independent=True, detail={"reason": "no recent news"})
 
-    client = Anthropic(api_key=ANTHROPIC_API_KEY)
+    client = Anthropic(api_key=ANTHROPIC_API_KEY, timeout=AI_TIMEOUT_S, max_retries=AI_MAX_RETRIES)  # bounded: an hourly job cannot wait the SDK's 10-minute default
     headlines_text = "\n".join(f"{i + 1}. {item.headline}" for i, item in enumerate(news_items))
 
     response = client.messages.parse(

@@ -12,7 +12,7 @@ from typing import Optional
 import psycopg
 from psycopg.types.json import Jsonb
 
-from agent.config.settings import DATABASE_URL
+from agent.config.settings import DATABASE_URL, DB_CONNECT_TIMEOUT_S
 from agent.shared.types import Prediction
 
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
@@ -21,7 +21,7 @@ SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 def get_connection() -> psycopg.Connection:
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL is not set (check your .env file)")
-    return psycopg.connect(DATABASE_URL)
+    return psycopg.connect(DATABASE_URL, connect_timeout=DB_CONNECT_TIMEOUT_S)
 
 
 def init_schema() -> None:

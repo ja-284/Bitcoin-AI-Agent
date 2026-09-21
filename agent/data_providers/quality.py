@@ -29,6 +29,7 @@ class BarQualityReport:
     first: datetime
     last: datetime
     gaps: list[tuple[datetime, int]] = field(default_factory=list)  # (last bar before the gap, hours missing)
+    zero_volume: list[datetime] = field(default_factory=list)  # candles with no trading volume: real on exchange outages, always suspicious
 
     @property
     def missing_hours(self) -> int:
@@ -45,6 +46,7 @@ class BarQualityReport:
             "last": self.last.isoformat(),
             "gaps": len(self.gaps),
             "missing_hours": self.missing_hours,
+            "zero_volume_bars": len(self.zero_volume),
         }
 
 
@@ -72,9 +74,12 @@ def validate_bars(bars: list[PriceBar], now: datetime | None = None) -> BarQuali
     now = now or datetime.now(tz=timezone.utc)
 
     gaps: list[tuple[datetime, int]] = []
+    zero_volume: list[datetime] = []
     previous: PriceBar | None = None
     for i, bar in enumerate(bars):
         _check_bar(i, bar)
+        if bar.volume == 0:
+            zero_volume.append(bar.as_of)
         if bar.as_of + HOUR > now:
             raise BarValidationError(f"bar {i} ({bar.as_of.isoformat()}) has not closed yet at {now.isoformat()}")
         if previous is not None:
@@ -86,4 +91,4 @@ def validate_bars(bars: list[PriceBar], now: datetime | None = None) -> BarQuali
                 gaps.append((previous.as_of, int(step / HOUR) - 1))
         previous = bar
 
-    return BarQualityReport(count=len(bars), first=bars[0].as_of, last=bars[-1].as_of, gaps=gaps)
+    return BarQualityReport(count=len(bars), first=bars[0].as_of, last=bars[-1].as_of, gaps=gaps, zero_volume=zero_volume)

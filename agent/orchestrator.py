@@ -17,6 +17,7 @@ a meaningless result.
 """
 
 import logging
+import os
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 
@@ -58,6 +59,7 @@ def run_once(save: bool = True) -> Prediction | None:
     run_meta: dict = {
         "lag_seconds_after_cutoff": (fetched_at - cutoff).total_seconds(),
         "price_data": {"provider": market.provider, "synthetic": reference.is_synthetic, **market.quality.summary()},
+        "code_commit": os.environ.get("GITHUB_SHA"),  # exactly which code produced this row (None when run by hand)
     }
     if reference.is_synthetic:
         logger.warning("Price data is SYNTHETIC (%s fallback): volume is not a true hourly figure this run.", market.provider)

@@ -11,6 +11,7 @@ returned alongside the bars so the caller can record them.
 
 import logging
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 
 from agent.data_providers.binance import BinanceProvider
 from agent.data_providers.coingecko import CoinGeckoProvider
@@ -29,14 +30,28 @@ class MarketData:
     provider: str
 
 
-def get_market_data(count: int) -> MarketData:
+def expected_last_closed(now: datetime) -> datetime:
+    """The hour whose candle closed most recently: the only acceptable reference candle."""
+    return now.replace(minute=0, second=0, microsecond=0) - timedelta(hours=1)
+
+
+def get_market_data(count: int, now: datetime | None = None) -> MarketData:
+    now = now or datetime.now(tz=timezone.utc)
     errors = []
     for provider in _PROVIDERS:
         try:
             bars = provider.get_hourly_bars(count)
             if not bars:
                 raise BarValidationError("provider returned no bars")
-            report = validate_bars(bars)
+            report = validate_bars(bars, now=now)
+            # Stale data is a provider failure: a feed that stopped an hour ago would otherwise
+            # make this run "predict" an hour that is already history (or already saved).
+            if bars[-1].as_of != expected_last_closed(now):
+                raise BarValidationError(f"stale: last candle {bars[-1].as_of.isoformat()}, expected {expected_last_closed(now).isoformat()}")
+            if len(bars) != count:
+                logger.warning("%s: asked for %d candles, got %d", provider.name, count, len(bars))
+            if report.zero_volume:
+                logger.warning("%s: %d zero-volume candle(s) in the window (last %s)", provider.name, len(report.zero_volume), report.zero_volume[-1].isoformat())
             if report.gaps:
                 logger.warning("%s: %d gap(s), %d missing hour(s) inside the window", provider.name, len(report.gaps), report.missing_hours)
             return MarketData(bars=bars, quality=report, provider=provider.name)

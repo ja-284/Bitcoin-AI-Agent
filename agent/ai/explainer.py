@@ -10,7 +10,7 @@ the AI (CLAUDE.md rule 6).
 
 from anthropic import Anthropic
 
-from agent.config.settings import ANTHROPIC_API_KEY
+from agent.config.settings import AI_MAX_RETRIES, AI_TIMEOUT_S, ANTHROPIC_API_KEY
 from agent.shared.types import CategoryScore, ConfidenceBreakdown
 
 MODEL = "claude-sonnet-5"  # a person reads this text directly, so it gets a bit more nuance than the news step
@@ -60,7 +60,7 @@ def write_explanation(
         f"Category scores:\n{_format_scores(category_scores)}"
     )
 
-    client = Anthropic(api_key=ANTHROPIC_API_KEY)
+    client = Anthropic(api_key=ANTHROPIC_API_KEY, timeout=AI_TIMEOUT_S, max_retries=AI_MAX_RETRIES)  # bounded: an hourly job cannot wait the SDK's 10-minute default
     response = client.messages.create(
         model=MODEL,
         max_tokens=1024,

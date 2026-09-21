@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 import feedparser
+import requests
 
 from agent.shared.types import NewsItem
 
@@ -49,8 +50,17 @@ def availability_time(entry) -> Optional[datetime]:
     return max(known) if known else None
 
 
+FETCH_TIMEOUT_S = 15
+USER_AGENT = "bitcoin-agent/0.2 (research; RSS reader)"
+
+
 def fetch_feed(source_name: str, url: str) -> list[NewsItem]:
-    parsed = feedparser.parse(url)
+    # The download is done here with a hard timeout; feedparser only parses the bytes.
+    # feedparser.parse(url) would download with no timeout at all -- one stalled feed server
+    # could hang the hourly job until the runner kills it, losing the hour.
+    resp = requests.get(url, timeout=FETCH_TIMEOUT_S, headers={"User-Agent": USER_AGENT})
+    resp.raise_for_status()
+    parsed = feedparser.parse(resp.content)
     if parsed.bozo and not parsed.entries:
         raise RuntimeError(f"could not parse feed: {parsed.get('bozo_exception')}")
     return [
