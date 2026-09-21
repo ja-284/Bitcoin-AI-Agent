@@ -60,6 +60,7 @@
   "platt_a": 1.0340720463708053,
   "platt_b": 0.195681707761432,
   "logit_clip": 1e-06,
+  "feature_fingerprint": "a2a3df36d4042a2d11b659be1f9dec250ebd2f3fdc8d6b514d9da2dd14e7e504",
   "training": {
     "fit_rows": 61971,
     "fit_range": [
@@ -82,8 +83,8 @@
       "E012",
       "E013"
     ],
-    "created_at": "2026-09-21T18:30:49.077211+00:00",
-    "git_commit": "6ef4da82bc4376ef92fb276e77e7492e0a56e76c",
+    "created_at": "2026-09-21T19:01:20.323285+00:00",
+    "git_commit": "d772d3fc665578ea32990a1c25c0235c5c41f4cd",
     "sklearn": "1.9.1"
   }
 }

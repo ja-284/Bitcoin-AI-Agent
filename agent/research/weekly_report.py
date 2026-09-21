@@ -300,8 +300,12 @@ def fetch_rows() -> tuple[list[dict], list[dict]]:
 def build(now: datetime, with_paper: bool = True) -> dict:
     preds, outs = fetch_rows()
     week_ago = now - timedelta(days=7)
+    from agent.database.db import SCHEMA_VERSION, schema_version
+
+    db_schema = schema_version()
     rep = {
         "generated_at": now.isoformat(), "pipeline_version": PIPELINE_VERSION, "scoring_version": SCORING_VERSION,
+        "schema_version": {"database": db_schema, "code": SCHEMA_VERSION, "match": db_schema == SCHEMA_VERSION},
         "live_since": LIVE.start.isoformat(), "live_hours": round((now - LIVE.start).total_seconds() / 3600, 1),
         "health_last_7_days": health(preds, outs, now, max(week_ago, LIVE.start)),
         "health_since_go_live": health(preds, outs, now, LIVE.start),
@@ -332,7 +336,7 @@ def _pct(x):
 def render(rep: dict) -> str:
     h7, hall, sr = rep["health_last_7_days"], rep["health_since_go_live"], rep["signal_record"]
     L = [f"# Weekly live report — {rep['generated_at'][:16]} UTC", "",
-         f"pipeline {rep['pipeline_version']} · scoring {rep['scoring_version']} (frozen, under test) · live since {rep['live_since'][:16]} · {rep['live_hours']} live hours", "",
+         f"pipeline {rep['pipeline_version']} · scoring {rep['scoring_version']} (frozen, under test) · schema {rep['schema_version']['database']} (code {rep['schema_version']['code']}{'' if rep['schema_version']['match'] else ' — MISMATCH'}) · live since {rep['live_since'][:16]} · {rep['live_hours']} live hours", "",
          "## 1. Health", "",
          f"- Last 7 days: {h7['predictions']} of {h7['expected_hours']} expected hours; missing: {h7['missing_hours'] or 'none'}",
          f"- Since go-live: {hall['predictions']} of {hall['expected_hours']} expected hours; missing: {len(hall['missing_hours'])} ({', '.join(t[5:16] for t in hall['missing_hours'][:8])}{'…' if len(hall['missing_hours']) > 8 else ''})",

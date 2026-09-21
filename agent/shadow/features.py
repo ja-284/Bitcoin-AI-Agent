@@ -9,7 +9,7 @@ never filled.
 """
 
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
@@ -52,3 +52,39 @@ def feature_row(bars: list[PriceBar], extras: pd.DataFrame, names: tuple[str, ..
             missing.append(n)
     reason = None if not missing else f"missing inputs at {ref.isoformat()}: {', '.join(missing)}"
     return values, reason
+
+
+# ---------------------------------------------------------------- feature-definition fingerprint (Backend Phase G)
+def reference_series(n: int = 600, seed: int = 20260921) -> tuple[list[PriceBar], pd.DataFrame]:
+    """A fixed, deterministic candle series. Feature values on it identify the feature DEFINITIONS."""
+    import numpy as np
+
+    rng = np.random.default_rng(seed)
+    close = 50000 * np.exp(np.cumsum(rng.normal(0, 0.004, size=n)))
+    start = datetime(2020, 1, 1, tzinfo=timezone.utc)
+    bars, extras = [], []
+    for i in range(n):
+        c = float(close[i])
+        o = float(close[i - 1]) if i else c
+        hi, lo = max(o, c) * (1 + abs(rng.normal(0, 0.001))), min(o, c) * (1 - abs(rng.normal(0, 0.001)))
+        vol = float(abs(rng.normal(100, 20)))
+        t = start + timedelta(hours=i)
+        bars.append(PriceBar(t, o, hi, lo, c, vol, "binance"))
+        extras.append((t, vol, int(abs(rng.normal(5000, 800))), vol * float(rng.uniform(0.3, 0.7))))
+    return bars, extras_frame(extras)
+
+
+def feature_fingerprint(names: tuple[str, ...] | list[str]) -> str:
+    """
+    sha256 of the named features over the last 100 hours of the reference series, rounded to
+    12 significant digits. Stored in every model artefact; checked when the model is loaded, so
+    a changed feature definition can never be evaluated with coefficients fitted on the old one.
+    """
+    import hashlib
+
+    bars, extras = reference_series()
+    grid = bars_to_frame(bars).index
+    feats = pd.concat([all_features(bars), microstructure_features(grid, extras)], axis=1)
+    tail = feats[list(names)].iloc[-100:]
+    text = "|".join(",".join(f"{float(v):.12g}" if pd.notna(v) else "nan" for v in row) for row in tail.to_numpy())
+    return hashlib.sha256(text.encode()).hexdigest()

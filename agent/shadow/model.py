@@ -63,7 +63,11 @@ class MoveSizeModel:
         return p_raw, p_cal
 
 
-def load_model(version: str = DEFAULT_VERSION) -> MoveSizeModel:
+class ModelVersionError(RuntimeError):
+    """The artefact and the running code disagree about what the features mean."""
+
+
+def load_model(version: str = DEFAULT_VERSION, verify_features: bool = True) -> MoveSizeModel:
     path = MODEL_DIR / f"{version}.json"
     d = json.loads(path.read_text(encoding="utf-8"))
     if d["version"] != version:
@@ -71,6 +75,18 @@ def load_model(version: str = DEFAULT_VERSION) -> MoveSizeModel:
     n = len(d["features"])
     if not (len(d["scaler_mean"]) == len(d["scaler_scale"]) == len(d["coef"]) == n):
         raise ValueError(f"artefact {path} is inconsistent (feature count {n})")
+    if verify_features:
+        from agent.shadow.features import feature_fingerprint  # local import: features pulls in pandas
+
+        expected = d.get("feature_fingerprint")
+        if not expected:
+            raise ModelVersionError(f"artefact {version} carries no feature fingerprint; refusing to run it blind")
+        current = feature_fingerprint(d["features"])
+        if current != expected:
+            raise ModelVersionError(
+                f"feature definitions changed since {version} was fitted (fingerprint {current[:12]} != {expected[:12]}); "
+                "export a new model version instead of running old coefficients on new features"
+            )
     return MoveSizeModel(
         version=d["version"], horizon_hours=int(d["horizon_hours"]), threshold=float(d["threshold"]),
         features=tuple(d["features"]), log_features=tuple(d["log_features"]),

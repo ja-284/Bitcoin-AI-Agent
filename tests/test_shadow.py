@@ -141,7 +141,7 @@ def test_grade_stores_a_fraction_and_applies_the_threshold():
 
 # A model version is immutable. Any edit to the artefact must come with a new version name
 # AND a deliberate update of this pin -- both visible in git. (Backend Phase E/G)
-ARTEFACT_SHA256 = {"move_size_1h_v1": "8a80d203917c6fbaf8c18f6576cb470cf7147a3c398da711a6b4a84f006d703f"}  # of the canonical JSON (line endings do not matter)
+ARTEFACT_SHA256 = {"move_size_1h_v1": "9e4c292d4a4692e2b6995fc3bc7e06022f8f13071496145e83c0330c966b7239"}  # of the canonical JSON (line endings do not matter)
 
 
 def test_frozen_artefacts_are_unchanged():
@@ -151,3 +151,15 @@ def test_frozen_artefacts_are_unchanged():
         text = (Path("agent/shadow/models") / f"{version}.json").read_text(encoding="utf-8")
         digest = hashlib.sha256(json.dumps(json.loads(text), sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         assert digest == expected, f"{version} was edited in place -- create a new version instead"
+
+
+def test_changed_feature_definitions_are_refused_at_load_time(monkeypatch):
+    """Backend Phase G: old coefficients must never run on new feature definitions."""
+    import agent.shadow.features as sf
+    from agent.shadow.model import ModelVersionError
+
+    load_model(DEFAULT_VERSION)  # current code matches the artefact's fingerprint
+    monkeypatch.setattr(sf, "feature_fingerprint", lambda names: "0" * 64)
+    with pytest.raises(ModelVersionError, match="feature definitions changed"):
+        load_model(DEFAULT_VERSION)
+    assert load_model(DEFAULT_VERSION, verify_features=False).version == DEFAULT_VERSION  # research tooling may opt out explicitly

@@ -118,3 +118,13 @@ DROP TRIGGER IF EXISTS predictions_append_only ON predictions;
 CREATE TRIGGER predictions_append_only BEFORE UPDATE OR DELETE ON predictions FOR EACH ROW EXECUTE FUNCTION forbid_change();
 DROP TRIGGER IF EXISTS prediction_outcomes_append_only ON prediction_outcomes;
 CREATE TRIGGER prediction_outcomes_append_only BEFORE UPDATE OR DELETE ON prediction_outcomes FOR EACH ROW EXECUTE FUNCTION forbid_change();
+
+-- Schema version (Backend Phase G): one row, written by init_schema(). Answers "which
+-- schema was this database on?"; the weekly report prints it.
+CREATE TABLE IF NOT EXISTS schema_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+INSERT INTO schema_meta (key, value) VALUES ('schema_version', '3')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now();

@@ -24,11 +24,26 @@ def get_connection() -> psycopg.Connection:
     return psycopg.connect(DATABASE_URL, connect_timeout=DB_CONNECT_TIMEOUT_S)
 
 
+SCHEMA_VERSION = "3"  # 1: original tables; 2: cutoff/version/status migrations (pipeline 0.2.0); 3: invariants + append-only triggers + schema_meta
+# The value written by schema.sql's schema_meta upsert must match this constant (checked by a test).
+
+
 def init_schema() -> None:
     sql = SCHEMA_PATH.read_text()
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(sql)
         conn.commit()
+
+
+def schema_version() -> Optional[str]:
+    """The schema version recorded in the database, or None before schema_meta exists."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT to_regclass('schema_meta')")
+        if cur.fetchone()[0] is None:
+            return None
+        cur.execute("SELECT value FROM schema_meta WHERE key = 'schema_version'")
+        row = cur.fetchone()
+        return row[0] if row else None
 
 
 def prediction_exists(as_of: datetime) -> bool:
