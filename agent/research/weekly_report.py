@@ -309,6 +309,13 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "shadow_record": shadow_record(fetch_shadow_rows(), now),
         "watch_list": watch_list(preds, now),
     }
+    try:  # Backend Phase A: re-analyse every live hour with the research replay and compare
+        from agent.research.parity import run as parity_run
+
+        rep["parity"] = parity_run(LIVE.start, now)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("parity check failed")
+        rep["parity"] = {"verdict": "ERROR", "error": str(exc)}
     if with_paper:
         try:
             rep["paper_move_size_1h"] = paper_section(now, outs)
@@ -381,8 +388,16 @@ def render(rep: dict) -> str:
               f"Model: fitted on {pr['model']['fit_rows']} rows to {pr['model']['fit_end'][:10]}, Platt on {pr['model']['calib_rows']} rows ({pr['model']['calib_range'][0][:10]} → {pr['model']['calib_range'][1][:10]}), a={pr['model']['platt']['a']:.3f} b={pr['model']['platt']['b']:.3f}",
               "Latest: " + ", ".join(f"{x['as_of'][5:16]} → {x['p_large_move']:.2f}" for x in pr["latest"]),
               "", f"*{pr['note']}*"]
+    pa = rep.get("parity", {})
+    L += ["", "## 4. Live / research parity (Backend Phase A)", ""]
+    if pa.get("verdict") == "ERROR":
+        L.append(f"Could not run: {pa.get('error')}")
+    else:
+        L.append(f"**{pa.get('verdict')}** — {pa.get('compared', 0)} live hours re-analysed by the research replay on today's exchange candles; parity breaks: **{pa.get('parity_breaks', 0)}**; skipped: {len(pa.get('skipped', []))} ({dict(Counter(r for _, r in pa.get('skipped', [])))})")
+        for b in pa.get("breaks", [])[:5]:
+            L.append(f"- {b['as_of']}: " + "; ".join(f"{m[0]} live={m[1]} replay={m[2]}" for m in b["mismatches"][:4]))
     wl = rep["watch_list"]
-    L += ["", "## 4. Watch list", "",
+    L += ["", "## 5. Watch list", "",
           f"- News evaluation (roadmap 8.6): {wl['news_hours']['have']} of {wl['news_hours']['need']} live hours with news — {'READY' if wl['news_hours']['ready'] else 'waiting'}",
           f"- Confirmatory re-tests on live data (funding 24h; dollar/yield 168h): {wl['live_months']['have']} of {wl['live_months']['need']} months — {'READY' if wl['live_months']['ready'] else 'waiting'}",
           "", "Reminders: healthchecks.io heartbeat not set up; GitHub token `supabase-dispatch` expires 2027-09-20; scheduled workflows on a public repo pause after 60 days without a commit."]

@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-09-21T18:33:43.600967+00:00",
+  "generated_at": "2026-09-21T18:39:02.988313+00:00",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.1.0",
   "live_since": "2026-09-19T09:00:00+00:00",
-  "live_hours": 57.6,
+  "live_hours": 57.7,
   "health_last_7_days": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-21T18:33:43.600967+00:00",
+    "now": "2026-09-21T18:39:02.988313+00:00",
     "expected_hours": 57,
     "predictions": 48,
     "missing_hours": [
@@ -73,7 +73,7 @@
   },
   "health_since_go_live": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-21T18:33:43.600967+00:00",
+    "now": "2026-09-21T18:39:02.988313+00:00",
     "expected_hours": 57,
     "predictions": 48,
     "missing_hours": [
@@ -367,6 +367,31 @@
         "dxy_ret_5d / tnx_chg_5d 168h negative (E006)"
       ]
     }
+  },
+  "parity": {
+    "compared": 44,
+    "parity_breaks": 0,
+    "breaks": [],
+    "skipped": [
+      [
+        "2026-09-19T09:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T11:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T14:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T17:00:00+00:00",
+        "pipeline version differs"
+      ]
+    ],
+    "verdict": "PARITY",
+    "candles_fetched": 307
   },
   "paper_move_size_1h": {
     "n": 56,
