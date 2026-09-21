@@ -149,6 +149,28 @@ def paper_record(p: np.ndarray, y: np.ndarray, abs_ret: np.ndarray) -> dict:
     d["rank_corr_p_vs_abs_return"] = float(pd.Series(p).rank().corr(pd.Series(abs_ret).rank())) if n >= 10 else float("nan")
     buckets, ece, _ = reliability_table(p, y)
     d["ece"] = ece
+    # Uncertainty (Backend Phase H): circular block bootstrap over time order, block 48h, once there are
+    # at least 4 blocks. Below that the point values are shown but no interval is claimed.
+    block = 48
+    if n >= 4 * block:
+        stacked = np.column_stack([p, y, abs_ret])
+
+        def gain(a):
+            b = float(a[:, 1].mean())
+            return 1 - brier_score(a[:, 0], a[:, 1]) / brier_score(np.full(len(a), b), a[:, 1])
+
+        def rho(a):
+            return float(pd.Series(a[:, 0]).rank().corr(pd.Series(a[:, 2]).rank()))
+
+        def ece_stat(a):
+            return reliability_table(a[:, 0], a[:, 1])[1]
+
+        for name, fn in (("brier_rel_gain", gain), ("rank_corr_p_vs_abs_return", rho), ("ece", ece_stat)):
+            pt, lo, hi = block_bootstrap(stacked, fn, block=block, n_boot=N_BOOT, seed=17)
+            d[f"{name}_ci95"] = [lo, hi]
+        d["interval_note"] = f"95% intervals from a {block}h block bootstrap, {N_BOOT} resamples"
+    else:
+        d["interval_note"] = f"no intervals yet: needs >= {4 * block} hours (have {n})"
     d["reliability"] = [b.__dict__ | {"enough_rows": b.reliable} for b in buckets]
     d["note"] = "Paper record computed after the fact from point-in-time candle features; the model is fitted on data before the sealed holdout only. Not a live shadow run. Read intervals, not points, until n is in the thousands."
     return d
@@ -333,6 +355,14 @@ def _pct(x):
     return "n/a" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x * 100:+.3f}%"
 
 
+def _ci(d: dict, key: str, scale: float = 1.0) -> str:
+    ci = d.get(f"{key}_ci95")
+    if not ci:
+        return ""
+    fmt = "{:+.1f}%" if scale == 100 else "{:+.3f}"
+    return " [" + fmt.format(ci[0] * scale) + ", " + fmt.format(ci[1] * scale) + "]"
+
+
 def render(rep: dict) -> str:
     h7, hall, sr = rep["health_last_7_days"], rep["health_since_go_live"], rep["signal_record"]
     L = [f"# Weekly live report — {rep['generated_at'][:16]} UTC", "",
@@ -370,7 +400,7 @@ def render(rep: dict) -> str:
               f"- Outcomes: {sh['outcomes']['ok']} graded · {sh['outcomes']['unavailable']} unavailable · {sh['outcomes']['pending']} pending"]
         ev = sh.get("evaluation")
         if ev:
-            L += [f"- Evaluation (n={ev['n']}): Brier {ev['brier']:.4f} vs base-rate {ev['brier_base_rate']:.4f} ({ev['brier_rel_gain'] * 100:+.1f}%) · accuracy {ev['accuracy']:.3f} vs naive {ev['naive_rate']:.3f} · ρ {ev['rank_corr_p_vs_abs_return']:+.3f} · ECE {ev['ece']:.3f}",
+            L += [f"- Evaluation (n={ev['n']}): Brier {ev['brier']:.4f} vs base-rate {ev['brier_base_rate']:.4f} ({ev['brier_rel_gain'] * 100:+.1f}%{_ci(ev, 'brier_rel_gain', 100)}) · accuracy {ev['accuracy']:.3f} vs naive {ev['naive_rate']:.3f} · ρ {ev['rank_corr_p_vs_abs_return']:+.3f}{_ci(ev, 'rank_corr_p_vs_abs_return')} · ECE {ev['ece']:.3f}{_ci(ev, 'ece')} · {ev['interval_note']}",
                   "", "| stated | observed | 95% interval | n |", "|---|---|---|---|"]
             L += [f"| {b['mean_predicted']:.2f} | {b['observed']:.2f} | [{b['ci_low']:.2f}, {b['ci_high']:.2f}] | {b['n']} |" for b in ev["reliability"]]
             L += ["", f"*{ev['note']}*"]
@@ -384,7 +414,7 @@ def render(rep: dict) -> str:
         L.append("No live hours with usable features yet.")
     else:
         L += [f"n = {pr['n']} live hours · observed large-move share {pr['base_rate_large']:.3f} · mean stated p {pr['mean_stated_p']:.3f}",
-              f"Brier {pr['brier']:.4f} vs base-rate {pr['brier_base_rate']:.4f} ({pr['brier_rel_gain'] * 100:+.1f}%) · accuracy {pr['accuracy']:.3f} vs naive {pr['naive_rate']:.3f} · ρ(p, |move|) {pr['rank_corr_p_vs_abs_return']:+.3f} · ECE {pr['ece']:.3f}",
+              f"Brier {pr['brier']:.4f} vs base-rate {pr['brier_base_rate']:.4f} ({pr['brier_rel_gain'] * 100:+.1f}%{_ci(pr, 'brier_rel_gain', 100)}) · accuracy {pr['accuracy']:.3f} vs naive {pr['naive_rate']:.3f} · ρ(p, |move|) {pr['rank_corr_p_vs_abs_return']:+.3f}{_ci(pr, 'rank_corr_p_vs_abs_return')} · ECE {pr['ece']:.3f}{_ci(pr, 'ece')} · {pr['interval_note']}",
               "", "| stated | observed | 95% interval | n |", "|---|---|---|---|"]
         L += [f"| {b['mean_predicted']:.2f} | {b['observed']:.2f} | [{b['ci_low']:.2f}, {b['ci_high']:.2f}] | {b['n']} |" for b in pr["reliability"]]
         tc = pr["tracker_consistency"]

@@ -117,3 +117,13 @@ def test_shadow_record_coverage_blanks_and_evaluation():
     assert sh["outcomes"]["ok"] == 7 and sh["outcomes"]["pending"] == 3  # rows 9,10,11 ok+pending; row 2 unavailable excluded
     assert sh["evaluation"]["n"] == 7 and "LIVE" in sh["evaluation"]["note"]
     assert shadow_record([], now) == {"n": 0, "note": "no shadow rows yet"}
+
+
+def test_paper_record_reports_intervals_only_with_enough_hours():
+    rng = np.random.default_rng(5)
+    p = rng.uniform(0.1, 0.9, size=300)
+    y = (rng.uniform(size=300) < p).astype(float)
+    rec = paper_record(p, y, np.abs(rng.normal(size=300)) * p)
+    assert "brier_rel_gain_ci95" in rec and "ece_ci95" in rec and rec["brier_rel_gain_ci95"][0] <= rec["brier_rel_gain"] <= rec["brier_rel_gain_ci95"][1]
+    small = paper_record(p[:100], y[:100], np.abs(rng.normal(size=100)))
+    assert "brier_rel_gain_ci95" not in small and "no intervals yet" in small["interval_note"]
