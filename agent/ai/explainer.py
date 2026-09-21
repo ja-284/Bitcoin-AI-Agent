@@ -67,4 +67,7 @@ def write_explanation(
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_content}],
     )
-    return next(block.text for block in response.content if block.type == "text")
+    text = next((block.text for block in response.content if block.type == "text"), "").strip()
+    if not text:
+        raise ValueError("explanation model returned no text")  # recorded as explanation_error; the decision is untouched
+    return text
