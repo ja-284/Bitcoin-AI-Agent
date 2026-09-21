@@ -1,9 +1,15 @@
-requests
-pandas
-pandas-ta-classic
-feedparser
-python-dotenv
-anthropic
-psycopg[binary]
-pytest
-scikit-learn
+# Pinned exactly (Backend readiness, 2026-09-21): the hourly job installs these on a fresh
+# runner every hour, so an unpinned major release (pandas, numpy, scikit-learn) could change
+# behaviour or break the job overnight without any commit. Upgrades are deliberate commits,
+# re-verified by the golden scoring test, the feature-fingerprint check and the parity check.
+requests==2.34.2
+pandas==3.0.6
+numpy==2.5.3
+pandas-ta-classic==0.8.32
+feedparser==6.0.14
+python-dotenv==1.2.3
+anthropic==1.7.0
+pydantic==2.13.5
+psycopg[binary]==3.3.6
+pytest==9.1.1
+scikit-learn==1.9.1

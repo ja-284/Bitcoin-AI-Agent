@@ -1,73 +1,96 @@
-# Confluence — Bitcoin AI Analysis Agent
+# Bitcoin AI Analysis Agent
 
-An AI-powered agent that watches Bitcoin and produces a simple signal:
-**BUY**, **HOLD**, or **SELL** — along with a confidence level and a plain-English
-explanation of why.
+A research backend that looks at Bitcoin every hour and records what it thinks, then checks
+itself against what actually happened. It produces a **BUY / HOLD / SELL** signal with a
+confidence figure and a plain-English explanation — and, separately, a **calibrated
+probability that the next hour's move will be large**.
 
-> ⚠️ **This is an analysis tool, not a trading bot.** It does not place real
-> trades. It's built to be tested carefully before being trusted with any
-> real decisions, and even then, the decision stays with the person using it.
+> ⚠️ **Analysis only. Not a trading bot, not financial advice.** It never places orders, holds
+> funds, or touches an exchange account, and it is not going to. No AI can reliably predict
+> price movements; this project measures honestly how little it can.
 
-## What it does
+## What the research found so far (read this before trusting any signal)
 
-The agent looks at several types of information and turns them into one
-combined score:
+- **Direction is not predictable from free data.** The hand-built scoring (v0.1.0, still the
+  live signal) has no measurable edge over 2017–2025 (E001). 47 candidate features across
+  volatility, regime, derivatives, macro, on-chain and microstructure add none (E002–E008). A
+  fitted model combining the weak effects gains ~2 points of 1-hour accuracy and **zero**
+  return edge (E011). The signal you see is therefore a *measuring instrument under test*,
+  not advice.
+- **Move size is predictable.** The probability that the next hour moves more than 0.25%
+  tracks reality (rank correlation 0.45 / 0.36 in two separate periods, Brier 15% / 9%
+  better than the base rate — E012), and after Platt calibration it means what it says in
+  every year since 2018 (E013). This model runs live in *shadow* mode and is judged
+  prospectively (`research/LIVE_EVALUATION.md`).
+- **Confidence is still a labelled heuristic** for the direction signal (it was shown
+  uninformative in E001); the calibrated number is the move-size probability, not the
+  BUY/HOLD/SELL confidence.
+- A 13.5-month **holdout (2025-07 → 2026-08) is sealed** and will be used exactly once, at
+  the end, to confirm — never to tune.
 
-- Price and historical price data
-- Trends
-- Trading volume
-- Momentum / technical indicators (like RSI)
-- Chart patterns
-- Relevant Bitcoin/crypto news
+Full record: `research/ROADMAP.md` (what was done, in order), `research/EXPERIMENTS.md`
+(every experiment, pre-registered criteria, results), `research/results/*/summary.md`.
 
-Each factor gets its own score. The scores combine into an overall score,
-which maps to a BUY / HOLD / SELL signal, plus a **confidence level** —
-one that's measured against real historical results, not just guessed by
-the AI.
+## How it runs
 
-## Why it's built this way
+Every hour (Supabase `pg_cron` → GitHub Actions `workflow_dispatch` at :12, with GitHub's own
+cron as backup), on GitHub's servers:
 
-A few rules this project follows on purpose:
+1. fetch the last 250 closed hourly candles (Binance; CoinGecko fallback, flagged)
+2. compute indicators and chart patterns; score trend, momentum, volume, patterns
+3. fetch RSS news limited to the information cutoff (the reference candle's close); a
+   structured Claude call scores it
+4. combine deterministically → signal + confidence; a second Claude call writes the
+   explanation *after* the decision (it cannot change it — tested)
+5. store everything (inputs, scores, versions, data-quality flags, git commit) in Postgres,
+   append-only
+6. grade older predictions against the exact later candle (1h/6h/24h/72h/168h)
+7. shadow: the frozen move-size model's probability for the hour, in its own table, graded
+   an hour later
 
-1. **Build the intelligence before the UI.** The backend and the AI agent
-   come first. The dashboard comes later, once the analysis actually works.
-2. **No data leakage.** When testing against old data, the agent only ever
-   sees what would have actually been known at that point in time.
-3. **No overfitting.** The goal is a system that holds up on new data, not
-   one that's just been tuned to match the past perfectly.
-4. **Log everything.** Every prediction is stored, along with what actually
-   happened afterward, so the agent can be judged fairly over time.
-5. **Confidence is measurable.** Not a made-up number — calibrated against
-   real outcomes.
-6. **Modular by design.** The AI model, data sources, indicators, scoring
-   system, database, and frontend can all be swapped out without rebuilding
-   the whole project.
-7. **No real trading, for now.** This phase is analysis-only.
+Weekly: `python -m agent.research.weekly_report` — health, the live signal record, the
+shadow record with intervals, live/research parity, drift vs the development data.
 
-## Roadmap
+## Module map
 
-- [ ] **Phase 1 — Backend & AI agent.** Data pipeline, indicators, scoring
-      system, AI analysis, database, automated hourly runs.
-- [ ] **Phase 2 — Backtesting.** Test the agent against historical data,
-      simulating only what it would have known at each point in time.
-- [ ] **Phase 3 — Improve the algorithm.** Use backtest results to refine
-      scoring and the AI's role, without overfitting to the past.
-- [ ] **Phase 4 — Logging system.** Full prediction history, compared
-      against real outcomes.
-- [ ] **Phase 5 — Paper trading.** Run live, automatically, with fake money,
-      to compare against backtest results.
-- [ ] **Phase 6 — Dashboard.** A frontend (built in Lovable) showing live
-      signals, confidence, scores, explanations, and historical performance.
+```
+agent/
+  orchestrator.py        one hourly run, start to finish (the information cutoff lives here)
+  data_providers/        Binance (primary), CoinGecko (fallback), candle validation, facade
+  indicators/ patterns/  deterministic technical inputs (pandas-ta-classic)
+  scoring/ decision/     category scores -> overall score -> signal; confidence heuristic
+  news/                  RSS feeds, availability-time rules, de-duplication
+  ai/                    the two narrow Claude calls (news score; explanation)
+  database/              schema (append-only, invariants as CHECKs/triggers), writes
+  outcome_tracker.py     grades predictions by the exact target candle; 'unavailable' on gaps
+  healthcheck.py         fails the job if the newest prediction is stale
+  shadow/                frozen move-size model (JSON artefact), features, run, grading
+  research/              everything experimental: periods & holdout guard, labels, features,
+                         replay, walk-forward, calibration, model bench, parity, drift,
+                         weekly report, holdout evaluation (sealed)
+research/                roadmap, experiment log + JSONs, results, live-evaluation protocol
+docs/research/           parity rules, data sources, failure modes, reproducibility, versions
+docs/ops/                external trigger, security audit, performance review
+tests/                   185 tests, no network or database; tests/integration (opt-in, real DB)
+```
 
-*Currently working on: Phase 1.*
+## Running it yourself
 
-## Status
+Python 3.12. `pip install -r requirements.txt` (pinned). Copy `.env.example` to `.env`
+(Anthropic key, Supabase `DATABASE_URL`; optional CoinGecko key). Then, from the project
+folder: `python run.py --no-save` for one analysis without writing, `python -m pytest tests/`
+for the tests. Everything else is listed in `CLAUDE.md` → "How to run things".
 
-🚧 Early development. Architecture decisions are still being made — this
-README will be updated as those are locked in.
+## Principles that are enforced, not just stated
+
+Point-in-time correctness (nothing after the cutoff, ever; tests garble the future and check
+the past is unchanged) · no fabricated data (gaps stay gaps; missing → `unavailable`) ·
+pre-registered experiments with fixed pass rules · chronological validation with purge and
+embargo · one change at a time · versions on everything (pipeline, scoring, model artefact,
+schema, git commit) with tests that fail on silent change · the explanation can never touch
+the decision · the holdout stays sealed.
 
 ## Disclaimer
 
-This project is for research and personal use. It is not financial advice,
-and no AI can reliably predict price movements. Any real financial
-decisions made using this tool are the user's own responsibility.
+For research and personal use. Not financial advice. Any decision made with it is the
+user's own responsibility.
