@@ -154,6 +154,15 @@ def paper_record(p: np.ndarray, y: np.ndarray, abs_ret: np.ndarray) -> dict:
     d["rank_corr_p_vs_abs_return"] = float(pd.Series(p).rank().corr(pd.Series(abs_ret).rank())) if n >= 10 else float("nan")
     buckets, ece, _ = reliability_table(p, y)
     d["ece"] = ece
+    # Accuracy and base rate always carry an interval, at every sample size, so a difference can
+    # never look real just because two numbers are printed to three decimals. (Wilson, which is
+    # sound for small n; it ignores the hour-to-hour dependence that the block bootstrap below
+    # accounts for, so it is the OPTIMISTIC bound -- if these overlap, nothing is established.)
+    hits = int(round(d["accuracy"] * n))
+    d["accuracy_ci95"] = list(wilson_interval(hits, n))
+    d["base_rate_ci95"] = list(wilson_interval(int(round(base * n)), n))
+    d["accuracy_beats_naive"] = bool(d["accuracy_ci95"][0] > d["naive_rate"])
+
     # Uncertainty (Backend Phase H): circular block bootstrap over time order, block 48h, once there are
     # at least 4 blocks. Below that the point values are shown but no interval is claimed.
     block = 48
@@ -449,7 +458,7 @@ def render(rep: dict) -> str:
               f"- Outcomes: {sh['outcomes']['ok_prospective']} graded (prospective) · {sh['outcomes']['unavailable']} unavailable · {sh['outcomes']['pending']} pending · written too late to count as prospective: {len(sh['not_prospective'])}"]
         ev = sh.get("evaluation")
         if ev:
-            L += [f"- Evaluation (n={ev['n']}): Brier {ev['brier']:.4f} vs base-rate {ev['brier_base_rate']:.4f} ({ev['brier_rel_gain'] * 100:+.1f}%{_ci(ev, 'brier_rel_gain', 100)}) · accuracy {ev['accuracy']:.3f} vs naive {ev['naive_rate']:.3f} · ρ {ev['rank_corr_p_vs_abs_return']:+.3f}{_ci(ev, 'rank_corr_p_vs_abs_return')} · ECE {ev['ece']:.3f}{_ci(ev, 'ece')} · {ev['interval_note']}",
+            L += [f"- Evaluation (n={ev['n']}): Brier {ev['brier']:.4f} vs base-rate {ev['brier_base_rate']:.4f} ({ev['brier_rel_gain'] * 100:+.1f}%{_ci(ev, 'brier_rel_gain', 100)}) · accuracy {ev['accuracy']:.3f} [{ev['accuracy_ci95'][0]:.3f}, {ev['accuracy_ci95'][1]:.3f}] vs naive {ev['naive_rate']:.3f} ({'clears it' if ev['accuracy_beats_naive'] else 'overlaps: nothing established'}) · ρ {ev['rank_corr_p_vs_abs_return']:+.3f}{_ci(ev, 'rank_corr_p_vs_abs_return')} · ECE {ev['ece']:.3f}{_ci(ev, 'ece')} · {ev['interval_note']}",
                   "", "| stated | observed | 95% interval | n |", "|---|---|---|---|"]
             L += [f"| {b['mean_predicted']:.2f} | {b['observed']:.2f} | [{b['ci_low']:.2f}, {b['ci_high']:.2f}] | {b['n']} |" for b in ev["reliability"]]
             L += ["", f"*{ev['note']}*"]
@@ -463,7 +472,7 @@ def render(rep: dict) -> str:
         L.append("No live hours with usable features yet.")
     else:
         L += [f"n = {pr['n']} live hours · observed large-move share {pr['base_rate_large']:.3f} · mean stated p {pr['mean_stated_p']:.3f}",
-              f"Brier {pr['brier']:.4f} vs base-rate {pr['brier_base_rate']:.4f} ({pr['brier_rel_gain'] * 100:+.1f}%{_ci(pr, 'brier_rel_gain', 100)}) · accuracy {pr['accuracy']:.3f} vs naive {pr['naive_rate']:.3f} · ρ(p, |move|) {pr['rank_corr_p_vs_abs_return']:+.3f}{_ci(pr, 'rank_corr_p_vs_abs_return')} · ECE {pr['ece']:.3f}{_ci(pr, 'ece')} · {pr['interval_note']}",
+              f"Brier {pr['brier']:.4f} vs base-rate {pr['brier_base_rate']:.4f} ({pr['brier_rel_gain'] * 100:+.1f}%{_ci(pr, 'brier_rel_gain', 100)}) · accuracy {pr['accuracy']:.3f} [{pr['accuracy_ci95'][0]:.3f}, {pr['accuracy_ci95'][1]:.3f}] vs naive {pr['naive_rate']:.3f} ({'clears it' if pr['accuracy_beats_naive'] else 'overlaps: nothing established'}) · ρ(p, |move|) {pr['rank_corr_p_vs_abs_return']:+.3f}{_ci(pr, 'rank_corr_p_vs_abs_return')} · ECE {pr['ece']:.3f}{_ci(pr, 'ece')} · {pr['interval_note']}",
               "", "| stated | observed | 95% interval | n |", "|---|---|---|---|"]
         L += [f"| {b['mean_predicted']:.2f} | {b['observed']:.2f} | [{b['ci_low']:.2f}, {b['ci_high']:.2f}] | {b['n']} |" for b in pr["reliability"]]
         tc = pr["tracker_consistency"]

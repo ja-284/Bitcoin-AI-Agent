@@ -163,3 +163,26 @@ def test_signal_record_reports_the_scoring_version_mix():
     outs = [{"prediction_as_of": r["as_of"], "horizon_hours": 1, "status": "ok", "pct_change_from_prediction": 0.004} for r in rows]
     sr = signal_record(rows, outs)
     assert sr["scoring_versions"] == {"0.1.0": 1, "0.2.0": 1}
+
+
+def test_accuracy_always_carries_an_interval_so_small_samples_say_so():
+    """
+    Precision discipline: an accuracy printed to three decimals next to a naive rate invites the
+    reader to believe a difference that 13 hours cannot support. Every accuracy now carries a
+    Wilson interval, and the report states plainly whether it clears the naive rate.
+    """
+    rng = np.random.default_rng(3)
+    small_p = rng.uniform(0.3, 0.7, size=13)
+    small_y = (rng.uniform(size=13) < small_p).astype(float)
+    small = paper_record(small_p, small_y, np.abs(rng.normal(size=13)))
+    lo, hi = small["accuracy_ci95"]
+    assert lo < small["accuracy"] < hi
+    assert hi - lo > 0.3, "13 observations must produce an obviously wide interval"
+    assert small["accuracy_beats_naive"] is False  # nothing can be established from 13 hours
+
+    big_p = rng.uniform(0.05, 0.95, size=4000)
+    big_y = (rng.uniform(size=4000) < big_p).astype(float)  # genuinely informative probabilities
+    big = paper_record(big_p, big_y, np.abs(rng.normal(size=4000)) * big_p)
+    blo, bhi = big["accuracy_ci95"]
+    assert bhi - blo < 0.05, "4000 observations must produce a tight interval"
+    assert big["accuracy_beats_naive"] is True
