@@ -26,6 +26,17 @@ trustworthy historical timestamp is classed UNAVAILABLE/UNSAFE for research.
 | mempool.space difficulty adjustments | adjustment time, height, factor | 2009 → | known at the triggering block's time | — | SAFE |
 | Open interest, liquidations, order-book depth/spread, social | — | no free, timestamped history | — | — | UNAVAILABLE |
 
+## What the live record shows about these sources (measured 2026-09-22, 64 corrected runs)
+
+- **Candles:** 0 gaps inside any 250-hour window, 0 zero-volume candles, 0 runs with
+  insufficient history, 0 fallback rows. Data is fetched 1–59 minutes after the cutoff
+  (average 13.6; the tail is late catch-up runs, which is harmless because the reference hour
+  comes from the candle, never the clock).
+- **News:** across 64 runs the cutoff rule excluded **26 headlines for being published after
+  the reference candle closed** — the leakage guard visibly doing its job — plus 3,912 as too
+  old for the 24-hour window, 5 duplicates and 0 undated. Only **114 distinct stories** appear
+  in 2,140 headline-slots: the same story is scored ~19 times as it sits in the window.
+
 ## Candle validation (`agent/data_providers/quality.py`)
 
 Impossible data **raises** (duplicates, out-of-order, NaN/inf, non-positive price, negative
