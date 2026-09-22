@@ -1,0 +1,38 @@
+{
+  "id": "E018",
+  "date": "2026-09-22",
+  "git_commit": "(pre-registration commit; results appended in a later commit)",
+  "status": "PRE-REGISTERED before any result was computed. Selection is exploratory by construction (a search); the evaluation of the chosen sequence on the validation period is the part that carries weight, and validation is never used to choose.",
+  "phase": "Master plan sections 14-19: signal discovery, feature ablation, marginal information, feature stability, and the explicit question 'how many signals should the model use?'",
+  "why_now": "The 1h move-size model (E012 + E013 Platt) is the only model in this project that has ever passed a pre-registered out-of-sample criterion, and it carries NINE inputs of which four measure volatility and two measure trade intensity. Nobody has ever asked whether it needs them. Two reasons to ask now rather than later: (1) Phase 12 will judge ONE frozen model on the sealed holdout, and that is a one-way door -- confirming an over-featured model wastes the holdout; (2) the prospective shadow record is only 18 hours old, so if a smaller model is better the cost of switching is near zero today and grows by one hour every hour.",
+  "hypothesis": "The nine inputs contain substantial redundancy, and a strictly smaller subset reaches the same out-of-sample probability quality (Brier, ranking, calibration) on the validation period as all nine.",
+  "questions": {
+    "Q1_redundancy": "How correlated are the nine inputs with each other (descriptive, no fitting)? Where is the duplication?",
+    "Q2_ablation": "Does removing a whole feature GROUP (volatility / trade intensity / calendar) measurably degrade out-of-sample performance?",
+    "Q3_count": "How many features does the evidence actually support?",
+    "Q4_stability": "Are the fitted coefficient signs stable across the walk-forward folds, per master plan section 19?"
+  },
+  "method": {
+    "shared": "Identical to E013 in every respect except the feature list: expanding walk-forward, min_train 365d, quarterly test blocks, purge = horizon, 24h embargo, calibration slice = last 90 days of each training range purged on both sides, Platt calibration, L2 logistic C = 0.1, the same six log-transformed inputs, target = |return over 1h| > 0.0025, snapshot btcusdt_1h_2026-09-19.csv, candles truncated at the sealed holdout. Every variant is scored on the SAME test rows (folds are built once, from the rows where all nine inputs exist, and reused for every variant) so that differences cannot come from different samples.",
+    "Q1": "Pairwise Spearman correlation and variance inflation factors on exploration rows, after the declared log transforms.",
+    "Q2": "Four runs: all nine, minus volatility (tr_mean_14_rel, rv_24, rv_168, vol_ratio_24_168), minus trade intensity (trades_rel_24h, trades_rel_168h), minus calendar (hour_sin, hour_cos, is_weekend).",
+    "Q3": "Greedy forward selection: start empty; at each step add the single feature that most reduces out-of-sample Brier ON THE EXPLORATION TEST ROWS ONLY; stop when all nine are in. This yields one nested sequence of sets of size 1..9, fixed by exploration alone. Each set in that sequence is then scored on the VALIDATION period, which selection never saw.",
+    "Q4": "coefficient_sign_agreement across folds, already produced by the bench, for the full set and for the chosen set."
+  },
+  "leakage_control": "Selection uses exploration test rows. Those rows are out-of-sample with respect to FITTING (walk-forward) but become in-sample with respect to SELECTION -- which is exactly why the number that decides anything is measured on the validation period, which no selection step touches. The sealed holdout is not read at any point; candles are loaded with the ordinary truncating loader.",
+  "acceptance_criterion": "PRE-REGISTERED, fixed before any result was seen. Let skill(k) = 1 - Brier(k) / Brier(base rate) on the VALIDATION period for the forward-selection set of size k, and let k* be the size with the highest skill. SE is the block-bootstrap standard deviation (circular blocks of 48 hours, 2000 resamples, seed 31) of the PAIRED difference in Brier between set k and set k*, computed on the identical validation rows. THE ANSWER TO 'how many features' IS THE SMALLEST k whose validation skill is within 1 SE of skill(k*) -- the one-standard-error rule, chosen in advance because it prefers the simpler model when the evidence cannot separate them. That set must additionally pass E013's usability bars to count as a replacement candidate: (C1) validation ECE <= 0.03 and every reliability bucket with >= 100 rows within 0.05 of its stated probability; (C2) Spearman rho(p, realised |return|) in validation within 0.02 of the nine-feature model's. A group in Q2 counts as CARRYING INFORMATION only if removing it lowers validation skill by more than 1 SE of the paired difference.",
+  "tripwire": "If any smaller set beats the full nine by MORE than 3% relative validation Brier, that is treated as suspicious rather than good news and investigated before being recorded (removing inputs cannot add information; a large gain points at overfitting in the full model, or at a bug).",
+  "what_would_change_the_conclusion": "If the one-standard-error rule lands on k = 9, the current model is already the right size and nothing changes. If it lands on a smaller k that also passes C1 and C2, the recorded research deliverable becomes over-featured and a smaller candidate exists -- which is a finding to report to the user with its cost, NOT a licence to swap the frozen artefact, because the live shadow record is a prospective test of a named model version and Phase 12 judges one frozen model.",
+  "decision_this_experiment_may_not_make": "It may not change scoring, may not change the live BUY/HOLD/SELL path, may not silently replace move_size_1h_v1, and may not touch the sealed holdout.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.2.0 (not under test here; the replay supplies the row index only)",
+  "features_under_test": ["tr_mean_14_rel", "rv_24", "rv_168", "vol_ratio_24_168", "trades_rel_24h", "trades_rel_168h", "hour_sin", "hour_cos", "is_weekend"],
+  "periods": {
+    "exploration": "out-of-sample test blocks before 2024-01-01 (used for SELECTION)",
+    "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (used for the DECISION; never used to select)",
+    "holdout": "sealed, not read"
+  },
+  "metrics": "filled in after the run",
+  "results": "filled in after the run",
+  "affected_design": "filled in after the run"
+}
