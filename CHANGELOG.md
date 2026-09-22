@@ -5,6 +5,39 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## scoring 0.2.0 — 2026-09-22 (history counted in consecutive hours)
+
+The first change to the scoring since go-live, made on the user's decision after the flaw was
+found and quantified on 2026-09-22. **Formulas, weights and thresholds are untouched.** What
+changed is what "enough history" means: it counted ROWS, so a window containing missing hours —
+an exchange outage — was treated as consecutive.
+
+- **Indicators** are computed on the longest unbroken hourly run ending at the reference candle
+  (`consecutive_tail`); an indicator whose warm-up does not fit inside that run is unavailable
+  rather than computed across the hole. A "200-hour average" could previously span 233 hours.
+- **The volume category** looks its reference candle up **by timestamp**; before, it counted six
+  rows back, which with a gap could be a candle up to 33 hours from the 6 it intends — the same
+  row-counting mistake pipeline 0.2.0 fixed in the outcome lookup.
+- **Chart patterns**: the 20-hour trend-structure window must be 20 real consecutive hours.
+- `IndicatorSet` now records `window_hours` and `consecutive_hours`, so every row says what it
+  actually saw.
+
+**Verified against history before deployment (E016, principle 7).** Full replay of 68,619 hours
+under both versions:
+- on the 62,262 hours whose window has **no gap — every live hour so far — the output is
+  identical** (worst relative difference 3e-16, i.e. CSV round-trip noise; signals and patterns
+  exactly equal). This is the safety property, and `tests/test_scoring_golden.py` pins it.
+- on the 6,357 gap-affected hours (9.26%), mean completeness falls 0.850 → 0.568 and the signal
+  changes on 2,702 of them (42.5%), because trend becomes unavailable on 81%, chart pattern on
+  32%, volume on 8% and momentum on 6%. Across the whole record 3.94% of hours change signal.
+- 392 hours now have no usable category at all and report completeness 0 — an honest "this hour
+  is unknowable" instead of a confident number built on holes.
+
+Consequence for earlier work: E001, E002 and E011 evaluated scoring 0.1.0 and remain valid
+statements about 0.1.0. They were null results, and 0.2.0 only removes silently-wrong inputs,
+so their direction cannot be reversed by this — but any future comparison must state its version,
+and the weekly report now prints the scoring-version mix of the live record.
+
 ## pipeline 0.2.0 — incident fix 2026-09-22 (information rules unchanged, version kept)
 
 Full post-mortem: `docs/ops/incident_2026-09-21_shadow_step.md`. The live record was never

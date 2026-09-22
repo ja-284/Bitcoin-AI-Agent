@@ -18,7 +18,7 @@ H = timedelta(hours=1)
 def _pred(as_of, signal="BUY", conf=0.8, delay_min=12.5, source="binance", synthetic=False, news=20, expl=True, meta=None, pv=PIPELINE_VERSION):
     return {"as_of": as_of, "fetched_at": as_of + H + timedelta(minutes=delay_min), "cutoff_at": as_of + H, "pipeline_version": pv,
             "price_source": source, "price_is_synthetic": synthetic, "run_meta": meta or {}, "news_items_n": news, "has_explanation": expl,
-            "signal": signal, "overall_confidence": conf}
+            "signal": signal, "overall_confidence": conf, "scoring_version": "0.2.0"}
 
 
 def test_expected_hours_respects_the_run_minute():
@@ -153,3 +153,13 @@ def test_shadow_record_reports_recorded_job_errors():
              "model_version": "move_size_1h_v1", "outcome_status": None, "outcome_return": None, "outcome_large": None} for i in range(3)]
     assert shadow_record(rows, now, [])["errors"]["n"] == 0
     assert shadow_record(rows, now)["errors"]["n"] == 0  # errors are optional
+
+
+def test_signal_record_reports_the_scoring_version_mix():
+    """Scoring 0.2.0 changed gap-affected hours, so the report must never blend versions silently."""
+    rows = [_pred(T0), _pred(T0 + H)]
+    rows[0]["scoring_version"] = "0.1.0"
+    rows[1]["scoring_version"] = "0.2.0"
+    outs = [{"prediction_as_of": r["as_of"], "horizon_hours": 1, "status": "ok", "pct_change_from_prediction": 0.004} for r in rows]
+    sr = signal_record(rows, outs)
+    assert sr["scoring_versions"] == {"0.1.0": 1, "0.2.0": 1}

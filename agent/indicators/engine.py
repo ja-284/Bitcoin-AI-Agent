@@ -8,15 +8,26 @@ misleading number, each indicator is left as None until there's enough history,
 and that gap is recorded in `insufficient_history` so the scoring step (and the
 confidence calculation) can see it and react honestly, instead of pretending
 every run has full information.
+
+Scoring 0.2.0 (2026-09-22) makes that requirement mean what it always claimed. Until then
+"enough history" counted ROWS, so a window with missing hours -- an exchange outage -- was
+treated as if it were consecutive: a "200-hour average" could quietly span 233 hours, and 9.26%
+of all replayed hours since 2017 had at least one hour missing inside their window (up to 33).
+Now every indicator is computed on the longest UNBROKEN hourly run ending at the reference
+candle, and an indicator whose warm-up does not fit inside that run is unavailable rather than
+wrong. On a window with no gaps -- every live hour so far -- the numbers are identical.
 """
 
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import Optional
 
 import pandas as pd
 import pandas_ta_classic as ta
 
 from agent.shared.types import PriceBar
+
+HOUR = timedelta(hours=1)
 
 # The feature window: how many closed hourly candles every calculation sees. Live runs
 # fetch exactly this many; the backtest replays with exactly this many per simulated
@@ -44,6 +55,8 @@ class IndicatorSet:
     volume: float
     volume_avg: Optional[float]
     insufficient_history: list[str] = field(default_factory=list)
+    window_hours: int = 0  # candles handed to this call
+    consecutive_hours: int = 0  # of those, the unbroken run ending at the reference candle
 
 
 def _bars_to_frame(bars: list[PriceBar]) -> pd.DataFrame:
@@ -52,13 +65,29 @@ def _bars_to_frame(bars: list[PriceBar]) -> pd.DataFrame:
     )
 
 
+def consecutive_tail(bars: list[PriceBar]) -> list[PriceBar]:
+    """
+    The longest unbroken hourly run ending at the last candle. Everything before a missing hour
+    is dropped: an indicator may only ever see real, adjacent hours, never a window that silently
+    stretches across an exchange outage.
+    """
+    cut = len(bars) - 1
+    while cut > 0 and bars[cut].as_of - bars[cut - 1].as_of == HOUR:
+        cut -= 1
+    return bars[cut:]
+
+
 def compute_indicators(bars: list[PriceBar]) -> IndicatorSet:
     if not bars:
         raise ValueError("compute_indicators requires at least one price bar")
 
+    window = bars
+    bars = consecutive_tail(bars)
     df = _bars_to_frame(bars)
     n = len(df)
     missing: list[str] = []
+    if n < len(window):
+        missing.append(f"window has a gap: only the last {n}h of {len(window)}h are consecutive")
 
     def latest(series: Optional[pd.Series]) -> Optional[float]:
         if series is None or series.empty or pd.isna(series.iloc[-1]):
@@ -67,15 +96,15 @@ def compute_indicators(bars: list[PriceBar]) -> IndicatorSet:
 
     sma_short = latest(ta.sma(df["close"], length=SMA_SHORT)) if n >= SMA_SHORT else None
     if sma_short is None:
-        missing.append(f"sma_{SMA_SHORT} needs {SMA_SHORT}h of history, have {n}h")
+        missing.append(f"sma_{SMA_SHORT} needs {SMA_SHORT} consecutive hours, have {n}")
 
     sma_long = latest(ta.sma(df["close"], length=SMA_LONG)) if n >= SMA_LONG else None
     if sma_long is None:
-        missing.append(f"sma_{SMA_LONG} needs {SMA_LONG}h of history, have {n}h")
+        missing.append(f"sma_{SMA_LONG} needs {SMA_LONG} consecutive hours, have {n}")
 
     rsi = latest(ta.rsi(df["close"], length=RSI_LENGTH)) if n >= RSI_LENGTH + 1 else None
     if rsi is None:
-        missing.append(f"rsi_{RSI_LENGTH} needs {RSI_LENGTH + 1}h of history, have {n}h")
+        missing.append(f"rsi_{RSI_LENGTH} needs {RSI_LENGTH + 1} consecutive hours, have {n}")
 
     macd_val = macd_signal = macd_hist = None
     if n >= 35:  # MACD(12,26,9) needs ~26 + 9 periods to fully settle
@@ -85,7 +114,7 @@ def compute_indicators(bars: list[PriceBar]) -> IndicatorSet:
             macd_hist = latest(macd_df.iloc[:, 1])
             macd_signal = latest(macd_df.iloc[:, 2])
     if macd_val is None:
-        missing.append("macd needs ~35h of history, have %dh" % n)
+        missing.append("macd needs ~35 consecutive hours, have %d" % n)
 
     bb_upper = bb_lower = None
     if n >= 20:
@@ -94,11 +123,11 @@ def compute_indicators(bars: list[PriceBar]) -> IndicatorSet:
             bb_lower = latest(bb_df.iloc[:, 0])
             bb_upper = latest(bb_df.iloc[:, 2])
     if bb_upper is None:
-        missing.append("bollinger_bands needs 20h of history, have %dh" % n)
+        missing.append("bollinger_bands needs 20 consecutive hours, have %d" % n)
 
     volume_avg = latest(ta.sma(df["volume"], length=VOLUME_AVG_LENGTH)) if n >= VOLUME_AVG_LENGTH else None
     if volume_avg is None:
-        missing.append(f"volume_avg_{VOLUME_AVG_LENGTH} needs {VOLUME_AVG_LENGTH}h of history, have {n}h")
+        missing.append(f"volume_avg_{VOLUME_AVG_LENGTH} needs {VOLUME_AVG_LENGTH} consecutive hours, have {n}")
 
     return IndicatorSet(
         close=float(df["close"].iloc[-1]),
@@ -113,4 +142,6 @@ def compute_indicators(bars: list[PriceBar]) -> IndicatorSet:
         volume=float(df["volume"].iloc[-1]),
         volume_avg=volume_avg,
         insufficient_history=missing,
+        window_hours=len(window),
+        consecutive_hours=n,
     )

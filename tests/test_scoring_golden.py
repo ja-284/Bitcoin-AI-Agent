@@ -21,7 +21,10 @@ GOLDEN = json.loads(Path(__file__).with_name("golden_scoring_0_1_0.json").read_t
 
 
 def test_versions_are_the_pinned_ones():
-    assert SCORING_VERSION == "0.1.0" and PIPELINE_VERSION == "0.2.0"  # bump deliberately, together with the golden file
+    # Bumped deliberately, together with the golden file. Scoring 0.2.0 (2026-09-22) counts
+    # history in consecutive hours; the golden values below are UNCHANGED from 0.1.0 because the
+    # reference series has no gaps -- which is the proof that the fix touches nothing else.
+    assert SCORING_VERSION == "0.2.0" and PIPELINE_VERSION == "0.2.0"
 
 
 def test_scoring_0_1_0_reproduces_the_golden_values():

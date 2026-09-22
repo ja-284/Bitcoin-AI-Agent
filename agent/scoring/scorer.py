@@ -20,12 +20,13 @@ are the baseline under evaluation and must not be tuned until that evaluation ex
 """
 
 from dataclasses import dataclass
+from datetime import timedelta
 
 from agent.indicators.engine import VOLUME_AVG_LENGTH, IndicatorSet
 from agent.patterns.rules import PatternResult
 from agent.shared.types import CategoryScore, PriceBar
 
-SCORING_VERSION = "0.1.0"
+SCORING_VERSION = "0.2.0"  # see agent/version.py: same formulas, history counted in consecutive hours
 
 NOMINAL_WEIGHTS = {
     "trend": 0.25,
@@ -93,7 +94,20 @@ def score_volume(indicators: IndicatorSet, bars: list[PriceBar]) -> CategoryScor
         # the category is marked unavailable rather than scored on incompatible data.
         return CategoryScore("volume", score=0.0, weight=0.0, is_independent=True, detail={"reason": "synthetic bars: no true hourly volume"})
 
-    recent_change = bars[-1].close - bars[-1 - RECENT_CHANGE_LOOKBACK].close
+    # Scoring 0.2.0: look the reference candle up BY TIMESTAMP. Until then this counted rows
+    # back from the end, so a window containing an exchange outage compared the close with a
+    # candle up to 33 hours away from the 6 it intends -- the same row-counting mistake pipeline
+    # 0.2.0 fixed in the outcome lookup. A missing reference hour now makes the category
+    # unavailable instead of quietly scoring against the wrong hour.
+    reference_hour = bars[-1].as_of - timedelta(hours=RECENT_CHANGE_LOOKBACK)
+    reference = next((b for b in reversed(bars) if b.as_of == reference_hour), None)
+    if reference is None:
+        return CategoryScore(
+            "volume", score=0.0, weight=0.0, is_independent=True,
+            detail={"reason": f"no candle at {reference_hour.isoformat()}: cannot tell which way volume is confirming"},
+        )
+
+    recent_change = bars[-1].close - reference.close
     direction = 1.0 if recent_change > 0 else (-1.0 if recent_change < 0 else 0.0)
 
     volume_ratio = (indicators.volume - indicators.volume_avg) / indicators.volume_avg

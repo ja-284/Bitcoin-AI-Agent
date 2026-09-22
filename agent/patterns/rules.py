@@ -7,7 +7,7 @@ behind this same interface without touching anything else.
 
 from dataclasses import dataclass, field
 
-from agent.indicators.engine import IndicatorSet
+from agent.indicators.engine import IndicatorSet, consecutive_tail
 from agent.shared.types import PriceBar
 
 TREND_STRUCTURE_WINDOW = 20  # hours looked at when judging higher-highs/higher-lows
@@ -29,6 +29,9 @@ def _ma_cross(indicators: IndicatorSet) -> str:
 
 
 def _trend_structure(bars: list[PriceBar]) -> str:
+    # Scoring 0.2.0: "the last 20 hours" must BE the last 20 hours. Counting rows meant that a
+    # window containing an exchange outage compared two halves that were not 10 hours each.
+    bars = consecutive_tail(bars)
     if len(bars) < TREND_STRUCTURE_WINDOW:
         return "unknown"
     window = bars[-TREND_STRUCTURE_WINDOW:]

@@ -100,7 +100,12 @@ def signal_record(pred_rows: list[dict], outcome_rows: list[dict]) -> dict:
     """Live scoring 0.1.0 vs naive per horizon. Only pipeline 0.2.0 rows (the corrected pipeline)."""
     rows = sorted([r for r in pred_rows if r["pipeline_version"] == PIPELINE_VERSION], key=lambda r: r["as_of"])
     by_key = {(o["prediction_as_of"], o["horizon_hours"]): o for o in outcome_rows if o["status"] == "ok"}
-    out: dict = {"rows_pipeline_0_2_0": len(rows), "signal_mix": dict(Counter(r["signal"] for r in rows)), "by_horizon": {}}
+    # Scoring 0.2.0 (2026-09-22) changed what a gap-affected hour produces. Live windows have had
+    # no gaps, so the two versions agree on every hour recorded so far -- but the mix is reported
+    # rather than assumed, because mixing scoring versions silently is exactly what the version
+    # stamps exist to prevent.
+    out: dict = {"rows_pipeline_0_2_0": len(rows), "signal_mix": dict(Counter(r["signal"] for r in rows)),
+                 "scoring_versions": dict(Counter(r.get("scoring_version") for r in rows)), "by_horizon": {}}
     for h in HORIZONS:
         graded = [(r, by_key[(r["as_of"], h)]) for r in rows if (r["as_of"], h) in by_key]
         if not graded:
@@ -340,9 +345,9 @@ def fetch_rows() -> tuple[list[dict], list[dict]]:
     with get_connection() as c, c.cursor() as cur:
         cur.execute("""SELECT as_of, fetched_at, cutoff_at, pipeline_version, price_source, price_is_synthetic, run_meta,
                               COALESCE(jsonb_array_length(news_items), 0), explanation IS NOT NULL AND explanation <> '',
-                              signal, overall_confidence FROM predictions ORDER BY as_of""")
+                              signal, overall_confidence, scoring_version FROM predictions ORDER BY as_of""")
         preds = [dict(zip(["as_of", "fetched_at", "cutoff_at", "pipeline_version", "price_source", "price_is_synthetic", "run_meta",
-                           "news_items_n", "has_explanation", "signal", "overall_confidence"], r)) for r in cur.fetchall()]
+                           "news_items_n", "has_explanation", "signal", "overall_confidence", "scoring_version"], r)) for r in cur.fetchall()]
         cur.execute("""SELECT p.as_of, o.horizon_hours, o.status, o.pct_change_from_prediction
                        FROM prediction_outcomes o JOIN predictions p ON p.id = o.prediction_id""")
         outs = [dict(zip(["prediction_as_of", "horizon_hours", "status", "pct_change_from_prediction"], r)) for r in cur.fetchall()]
@@ -413,8 +418,8 @@ def render(rep: dict) -> str:
          f"- Rows without explanation: {h7['rows_without_explanation']}; rows with zero news: {h7['rows_with_zero_news']}; mean news items: {h7['mean_news_items']:.1f}" if h7["predictions"] else "",
          f"- Run errors recorded in run_meta (7d): {h7['run_errors'] or 'none'}; timestamp-rule violations: {h7['timestamp_rule_violations'] or 'none'}",
          "- Outcome coverage (since go-live): " + " · ".join(f"{k}: {v['ok']} ok / {v['unavailable']} unavailable / **{v['overdue']} overdue** of {v['due']} due" for k, v in hall["outcome_coverage"].items()),
-         "", "## 2. Live signal record — scoring 0.1.0", "",
-         f"Rows (pipeline 0.2.0): {sr['rows_pipeline_0_2_0']} · signal mix {sr['signal_mix']}", "",
+         "", "## 2. Live signal record — the scoring under test", "",
+         f"Rows (pipeline 0.2.0): {sr['rows_pipeline_0_2_0']} · signal mix {sr['signal_mix']} · scoring versions {sr['scoring_versions']}", "",
          "| horizon | graded n | acted | acted accuracy | naive | edge (BUY − SELL) | 95% interval | buy-and-hold mean |", "|---|---|---|---|---|---|---|---|"]
     for k, d in sr["by_horizon"].items():
         if not d.get("n"):

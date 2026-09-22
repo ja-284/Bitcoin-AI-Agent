@@ -70,16 +70,18 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
 
 ## Standing findings that constrain later phases
 
-- **9.26% of replayed hours have a gap inside their scoring window** (6,357 of 68,619; up to 33
-  missing hours in one window; 2017–2021 and one stretch ending 2023-04). Scoring 0.1.0 treats
-  the 250 candles as consecutive, and `score_volume` compares `bars[-1]` with `bars[-1-24]` by
-  position, so on those hours its direction term can read a candle up to 33 hours off. Found
-  2026-09-22 by reading the live scoring path; quantified from the replay cache; documented in
-  `docs/research/parity.md`. **Not fixed**: 0.1.0 is the frozen object under test, so changing
-  it would invalidate every comparison against it — the fix is a user decision with a version
-  bump. **Consequence for research:** any future fitted work on the replay must include a
-  robustness check that excludes gap-affected hours. E001/E002's conclusions were null results
-  and are not overturned by this, but they were computed with those hours included.
+- **The gap flaw is FIXED in scoring 0.2.0** (2026-09-22, on the user's decision; found the same
+  day by reading the live scoring path). 6,357 of 68,619 replayed hours (9.26%) had a gap inside
+  their 250-candle window, up to 33 missing hours; scoring 0.1.0 treated those windows as
+  consecutive and `score_volume` looked its reference candle up by row position. Now every
+  indicator runs on the unbroken run ending at the reference candle, the volume reference hour
+  is found by timestamp, and trend structure needs 20 real hours; anything whose hours are
+  missing is unavailable instead of wrong. **Verified before deployment (E016):** identical
+  output on all 62,262 gap-free hours (worst relative difference 3e-16), while on gap-affected
+  hours mean completeness falls 0.850 → 0.568 and 42.5% of signals change (3.94% of the whole
+  record). **Consequence:** E001, E002 and E011 are statements about scoring **0.1.0** and stay
+  valid as such; re-running the E001 baseline under 0.2.0 is the natural follow-up (the 0.2.0
+  replay is now cached, so it is cheap), and every future comparison must name its version.
 
 - Scoring 0.1.0 has no predictive value (E001) and none of its four categories does alone (E002). Re-weighting it (Phase 10) is pointless unless a feature with signal is found in Phase 8. If none is, Phase 10 collapses to "drop redundant categories" and the honest deliverable is calibrated *uncertainty* rather than direction.
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.

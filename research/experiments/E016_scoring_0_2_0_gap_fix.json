@@ -1,0 +1,57 @@
+{
+  "id": "E016",
+  "date": "2026-09-22",
+  "git_commit": "(this commit)",
+  "status": "verification of a correctness fix (not a research question; pre-registered claim, falsifiable)",
+  "why": "The user decided to fix the gap flaw found on 2026-09-22 (scoring counted ROWS where it claimed hours). Project principle 7 requires every meaningful change to be tested against historical data before it is trusted, and scoring 0.1.0 was the object E001, E002 and E011 evaluated, so the difference between the versions must be measured, not assumed.",
+  "what_changed": {
+    "indicators": "each indicator is computed on the longest UNBROKEN hourly run ending at the reference candle, and its warm-up must fit inside that run; otherwise it is unavailable (agent/indicators/engine.py::consecutive_tail)",
+    "volume category": "the candle 6 hours back is looked up BY TIMESTAMP; if the hour is missing the category is unavailable instead of comparing against whatever candle sat 6 rows back",
+    "chart patterns": "the 20-hour trend-structure window must be 20 real consecutive hours",
+    "unchanged": "every formula, weight and threshold; the decision thresholds; the confidence formula; the information cutoff and all pipeline rules (PIPELINE_VERSION stays 0.2.0)"
+  },
+  "claim": "PRE-REGISTERED, falsifiable, stated before the comparison was run: (a) on every hour whose 250-candle window contains NO missing hour, scoring 0.2.0 reproduces 0.1.0 EXACTLY (numeric difference < 1e-9 and identical signals/strings); (b) on hours whose window contains a gap, the affected categories become unavailable, so completeness falls and some signals change. Any clean hour that changed, or any gapped hour left identical in its availability, means the fix is wrong -- that would be a defect, not a finding.",
+  "method": "Full replay of the development period (2017-08-27 -> 2025-06-30, 68,619 hours, holdout not read) under scoring 0.2.0, compared row by row with the cached 0.1.0 replay of exactly the same hours and snapshot. The replay cache is keyed by scoring version, so the two cannot be mixed.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.2.0 (compared against 0.1.0)",
+  "unit_evidence": "tests/test_consecutive_history.py (8 tests: the unbroken-run helper, a gap-free window unchanged, a gap making the 200h average unavailable while shorter indicators survive, the volume category refusing a missing reference hour, trend structure needing 20 real hours, completeness falling instead of producing confident nonsense) and tests/test_scoring_golden.py, whose pinned values on a gap-free reference series are UNCHANGED from 0.1.0 -- the proof that the fix touches nothing else. 220 tests pass.",
+  "metrics": {
+    "hours_compared": 68619,
+    "gap_affected": 6357,
+    "gap_affected_share": "9.26%",
+    "clean_hours": {
+      "count": 62262,
+      "signals_identical": true,
+      "patterns_identical": true,
+      "worst_numeric_difference": "1.46e-11 absolute on a ~50,000 price level = 3e-16 relative, i.e. CSV round-trip precision of the stored 0.1.0 replay, not a behaviour change"
+    },
+    "gap_affected_hours": {
+      "signal_changed": "2702 (42.5%)",
+      "mean_completeness": "0.850 -> 0.568",
+      "overall_score_change": "mean 0.199, median 0.184, max 0.951",
+      "categories_lost": {
+        "trend": "5157 (81.1%)",
+        "chart_pattern": "2007 (31.6%)",
+        "volume": "532 (8.4%)",
+        "momentum": "392 (6.2%)"
+      }
+    },
+    "whole_record": {
+      "signal_changed": "2702 of 68619 (3.94%)",
+      "signal_mix_before": {
+        "BUY": 26921,
+        "SELL": 22502,
+        "HOLD": 19196
+      },
+      "signal_mix_after": {
+        "BUY": 26492,
+        "SELL": 22541,
+        "HOLD": 19586
+      },
+      "hours_with_no_usable_category": 392
+    }
+  },
+  "results": "BOTH PARTS OF THE CLAIM CONFIRMED. (a) On all 62,262 hours whose window has no gap -- which is every live hour recorded so far -- scoring 0.2.0 reproduces 0.1.0 exactly: identical signals and patterns, and a worst numeric difference of 3e-16 relative, which is the precision of the stored CSV rather than a change in behaviour. (b) On the 6,357 gap-affected hours the affected categories become unavailable: trend on 81.1% (it needs the 200-hour average), chart pattern on 31.6%, volume on 8.4%, momentum on 6.2%; mean completeness falls from 0.850 to 0.568 and the signal changes on 2,702 of them (42.5%). 392 hours now have no usable category at all and honestly report completeness 0. Across the whole record 3.94% of hours change signal. The size of that change on gap-affected hours is the measure of how wrong the old behaviour was on them.",
+  "affected_design": "Live: no change to any hour recorded so far (no live window has contained a gap) and none expected while Binance stays continuous; when a gap does occur the run now reports lower completeness instead of a confident number. Research: E001, E002 and E011 are statements about scoring 0.1.0 and remain valid as such; re-running the E001 baseline under 0.2.0 is the natural follow-up and is now cheap because the 0.2.0 replay is cached. The weekly report prints the scoring-version mix so the live record can never blend versions silently.",
+  "notes": "Consequence for earlier work regardless of the numbers: E001, E002 and E011 evaluated scoring 0.1.0 and remain valid statements about 0.1.0. Their conclusions were null results, and 0.2.0 differs only by making some inputs unavailable on gap-affected hours, so the direction of those conclusions cannot be reversed by this change -- but any future comparison must state which version it used."
+}
