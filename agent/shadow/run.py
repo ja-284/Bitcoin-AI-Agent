@@ -18,6 +18,7 @@ import argparse
 import logging
 import math
 import os
+import sys
 from datetime import datetime, timedelta, timezone
 
 from agent.data_providers.binance import BinanceProvider
@@ -59,23 +60,43 @@ def compute(model: MoveSizeModel, bars, extras_rows, fetched_at: datetime) -> di
     return row
 
 
+class ShadowRunError(RuntimeError):
+    """An operational failure, carrying the stage it happened in so it can be recorded usefully."""
+
+    def __init__(self, step: str, cause: BaseException):
+        super().__init__(f"{step}: {type(cause).__name__}: {cause}")
+        self.step, self.cause = step, cause
+
+
 def run_once(save: bool = True, version: str = DEFAULT_VERSION) -> dict | None:
-    model = load_model(version)
-    fetched_at = datetime.now(tz=timezone.utc)
-    bars, extras = BinanceProvider().get_hourly_klines_with_extras(WINDOW_HOURS)
-    row = compute(model, bars, extras, fetched_at)
+    step = "load_model"
+    try:
+        model = load_model(version)
+        step = "fetch"
+        fetched_at = datetime.now(tz=timezone.utc)
+        bars, extras = BinanceProvider().get_hourly_klines_with_extras(WINDOW_HOURS)
+        step = "compute"
+        row = compute(model, bars, extras, fetched_at)
+    except Exception as exc:  # noqa: BLE001 -- re-raised with the stage attached
+        raise ShadowRunError(step, exc) from exc
     if save:
         from agent.shadow.db import ensure_schema, live_close_for, save_shadow, shadow_exists
 
-        ensure_schema()
-        if shadow_exists(row["as_of"]):
-            logger.info("Shadow row for %s already exists -- nothing to do", row["as_of"].isoformat())
-            return None
-        live_close = live_close_for(row["as_of"])
-        row["live_close_match"] = None if live_close is None else bool(math.isclose(live_close, row["reference_close"], rel_tol=0, abs_tol=1e-9))
-        if row["live_close_match"] is False:
-            logger.warning("Reference close differs from the live prediction's: shadow %s vs live %s at %s", row["reference_close"], live_close, row["as_of"])
-        new_id = save_shadow(row)
+        try:
+            ensure_schema()
+        except Exception as exc:  # noqa: BLE001
+            raise ShadowRunError("save", exc) from exc
+        try:
+            if shadow_exists(row["as_of"]):
+                logger.info("Shadow row for %s already exists -- nothing to do", row["as_of"].isoformat())
+                return None
+            live_close = live_close_for(row["as_of"])
+            row["live_close_match"] = None if live_close is None else bool(math.isclose(live_close, row["reference_close"], rel_tol=0, abs_tol=1e-9))
+            if row["live_close_match"] is False:
+                logger.warning("Reference close differs from the live prediction's: shadow %s vs live %s at %s", row["reference_close"], live_close, row["as_of"])
+            new_id = save_shadow(row)
+        except Exception as exc:  # noqa: BLE001
+            raise ShadowRunError("save", exc) from exc
         if new_id is None:
             logger.info("Shadow row for %s was written by a concurrent run -- nothing to do", row["as_of"].isoformat())
             return None
@@ -86,12 +107,50 @@ def run_once(save: bool = True, version: str = DEFAULT_VERSION) -> dict | None:
     return row
 
 
+def run_and_record(version: str = DEFAULT_VERSION) -> int:
+    """
+    The entry point the hourly job uses. Returns the process exit code.
+
+    A failure of this research add-on is RECORDED, not crashed on: the live prediction was
+    already saved and self-checked by earlier steps, and dragging the whole job red every hour
+    teaches the owner to ignore the alarm (it did, on 2026-09-21/22). Nothing is swallowed --
+    the reason lands in shadow_run_errors, the weekly report prints it, and the watchdog turns
+    red when such errors persist. If even the recording fails, this exits 1, because then the
+    failure would otherwise be invisible.
+    """
+    from agent.data_providers.market_data import expected_last_closed
+    from agent.shadow.db import ensure_schema, save_run_error
+
+    try:
+        run_once(save=True, version=version)
+        return 0
+    except Exception as exc:  # noqa: BLE001 -- deliberately broad: the point is to record anything
+        step = getattr(exc, "step", "run")
+        cause = getattr(exc, "cause", exc)
+        logger.error("Shadow run failed at %s: %s: %s", step, type(cause).__name__, cause)
+        try:
+            ensure_schema()
+            save_run_error({
+                "expected_as_of": expected_last_closed(datetime.now(tz=timezone.utc)),
+                "step": step, "error_type": type(cause).__name__, "error_message": str(cause)[:4000],
+                "model_version": version, "pipeline_version": PIPELINE_VERSION, "code_commit": os.environ.get("GITHUB_SHA"),
+            })
+            logger.error("Recorded in shadow_run_errors; the live record is unaffected.")
+            return 0
+        except Exception as record_exc:  # noqa: BLE001
+            logger.error("Could not even record the failure (%s) -- failing the step so it is visible", record_exc)
+            return 1
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--no-save", action="store_true")
     parser.add_argument("--version", default=DEFAULT_VERSION)
+    parser.add_argument("--raise-errors", action="store_true", help="do not record failures; let them propagate (local debugging)")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    if not args.no_save and not args.raise_errors:
+        sys.exit(run_and_record(version=args.version))
     out = run_once(save=not args.no_save, version=args.version)
     if out is None:
         print("Shadow row for this hour already exists -- nothing to do.")

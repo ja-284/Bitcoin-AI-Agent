@@ -59,3 +59,27 @@ DROP TRIGGER IF EXISTS shadow_move_size_guard_update ON shadow_move_size;
 CREATE TRIGGER shadow_move_size_guard_update BEFORE UPDATE ON shadow_move_size FOR EACH ROW EXECUTE FUNCTION shadow_guard_update();
 DROP TRIGGER IF EXISTS shadow_move_size_forbid_delete ON shadow_move_size;
 CREATE TRIGGER shadow_move_size_forbid_delete BEFORE DELETE ON shadow_move_size FOR EACH ROW EXECUTE FUNCTION shadow_forbid_delete();
+
+-- Operational failures of the shadow job (Backend Phase C/I follow-up, 2026-09-22). A research
+-- add-on must not drag the live hourly job down, but nothing may be swallowed either: every
+-- failure is recorded here with its reason, the weekly report prints them, and the watchdog
+-- fails when they persist. Append-only, like the rest of the record.
+CREATE TABLE IF NOT EXISTS shadow_run_errors (
+    id BIGSERIAL PRIMARY KEY,
+    occurred_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    expected_as_of TIMESTAMPTZ,              -- the hour the run was trying to score (from the clock)
+    step TEXT NOT NULL,                      -- load_model | fetch | compute | save | outcomes
+    error_type TEXT NOT NULL,
+    error_message TEXT NOT NULL,
+    model_version TEXT,
+    pipeline_version TEXT,
+    code_commit TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_shadow_run_errors_time ON shadow_run_errors (occurred_at);
+-- Own guard function so this file stays self-contained (the predictions schema has its own).
+CREATE OR REPLACE FUNCTION shadow_errors_forbid_change() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'shadow_run_errors is append-only: % refused (row id %)', TG_OP, COALESCE(OLD.id, -1);
+END $$;
+DROP TRIGGER IF EXISTS shadow_run_errors_append_only ON shadow_run_errors;
+CREATE TRIGGER shadow_run_errors_append_only BEFORE UPDATE OR DELETE ON shadow_run_errors FOR EACH ROW EXECUTE FUNCTION shadow_errors_forbid_change();

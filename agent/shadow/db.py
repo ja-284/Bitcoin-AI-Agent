@@ -66,6 +66,35 @@ def shadow_rows_awaiting_outcome(now: datetime) -> list[tuple[int, datetime, flo
         return [(r[0], r[1], float(r[2]), float(r[3]), int(r[4])) for r in cur.fetchall()]
 
 
+def save_run_error(row: dict) -> int | None:
+    """Record an operational failure of the shadow job. Nothing about it is silent."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO shadow_run_errors (expected_as_of, step, error_type, error_message, model_version, pipeline_version, code_commit)
+            VALUES (%(expected_as_of)s, %(step)s, %(error_type)s, %(error_message)s, %(model_version)s, %(pipeline_version)s, %(code_commit)s)
+            RETURNING id
+            """,
+            row,
+        )
+        out = cur.fetchone()
+        conn.commit()
+        return out[0] if out else None
+
+
+def run_errors_since(since: datetime) -> list[dict]:
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT to_regclass('shadow_run_errors')")
+        if cur.fetchone()[0] is None:
+            return []
+        cur.execute(
+            """SELECT occurred_at, expected_as_of, step, error_type, error_message, code_commit
+               FROM shadow_run_errors WHERE occurred_at >= %s ORDER BY occurred_at""",
+            (since,),
+        )
+        return [dict(zip(["occurred_at", "expected_as_of", "step", "error_type", "error_message", "code_commit"], r)) for r in cur.fetchall()]
+
+
 def save_shadow_outcome(row_id: int, close: float | None, ret: float | None, large: bool | None, status: str, checked_at: datetime) -> None:
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(

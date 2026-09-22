@@ -67,6 +67,37 @@ class ModelVersionError(RuntimeError):
     """The artefact and the running code disagree about what the features mean."""
 
 
+FEATURE_CHECK_RTOL = 1e-6
+# Wide enough to ignore platform floating-point noise (~1e-14 between CPUs and math libraries),
+# far tighter than any real change to a feature's definition. See feature_reference_values().
+
+
+def compare_reference_values(stored: dict, current: dict, rtol: float = FEATURE_CHECK_RTOL) -> list[str]:
+    """Readable descriptions of every disagreement; empty when the definitions still match."""
+    problems = []
+    for name, want in stored.items():
+        have = current.get(name)
+        if have is None:
+            problems.append(f"{name}: no longer produced by the feature code")
+            continue
+        if len(have) != len(want):
+            problems.append(f"{name}: {len(want)} stored values vs {len(have)} now")
+            continue
+        for i, (a, b) in enumerate(zip(want, have)):
+            a, b = float(a), float(b)
+            if math.isnan(a) or math.isnan(b):
+                if math.isnan(a) != math.isnan(b):
+                    problems.append(f"{name}[{i}]: stored {a} vs now {b}")
+                continue
+            scale = max(abs(a), abs(b), 1e-12)
+            if abs(a - b) > rtol * scale:
+                problems.append(f"{name}[{i}]: stored {a:.10g} vs now {b:.10g} (relative {abs(a - b) / scale:.2e})")
+    for name in current:
+        if name not in stored:
+            problems.append(f"{name}: produced now but absent from the artefact")
+    return problems
+
+
 def load_model(version: str = DEFAULT_VERSION, verify_features: bool = True) -> MoveSizeModel:
     path = MODEL_DIR / f"{version}.json"
     d = json.loads(path.read_text(encoding="utf-8"))
@@ -76,16 +107,16 @@ def load_model(version: str = DEFAULT_VERSION, verify_features: bool = True) -> 
     if not (len(d["scaler_mean"]) == len(d["scaler_scale"]) == len(d["coef"]) == n):
         raise ValueError(f"artefact {path} is inconsistent (feature count {n})")
     if verify_features:
-        from agent.shadow.features import feature_fingerprint  # local import: features pulls in pandas
+        from agent.shadow.features import feature_reference_values  # local import: features pulls in pandas
 
-        expected = d.get("feature_fingerprint")
-        if not expected:
-            raise ModelVersionError(f"artefact {version} carries no feature fingerprint; refusing to run it blind")
-        current = feature_fingerprint(d["features"])
-        if current != expected:
+        stored = d.get("feature_reference")
+        if not stored:
+            raise ModelVersionError(f"artefact {version} carries no feature reference values; refusing to run it blind")
+        problems = compare_reference_values(stored, feature_reference_values(d["features"]))
+        if problems:
             raise ModelVersionError(
-                f"feature definitions changed since {version} was fitted (fingerprint {current[:12]} != {expected[:12]}); "
-                "export a new model version instead of running old coefficients on new features"
+                f"feature definitions changed since {version} was fitted: " + "; ".join(problems[:4])
+                + " -- export a new model version instead of running old coefficients on new features"
             )
     return MoveSizeModel(
         version=d["version"], horizon_hours=int(d["horizon_hours"]), threshold=float(d["threshold"]),

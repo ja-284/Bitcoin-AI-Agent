@@ -31,7 +31,7 @@ import pandas as pd
 from agent.research.model_test import LogisticModel, PlattCalibrator, build_frame
 from agent.research.periods import HOLDOUT
 from agent.research.walkforward import WalkForwardSpec
-from agent.shadow.features import feature_fingerprint
+from agent.shadow.features import feature_reference_values
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +92,7 @@ def fit(version: str) -> dict:
         "platt_a": cal.params()["a"],
         "platt_b": cal.params()["b"],
         "logit_clip": 1e-6,
-        "feature_fingerprint": feature_fingerprint(FEATURES),  # identifies the feature DEFINITIONS; checked at load time
+        "feature_reference": feature_reference_values(FEATURES),  # identifies the feature DEFINITIONS; re-checked at load time
         "training": {
             "fit_rows": int(len(train)), "fit_range": [str(train.index.min()), str(train.index.max())],
             "calib_rows": int(len(calib)), "calib_range": [str(calib.index.min()), str(calib.index.max())],

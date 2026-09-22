@@ -106,7 +106,8 @@ def test_shadow_record_coverage_blanks_and_evaluation():
     for i in range(12):
         if i == 4:
             continue  # one missing hour
-        r = {"as_of": T0 + i * H, "status": "ok", "status_reason": None, "live_close_match": True, "p_calibrated": 0.4 + 0.02 * i,
+        r = {"as_of": T0 + i * H, "fetched_at": T0 + i * H + timedelta(hours=1, minutes=12), "horizon_hours": 1,
+             "status": "ok", "status_reason": None, "live_close_match": True, "p_calibrated": 0.4 + 0.02 * i,
              "model_version": "move_size_1h_v1", "outcome_status": "ok" if i < 9 else None, "outcome_return": 0.004 if i % 2 else -0.001, "outcome_large": bool(i % 2)}
         rows.append(r)
     rows[2].update({"status": "unavailable", "status_reason": "missing inputs: rv_168", "p_calibrated": None, "outcome_status": None})
@@ -114,9 +115,18 @@ def test_shadow_record_coverage_blanks_and_evaluation():
     sh = shadow_record(rows, now)
     assert sh["n"] == 11 and sh["expected_hours"] == 12 and [m[11:13] for m in sh["missing_hours"]] == ["13"]
     assert sh["unavailable"] == 1 and sh["live_close_mismatch"] == 1
-    assert sh["outcomes"]["ok"] == 7 and sh["outcomes"]["pending"] == 3  # rows 9,10,11 ok+pending; row 2 unavailable excluded
-    assert sh["evaluation"]["n"] == 7 and "LIVE" in sh["evaluation"]["note"]
-    assert shadow_record([], now) == {"n": 0, "note": "no shadow rows yet"}
+    assert sh["outcomes"]["ok_prospective"] == 7 and sh["outcomes"]["pending"] == 3  # rows 9,10,11 ok+pending; row 2 unavailable excluded
+    assert sh["evaluation"]["n"] == 7 and "prospective" in sh["evaluation"]["note"]
+    assert sh["not_prospective"] == []
+
+    # a row written after its outcome candle had already closed is kept, shown, and NOT evaluated
+    late = [dict(r) for r in rows]
+    late[0]["fetched_at"] = late[0]["as_of"] + timedelta(hours=3)
+    sh_late = shadow_record(late, now)
+    assert sh_late["outcomes"]["ok_prospective"] == 6 and len(sh_late["not_prospective"]) == 1
+    assert sh_late["evaluation"]["n"] == 6
+    empty = shadow_record([], now)
+    assert empty["n"] == 0 and empty["note"] == "no shadow rows yet" and empty["errors"]["n"] == 0
 
 
 def test_paper_record_reports_intervals_only_with_enough_hours():
@@ -127,3 +137,19 @@ def test_paper_record_reports_intervals_only_with_enough_hours():
     assert "brier_rel_gain_ci95" in rec and "ece_ci95" in rec and rec["brier_rel_gain_ci95"][0] <= rec["brier_rel_gain"] <= rec["brier_rel_gain_ci95"][1]
     small = paper_record(p[:100], y[:100], np.abs(rng.normal(size=100)))
     assert "brier_rel_gain_ci95" not in small and "no intervals yet" in small["interval_note"]
+
+
+def test_shadow_record_reports_recorded_job_errors():
+    """A shadow job that fails no longer turns the hourly workflow red, so the report must show it."""
+    from agent.research.weekly_report import shadow_record
+
+    now = T0 + 12 * H
+    errors = [{"occurred_at": T0 + i * H, "expected_as_of": T0 + (i - 1) * H, "step": "load_model",
+               "error_type": "ModelVersionError", "error_message": "feature definitions changed", "code_commit": None} for i in (1, 3, 5)]
+    sh = shadow_record([], now, errors)
+    assert sh["n"] == 0 and sh["errors"]["n"] == 3 and sh["errors"]["by_step"] == {"load_model": 3}
+    assert sh["errors"]["latest"]["step"] == "load_model" and "ModelVersionError" in sh["errors"]["latest"]["error"]
+    rows = [{"as_of": T0 + i * H, "status": "ok", "status_reason": None, "live_close_match": True, "p_calibrated": 0.5,
+             "model_version": "move_size_1h_v1", "outcome_status": None, "outcome_return": None, "outcome_large": None} for i in range(3)]
+    assert shadow_record(rows, now, [])["errors"]["n"] == 0
+    assert shadow_record(rows, now)["errors"]["n"] == 0  # errors are optional

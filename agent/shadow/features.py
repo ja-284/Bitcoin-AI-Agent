@@ -54,7 +54,10 @@ def feature_row(bars: list[PriceBar], extras: pd.DataFrame, names: tuple[str, ..
     return values, reason
 
 
-# ---------------------------------------------------------------- feature-definition fingerprint (Backend Phase G)
+# ---------------------------------------------------------------- feature-definition check (Backend Phase G)
+FEATURE_CHECK_ROWS = 5  # the last five hours of the reference series are stored in each model artefact
+
+
 def reference_series(n: int = 600, seed: int = 20260921) -> tuple[list[PriceBar], pd.DataFrame]:
     """A fixed, deterministic candle series. Feature values on it identify the feature DEFINITIONS."""
     import numpy as np
@@ -74,17 +77,22 @@ def reference_series(n: int = 600, seed: int = 20260921) -> tuple[list[PriceBar]
     return bars, extras_frame(extras)
 
 
-def feature_fingerprint(names: tuple[str, ...] | list[str]) -> str:
+def feature_reference_values(names: tuple[str, ...] | list[str]) -> dict[str, list[float]]:
     """
-    sha256 of the named features over the last 100 hours of the reference series, rounded to
-    12 significant digits. Stored in every model artefact; checked when the model is loaded, so
-    a changed feature definition can never be evaluated with coefficients fitted on the old one.
-    """
-    import hashlib
+    The named features' values over the last FEATURE_CHECK_ROWS hours of the fixed reference
+    series. Stored in every model artefact and re-checked by load_model(), so coefficients
+    fitted on one definition of a feature can never be evaluated on a different definition.
 
+    Why VALUES compared with a tolerance and not a hash: the first version of this guard hashed
+    the values printed to 12 significant digits. GitHub's runners disagree with this machine in
+    the last few bits (different CPUs vectorise reductions differently, and libm differs between
+    platforms) -- a relative difference of only 1e-14 flipped that hash in ~56% of trials, and it
+    killed the live shadow step on about half of all hours on 2026-09-21/22. A real definition
+    change moves a feature by orders of magnitude more than FEATURE_CHECK_RTOL, so comparing
+    numbers with a tolerance catches what matters and ignores what does not.
+    """
     bars, extras = reference_series()
     grid = bars_to_frame(bars).index
     feats = pd.concat([all_features(bars), microstructure_features(grid, extras)], axis=1)
-    tail = feats[list(names)].iloc[-100:]
-    text = "|".join(",".join(f"{float(v):.12g}" if pd.notna(v) else "nan" for v in row) for row in tail.to_numpy())
-    return hashlib.sha256(text.encode()).hexdigest()
+    tail = feats[list(names)].iloc[-FEATURE_CHECK_ROWS:]
+    return {name: [float(v) for v in tail[name].to_numpy()] for name in names}

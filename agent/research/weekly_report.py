@@ -253,29 +253,60 @@ def paper_section(now: datetime, outcome_rows: list[dict]) -> dict:
 
 
 # ---------------------------------------------------------------- 3b. LIVE shadow record (agent/shadow)
-def shadow_record(rows: list[dict], now: datetime) -> dict:
-    """rows: dicts with as_of, status, status_reason, live_close_match, p_calibrated, model_version, outcome_status, outcome_return, outcome_large."""
+def shadow_record(rows: list[dict], now: datetime, errors: list[dict] | None = None) -> dict:
+    """
+    rows: dicts with as_of, fetched_at, horizon_hours, status, status_reason, live_close_match,
+    p_calibrated, model_version, outcome_status, outcome_return, outcome_large.
+    `errors`: rows of shadow_run_errors -- hours the shadow job could not score at all. They are
+    reported here so a broken job can never be invisible just because it no longer turns the
+    hourly workflow red (incident 2026-09-21/22).
+    """
+    errors = errors or []
+    error_summary = {
+        "n": len(errors), "by_step": dict(Counter(e["step"] for e in errors)), "by_type": dict(Counter(e["error_type"] for e in errors)),
+        "last_24h": sum(1 for e in errors if (now - e["occurred_at"]).total_seconds() <= 86400),
+        "latest": ({"occurred_at": errors[-1]["occurred_at"].isoformat(), "step": errors[-1]["step"],
+                    "error": f"{errors[-1]['error_type']}: {errors[-1]['error_message'][:300]}"} if errors else None),
+    }
     if not rows:
-        return {"n": 0, "note": "no shadow rows yet"}
+        return {"n": 0, "note": "no shadow rows yet", "errors": error_summary}
     rows = sorted(rows, key=lambda r: r["as_of"])
     first = rows[0]["as_of"]
     expected = expected_hours(first, now)
     got = {r["as_of"] for r in rows}
     missing = [t for t in expected if t not in got]
-    graded = [r for r in rows if r["outcome_status"] == "ok" and r["status"] == "ok"]
+
+    # research/LIVE_EVALUATION.md rule 1: a row is PROSPECTIVE only if its probability was stored
+    # before its outcome candle closed (as_of + horizon + 1h). A row written by a late catch-up
+    # run is kept and shown, but it is not evidence about the future and is not evaluated.
+    def prospective(r: dict) -> bool:
+        fetched = r.get("fetched_at")
+        return fetched is not None and fetched < r["as_of"] + timedelta(hours=int(r.get("horizon_hours") or 1) + 1)
+
+    graded = [r for r in rows if r["outcome_status"] == "ok" and r["status"] == "ok" and prospective(r)]
+    not_prospective = [r for r in rows if not prospective(r)]
     out = {
         "n": len(rows), "first_hour": first.isoformat(), "expected_hours": len(expected), "missing_hours": [t.isoformat() for t in missing],
         "unavailable": sum(1 for r in rows if r["status"] == "unavailable"), "unavailable_reasons": dict(Counter(r["status_reason"] for r in rows if r["status"] == "unavailable")),
         "live_close_mismatch": sum(1 for r in rows if r["live_close_match"] is False), "live_close_unchecked": sum(1 for r in rows if r["live_close_match"] is None),
         "model_versions": dict(Counter(r["model_version"] for r in rows)),
-        "outcomes": {"ok": len(graded), "unavailable": sum(1 for r in rows if r["outcome_status"] == "unavailable"), "pending": sum(1 for r in rows if r["status"] == "ok" and r["outcome_status"] is None)},
+        "outcomes": {"ok_prospective": len(graded), "unavailable": sum(1 for r in rows if r["outcome_status"] == "unavailable"), "pending": sum(1 for r in rows if r["status"] == "ok" and r["outcome_status"] is None)},
+        "not_prospective": [r["as_of"].isoformat() for r in not_prospective],
+        "errors": error_summary,
     }
     if graded:
         p = np.array([r["p_calibrated"] for r in graded], float)
         y = np.array([1.0 if r["outcome_large"] else 0.0 for r in graded])
         out["evaluation"] = paper_record(p, y, np.abs(np.array([r["outcome_return"] for r in graded], float)))
-        out["evaluation"]["note"] = "LIVE shadow record: probabilities were stored before their outcomes existed. Read intervals, not points, until n is in the thousands."
+        out["evaluation"]["note"] = ("LIVE shadow record, prospective rows only (the probability was stored before the outcome "
+                                     "candle closed). Read intervals, not points, until n is in the thousands.")
     return out
+
+
+def fetch_shadow_errors(since: datetime) -> list[dict]:
+    from agent.shadow.db import run_errors_since
+
+    return run_errors_since(since)
 
 
 def fetch_shadow_rows() -> list[dict]:
@@ -332,7 +363,7 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "health_last_7_days": health(preds, outs, now, max(week_ago, LIVE.start)),
         "health_since_go_live": health(preds, outs, now, LIVE.start),
         "signal_record": signal_record(preds, outs),
-        "shadow_record": shadow_record(fetch_shadow_rows(), now),
+        "shadow_record": shadow_record(fetch_shadow_rows(), now, fetch_shadow_errors(now - timedelta(days=30))),
         "watch_list": watch_list(preds, now),
     }
     try:  # Backend Phase I: drift vs the frozen development reference
@@ -399,12 +430,18 @@ def render(rep: dict) -> str:
     L += ["", "*Read this table as a growing record, not a verdict: intervals appear only once there are enough hours, and one week of hours is far too few to overturn E001.*"]
     sh = rep.get("shadow_record", {})
     L += ["", "## 3. LIVE shadow record — E012 + Platt, P(next-hour move > 0.25%) (agent/shadow, own table, never touches the signal)", ""]
+    err = sh.get("errors", {})
+    if err.get("n"):
+        L += [f"- **Shadow-job errors: {err['n']} recorded ({err['last_24h']} in the last 24h)** · by stage: {err['by_step']} · by type: {err['by_type']}",
+              f"  latest: {err['latest']['occurred_at'][:16]} at `{err['latest']['step']}` — {err['latest']['error']}"]
+    else:
+        L.append("- Shadow-job errors: none recorded")
     if not sh.get("n"):
         L.append("No shadow rows yet.")
     else:
         L += [f"- Rows: {sh['n']} since {sh['first_hour'][:16]} · expected {sh['expected_hours']} · missing {len(sh['missing_hours'])} {sh['missing_hours'][:6]}",
               f"- Unavailable (honest blanks): {sh['unavailable']} {sh['unavailable_reasons'] or ''} · reference close ≠ live prediction's: **{sh['live_close_mismatch']}** (unchecked: {sh['live_close_unchecked']}) · model versions: {sh['model_versions']}",
-              f"- Outcomes: {sh['outcomes']['ok']} graded · {sh['outcomes']['unavailable']} unavailable · {sh['outcomes']['pending']} pending"]
+              f"- Outcomes: {sh['outcomes']['ok_prospective']} graded (prospective) · {sh['outcomes']['unavailable']} unavailable · {sh['outcomes']['pending']} pending · written too late to count as prospective: {len(sh['not_prospective'])}"]
         ev = sh.get("evaluation")
         if ev:
             L += [f"- Evaluation (n={ev['n']}): Brier {ev['brier']:.4f} vs base-rate {ev['brier_base_rate']:.4f} ({ev['brier_rel_gain'] * 100:+.1f}%{_ci(ev, 'brier_rel_gain', 100)}) · accuracy {ev['accuracy']:.3f} vs naive {ev['naive_rate']:.3f} · ρ {ev['rank_corr_p_vs_abs_return']:+.3f}{_ci(ev, 'rank_corr_p_vs_abs_return')} · ECE {ev['ece']:.3f}{_ci(ev, 'ece')} · {ev['interval_note']}",

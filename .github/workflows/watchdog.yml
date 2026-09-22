@@ -30,3 +30,8 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Newest prediction must be less than 3 hours old
         run: python -m agent.healthcheck --max-age-hours 3
+
+      # A single failed shadow hour is recorded and tolerated (it must not turn the hourly job
+      # red every hour -- see agent/shadow/run.py). A persistent failure must still be alarmed.
+      - name: Shadow job must not be failing repeatedly
+        run: python -m agent.healthcheck --shadow-errors-max 2 --shadow-errors-hours 6

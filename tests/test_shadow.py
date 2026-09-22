@@ -141,7 +141,7 @@ def test_grade_stores_a_fraction_and_applies_the_threshold():
 
 # A model version is immutable. Any edit to the artefact must come with a new version name
 # AND a deliberate update of this pin -- both visible in git. (Backend Phase E/G)
-ARTEFACT_SHA256 = {"move_size_1h_v1": "9e4c292d4a4692e2b6995fc3bc7e06022f8f13071496145e83c0330c966b7239"}  # of the canonical JSON (line endings do not matter)
+ARTEFACT_SHA256 = {"move_size_1h_v1": "7d53cd073fc2007ede16a3096ffa7f0db9b4d926ea933b662cd97a98717f40ab"}  # of the canonical JSON (line endings do not matter)
 
 
 def test_frozen_artefacts_are_unchanged():
@@ -158,8 +158,61 @@ def test_changed_feature_definitions_are_refused_at_load_time(monkeypatch):
     import agent.shadow.features as sf
     from agent.shadow.model import ModelVersionError
 
-    load_model(DEFAULT_VERSION)  # current code matches the artefact's fingerprint
-    monkeypatch.setattr(sf, "feature_fingerprint", lambda names: "0" * 64)
+    load_model(DEFAULT_VERSION)  # current code matches the artefact's stored reference values
+    real = sf.feature_reference_values
+
+    def changed(names):  # a definition change: every value 1% different
+        return {k: [v * 1.01 for v in vals] for k, vals in real(names).items()}
+
+    monkeypatch.setattr(sf, "feature_reference_values", changed)
     with pytest.raises(ModelVersionError, match="feature definitions changed"):
         load_model(DEFAULT_VERSION)
+
+    monkeypatch.setattr(sf, "feature_reference_values", lambda names: {k: v for k, v in list(real(names).items())[1:]})
+    with pytest.raises(ModelVersionError, match="no longer produced"):
+        load_model(DEFAULT_VERSION)
+
     assert load_model(DEFAULT_VERSION, verify_features=False).version == DEFAULT_VERSION  # research tooling may opt out explicitly
+
+
+def test_platform_floating_point_noise_does_not_trip_the_guard(monkeypatch):
+    """
+    REGRESSION (incident 2026-09-21/22). The first version of this guard hashed feature values
+    printed to 12 significant digits. GitHub's runners differ from this machine in the last few
+    bits, so the hash flipped on roughly half of all runs and the live shadow step died before
+    it could fetch anything. Noise of this size must never be mistaken for a definition change.
+    """
+    import agent.shadow.features as sf
+
+    real = sf.feature_reference_values
+    rng = np.random.default_rng(11)
+    for rel in (1e-15, 1e-14, 1e-13, 1e-12, 1e-9):
+        monkeypatch.setattr(sf, "feature_reference_values",
+                            (lambda r: (lambda names: {k: [v * (1 + float(rng.uniform(-r, r))) for v in vals] for k, vals in real(names).items()}))(rel))
+        load_model(DEFAULT_VERSION)  # must not raise at any of these magnitudes
+
+
+def test_run_and_record_writes_a_failure_instead_of_crashing_the_hourly_job(monkeypatch):
+    """A broken shadow step must be recorded and must not fail the job; an unrecordable one must fail it."""
+    import agent.shadow.db as sdb
+    import agent.shadow.run as srun
+
+    recorded = []
+    monkeypatch.setattr(sdb, "ensure_schema", lambda: None)
+    monkeypatch.setattr(sdb, "save_run_error", lambda row: recorded.append(row) or 1)
+    monkeypatch.setattr(srun, "load_model", lambda v: (_ for _ in ()).throw(RuntimeError("artefact exploded")))
+    assert srun.run_and_record() == 0
+    assert recorded and recorded[0]["step"] == "load_model" and "artefact exploded" in recorded[0]["error_message"]
+    assert recorded[0]["error_type"] == "RuntimeError" and recorded[0]["expected_as_of"].minute == 0
+
+    monkeypatch.setattr(sdb, "save_run_error", lambda row: (_ for _ in ()).throw(ConnectionError("db down")))
+    assert srun.run_and_record() == 1  # nowhere to record it -> the step must go red
+
+
+def test_shadow_run_error_names_the_stage(monkeypatch):
+    import agent.shadow.run as srun
+
+    monkeypatch.setattr(srun.BinanceProvider, "get_hourly_klines_with_extras", lambda self, n: (_ for _ in ()).throw(RuntimeError("all Binance endpoints failed")))
+    with pytest.raises(srun.ShadowRunError) as excinfo:
+        srun.run_once(save=False)
+    assert excinfo.value.step == "fetch" and "Binance" in str(excinfo.value)

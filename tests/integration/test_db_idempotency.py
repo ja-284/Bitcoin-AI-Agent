@@ -208,3 +208,25 @@ def test_record_is_append_only_and_invariants_are_enforced_by_the_database(scrat
     with sdb.get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT outcome_return FROM shadow_move_size WHERE id = %s", (sid,))
         assert cur.fetchone()[0] == 0.003
+
+
+def test_shadow_run_errors_are_recorded_and_append_only(scratch_db):
+    """A failed shadow job must leave a readable trace that nothing can quietly edit away."""
+    import psycopg
+
+    db, sdb = scratch_db
+    row = {"expected_as_of": datetime(2026, 1, 10, tzinfo=timezone.utc), "step": "load_model", "error_type": "ModelVersionError",
+           "error_message": "feature definitions changed since move_size_1h_v1 was fitted", "model_version": "move_size_1h_v1",
+           "pipeline_version": "0.2.0", "code_commit": "abc123"}
+    first = sdb.save_run_error(row)
+    second = sdb.save_run_error({**row, "step": "fetch"})
+    assert first and second and second != first  # every failure is its own row (not deduplicated)
+    got = sdb.run_errors_since(datetime(2026, 1, 1, tzinfo=timezone.utc))
+    assert [g["step"] for g in got] == ["load_model", "fetch"] and "feature definitions changed" in got[0]["error_message"]
+    assert sdb.run_errors_since(datetime(2027, 1, 1, tzinfo=timezone.utc)) == []
+    for sql in ("UPDATE shadow_run_errors SET error_message = 'nothing to see' WHERE id = %s",
+                "DELETE FROM shadow_run_errors WHERE id = %s"):
+        with pytest.raises(psycopg.Error):
+            with db.get_connection() as conn, conn.cursor() as cur:
+                cur.execute(sql, (first,))
+                conn.commit()
