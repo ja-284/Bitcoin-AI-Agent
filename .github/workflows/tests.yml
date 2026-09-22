@@ -1,0 +1,36 @@
+# Run the test suite on GitHub's own runners, on every push.
+#
+# Why this exists (incident 2026-09-21/22): a guard that compared feature values bit-exactly
+# passed on the development machine and failed on about half of GitHub's runners, which broke
+# the live shadow step for ~17 hours. The suite is hermetic -- no network, no database, no
+# secrets -- so it can run here, and it exercises exactly the platform the hourly job runs on.
+# Had this workflow existed, the failure would have shown up on the commit instead of in
+# production. See docs/ops/incident_2026-09-21_shadow_step.md.
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: reads the repository, nothing else. No secrets are passed: the suite must
+# keep running without them, which is itself worth enforcing.
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run the test suite
+        run: python -m pytest tests/ -q
