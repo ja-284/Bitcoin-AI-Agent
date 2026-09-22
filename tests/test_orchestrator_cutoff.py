@@ -38,6 +38,8 @@ def test_cutoff_is_reference_candle_close_and_reaches_news_and_prediction(monkey
         return NewsResult(items=[], cutoff=cutoff, sources_attempted=3)
 
     monkeypatch.setattr(orch, "get_market_data", lambda n: _market(bars))
+    # The schema guard would otherwise open a real connection: the suite must need no database.
+    monkeypatch.setattr(orch, "assert_schema_current", lambda: None)
     monkeypatch.setattr(orch, "prediction_exists", lambda as_of: False)
     monkeypatch.setattr(orch, "get_recent_news", fake_news)
     monkeypatch.setattr(orch.news_scorer, "score_news", lambda items: CategoryScore("news", 0.0, 0.0, True, {}))
@@ -60,6 +62,7 @@ def test_existing_prediction_short_circuits_before_any_ai_call(monkeypatch):
     calls = {"news": 0, "explain": 0}
 
     monkeypatch.setattr(orch, "get_market_data", lambda n: _market(bars))
+    monkeypatch.setattr(orch, "assert_schema_current", lambda: None)  # no database in the suite
     monkeypatch.setattr(orch, "prediction_exists", lambda as_of: True)
     monkeypatch.setattr(orch, "get_recent_news", lambda cutoff: calls.__setitem__("news", calls["news"] + 1))
     monkeypatch.setattr(orch.news_scorer, "score_news", lambda items: calls.__setitem__("news", calls["news"] + 1))

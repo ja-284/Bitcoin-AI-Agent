@@ -33,4 +33,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Run the test suite
+        # A deliberately unreachable DATABASE_URL. The suite must need no database, and stating
+        # that as a broken value makes a test that quietly starts depending on one fail here
+        # immediately and obviously, instead of passing on a developer machine that happens to
+        # have a working .env. (Caught exactly that on 2026-09-22, when a new schema guard made
+        # five orchestrator tests open real connections.)
+        env:
+          DATABASE_URL: "postgresql://nobody:nobody@127.0.0.1:1/there-is-no-database-in-ci"
         run: python -m pytest tests/ -q

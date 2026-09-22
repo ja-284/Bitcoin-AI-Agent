@@ -42,6 +42,8 @@ def _market(bars):
 
 def _wire(monkeypatch, bars, news_scorer_fn=None, explainer_fn=None, save_fn=None):
     monkeypatch.setattr(orch, "get_market_data", lambda n: _market(bars))
+    # The schema guard would otherwise open a real connection: the suite must need no database.
+    monkeypatch.setattr(orch, "assert_schema_current", lambda: None)
     monkeypatch.setattr(orch, "prediction_exists", lambda as_of: False)
     items = [NewsItem("Bitcoin does a thing", "Test", "http://x/1", bars[-1].as_of + timedelta(minutes=30))]
     monkeypatch.setattr(orch, "get_recent_news", lambda cutoff: NewsResult(items=items, cutoff=cutoff, sources_attempted=1, fetched_count=1))
@@ -207,3 +209,34 @@ def test_the_contract_shows_a_partial_news_failure():
     assert news["sources_failed"] == ["Decrypt", "CoinDesk"]
     assert news["sources_used"] == news["sources_total"] - 2
     assert news["available"] is True, "it still produced news -- the point is that the shortfall is visible"
+
+
+# ---------------------------------------------------------------- schema mismatch
+def test_a_stale_database_schema_stops_the_run_before_anything_is_written(monkeypatch):
+    """
+    Version 3 is what added the CHECK constraints and the append-only triggers. An older
+    database would quietly accept rows this project believes are impossible, so a mismatch has
+    to stop the run rather than be discovered later by a strange row.
+    """
+    from agent.database import db
+
+    monkeypatch.setattr(db, "schema_version", lambda: "2")
+    with pytest.raises(RuntimeError, match="expects"):
+        db.assert_schema_current()
+
+    monkeypatch.setattr(db, "schema_version", lambda: None)  # schema_meta does not exist at all
+    with pytest.raises(RuntimeError):
+        db.assert_schema_current()
+
+    monkeypatch.setattr(db, "schema_version", lambda: db.SCHEMA_VERSION)
+    db.assert_schema_current()  # matching version: no exception
+
+
+def test_the_schema_guard_runs_before_the_duplicate_check(monkeypatch):
+    """Ordering matters: a stale schema must be caught even on an hour that is already saved."""
+    calls = []
+    monkeypatch.setattr(orch, "assert_schema_current", lambda: calls.append("schema"))
+    monkeypatch.setattr(orch, "prediction_exists", lambda as_of: calls.append("exists") or True)
+    monkeypatch.setattr(orch, "get_market_data", lambda hours: _market(_bars(300)))
+    assert orch.run_once(save=True) is None
+    assert calls == ["schema", "exists"]

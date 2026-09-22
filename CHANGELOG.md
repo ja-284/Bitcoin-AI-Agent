@@ -23,6 +23,21 @@ New, read-only, and not yet wired to anything that runs.
 - **`docs/api/contract_v1.md`** documents the fields, what a frontend must not do, and the three
   transport options with a recommendation. Transport is deliberately not decided yet.
 
+## backend — 2026-09-22 (a stale database schema now stops the run)
+
+- **`SCHEMA_VERSION` was defined, read, and never compared in the live path** — only the weekly
+  report checked it. Version 3 is what added the CHECK constraints and the append-only triggers
+  that several guarantees elsewhere assume, so an older database would quietly accept rows this
+  project believes are impossible. `assert_schema_current()` now runs before anything is
+  written, costs one small query an hour, and was verified against the live database (0.5s,
+  database 3 = code 3) before being committed.
+- **It immediately caused a regression, which is how the next fix was found.** The guard made
+  five orchestrator tests open real database connections, breaking the rule that the suite needs
+  no network and no database. They pass on a machine with a working `.env`, which is exactly why
+  it would not have been noticed. The tests now stub the guard, and **CI runs the suite with a
+  deliberately unreachable `DATABASE_URL`** so a test that quietly starts depending on a database
+  fails there immediately instead of passing locally.
+
 ## backend — 2026-09-22 (observability review: can a failure be told apart from a normal run?)
 
 Every failure handler in the live path read against one standard: a failure must never be

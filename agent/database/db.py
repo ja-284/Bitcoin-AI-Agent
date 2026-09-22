@@ -46,6 +46,26 @@ def schema_version() -> Optional[str]:
         return row[0] if row else None
 
 
+def assert_schema_current() -> None:
+    """
+    Fail loudly, before anything is written, if the database is not on the schema this code was
+    written against.
+
+    A mismatch is not a cosmetic problem. Version 3 is what added the CHECK constraints (the
+    cutoff rule, fetch-after-cutoff, outcome consistency) and the append-only triggers, and a
+    good deal of code elsewhere is written on the assumption that those exist -- an older
+    database would quietly accept rows this project believes are impossible. Checking costs one
+    small query an hour; not checking costs a corrupted record that looks fine.
+    """
+    found = schema_version()
+    if found != SCHEMA_VERSION:
+        raise RuntimeError(
+            f"database schema is {found!r} but this code expects {SCHEMA_VERSION!r}. "
+            "The invariants and append-only triggers this code relies on may be missing. "
+            "Apply the migrations first: python -c \"from agent.database.db import init_schema; init_schema()\""
+        )
+
+
 def prediction_exists(as_of: datetime) -> bool:
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT 1 FROM predictions WHERE as_of = %s LIMIT 1", (as_of,))

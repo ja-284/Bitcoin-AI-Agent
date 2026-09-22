@@ -23,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 
 from agent.ai import explainer, news_scorer
 from agent.data_providers.market_data import get_market_data
-from agent.database.db import prediction_exists, save_prediction
+from agent.database.db import assert_schema_current, prediction_exists, save_prediction
 from agent.decision.decision import compute_confidence, decide_signal
 from agent.indicators.engine import HISTORY_HOURS, compute_indicators
 from agent.news.news_service import get_recent_news
@@ -52,6 +52,11 @@ def run_once(save: bool = True) -> Prediction | None:
     bars = market.bars
     reference = bars[-1]
     cutoff = information_cutoff(reference)
+    if save:
+        # Before anything is written: is the database the shape this code expects? A stale
+        # schema would be missing the constraints and triggers that several guarantees here
+        # assume, so it must stop the run rather than be discovered later by a strange row.
+        assert_schema_current()
     if save and prediction_exists(reference.as_of):
         logger.info("Prediction for %s already exists -- nothing to do.", reference.as_of.isoformat())
         return None
