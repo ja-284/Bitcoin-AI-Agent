@@ -27,7 +27,7 @@ Hypothesis, pre-registered criterion, data snapshot names and ranges, periods, h
 | claim | how it was checked | result |
 |---|---|---|
 | a live prediction can be rebuilt from candles + committed code | `agent/research/parity.py`: every live hour re-analysed by the replay on today's candles | 44/44 identical (close, volume, 9 indicators, 4 categories, overall score without news) |
-| a shadow probability can be rebuilt from its stored features + the frozen artefact | `MoveSizeModel.predict(row.features)` vs stored `p_raw`/`p_calibrated` | identical to 1e-12 on every stored row |
+| a shadow probability can be rebuilt from its stored features + the frozen artefact | `MoveSizeModel.predict(row.features)` vs stored `p_raw`/`p_calibrated` | agrees to **≤ 5e-16** on every stored row (2026-09-22: 13/13). Not bit-identical: the database returns 15 significant digits, so the stored number differs from the recomputed one in the 16th digit. Irrelevant at any scale a probability is used, but stated exactly rather than claimed as "identical" |
 | an experiment can be re-run from its recorded command | E012 `size_expanding_1h` re-run to a scratch tag and compared with the committed JSON | n, Brier, accuracy, ECE, ρ **bit-identical** in exploration, validation and overall |
 | the frozen model equals the research fit | artefact fit rows/ranges/Platt (a, b) vs the E013-style fit in the weekly paper record | identical (61,971 rows to 2025-03-30; a = 1.034, b = 0.196) |
 | the live outcome tracker equals the research label rule | weekly report consistency check; `tests/test_parity.py` | 46/46 hours equal to 1e-16; unit test across a gap |

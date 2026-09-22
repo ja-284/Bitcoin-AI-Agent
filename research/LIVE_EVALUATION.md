@@ -8,9 +8,13 @@ exist when the model was fitted?
 ## Rules
 
 1. **Prospective only.** A shadow row counts only if its probability was stored before its
-   outcome candle closed (`fetched_at < as_of + 2h`, and the outcome written by the grading
-   step later). The after-the-fact "paper record" of earlier live hours is reported separately
-   and never merged into the prospective statistics.
+   outcome candle closed (`fetched_at < as_of + horizon + 1h`, and the outcome written by the
+   grading step later). The after-the-fact "paper record" of earlier live hours is reported
+   separately and never merged into the prospective statistics.
+   *Enforced in code since 2026-09-22* (`agent/research/weekly_report.py::shadow_record`): until
+   then this rule was documented but not applied, and a row written by a late catch-up run
+   would have been evaluated. Rows that fail the rule are listed as `not_prospective` and
+   excluded from the evaluation.
 2. **No tuning on the judging data.** Nothing about the artefact changes because of these
    numbers. If the model degrades, that is recorded; a replacement is a new experiment on
    development data, a new artefact version, and a new prospective record starting from zero.
@@ -50,3 +54,10 @@ and the latest probabilities.
 | 2026-08-20 → 2026-09-19 | contaminated buffer | no confirmatory use |
 | 2026-09-19 → 2026-09-21 17:00 | live, before the shadow existed | after-the-fact paper record only |
 | 2026-09-21 17:00 → | **prospective shadow record** | judges the model; never tunes it |
+
+**Gap in the prospective record:** 8 hours are missing (2026-09-21 19:00; 2026-09-22 01, 02,
+04, 05, 07, 09, 11 UTC) because the shadow step failed on about half of all runs until
+2026-09-22 13:0x UTC (`docs/ops/incident_2026-09-21_shadow_step.md`). They are deliberately
+**not** backfilled: a probability computed after its outcome exists is not prospective
+evidence, whatever it looks like in the table. The hours simply do not count, and the
+checkpoint thresholds (500 / 2,000 / 5,000 hours) count only rows that do.
