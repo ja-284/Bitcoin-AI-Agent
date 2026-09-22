@@ -111,15 +111,11 @@ no-fitting baseline), E020 (model family), E021 (threshold definition), E022 (wh
 the isolated signal); backend contract v1 + its transport; observability review; schema-mismatch
 guard; readiness gate scored across 22 categories; README and open-user-actions docs.
 
-**THE ONE THING TO CHECK FIRST ON RESUME.** The schema guard (`assert_schema_current`, commit
-`2cef624`) is the only change today that touches the hourly job's live path, and it had **not yet
-been observed in a production run** when work stopped — the 19:00 prediction was due at 20:12 UTC
-and the last confirmed row was 18:00, written by `da35e78`. Verify: a prediction exists for
-19:00 UTC or later, written by a commit at or after `2cef624`, with a shadow row and no
-`shadow_run_errors`. The guard was verified against the live database by hand (0.5s, database 3 =
-code 3) and the hourly path imports nothing else that changed today (checked explicitly), so this
-is a confirmation rather than a worry. If it *did* fail, the symptom would be a red hourly job
-with a `RuntimeError` naming the schema versions, and the fix is to revert that one commit.
+**The schema guard is VERIFIED IN PRODUCTION** (this was the one open question at the pause, and
+it was answered before stopping). The 19:00 UTC prediction was written at 20:12:38 by commit
+`0732a10` — after the guard commit `2cef624` — with its shadow row, no `shadow_run_errors`, no
+fallback data and no timestamp violations. 74 predictions, 20 shadow rows, 0 missing hours in 48.
+Nothing about today's work is left unobserved in the live system.
 
 **Then, in order:**
 1. Wire the publish step into `.github/workflows/hourly.yml` — one step after
