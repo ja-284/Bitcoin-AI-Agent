@@ -111,10 +111,26 @@ def test_trading_boundary_is_stated_in_the_contract_itself():
 
 # ---------------------------------------------------------------- degraded states
 def test_missing_news_is_reported_rather_than_hidden():
-    s = _state(pred=_pred(news_items=[], run_meta={"news_error": "the scorer timed out"}))
+    s = _state(pred=_pred(news_items=[], run_meta={"news_error": "the scorer timed out",
+                                                   "news_error_type": "TimeoutError"}))
     news = s["latest"]["news"]
     assert news["available"] is False
-    assert news["reason_if_absent"] == "the scorer timed out"
+    assert "failed this hour" in news["reason_if_absent"]
+    assert news["error_type"] == "TimeoutError"
+
+
+def test_the_raw_exception_text_never_reaches_the_contract():
+    """
+    A stringified exception is verbose, exposes internal structure and is not something anyone
+    should promise is safe to publish. It stays in the database, where it is needed for
+    diagnosis -- it is what identified the 2026-09-21 truncation -- and stops there.
+    """
+    import json
+    secret_looking = "Connection failed: postgresql://user:hunter2@db.example/postgres"
+    s = _state(pred=_pred(news_items=[], run_meta={"news_error": secret_looking,
+                                                   "news_error_type": "OperationalError"}))
+    assert secret_looking not in json.dumps(s, default=str)
+    assert s["latest"]["news"]["error_type"] == "OperationalError"
 
 
 def test_an_unavailable_category_is_visible_as_unavailable():

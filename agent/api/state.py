@@ -226,9 +226,15 @@ def assemble(pred: dict | None, shadow: dict | None, counts: dict, outcomes: dic
         "categories": [{"name": c.get("name"), "score": c.get("score"), "weight": c.get("weight"),
                         "is_independent": c.get("is_independent"),
                         "available": bool(c.get("weight"))} for c in categories],
+        # The raw exception text stays in the database, where it is needed for diagnosis, and
+        # never reaches this contract: it is verbose, it exposes internal structure, and a
+        # stringified exception is not something anyone should promise is safe to publish.
         "news": {"available": bool(news_items) and not news_error,
                  "items_used": len(news_items),
-                 "reason_if_absent": news_error or (None if news_items else "no items passed the cutoff"),
+                 "reason_if_absent": ("the news step failed this hour, so news was left out rather than "
+                                      "counted as neutral" if news_error else
+                                      (None if news_items else "no stories were published before the cutoff")),
+                 "error_type": run_meta.get("news_error_type") if news_error else None,
                  "detail": ("Only stories that were published and retrievable before the information cutoff "
                             "are used. An hour with no usable news is scored on the other categories and "
                             "says so here.")},

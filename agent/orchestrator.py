@@ -77,6 +77,10 @@ def run_once(save: bool = True) -> Prediction | None:
     except Exception as exc:  # noqa: BLE001 -- a failed news step degrades the run, it doesn't end it
         logger.warning("News step failed, continuing with reduced confidence: %s", exc)
         run_meta["news_error"] = str(exc)
+        # The full message is kept for diagnosis (it is what identified the 2026-09-21
+        # truncation); the TYPE is stored separately so failures can be counted and grouped
+        # without anything having to parse free text or repeat it to a reader.
+        run_meta["news_error_type"] = type(exc).__name__
 
     result = score_all(bars, indicators, patterns, news_score=news_score)
     signal = decide_signal(result.overall_score)
