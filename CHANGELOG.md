@@ -5,6 +5,30 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-09-22 (E018: the move-size model is over-featured; no code that runs changed)
+
+No version stamp moves: nothing in the live path, the scoring or the frozen artefact changed.
+Recorded here because it changes how the research deliverable must be **described**.
+
+- **One of the nine model inputs is arithmetic.** After the declared log transforms,
+  `vol_ratio_24_168` equals `rv_24` minus `rv_168` exactly (largest disagreement 1.0e-15 over
+  51,053 hours). `move_size_1h_v1` therefore carries **eight** independent inputs, not nine.
+  L2 regularisation kept the predictions healthy, which is why E012 and E013 never showed it —
+  but the three volatility coefficients cannot be read individually, and the model must no
+  longer be described as using nine pieces of information.
+- **Six of those inputs carry 99.4% of its skill**; four carry 95.6%. Group ablation: dropping
+  volatility costs 61% of the model's validation skill, trade intensity 18%, calendar 6%.
+- **A method lesson, recorded against myself.** The one-standard-error rule I pre-registered used
+  a *paired* bootstrap standard error, which shrinks as fast as the difference it measures and so
+  degenerates into "pick the largest model". Its answer (k = 9) stands as the primary result
+  because it was pre-registered; the classical unpaired rule (k = 4) is recorded beside it as
+  exploratory, with the defect explained.
+- **`block_bootstrap` refactored** to call a new `block_bootstrap_estimates`, which returns the
+  resampled values so a paired comparison can measure their spread. Same resampling, same seed,
+  same numbers — `tests/test_feature_count.py` asserts the two agree.
+- Nine new tests; the ablation-covers-every-feature and identical-rows guards each fail when
+  removed.
+
 ## scoring 0.2.0 — 2026-09-22 (history counted in consecutive hours)
 
 The first change to the scoring since go-live, made on the user's decision after the flaw was

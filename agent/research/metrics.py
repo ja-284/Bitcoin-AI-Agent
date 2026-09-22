@@ -137,16 +137,20 @@ def reliability_table(p_up: np.ndarray, y_up: np.ndarray, edges: list[float] | N
     return buckets, ece, mce
 
 
-def block_bootstrap(values: np.ndarray, stat, block: int, n_boot: int = 1000, seed: int = 0) -> tuple[float, float, float]:
+def block_bootstrap_estimates(values: np.ndarray, stat, block: int, n_boot: int = 1000, seed: int = 0) -> tuple[float, np.ndarray]:
     """
     Circular block bootstrap of `stat(values)` over a time-ordered array (or 2-D array of
-    rows). Returns (point estimate, 2.5th pct, 97.5th pct). `block` = hours per block.
+    rows). Returns (point estimate, the n_boot resampled estimates). `block` = hours per hour-block.
+
+    Callers that only want an interval use `block_bootstrap`; this variant exists because a
+    PAIRED comparison of two models needs the spread of the resampled differences, not a
+    percentile of one of them. The resampling itself is identical, so the two agree exactly.
     """
     values = np.asarray(values)
     n = len(values)
     point = float(stat(values))
     if n < block * 2:
-        return point, float("nan"), float("nan")
+        return point, np.empty(0)
     rng = np.random.default_rng(seed)
     n_blocks = math.ceil(n / block)
     estimates = np.empty(n_boot)
@@ -154,6 +158,16 @@ def block_bootstrap(values: np.ndarray, stat, block: int, n_boot: int = 1000, se
         starts = rng.integers(0, n, size=n_blocks)
         idx = (starts[:, None] + np.arange(block)[None, :]).ravel() % n
         estimates[b] = stat(values[idx[:n]])
+    return point, estimates
+
+
+def block_bootstrap(values: np.ndarray, stat, block: int, n_boot: int = 1000, seed: int = 0) -> tuple[float, float, float]:
+    """
+    Circular block bootstrap of `stat(values)`. Returns (point estimate, 2.5th pct, 97.5th pct).
+    """
+    point, estimates = block_bootstrap_estimates(values, stat, block, n_boot, seed)
+    if len(estimates) == 0:
+        return point, float("nan"), float("nan")
     return point, float(np.percentile(estimates, 2.5)), float(np.percentile(estimates, 97.5))
 
 

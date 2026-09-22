@@ -68,6 +68,8 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
 
 6. **Phase 10 closed without running an optimisation (2026-09-21).** *What:* no weight or threshold search on scoring 0.1.0. *Why:* the inputs to such a search have been shown to carry no direction — fit-free (E001, E002, E003–E008) and fitted (E011: 15 walk-forward runs, zero return edge). *Problem this avoids:* a search over signal-free inputs always finds a "best" setting, and that setting is noise — exactly the overfitting rule 4 forbids. *Why appropriate:* the roadmap's own condition for Phase 10 ("only if justified") is not met; the live scoring stays 0.1.0, unchanged, as the frozen thing under test. *Re-opens if:* a pre-registered test on live data (funding 24h, dollar/yield 168h watch list; news at ≥ 500 live hours) finds a directional input.
 
+7. **Feature-count research (E018) inserted at the front of the master plan's sections 14-19 work (2026-09-22).** *What:* redundancy, group ablation, forward selection and coefficient stability were run on the 1h move-size model before any new feature groups were added. *Why:* the master plan asks "how many signals should the final model use?" and forbids maximising feature count; the honest place to ask that first is the one model that has ever passed a pre-registered test, not a model that does not exist yet. *Problem this avoids:* adding new candidate groups to a model whose existing inputs have never been checked for duplication, and carrying an over-featured model into Phase 12's one-way holdout evaluation. *Why appropriate:* it uses only existing data and existing machinery, changes nothing that runs, and its result feeds directly into the Phase 12 freeze decision.
+
 ## Standing findings that constrain later phases
 
 - **The gap flaw is FIXED in scoring 0.2.0** (2026-09-22, on the user's decision; found the same
@@ -90,6 +92,28 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   +0.172]) now includes it (+0.076% [−0.011, +0.155]). **Lesson recorded: a borderline result
   sitting on the edge of its interval should be checked against data-quality flags before it is
   believed.** Scoring 0.2.0 is now the object under test; E001 stays the record for 0.1.0.
+
+- **The move-size model is over-featured, and one of its nine inputs is arithmetic (E018, 2026-09-22).**
+  After the declared log transforms `vol_ratio_24_168` equals `rv_24` minus `rv_168` **exactly**
+  (largest disagreement 1.0e-15 over 51,053 hours), so `move_size_1h_v1` carries **eight**
+  independent inputs, not nine; removing the redundant one moves validation Brier by +0.0045%
+  relative. Six features reach 99.4% of the best validation skill and four reach 95.6% — features
+  seven to nine together add 0.6%. Group ablation ranks the sources: dropping volatility costs 61%
+  of the model's skill, trade intensity 18%, calendar 6%. Coefficient signs are stable (1.00 for
+  five inputs, 0.78 for the weakest, `is_weekend`). **Nothing was changed:** the smaller sets are
+  not better, only indistinguishable in practice and slightly worse in point estimate, and swapping
+  the artefact would reset the prospective shadow record. **Constraint on later phases:** the model
+  must be described as eight inputs of which about six carry its skill; Phase 12's freeze decision
+  has this evidence in front of it; and any future feature work starts from the knowledge that this
+  model's inputs already duplicate each other heavily (`tr_mean_14_rel`/`rv_24` rho +0.92,
+  `trades_rel_24h`/`trades_rel_168h` +0.78).
+- **A one-standard-error rule must use the standard error of the metric, not of the paired
+  difference (E018, method lesson).** I pre-registered the paired version. Paired, the standard
+  error shrinks as fast as the difference it measures — at k = 8 a 0.005% relative Brier difference
+  came with an SE of 0.000005 — so the rule degenerates into "pick the largest model" on any large
+  sample. The pre-registered answer (k = 9) is recorded as the primary result because that is what
+  pre-registration means; the classical unpaired rule (k = 4) is recorded beside it as exploratory.
+  **Applies to all model-selection work still to come.**
 
 - Scoring 0.1.0 has no predictive value (E001) and none of its four categories does alone (E002). Re-weighting it (Phase 10) is pointless unless a feature with signal is found in Phase 8. If none is, Phase 10 collapses to "drop redundant categories" and the honest deliverable is calibrated *uncertainty* rather than direction.
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.

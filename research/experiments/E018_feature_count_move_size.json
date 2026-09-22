@@ -1,8 +1,8 @@
 {
   "id": "E018",
   "date": "2026-09-22",
-  "git_commit": "(pre-registration commit; results appended in a later commit)",
-  "status": "PRE-REGISTERED before any result was computed. Selection is exploratory by construction (a search); the evaluation of the chosen sequence on the validation period is the part that carries weight, and validation is never used to choose.",
+  "git_commit": "(results commit)",
+  "status": "PRE-REGISTERED before any result was computed; the primary answer is the pre-registered rule's. The secondary analysis (classical one-SE rule, practical skill thresholds, dropping the redundant input) was added AFTER seeing that answer and is labelled exploratory throughout.",
   "phase": "Master plan sections 14-19: signal discovery, feature ablation, marginal information, feature stability, and the explicit question 'how many signals should the model use?'",
   "why_now": "The 1h move-size model (E012 + E013 Platt) is the only model in this project that has ever passed a pre-registered out-of-sample criterion, and it carries NINE inputs of which four measure volatility and two measure trade intensity. Nobody has ever asked whether it needs them. Two reasons to ask now rather than later: (1) Phase 12 will judge ONE frozen model on the sealed holdout, and that is a one-way door -- confirming an over-featured model wastes the holdout; (2) the prospective shadow record is only 18 hours old, so if a smaller model is better the cost of switching is near zero today and grows by one hour every hour.",
   "hypothesis": "The nine inputs contain substantial redundancy, and a strictly smaller subset reaches the same out-of-sample probability quality (Brier, ranking, calibration) on the validation period as all nine.",
@@ -26,13 +26,164 @@
   "decision_this_experiment_may_not_make": "It may not change scoring, may not change the live BUY/HOLD/SELL path, may not silently replace move_size_1h_v1, and may not touch the sealed holdout.",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.2.0 (not under test here; the replay supplies the row index only)",
-  "features_under_test": ["tr_mean_14_rel", "rv_24", "rv_168", "vol_ratio_24_168", "trades_rel_24h", "trades_rel_168h", "hour_sin", "hour_cos", "is_weekend"],
+  "features_under_test": [
+    "tr_mean_14_rel",
+    "rv_24",
+    "rv_168",
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h",
+    "hour_sin",
+    "hour_cos",
+    "is_weekend"
+  ],
   "periods": {
     "exploration": "out-of-sample test blocks before 2024-01-01 (used for SELECTION)",
     "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (used for the DECISION; never used to select)",
     "holdout": "sealed, not read"
   },
-  "metrics": "filled in after the run",
-  "results": "filled in after the run",
-  "affected_design": "filled in after the run"
+  "metrics": {
+    "folds": 27,
+    "rows_common": 64180,
+    "variants_evaluated": 48,
+    "nine_features_validation": {
+      "brier": 0.22486794688851872,
+      "skill": 0.09831058812130411,
+      "ece": 0.013908212033160137,
+      "rho": 0.360210573019641,
+      "max_bucket_gap_100": 0.029084177397575184
+    },
+    "Q1_exact_dependence": {
+      "identity": "log(vol_ratio_24_168) == log(rv_24) - log(rv_168)",
+      "max_abs_residual": 9.992007221626409e-16,
+      "rows": 51053,
+      "exact_to_floating_point": true
+    },
+    "Q1_highest_correlations": [
+      {
+        "a": "tr_mean_14_rel",
+        "b": "rv_24",
+        "abs_rho": 0.919
+      },
+      {
+        "a": "tr_mean_14_rel",
+        "b": "rv_168",
+        "abs_rho": 0.813
+      },
+      {
+        "a": "rv_24",
+        "b": "rv_168",
+        "abs_rho": 0.78
+      },
+      {
+        "a": "trades_rel_24h",
+        "b": "trades_rel_168h",
+        "abs_rho": 0.777
+      },
+      {
+        "a": "rv_24",
+        "b": "vol_ratio_24_168",
+        "abs_rho": 0.572
+      },
+      {
+        "a": "tr_mean_14_rel",
+        "b": "vol_ratio_24_168",
+        "abs_rho": 0.416
+      }
+    ],
+    "Q2_ablation_validation_skill": {
+      "all_nine": 0.09831058812130411,
+      "without_volatility": 0.03834566063648048,
+      "without_trade_intensity": 0.08082672359731757,
+      "without_calendar": 0.09250833096627342,
+      "note": "every group clears the pre-registered 1-SE bar; the SIZES differ enormously -- dropping volatility costs 61% of the model's skill, trade intensity 18%, calendar 6%"
+    },
+    "Q3_forward_order": [
+      "tr_mean_14_rel",
+      "trades_rel_24h",
+      "rv_168",
+      "hour_cos",
+      "hour_sin",
+      "is_weekend",
+      "trades_rel_168h",
+      "rv_24",
+      "vol_ratio_24_168"
+    ],
+    "Q3_validation_skill_by_k": {
+      "1": 0.0582,
+      "2": 0.0856,
+      "3": 0.0898,
+      "4": 0.0939,
+      "5": 0.0957,
+      "6": 0.0977,
+      "7": 0.0979,
+      "8": 0.0983,
+      "9": 0.0983
+    },
+    "Q3_share_of_best_skill_by_k": {
+      "1": 59.2,
+      "2": 87.1,
+      "3": 91.3,
+      "4": 95.6,
+      "5": 97.4,
+      "6": 99.4,
+      "7": 99.6,
+      "8": 100.0,
+      "9": 100.0
+    },
+    "Q3_validation_ece_by_k": {
+      "1": 0.018,
+      "2": 0.015,
+      "3": 0.016,
+      "4": 0.015,
+      "5": 0.017,
+      "6": 0.016,
+      "7": 0.015,
+      "8": 0.014,
+      "9": 0.014
+    },
+    "Q4_sign_agreement": {
+      "tr_mean_14_rel": 1.0,
+      "rv_24": 1.0,
+      "rv_168": 1.0,
+      "vol_ratio_24_168": 1.0,
+      "trades_rel_24h": 0.8888888888888888,
+      "trades_rel_168h": 1.0,
+      "hour_sin": 0.9629629629629629,
+      "hour_cos": 0.9629629629629629,
+      "is_weekend": 0.7777777777777778
+    },
+    "answers": {
+      "pre_registered_paired_rule": 9,
+      "classical_one_se_rule_unpaired": 4,
+      "smallest_k_with_99pct_of_best_skill": 6,
+      "smallest_k_with_95pct_of_best_skill": 4
+    },
+    "drop_the_redundant_input": {
+      "set": [
+        "tr_mean_14_rel",
+        "rv_24",
+        "rv_168",
+        "trades_rel_24h",
+        "trades_rel_168h",
+        "hour_sin",
+        "hour_cos",
+        "is_weekend"
+      ],
+      "validation_brier": 0.22487801191521134,
+      "validation_skill": 0.09827022875428626,
+      "validation_ece": 0.014351430098331485,
+      "validation_rho": 0.36016506955062433,
+      "brier_minus_full": 1.006502669262388e-05,
+      "paired_se": 4.954997432393834e-06,
+      "relative_brier_change": 4.475972156944961e-05
+    },
+    "validation_rows": 13127,
+    "exploration_rows": 41345
+  },
+  "results": "THREE FINDINGS.\n\n(1) ONE OF THE NINE INPUTS IS ARITHMETIC, NOT INFORMATION. After the declared log transforms, log(vol_ratio_24_168) = log(rv_24) - log(rv_168) exactly -- largest disagreement 1.0e-15 over 51,053 hours. The frozen model therefore carries EIGHT independent inputs, not nine. Removing the redundant one changes validation Brier by +0.0045% relative (0.22487 -> 0.22488) and leaves skill, ECE and rho unchanged to three decimals. L2 regularisation kept the predictions well behaved, which is why this was never visible in E012 or E013 -- but the three volatility coefficients cannot be read individually, and the model should never have been described as using nine pieces of information.\n\n(2) THE PRE-REGISTERED RULE ANSWERED k = 9, AND THE RULE IS THE WRONG INSTRUMENT. I wrote the one-standard-error rule with a PAIRED bootstrap standard error. Paired, the error shrinks as fast as the difference it measures: at k = 8 the validation Brier is worse by 0.00001 (0.005% relative) with a paired SE of 0.000005, so the rule calls it two standard errors worse and rejects it. The rule is answering 'are these two models statistically distinguishable on 13,127 paired rows?' -- nearly always yes -- instead of 'does the extra feature matter?'. Breiman's classical rule uses the standard error of the best model's OWN estimate, unpaired (0.00197 here). The pre-registered answer is recorded as the primary result because that is what pre-registration means; the defect is recorded with it.\n\n(3) ON EVERY SENSIBLE READING THE MODEL IS OVER-FEATURED. Validation skill by feature count: k=1 0.0582, k=2 0.0856, k=3 0.0898, k=4 0.0939, k=5 0.0957, k=6 0.0977, k=7 0.0979, k=8 0.0983, k=9 0.0983. Six features reach 99.4% of the best skill and four reach 95.6%; features seven, eight and nine together add 0.6%. The classical one-SE rule lands on k = 4 {tr_mean_14_rel, trades_rel_24h, rv_168, hour_cos}. Calibration does not degrade at any size (validation ECE 0.014-0.018 throughout), so the master plan's 'prefer the simpler system when adding features stops improving performance' is not strictly triggered -- performance keeps improving, by less and less. Group ablation agrees on the ordering of importance: removing volatility costs 61% of the model's skill, trade intensity 18%, calendar 6%. Coefficient signs are stable (sign agreement 1.00 for five inputs, 0.89 and 0.96 for three, 0.78 for is_weekend, the weakest input).",
+  "affected_design": "NO CHANGE IS MADE TO ANY RUNNING SYSTEM. The frozen artefact move_size_1h_v1 keeps all nine inputs and keeps running in the live shadow record; scoring, the live BUY/HOLD/SELL path and the sealed holdout are untouched. Reasons: the smaller models are not BETTER, only indistinguishable-in-practice and slightly worse in point estimate (k=6 is 0.6% less skilful, k=4 is 4.4% less); swapping the artefact would reset a prospective record that is the only genuinely out-of-sample evidence this project will ever have; and removing the arithmetic input buys a 1e-5 change in probability. What DOES change is the description: the model is recorded from now on as having eight independent inputs of which about six carry its skill, and Phase 12's freeze decision now has this evidence in front of it. TIMING NOTE FOR THE USER: if the model is ever to be simplified, the cheapest moment is while the prospective record is short. It was 18 hours old when this ran.",
+  "command": "python -m agent.research.feature_count --experiment E018",
+  "reproducibility_check": "The nine-feature run reproduces E013 exactly from an independently written evaluation path: 27 folds, 54,472 out-of-sample rows (41,345 exploration + 13,127 validation), validation Brier 0.22487 vs E013's 0.2249, ECE 0.0140 vs 0.0139, rho +0.360 vs +0.360, exploration ECE 0.004 vs 0.0044. This was not the point of the experiment, but it is the strongest reproducibility evidence the project has: two separately written harnesses landing on the same numbers.",
+  "methodological_finding": "A one-standard-error rule must use the standard error of the selected metric, not of the paired difference between candidates. With enough paired rows the paired SE goes to zero and the rule degenerates into 'pick the largest model'. This is written down here so the mistake is not repeated in the model-selection work still to come."
 }
