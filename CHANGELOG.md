@@ -30,6 +30,16 @@ research shadow step added on 2026-09-21.
 - **Weekly report**: shadow-job errors section; the pre-registered prospective rule is now
   enforced in code (a row written after its outcome candle closed is shown separately and
   excluded from the evaluation).
+- **Second, unrelated defect fixed the same day** (found while reading the weekly report): the
+  news scorer's `max_tokens` was 2048, room for ~50 headlines, and each assessment echoes its
+  headline. The live 24h news window grew from 16 items (09-19) to 63 (09-22), so from
+  2026-09-21 20:00 to 2026-09-22 12:00 UTC every answer was truncated and **17 predictions were
+  made with news unavailable** (weight 0, `completeness_score` 0.85, `run_meta.news_error` set —
+  the rows say so themselves). `max_tokens` is now a named constant at 16384 (~350 headlines);
+  the prompt and schema are unchanged, so E009 still applies. A parsing failure now names
+  truncation as the likely cause. Verified on the real volume (59 headlines scored).
+- **The test suite now runs on GitHub's runners on every push** (`.github/workflows/tests.yml`)
+  — the check that would have caught the first defect before it reached production.
 
 ## pipeline 0.2.0 — hardening 2026-09-21 (Backend Phase B; information rules unchanged, version kept)
 

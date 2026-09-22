@@ -91,6 +91,16 @@ Full post-mortem: `docs/ops/incident_2026-09-21_shadow_step.md`. Summary for thi
   prospective rule is now enforced in code, not only documented.
 - **Readiness gate reopened and revised** (`docs/research/readiness_gate.md`): two rows
   corrected, judgement re-dated to after the fix.
+- **A second, unrelated defect was found during the response** (weekly report, §1): the news
+  scorer's answer was truncated once the 24h window passed ~50 headlines, so **17 predictions
+  (2026-09-21 20:00 → 2026-09-22 12:00 UTC) were made with news unavailable**. Those rows are
+  self-describing (`completeness_score` 0.85, news weight 0, `ai_model_news` NULL,
+  `run_meta.news_error`) — research using the live record should treat them as four-category
+  hours, not discard them silently. Fixed the same day; the prompt and schema are unchanged,
+  so E009's validation still applies.
+- **New safety net:** the test suite now runs on GitHub's runners on every push
+  (`.github/workflows/tests.yml`) — the check that would have caught the first defect before
+  deployment, since the guard test loads the model on a GitHub runner.
 
 ## Paused 2026-09-21 19:58 UTC — resume point (history; superseded by the incident work above)
 

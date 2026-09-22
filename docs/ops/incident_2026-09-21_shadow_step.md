@@ -108,6 +108,36 @@ under "model/version identification reliable", was itself the defect. Both are c
 this fix and the gate document now records the incident. The engineering conclusion stands
 *after* this fix, not before it.
 
+## A second, unrelated defect found during the response (2026-09-22 13:2x UTC)
+
+Reading the weekly report during this investigation surfaced a line that had not been there
+before: **17 runs recorded a news error**. This is a different defect with a different cause,
+and it touched the live signal.
+
+- **What happened:** every run from 2026-09-21 20:00 to 2026-09-22 12:00 UTC failed the news
+  step, so those 17 predictions were made with **news unavailable** — four categories instead
+  of five, news weight 0.
+- **Cause:** each assessment in the model's structured answer echoes its headline (~45 output
+  tokens per item), and `max_tokens` was 2048 — room for about 50 headlines. The live 24-hour
+  news window grew from 16 items on 09-19 to 63 by 09-22, so the answer was truncated, and a
+  truncated JSON answer fails schema validation.
+- **Evidence:** the step succeeded on every run with ≤ 51 headlines and failed on every run
+  with ≥ 53. The number of items *fetched* was unchanged throughout (91–113), so the trigger
+  was news volume inside the window, not the RSS hardening deployed the day before.
+- **What the record shows:** all 17 rows are self-describing — `completeness_score` 0.85 (not
+  1.0), news weight 0.0, `ai_model_news` NULL, and the error text in `run_meta.news_error`.
+  Nothing is wrong in those rows; a category was missing and they say so.
+- **Fix:** `max_tokens` 2048 → 16384 (a named constant, ~350 headlines). The prompt and schema
+  are unchanged, so E009's validation of this component still applies, and only tokens actually
+  generated are billed, so the higher cap costs nothing by itself. A parsing failure now names
+  truncation as the likely cause instead of surfacing a bare JSON error. Verified against the
+  real failing volume: a live run with 59 headlines scored news +0.32 at weight 0.15.
+- **Cost note for the owner:** the AI cost scales with news volume, not with the cap. At ~60
+  headlines an hour the two calls cost roughly $0.02 per run (~$15/month), above the "well
+  under $10/month" figure estimated when the window held ~20 headlines. Halving it is possible
+  (drop the echoed headline from the schema) but that *is* a change to the AI's task and would
+  need E009 re-run, so it is not done unilaterally.
+
 ## Lessons recorded
 
 - A guard on scientific *meaning* must not be implemented as a bit-exact comparison across
@@ -119,3 +149,13 @@ this fix and the gate document now records the incident. The engineering conclus
 - "Verified working" on one machine is not verification of a distributed job. The first
   GitHub-side run of a new step is part of the verification, and its *variability* across
   runners matters too.
+- The test suite now runs on GitHub's runners on every push (`.github/workflows/tests.yml`).
+  That is precisely the check that would have caught the first defect before deployment: the
+  guard test loads the model on a GitHub runner, so it would have failed there ~50% of the
+  time while passing locally.
+- A limit that is comfortable at today's data volume is a time bomb: the news answer fitted
+  16 headlines easily and 63 not at all. Limits that scale with input deserve either headroom
+  or an explicit check — and the failure they produce should name itself.
+- Reading the weekly report is part of incident response. The second defect had been failing
+  every hour for 17 hours and nothing red was raised, because the system degraded exactly as
+  designed and only said so in the record.
