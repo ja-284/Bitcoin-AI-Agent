@@ -81,3 +81,33 @@ def test_clients_are_bounded(monkeypatch):
     score = news_scorer.score_news([NewsItem("h", "s", "u", None)])
     assert seen["timeout"] == news_scorer.AI_TIMEOUT_S and seen["max_retries"] == news_scorer.AI_MAX_RETRIES
     assert isinstance(score, CategoryScore) and score.score == pytest.approx(0.2)
+
+
+def test_news_answer_has_room_for_a_realistic_headline_count():
+    """
+    REGRESSION (2026-09-21/22): the answer echoes each headline, so it costs ~45 output tokens
+    per item. max_tokens=2048 covered ~50 headlines; the live 24h window grew to 63 and every
+    answer came back truncated -- invalid JSON -- so the live signal lost its news category for
+    17 hours. The cap must cover far more than the observed volume.
+    """
+    assert news_scorer.MAX_TOKENS >= 45 * 200, "the cap must fit at least 200 headlines"
+    import inspect
+
+    src = inspect.getsource(news_scorer.score_news)
+    assert "max_tokens=MAX_TOKENS" in src  # no stray literal that can drift from the constant
+
+
+def test_a_truncated_answer_names_the_cause(monkeypatch):
+    """A truncated structured answer must not surface as a bare JSON error."""
+    from pydantic import ValidationError
+
+    class Boom:
+        def __init__(self):
+            self.messages = self
+
+        def parse(self, **kw):
+            raise ValidationError.from_exception_data("NewsAnalysis", [])
+
+    monkeypatch.setattr(news_scorer, "Anthropic", lambda **kw: Boom())
+    with pytest.raises(ValueError, match="truncated answer arrives as invalid JSON"):
+        news_scorer.score_news([NewsItem(f"h{i}", "s", f"u{i}", None) for i in range(60)])

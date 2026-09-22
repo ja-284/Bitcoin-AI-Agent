@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T13:02:40.379348+00:00",
+  "generated_at": "2026-09-22T13:22:43.262899+00:00",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.1.0",
   "schema_version": {
@@ -8,12 +8,12 @@
     "match": true
   },
   "live_since": "2026-09-19T09:00:00+00:00",
-  "live_hours": 76.0,
+  "live_hours": 76.4,
   "health_last_7_days": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-22T13:02:40.379348+00:00",
-    "expected_hours": 75,
-    "predictions": 66,
+    "now": "2026-09-22T13:22:43.262899+00:00",
+    "expected_hours": 76,
+    "predictions": 67,
     "missing_hours": [
       "2026-09-19T10:00:00+00:00",
       "2026-09-19T12:00:00+00:00",
@@ -27,22 +27,22 @@
     ],
     "fetch_delay_min": {
       "min": 1.0371253,
-      "median": 12.538791566666667,
+      "median": 12.535106616666667,
       "max": 59.32737363333333
     },
     "price_sources": {
-      "binance": 66
+      "binance": 67
     },
     "synthetic_rows": 0,
     "pipeline_versions": {
       "0.1.0": 4,
-      "0.2.0": 62
+      "0.2.0": 63
     },
     "rows_without_explanation": 0,
     "rows_with_zero_news": 0,
-    "mean_news_items": 32.04545454545455,
+    "mean_news_items": 32.46268656716418,
     "run_errors": {
-      "news_error": 16
+      "news_error": 17
     },
     "timestamp_rule_violations": [],
     "outcome_coverage": {
@@ -80,9 +80,9 @@
   },
   "health_since_go_live": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-22T13:02:40.379348+00:00",
-    "expected_hours": 75,
-    "predictions": 66,
+    "now": "2026-09-22T13:22:43.262899+00:00",
+    "expected_hours": 76,
+    "predictions": 67,
     "missing_hours": [
       "2026-09-19T10:00:00+00:00",
       "2026-09-19T12:00:00+00:00",
@@ -96,22 +96,22 @@
     ],
     "fetch_delay_min": {
       "min": 1.0371253,
-      "median": 12.538791566666667,
+      "median": 12.535106616666667,
       "max": 59.32737363333333
     },
     "price_sources": {
-      "binance": 66
+      "binance": 67
     },
     "synthetic_rows": 0,
     "pipeline_versions": {
       "0.1.0": 4,
-      "0.2.0": 62
+      "0.2.0": 63
     },
     "rows_without_explanation": 0,
     "rows_with_zero_news": 0,
-    "mean_news_items": 32.04545454545455,
+    "mean_news_items": 32.46268656716418,
     "run_errors": {
-      "news_error": 16
+      "news_error": 17
     },
     "timestamp_rule_violations": [],
     "outcome_coverage": {
@@ -148,32 +148,32 @@
     }
   },
   "signal_record": {
-    "rows_pipeline_0_2_0": 62,
+    "rows_pipeline_0_2_0": 63,
     "signal_mix": {
-      "BUY": 51,
+      "BUY": 52,
       "SELL": 1,
       "HOLD": 10
     },
     "by_horizon": {
       "1h": {
-        "n": 61,
-        "base_rate_up": 0.5737704918032787,
-        "naive_rate": 0.5737704918032787,
-        "acted_share": 0.8360655737704918,
-        "acted_accuracy": 0.5686274509803921,
-        "acted_n": 51,
+        "n": 62,
+        "base_rate_up": 0.5806451612903226,
+        "naive_rate": 0.5806451612903226,
+        "acted_share": 0.8387096774193549,
+        "acted_accuracy": 0.5769230769230769,
+        "acted_n": 52,
         "edge": {
-          "point": 0.0018947518937787238,
+          "point": 0.0018792765149420253,
           "ci_low": NaN,
           "ci_high": NaN,
           "interval_available": false,
           "hours_needed_for_interval": 96
         },
-        "buy_and_hold_mean_return": 0.0010829225277137874,
+        "buy_and_hold_mean_return": 0.0010724695045911641,
         "mean_return_by_signal": {
           "BUY": {
-            "n": 50,
-            "mean": 0.0012240794147827688
+            "n": 51,
+            "mean": 0.0012086040359460702
           },
           "HOLD": {
             "n": 10,
@@ -185,7 +185,7 @@
           }
         },
         "confidence_reliability": {
-          "ece": 0.3322269160694753,
+          "ece": 0.3240684431841597,
           "buckets": [
             {
               "lower": 0.7,
@@ -210,11 +210,11 @@
             {
               "lower": 0.9,
               "upper": 0.95,
-              "n": 21,
-              "mean_predicted": 0.9306936628793387,
-              "observed": 0.7142857142857143,
-              "ci_low": 0.500432261771624,
-              "ci_high": 0.8618632425437179,
+              "n": 22,
+              "mean_predicted": 0.9296615112045082,
+              "observed": 0.7272727272727273,
+              "ci_low": 0.5184787630099802,
+              "ci_high": 0.8684941798418556,
               "enough_rows": false
             },
             {
@@ -231,24 +231,24 @@
         }
       },
       "6h": {
-        "n": 56,
-        "base_rate_up": 0.6785714285714286,
-        "naive_rate": 0.6785714285714286,
-        "acted_share": 0.8214285714285714,
-        "acted_accuracy": 0.6739130434782609,
-        "acted_n": 46,
+        "n": 57,
+        "base_rate_up": 0.6842105263157895,
+        "naive_rate": 0.6842105263157895,
+        "acted_share": 0.8245614035087719,
+        "acted_accuracy": 0.6808510638297872,
+        "acted_n": 47,
         "edge": {
-          "point": 0.00688917420385612,
+          "point": 0.006906777744830714,
           "ci_low": NaN,
           "ci_high": NaN,
           "interval_available": false,
           "hours_needed_for_interval": 96
         },
-        "buy_and_hold_mean_return": 0.006282186898807455,
+        "buy_and_hold_mean_return": 0.006303473946891721,
         "mean_return_by_signal": {
           "BUY": {
-            "n": 45,
-            "mean": 0.006685785754779271
+            "n": 46,
+            "mean": 0.006703389295753865
           },
           "HOLD": {
             "n": 10,
@@ -260,7 +260,7 @@
           }
         },
         "confidence_reliability": {
-          "ece": 0.22893613738774826,
+          "ece": 0.22112861011849785,
           "buckets": [
             {
               "lower": 0.7,
@@ -275,11 +275,11 @@
             {
               "lower": 0.8,
               "upper": 0.9,
-              "n": 18,
-              "mean_predicted": 0.8597450868390943,
-              "observed": 0.5555555555555556,
-              "ci_low": 0.3371606942825164,
-              "ci_high": 0.7544076889861088,
+              "n": 19,
+              "mean_predicted": 0.8598628378335093,
+              "observed": 0.5789473684210527,
+              "ci_low": 0.36275551465160105,
+              "ci_high": 0.7685837960796962,
               "enough_rows": false
             },
             {
@@ -306,24 +306,24 @@
         }
       },
       "24h": {
-        "n": 38,
-        "base_rate_up": 0.8947368421052632,
-        "naive_rate": 0.8947368421052632,
-        "acted_share": 0.7368421052631579,
-        "acted_accuracy": 0.8214285714285714,
-        "acted_n": 28,
+        "n": 39,
+        "base_rate_up": 0.8974358974358975,
+        "naive_rate": 0.8974358974358975,
+        "acted_share": 0.7435897435897436,
+        "acted_accuracy": 0.8275862068965517,
+        "acted_n": 29,
         "edge": {
-          "point": 0.030122270982922174,
+          "point": 0.028923305924166018,
           "ci_low": NaN,
           "ci_high": NaN,
           "interval_available": false,
           "hours_needed_for_interval": 96
         },
-        "buy_and_hold_mean_return": 0.03993772630613205,
+        "buy_and_hold_mean_return": 0.03912434757619026,
         "mean_return_by_signal": {
           "BUY": {
-            "n": 27,
-            "mean": 0.041786977483574676
+            "n": 28,
+            "mean": 0.04058801242481852
           },
           "HOLD": {
             "n": 10,
@@ -335,7 +335,7 @@
           }
         },
         "confidence_reliability": {
-          "ece": 0.10169806697509456,
+          "ece": 0.09462614257407125,
           "buckets": [
             {
               "lower": 0.7,
@@ -350,11 +350,11 @@
             {
               "lower": 0.8,
               "upper": 0.9,
-              "n": 6,
-              "mean_predicted": 0.8557758852514447,
-              "observed": 0.8333333333333334,
-              "ci_low": 0.43649056343635395,
-              "ci_high": 0.9699474141282697,
+              "n": 7,
+              "mean_predicted": 0.861609652979155,
+              "observed": 0.8571428571428571,
+              "ci_low": 0.48686549668097007,
+              "ci_high": 0.9743210440510253,
               "enough_rows": false
             },
             {
@@ -389,9 +389,9 @@
     }
   },
   "shadow_record": {
-    "n": 12,
+    "n": 13,
     "first_hour": "2026-09-21T17:00:00+00:00",
-    "expected_hours": 19,
+    "expected_hours": 20,
     "missing_hours": [
       "2026-09-21T19:00:00+00:00",
       "2026-09-22T01:00:00+00:00",
@@ -406,10 +406,10 @@
     "live_close_mismatch": 0,
     "live_close_unchecked": 0,
     "model_versions": {
-      "move_size_1h_v1": 12
+      "move_size_1h_v1": 13
     },
     "outcomes": {
-      "ok_prospective": 11,
+      "ok_prospective": 12,
       "unavailable": 0,
       "pending": 1
     },
@@ -422,17 +422,17 @@
       "latest": null
     },
     "evaluation": {
-      "n": 11,
-      "base_rate_large": 0.45454545454545453,
-      "mean_stated_p": 0.4981346428267679,
-      "brier": 0.24131049603381183,
-      "brier_base_rate": 0.2479338842975206,
-      "accuracy": 0.6363636363636364,
-      "naive_rate": 0.5454545454545454,
-      "brier_rel_gain": 0.02671433266362544,
-      "rank_corr_p_vs_abs_return": 0.30000000000000004,
-      "ece": 0.11523703245949105,
-      "interval_note": "no intervals yet: needs >= 192 hours (have 11)",
+      "n": 12,
+      "base_rate_large": 0.4166666666666667,
+      "mean_stated_p": 0.494454104903133,
+      "brier": 0.23837521432122752,
+      "brier_base_rate": 0.24305555555555555,
+      "accuracy": 0.6666666666666666,
+      "naive_rate": 0.5833333333333333,
+      "brier_rel_gain": 0.01925626107837819,
+      "rank_corr_p_vs_abs_return": 0.3356643356643357,
+      "ece": 0.14346462873312932,
+      "interval_note": "no intervals yet: needs >= 192 hours (have 12)",
       "reliability": [
         {
           "lower": 0.3,
@@ -447,11 +447,11 @@
         {
           "lower": 0.4,
           "upper": 0.5,
-          "n": 5,
-          "mean_predicted": 0.4625985419011398,
-          "observed": 0.4,
-          "ci_low": 0.1176182311592533,
-          "ci_high": 0.769280067791163,
+          "n": 6,
+          "mean_predicted": 0.46116014954147483,
+          "observed": 0.3333333333333333,
+          "ci_low": 0.09676933255921683,
+          "ci_high": 0.7000116786584712,
           "enough_rows": false
         },
         {
@@ -480,7 +480,7 @@
   },
   "watch_list": {
     "news_hours": {
-      "have": 62,
+      "have": 63,
       "need": 500,
       "ready": false
     },
@@ -498,79 +498,79 @@
     "reference": "development period 2017-08-27 -> 2025-06-30 (snapshot btcusdt_1h_2026-09-19.csv); raw feature values (before log)",
     "features": {
       "tr_mean_14_rel": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.008219970356210995,
         "dev_iqr": 0.0062625525281903545,
-        "live_median": 0.00735063735242666,
-        "median_shift_iqr": -0.13881448496776758,
+        "live_median": 0.007289779661575987,
+        "median_shift_iqr": -0.14853219840437779,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "rv_24": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.005213735518525552,
         "dev_iqr": 0.004240295289740068,
-        "live_median": 0.005936274691697907,
-        "median_shift_iqr": 0.17039831516466092,
+        "live_median": 0.005897441201439364,
+        "median_shift_iqr": 0.16124011093475604,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "rv_168": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.005764971032744351,
         "dev_iqr": 0.0034698771587411527,
-        "live_median": 0.004284290469695684,
-        "median_shift_iqr": -0.42672420241696624,
+        "live_median": 0.004292136196056587,
+        "median_shift_iqr": -0.424463106129699,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "vol_ratio_24_168": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.8807932168054635,
         "dev_iqr": 0.4531093482009425,
-        "live_median": 1.3917421192584536,
-        "median_shift_iqr": 1.1276503221169412,
+        "live_median": 1.386270304847078,
+        "median_shift_iqr": 1.1155741766277754,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "trades_rel_24h": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.8714218327168003,
         "dev_iqr": 0.48413926586490463,
-        "live_median": 0.702925209412142,
-        "median_shift_iqr": -0.3480333763129967,
+        "live_median": 0.7204612914434434,
+        "median_shift_iqr": -0.3118122241204069,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "trades_rel_168h": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.8531530324057546,
         "dev_iqr": 0.5489125694216114,
-        "live_median": 0.9675670915146721,
-        "median_shift_iqr": 0.20843767383478853,
+        "live_median": 0.9801067381124521,
+        "median_shift_iqr": 0.2312821982569437,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "hour_sin": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.0,
         "dev_iqr": 1.4142135623730954,
-        "live_median": -0.12940952255126079,
-        "median_shift_iqr": -0.09150635094610993,
+        "live_median": 0.0,
+        "median_shift_iqr": 0.0,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "hour_cos": {
-        "n": 12,
+        "n": 13,
         "dev_median": -1.8369701987210297e-16,
         "dev_iqr": 1.4142135623730954,
-        "live_median": 0.2500000000000001,
-        "median_shift_iqr": 0.17677669529663703,
+        "live_median": 6.123233995736766e-17,
+        "median_shift_iqr": 1.7319121124709863e-16,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "is_weekend": {
-        "n": 12,
+        "n": 13,
         "dev_median": 0.0,
         "dev_iqr": 1.0,
         "live_median": 0.0,
@@ -580,38 +580,38 @@
       }
     },
     "probability": {
-      "n": 12,
+      "n": 13,
       "dev_median": 0.4683123149656863,
       "dev_q05_q95": [
         0.20662709854077255,
         0.7428892643106039
       ],
-      "live_median": 0.4847881308359435,
+      "live_median": 0.481960431752392,
       "live_q05_q95": [
-        0.41570126895038045,
-        0.6016453655568648
+        0.4179581315001024,
+        0.601255229969305
       ],
       "share_above_dev_q95": 0.0,
       "share_below_dev_q05": 0.0,
       "status": "too few rows to flag"
     },
     "outcomes": {
-      "n": 11,
+      "n": 12,
       "dev_share": 0.517990960781455,
       "validation_share": 0.4752037784718519,
-      "live_share": 0.45454545454545453,
+      "live_share": 0.4166666666666667,
       "live_share_ci95": [
-        0.1602878664116818,
-        0.7488030426792273
+        0.13772189581554434,
+        0.6956114375177891
       ],
       "status": "too few rows to flag"
     },
     "missing_and_timing": {
       "shadow_unavailable_share": 0.0,
-      "shadow_rows": 12,
+      "shadow_rows": 13,
       "fetch_delay_by_week_median_min": {
         "2026-W38": 12.415510699999999,
-        "2026-W39": 12.557378225
+        "2026-W39": 12.552776216666672
       },
       "status": "too few rows to flag"
     },
@@ -619,7 +619,7 @@
     "note": "Flags are descriptive: investigate and document; never retrain or retune from them. Reference distributions are frozen."
   },
   "parity": {
-    "compared": 62,
+    "compared": 63,
     "parity_breaks": 0,
     "breaks": [],
     "skipped": [
@@ -729,7 +729,7 @@
     ],
     "note": "Paper record computed after the fact from point-in-time candle features; the model is fitted on data before the sealed holdout only. Not a live shadow run. Read intervals, not points, until n is in the thousands.",
     "tracker_consistency": {
-      "hours_compared": 65,
+      "hours_compared": 66,
       "max_abs_difference": 1.0495077029659683e-16,
       "agree_within_1e-9": true
     },

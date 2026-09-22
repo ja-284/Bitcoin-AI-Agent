@@ -13,7 +13,7 @@ pattern that breaks in ways that are annoying to debug.
 
 import logging
 
-from anthropic import Anthropic
+from anthropic import Anthropic, AnthropicError
 from pydantic import BaseModel, Field
 
 from agent.config.settings import AI_MAX_RETRIES, AI_TIMEOUT_S, ANTHROPIC_API_KEY
@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 
 MODEL = "claude-haiku-4-5"  # narrow, structured classification -- the cheapest current model is genuinely enough
 NEWS_WEIGHT = 0.15
+
+# Each assessment echoes its headline, so the answer costs roughly 45 output tokens per
+# headline. The original 2048 covered ~50 headlines; on 2026-09-21 20:00 UTC the 24h news
+# window grew past that (16 items on 09-19, 63 by 09-22) and every answer came back truncated,
+# i.e. invalid JSON, so the live signal lost its news category for 17 hours. 16384 covers
+# ~350 headlines. Only tokens actually generated are billed, so the cap itself costs nothing.
+MAX_TOKENS = 16384
 
 SYSTEM_PROMPT = (
     "You rate news headlines for a Bitcoin price-analysis system. For each headline, "
@@ -52,13 +59,21 @@ def score_news(news_items: list[NewsItem]) -> CategoryScore:
     client = Anthropic(api_key=ANTHROPIC_API_KEY, timeout=AI_TIMEOUT_S, max_retries=AI_MAX_RETRIES)  # bounded: an hourly job cannot wait the SDK's 10-minute default
     headlines_text = "\n".join(f"{i + 1}. {item.headline}" for i, item in enumerate(news_items))
 
-    response = client.messages.parse(
-        model=MODEL,
-        max_tokens=2048,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": headlines_text}],
-        output_format=NewsAnalysis,
-    )
+    try:
+        response = client.messages.parse(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": headlines_text}],
+            output_format=NewsAnalysis,
+        )
+    except AnthropicError:
+        raise  # API failures (timeout, rate limit, overload) keep their own type and meaning
+    except Exception as exc:  # noqa: BLE001 -- a parsing failure, re-raised with the fact that explains most of them
+        raise ValueError(
+            f"news model answer unusable for {len(news_items)} headlines (max_tokens={MAX_TOKENS}; "
+            f"a truncated answer arrives as invalid JSON): {type(exc).__name__}: {exc}"
+        ) from exc
     analysis = response.parsed_output
     if analysis is None or not analysis.assessments:
         # Schema-valid but empty is NOT "nothing relevant": it is a missing answer. Raising makes
