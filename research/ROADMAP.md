@@ -58,6 +58,47 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
 - [x] **Backend readiness gate — assessed 2026-09-21** (`docs/research/readiness_gate.md`): every engineering, security and maintainability item verified except two external user actions (healthchecks.io heartbeat; least-privilege DB role — mitigated by append-only triggers). Research items verified; prospective live evidence has only just begun (by the calendar, not by a defect). **Judgement: engineering is release-candidate quality for a read-only frontend that shows the research state truthfully. The holdout stays sealed.** Requirements pinned exactly; README rewritten.
 - [ ] **Final holdout decision → one-time confirmation (Phase 12) → final backend confirmation → frontend.** Holdout: sealed, waits for the Phase H checkpoints and the user's decision. Frontend: may start as a read-only consumer of the record at any time (contract in `readiness_gate.md`); the backend continues under the same discipline.
 
+## 2026-09-22 (evening) — second pass: sections 14-25 and 39-42 of the master plan
+
+Added after the readiness gate, in the order the master plan's operating loop sets out. None of
+it changed anything that runs.
+
+- [x] **Sections 14-19 — signal discovery, ablation, redundancy, feature count** (E018). Applied to
+  the only model that ever passed a pre-registered test. One of its nine inputs is arithmetic;
+  six carry 99.4% of the skill. Also found and recorded a defect in my own pre-registered rule.
+- [x] **Sections 24-25 — model selection** (E019, E020). The model beats a rule that needs no
+  fitting by 2.47x, and neither gradient-boosted trees nor an interaction model clears the bar to
+  replace it. Its complexity is now defended rather than assumed.
+- [x] **Section 20 — threshold definition** (E021). Pays the debt recorded on 2026-09-19. The fixed
+  target stands; the decomposition it produced is the more valuable output.
+- [x] **Sections 14-19 again, on the isolated signal** (E022, exploratory). Which inputs carry the
+  part that is genuinely the model's. Recorded as a hypothesis with its cautions attached.
+- [x] **Sections 39 & 52 — the backend contract** (`agent/api/state.py`, `docs/api/contract_v1.md`).
+  Read-only, versioned, tested. Transport deliberately undecided, with a recommendation.
+- [x] **Section 42 — observability review** (`docs/ops/observability.md`). Sixteen failure paths
+  audited; one invisible failure found and fixed; one gap that is not code (the heartbeat).
+- [x] **Section 30 — the last untested failure**: a stale database schema now stops the run before
+  anything is written. Verified against the live database before being committed.
+- [x] **Section 50 — readiness gate revision 2**: the 22 categories scored individually,
+  19 PASS / 3 PARTIAL / 0 FAIL / 0 UNKNOWN.
+- [x] **Section 36 — the open user actions written up properly** (`docs/ops/open_user_actions.md`).
+
+### Where the research programme actually stands
+
+**There is no non-gated research work left.** Every remaining item waits on one of three things:
+
+| waiting on | items |
+|---|---|
+| elapsed time | 8.6 / J (news, at 500 live hours with news — 69 now), H (checkpoints at 500 / 2,000 / 5,000 prospective shadow hours — 19 now), K (move-size variants at 2,000), the watch-list re-tests at 6 months |
+| a user decision | Phase 12 / the sealed holdout |
+| evidence that does not exist | L (directional research — nothing justified; E011 is the standing null) |
+
+And one thing that argues against manufacturing more work: **validation wear**. Twenty-plus
+experiments have now examined the validation period. Continuing to mine it would produce
+findings of steadily decreasing trustworthiness while spending the credibility of the only clean
+arbiter left. The correct action is to stop and let time pass, which is what the monitoring
+rhythm is for.
+
 ## Roadmap adjustments (documented before acting)
 
 1. **Phases 5 and 7 completed together (E002).** For a rules-based system, ablation is a recombination of the same stored category scores — running it separately from the diagnosis would repeat identical work. Nothing was skipped: every category was tested alone, and every leave-one-out variant was evaluated in both periods with uncertainty.
