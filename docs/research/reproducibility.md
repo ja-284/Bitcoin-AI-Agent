@@ -48,6 +48,29 @@ Hypothesis, pre-registered criterion, data snapshot names and ranges, periods, h
   clean hours (reported in E016's first write-up) was entirely the reader. The true difference
   is zero, and the record was corrected.
 
+### How precise are our own confidence intervals?
+
+Every uncertainty figure in this project comes from a circular block bootstrap, and the number
+of resamples is itself a source of noise. Measured on the real 24-hour edge series (55,491
+exploration hours, block 48h, six seeds each, 2026-09-22):
+
+| resamples | movement of the lower endpoint | of the upper endpoint |
+|---|---|---|
+| 500 | ±0.031 pp | ±0.038 pp |
+| 2,000 | ±0.019 pp | ±0.016 pp |
+| 8,000 | ±0.008 pp | ±0.004 pp |
+
+The **point estimate is exact** — it is computed on the data, not resampled. Only the endpoints
+move. Consequences, now applied:
+
+- the weekly report uses **2,000** resamples (its data is small, so the cost is nothing) and
+  prints the resulting endpoint precision, so no one reads a difference finer than the method;
+- the large historical experiments keep **500**, both for cost and so that they stay directly
+  comparable with E001, which used 500 — a comparison is only fair if both sides carry the same
+  noise;
+- **no interval endpoint should be read to better than about 0.02–0.03 percentage points**, and
+  a gap smaller than that between two intervals means nothing.
+
 ## Secrets
 
 `.env` is git-ignored; only `.env.example` (placeholders) is tracked. Secrets live in `.env`

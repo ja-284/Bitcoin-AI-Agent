@@ -41,7 +41,13 @@ logger = logging.getLogger(__name__)
 HORIZONS = [1, 6, 24, 72, 168]
 HOUR = timedelta(hours=1)
 OUT_DIR = Path("research") / "monitoring"
-N_BOOT = 500
+# Resamples for every bootstrap interval here. Measured on the real 24h-edge series
+# (2026-09-22): at 500 resamples the interval ENDPOINTS themselves move by ±0.03 percentage
+# points between seeds, at 2000 by ±0.02, at 8000 by ±0.006. The weekly report runs on a small
+# live record, so the extra resamples cost little and buy endpoints that stay put between runs;
+# the large historical experiments keep 500, both for cost and to stay comparable with E001.
+N_BOOT = 2000
+BOOTSTRAP_ENDPOINT_NOISE_PP = 0.02  # how finely an endpoint may honestly be read, in percentage points
 NEWS_HOURS_FOR_8_6 = 500  # roadmap 8.6 re-opens at this many live hours with news
 MONTHS_FOR_WATCHLIST = 6  # funding / dollar-yield confirmatory re-tests
 
@@ -441,7 +447,8 @@ def render(rep: dict) -> str:
         cr = d.get("confidence_reliability")
         if cr:
             L += ["", f"Stated confidence vs hit rate at {k} (ECE {cr['ece']:.3f}): " + " · ".join(f"{b['mean_predicted']:.2f} → {b['observed']:.2f} [{b['ci_low']:.2f}, {b['ci_high']:.2f}] n={b['n']}{'' if b['enough_rows'] else ' (few)'}" for b in cr["buckets"])]
-    L += ["", "*Read this table as a growing record, not a verdict: intervals appear only once there are enough hours, and one week of hours is far too few to overturn E001.*"]
+    L += ["", "*Read this table as a growing record, not a verdict: intervals appear only once there are enough hours, and one week of hours is far too few to overturn E001. "
+         f"Interval endpoints come from a {N_BOOT}-resample block bootstrap and are themselves only good to about {BOOTSTRAP_ENDPOINT_NOISE_PP:.2f} percentage points; a difference smaller than that is noise in the method, not in the market.*"]
     sh = rep.get("shadow_record", {})
     L += ["", "## 3. LIVE shadow record — E012 + Platt, P(next-hour move > 0.25%) (agent/shadow, own table, never touches the signal)", ""]
     err = sh.get("errors", {})
