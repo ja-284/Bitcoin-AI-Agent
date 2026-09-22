@@ -68,12 +68,16 @@ MOVE_SIZE_STATUS = {
                "the BUY/HOLD/SELL signal. Its calibration was measured on 2024-2025 validation data; its "
                "prospective record began on 2026-09-21 and is judged at 500, 2,000 and 5,000 hours. The "
                "final sealed holdout has not been opened."),
-    "experiments": ["E012", "E013", "E018", "E019", "E020"],
+    "experiments": ["E012", "E013", "E018", "E019", "E020", "E021"],
 }
 LIMITATIONS = [
     "The BUY/HOLD/SELL signal has no demonstrated predictive value (E001, E017).",
     "The confidence number is a heuristic about agreement and completeness, not a probability.",
     "Only the move-size probability is calibrated, and only on validation data so far.",
+    ("Most of the move-size model's skill is simply knowing how volatile the market is right now, which a "
+     "plain average of recent hours also captures; its own added value is the smaller part (E019, E021)."),
+    ("The question itself gets easier and harder with the market: across years, the share of hours with a "
+     "move over 0.25% has ranged from 34% to 68% (E021)."),
     "Nothing here is a direction forecast: no directional edge was found in the free data (E011).",
     "This system does not trade, hold funds, or place orders of any kind, and is not investment advice.",
 ]

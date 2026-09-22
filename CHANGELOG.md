@@ -23,6 +23,24 @@ New, read-only, and not yet wired to anything that runs.
 - **`docs/api/contract_v1.md`** documents the fields, what a frontend must not do, and the three
   transport options with a recommendation. Transport is deliberately not decided yet.
 
+## research — 2026-09-22 (E021: should "a large move" adapt to the market? Tested, and no)
+
+Nothing that runs changed.
+
+- **A debt recorded on 2026-09-19 and never paid**: "threshold fixed-% vs volatility-scaled to
+  be tested, not assumed". Every move-size result rested on one definition that was chosen.
+- **The fixed target stands.** It is clearly more predictable (validation skill 0.098 vs 0.074,
+  against a bar of 0.90x) and ranks realised move size no worse. The scaled target wins hugely on
+  stability — yearly positive rate 0.476-0.508 against the fixed target's **0.336 to 0.676** —
+  and that instability is now a documented property of the deliverable.
+- **The finding underneath the verdict:** scoring the E019 no-fitting reference against both
+  targets decomposes the model's skill. Against the fixed target the reference scores +0.0398;
+  against the scaled one, which divides the volatility level out, it scores **+0.0003 — nothing**.
+  The model scores +0.0983 and +0.0736. Most of the headline skill is the volatility level, free
+  from a 24-hour EWMA; the model's own contribution is within-regime timing.
+- Seven new tests, including a perturbation test that the adaptive threshold cannot see the hour
+  it labels.
+
 ## research — 2026-09-22 (E020: a fancier model does not help)
 
 Nothing that runs changed.

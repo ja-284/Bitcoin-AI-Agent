@@ -93,6 +93,21 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   sitting on the edge of its interval should be checked against data-quality flags before it is
   believed.** Scoring 0.2.0 is now the object under test; E001 stays the record for 0.1.0.
 
+- **Where the move-size model's skill actually comes from (E021, 2026-09-22).** Scoring the E019
+  reference against two target definitions splits it in two. Against the FIXED 0.25% target the no-fitting
+  24h EWMA scores +0.0398 and the model +0.0983. Against a VOLATILITY-SCALED target — which divides the
+  recent volatility level out of the question — the EWMA scores **+0.0003, nothing at all**, and the model
+  still scores +0.0736. **Most of the model's apparent skill is knowledge of the volatility level, which is
+  free; the part that is genuinely its own is within-regime timing, worth about +0.074 skill.** Every future
+  description of the deliverable should say this rather than quoting the headline number alone.
+- **The fixed target's meaning is not stable, and that is now measured (E021).** Its positive rate ranges
+  from 0.336 (2023) to 0.676 (2018, 2021) — "a move bigger than 0.25%" is a different question in a calm
+  year than in a wild one. The volatility-scaled alternative holds 0.476–0.508. **The fixed target stands
+  anyway** because it is clearly more predictable (skill 0.098 vs 0.074, bar 0.90x, ratio 0.75x) and the
+  scaled one ranks realised move size no better (rho 0.338 vs 0.360, a tie that technically failed by 0.002).
+  **Constraint on later phases:** this instability belongs in the contract's limitations; and if the
+  2026-09-22 live watch item survives the 500-hour checkpoint, the scaled target is the first thing to
+  reconsider — as a deliberate trade of skill for stability, made with the user, never as a side-effect.
 - **WATCH ITEM (opened 2026-09-22, do not act on it): the first 18 prospective shadow hours ran BEHIND
   the no-fitting reference.** Model Brier 0.2574 vs the E019 EWMA rule's 0.2258 — the model is 0.032 worse,
   where development data said it should be roughly twice as skilful. Large moves occurred in 33% of those

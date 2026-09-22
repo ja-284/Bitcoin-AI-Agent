@@ -1,8 +1,8 @@
 {
   "id": "E021",
   "date": "2026-09-22",
-  "git_commit": "(pre-registration commit; results appended in a later commit)",
-  "status": "PRE-REGISTERED before any result was computed.",
+  "git_commit": "(results commit)",
+  "status": "PRE-REGISTERED; two candidates, run once each; no search over the multiplier.",
   "phase": "Master plan section 20 (move-size research: threshold definitions) and the research rule recorded on 2026-09-19: 'threshold fixed-% vs volatility-scaled to be tested, not assumed'. That debt has been open since the research rules were written and has never been paid.",
   "why_now": "Two reasons. (1) The rule was recorded as owed and never done: every move-size result in this project (E012, E013, E018, E019, E020) rests on ONE target definition that was chosen, not tested. (2) On 2026-09-22 the first 18 prospective shadow hours ran behind the no-fitting reference, and the visible reason was that large moves happened in 33% of those hours against about 47% in the data the model was fitted on. A FIXED 0.25% bar quietly changes meaning when the market calms down: the same number stops describing the same kind of event. A volatility-scaled bar would not. That observation is n = 18 and is NOT evidence -- it is the motivation for finally running a test that was already owed, and the test is judged on 54,472 out-of-sample hours, not on those 18.",
   "hypothesis": "Defining a 'large move' relative to recent typical movement gives a target that is at least as predictable, at least as well calibrated, ranks realised move size at least as well, and whose meaning is far more stable across market regimes than a fixed percentage.",
@@ -25,9 +25,115 @@
     "holdout": "sealed, not read"
   },
   "horizon_hours": 1,
-  "features": ["tr_mean_14_rel", "rv_24", "rv_168", "vol_ratio_24_168", "trades_rel_24h", "trades_rel_168h", "hour_sin", "hour_cos", "is_weekend"],
+  "features": [
+    "tr_mean_14_rel",
+    "rv_24",
+    "rv_168",
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h",
+    "hour_sin",
+    "hour_cos",
+    "is_weekend"
+  ],
   "also_reported": "Per-year positive rate, skill and ECE for both targets; the E019 no-fitting reference scored against each target on the same rows, since that is now the standing reference for anything about move size.",
-  "metrics": "filled in after the run",
-  "results": "filled in after the run",
-  "affected_design": "filled in after the run"
+  "metrics": {
+    "folds": 27,
+    "rows_common": 64180,
+    "dropped_no_vol_threshold": 0,
+    "median_vol_threshold_pct": 0.25628300660791303,
+    "validation": {
+      "F_fixed_incumbent": {
+        "base_rate": 0.4752,
+        "brier": 0.22487,
+        "skill": 0.09831,
+        "ece": 0.01391,
+        "max_bucket_gap_100": 0.02908,
+        "rho_p_vs_abs_return": 0.36021
+      },
+      "V_vol_scaled": {
+        "base_rate": 0.49531,
+        "brier": 0.23157,
+        "skill": 0.07363,
+        "ece": 0.0125,
+        "max_bucket_gap_100": 0.04763,
+        "rho_p_vs_abs_return": 0.33782
+      }
+    },
+    "exploration": {
+      "F_fixed_incumbent": {
+        "base_rate": 0.49943,
+        "skill": 0.1457,
+        "ece": 0.00437,
+        "rho_p_vs_abs_return": 0.44007
+      },
+      "V_vol_scaled": {
+        "base_rate": 0.49302,
+        "skill": 0.04347,
+        "ece": 0.02117,
+        "rho_p_vs_abs_return": 0.31034
+      }
+    },
+    "yearly_positive_rate": {
+      "F_fixed_incumbent": {
+        "2018": 0.669,
+        "2019": 0.473,
+        "2020": 0.496,
+        "2021": 0.676,
+        "2022": 0.514,
+        "2023": 0.336,
+        "2024": 0.489,
+        "2025": 0.448
+      },
+      "V_vol_scaled": {
+        "2018": 0.488,
+        "2019": 0.481,
+        "2020": 0.508,
+        "2021": 0.493,
+        "2022": 0.476,
+        "2023": 0.508,
+        "2024": 0.502,
+        "2025": 0.481
+      }
+    },
+    "yearly_positive_rate_spread": {
+      "F_fixed_incumbent": 0.34,
+      "V_vol_scaled": 0.032
+    },
+    "ewma_reference_validation_skill": {
+      "F_fixed_incumbent": 0.03979,
+      "V_vol_scaled": 0.00032
+    },
+    "verdict": {
+      "checks": {
+        "i_predictability": {
+          "skill_F": 0.09831058812130411,
+          "skill_V": 0.073632491254781,
+          "ratio": 0.7489782399015542,
+          "pass": false
+        },
+        "ii_calibration": {
+          "ece_V": 0.012499386668718887,
+          "worst_bucket_V": 0.04763080320060087,
+          "pass": true
+        },
+        "iii_ranking": {
+          "rho_F": 0.360210573019641,
+          "rho_V": 0.33782272886942527,
+          "pass": false
+        },
+        "iv_stability": {
+          "spread_F": 0.34027002521364846,
+          "spread_V": 0.03224254602091203,
+          "pass": true
+        }
+      },
+      "all_four_pass": false,
+      "tripwire_V_skill_over_1_5x_F": false,
+      "statement": "the volatility-scaled definition does not clear the pre-registered bars -- the fixed target stands"
+    }
+  },
+  "results": "THE FIXED TARGET STANDS: two of the four pre-registered parts fail.\n\n(iv) STABILITY passes overwhelmingly, and it is worth seeing how large the effect is. The FIXED target's positive rate ranges from 0.336 in 2023 to 0.676 in 2018 and 2021 -- a yearly spread of 0.340. 'A move bigger than 0.25%' is simply not the same question in a calm year as in a wild one. The volatility-scaled target holds 0.476-0.508, a spread of 0.032, more than ten times tighter. (ii) CALIBRATION also passes (validation ECE 0.012, worst bucket 0.048).\n\n(i) PREDICTABILITY FAILS, clearly: validation skill 0.0736 against the fixed target's 0.0983, a ratio of 0.75 against a bar of 0.90. In exploration the gap is far wider (0.0435 vs 0.1457). (iii) RANKING fails by two thousandths -- rho 0.338 where 0.340 was needed -- which is a tie, not a defeat, and should be read as one; the verdict does not rest on it, because (i) fails on its own.\n\nWHY THE ADAPTIVE TARGET IS HARDER, WHICH IS THE REAL FINDING. The volatility-scaled threshold divides the recent volatility level OUT of the target, so what is left is the question of which hour INSIDE a regime will be big, rather than how lively the market is at all. Scoring the E019 no-fitting reference against both targets splits the model's skill in two: the reference has skill +0.0398 against the fixed target and +0.0003 -- nothing at all -- against the scaled one. The model has +0.0983 and +0.0736. So most of the model's apparent skill against the fixed target is knowledge of the volatility LEVEL, which a 24-hour EWMA gives away for free; but a real +0.0736 of within-regime timing skill survives, where the free baseline retains essentially none. Against the fixed target the model is 2.5x the reference; against the scaled one it is over 200x, on a much smaller absolute number.\n\nA MECHANISM FOR THE 2026-09-22 WATCH ITEM, offered as a mechanism and not as evidence. Because the fixed target's difficulty swings so violently between regimes, a model trained across the mixture will over-state large moves during a quiet stretch -- which is exactly what the first 18 prospective hours looked like (large moves in 33% of them against ~47% in training). n was 18; this explains nothing until the sample grows.\n\nONE OBSERVATION NOT PART OF THE CRITERION: the scaled target's skill IMPROVES over time (2019 +0.011, 2020 +0.051, 2022 +0.058, 2023 +0.069, 2024 +0.068, 2025 +0.084) while the fixed target's stays flat. Recorded, not interpreted -- it could be a real change in market structure or it could be noise, and nothing here is designed to tell those apart.",
+  "affected_design": "Nothing changes. The recorded target stays |1h return| > 0.25%, and the answer to 'should the threshold adapt?' is now a tested no rather than an untested assumption -- which is what the 2026-09-19 rule asked for. Three things are carried forward. (1) The skill DECOMPOSITION is now the honest way to describe the move-size model: most of its skill against the fixed target is the volatility level, freely available from a 24-hour EWMA; the part that is genuinely the model's is the within-regime timing worth about +0.074 skill. Any future description of the deliverable should say this. (2) The fixed target's regime instability (positive rate 0.336-0.676 across years) is a documented property of the deliverable and belongs in the backend contract's limitations, because a user reading 'chance of a move over 0.25%' deserves to know the question itself gets easier and harder with the market. (3) If the live watch item persists past the 500-hour checkpoint, the volatility-scaled target is the first thing to reconsider -- not because it predicts better, it does not, but because it would not drift in meaning. That would be a deliberate trade of skill for stability, made with the user, never a research side-effect.",
+  "command": "python -m agent.research.threshold_test --experiment E021"
 }

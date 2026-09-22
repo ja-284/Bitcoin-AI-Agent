@@ -22,7 +22,7 @@ BUY makes them look identical:
 |---|---|
 | the BUY/HOLD/SELL signal | a rules-based score with **no demonstrated predictive value** (E001, E017) |
 | the confidence figure | a **heuristic** about whether the categories agree and the data was complete — not a probability, and it carries no information about whether the signal turns out to be right |
-| the move-size probability | a **calibrated probability** that the next hour's move exceeds 0.25%, in either direction, currently a research shadow record |
+| the move-size probability | a **calibrated probability** that the next hour's move exceeds 0.25%, in either direction, currently a research shadow record. Most of its skill is knowing how volatile the market is right now — which a plain average of recent hours also captures — and the share of hours that clear 0.25% has itself ranged from 34% to 68% across years (E019, E021). Both facts are in `limitations`. |
 
 So every quantity arrives as an object, never a bare number:
 
