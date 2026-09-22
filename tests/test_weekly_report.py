@@ -186,3 +186,58 @@ def test_accuracy_always_carries_an_interval_so_small_samples_say_so():
     blo, bhi = big["accuracy_ci95"]
     assert bhi - blo < 0.05, "4000 observations must produce a tight interval"
     assert big["accuracy_beats_naive"] is True
+
+
+# ---------------------------------------------------------------- E019 reference, pre-committed
+def _graded(n: int, start=None, threshold=0.0025):
+    from datetime import datetime, timedelta, timezone
+    start = start or datetime(2026, 9, 21, 17, tzinfo=timezone.utc)
+    rows = []
+    for i in range(n):
+        t = start + timedelta(hours=i)
+        rows.append({"as_of": t, "fetched_at": t + timedelta(minutes=12), "status": "ok",
+                     "status_reason": None, "live_close_match": True, "p_calibrated": 0.4 + 0.01 * (i % 5),
+                     "model_version": "move_size_1h_v1", "outcome_status": "ok",
+                     "outcome_return": 0.003 if i % 2 else 0.001, "outcome_large": bool(i % 2),
+                     "threshold": threshold, "horizon_hours": 1})
+    return rows
+
+
+def test_the_no_fitting_reference_is_scored_on_the_same_hours():
+    """E019 made the EWMA rule the standing reference; the weekly report must actually use it."""
+    import pandas as pd
+    from datetime import datetime, timedelta, timezone
+    from agent.research.weekly_report import shadow_record
+
+    rows = _graded(12)
+    idx = pd.DatetimeIndex([r["as_of"] for r in rows])
+    ewma = pd.Series([0.45] * len(rows), index=idx)
+    now = rows[-1]["as_of"] + timedelta(hours=3)
+    sh = shadow_record(rows, now, [], ewma=ewma)
+    ref = sh["evaluation_vs_ewma_reference"]
+    assert ref["hours_compared"] == 12
+    assert ref["model_brier"] == sh["evaluation"]["brier"]
+    assert "2.47x" in ref["development_expectation"]
+
+
+def test_the_reference_refuses_to_compare_a_different_event():
+    """A shadow row scored at another threshold is not measuring the same thing as the reference."""
+    import pandas as pd
+    from datetime import timedelta
+    from agent.research.weekly_report import shadow_record
+
+    rows = _graded(12, threshold=0.01)
+    ewma = pd.Series([0.45] * len(rows), index=pd.DatetimeIndex([r["as_of"] for r in rows]))
+    sh = shadow_record(rows, rows[-1]["as_of"] + timedelta(hours=3), [], ewma=ewma)
+    assert "unavailable" in sh["evaluation_vs_ewma_reference"]
+    assert "same event" in sh["evaluation_vs_ewma_reference"]["unavailable"]
+
+
+def test_a_missing_reference_never_costs_the_shadow_evaluation():
+    from datetime import timedelta
+    from agent.research.weekly_report import shadow_record
+
+    rows = _graded(12)
+    sh = shadow_record(rows, rows[-1]["as_of"] + timedelta(hours=3), [], ewma=None)
+    assert sh["evaluation"]["n"] == 12
+    assert "evaluation_vs_ewma_reference" not in sh

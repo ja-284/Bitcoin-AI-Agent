@@ -273,7 +273,27 @@ def paper_section(now: datetime, outcome_rows: list[dict]) -> dict:
 
 
 # ---------------------------------------------------------------- 3b. LIVE shadow record (agent/shadow)
-def shadow_record(rows: list[dict], now: datetime, errors: list[dict] | None = None) -> dict:
+def ewma_reference_series(now: datetime, lookback_hours: int = 800) -> "pd.Series":
+    """
+    E019's standing reference, on live candles: a 24-hour EWMA of "did recent hours move more
+    than the threshold?". It needs no fitting, no calibration and no artefact, and on development
+    data it already reached 40% of the model's skill -- which is why comparing the model only
+    against the base rate, as E012 did, sets the bar far too low.
+
+    The SAME function the experiment used (`agent.research.simple_baselines.simple_rules`) is
+    called here, so the monitoring reference and the research reference cannot drift apart.
+    """
+    from agent.data_providers.binance import BinanceProvider
+    from agent.research.simple_baselines import simple_rules
+
+    end = now.replace(minute=0, second=0, microsecond=0) - HOUR  # last closed candle
+    hours = int((end - LIVE.start).total_seconds() // 3600) + lookback_hours
+    bars = BinanceProvider().get_history(end=end, hours=hours)
+    return simple_rules(bars)["E_ewma_halflife_24h"]
+
+
+def shadow_record(rows: list[dict], now: datetime, errors: list[dict] | None = None,
+                  ewma: "pd.Series | None" = None) -> dict:
     """
     rows: dicts with as_of, fetched_at, horizon_hours, status, status_reason, live_close_match,
     p_calibrated, model_version, outcome_status, outcome_return, outcome_large.
@@ -317,10 +337,54 @@ def shadow_record(rows: list[dict], now: datetime, errors: list[dict] | None = N
     if graded:
         p = np.array([r["p_calibrated"] for r in graded], float)
         y = np.array([1.0 if r["outcome_large"] else 0.0 for r in graded])
-        out["evaluation"] = paper_record(p, y, np.abs(np.array([r["outcome_return"] for r in graded], float)))
+        abs_ret = np.abs(np.array([r["outcome_return"] for r in graded], float))
+        out["evaluation"] = paper_record(p, y, abs_ret)
         out["evaluation"]["note"] = ("LIVE shadow record, prospective rows only (the probability was stored before the outcome "
                                      "candle closed). Read intervals, not points, until n is in the thousands.")
+        if ewma is not None and len(ewma):
+            out["evaluation_vs_ewma_reference"] = _against_ewma(graded, p, y, abs_ret, ewma)
     return out
+
+
+def _against_ewma(graded: list[dict], p: np.ndarray, y: np.ndarray, abs_ret: np.ndarray, ewma: "pd.Series") -> dict:
+    """
+    The model against E019's no-fitting reference, on the SAME live hours.
+
+    Pre-committed deliberately: this comparison is wired in now, while there are far too few
+    hours to judge anything, precisely so that it cannot be chosen after the answer is visible.
+    On development data the model was 2.47x the reference's skill; if the live record ever fails
+    to show a gap of that kind, that is the finding, and it will be one nobody picked.
+    """
+    from agent.research.simple_baselines import THRESHOLD as SIMPLE_BASELINE_THRESHOLD
+
+    thresholds = {r.get("threshold") for r in graded if r.get("threshold") is not None}
+    if thresholds and thresholds != {SIMPLE_BASELINE_THRESHOLD}:
+        return {"unavailable": "the shadow rows use threshold(s) %s but the reference is built at %s -- "
+                               "they would not be measuring the same event"
+                               % (sorted(thresholds), SIMPLE_BASELINE_THRESHOLD)}
+    ref = ewma.reindex([r["as_of"] for r in graded]).to_numpy(dtype=float)
+    ok = ~np.isnan(ref)
+    if int(ok.sum()) < 5:
+        return {"unavailable": "the reference has a value for only %d of %d graded hours" % (int(ok.sum()), len(graded))}
+    model_rec = paper_record(p[ok], y[ok], abs_ret[ok])
+    ref_rec = paper_record(ref[ok], y[ok], abs_ret[ok])
+    return {
+        "why": ("E019: a 24-hour EWMA of 'did recent hours move a lot?' needs no fitting at all and reached "
+                "40% of the model's skill on development data. Comparing the model only against the base "
+                "rate, as E012 did, sets the bar far too low."),
+        "hours_compared": int(ok.sum()),
+        "model_brier": model_rec["brier"], "reference_brier": ref_rec["brier"],
+        "model_skill": model_rec["brier_rel_gain"], "reference_skill": ref_rec["brier_rel_gain"],
+        "model_brier_minus_reference": model_rec["brier"] - ref_rec["brier"],
+        "observed_large_move_share": float(y[ok].mean()),
+        "development_expectation": "the model had 2.47x the reference's skill on validation data (E019)",
+        "note": ("Pre-committed before the live sample was large enough to judge, so the comparison could not "
+                 "be chosen after seeing the answer. Far too few hours to mean anything yet -- this line exists "
+                 "to be read at the 500-hour checkpoint. Both skill figures are measured against a base rate "
+                 "computed on these very hours, which at small n is an ORACLE that knew whether the period "
+                 "turned out calm or wild; it flatters neither side but makes both look worse than they are. "
+                 "The difference between the two Briers is the part that is comparable."),
+    }
 
 
 def fetch_shadow_errors(since: datetime) -> list[dict]:
@@ -336,9 +400,11 @@ def fetch_shadow_rows() -> list[dict]:
         cur.execute("SELECT to_regclass('shadow_move_size')")
         if cur.fetchone()[0] is None:
             return []
-        cur.execute("""SELECT as_of, status, status_reason, live_close_match, p_calibrated, model_version, outcome_status, outcome_return, outcome_large, features, fetched_at
-                       FROM shadow_move_size ORDER BY as_of""")
-        return [dict(zip(["as_of", "status", "status_reason", "live_close_match", "p_calibrated", "model_version", "outcome_status", "outcome_return", "outcome_large", "features", "fetched_at"], r)) for r in cur.fetchall()]
+        cols = ["as_of", "status", "status_reason", "live_close_match", "p_calibrated", "model_version",
+                "outcome_status", "outcome_return", "outcome_large", "features", "fetched_at", "threshold",
+                "horizon_hours"]
+        cur.execute("SELECT " + ", ".join(cols) + " FROM shadow_move_size ORDER BY as_of")
+        return [dict(zip(cols, r)) for r in cur.fetchall()]
 
 
 # ---------------------------------------------------------------- 4. watch list
@@ -383,9 +449,16 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "health_last_7_days": health(preds, outs, now, max(week_ago, LIVE.start)),
         "health_since_go_live": health(preds, outs, now, LIVE.start),
         "signal_record": signal_record(preds, outs),
-        "shadow_record": shadow_record(fetch_shadow_rows(), now, fetch_shadow_errors(now - timedelta(days=30))),
         "watch_list": watch_list(preds, now),
     }
+    ewma = None
+    if with_paper:  # the reference needs candles; --no-paper keeps the report network-free
+        try:
+            ewma = ewma_reference_series(now)
+        except Exception:  # noqa: BLE001 -- a missing reference must never cost the report
+            logger.exception("EWMA reference fetch failed")
+    rep["shadow_record"] = shadow_record(fetch_shadow_rows(), now,
+                                         fetch_shadow_errors(now - timedelta(days=30)), ewma=ewma)
     try:  # Backend Phase I: drift vs the frozen development reference
         from agent.research.drift import report as drift_report
 
@@ -469,6 +542,17 @@ def render(rep: dict) -> str:
                   "", "| stated | observed | 95% interval | n |", "|---|---|---|---|"]
             L += [f"| {b['mean_predicted']:.2f} | {b['observed']:.2f} | [{b['ci_low']:.2f}, {b['ci_high']:.2f}] | {b['n']} |" for b in ev["reliability"]]
             L += ["", f"*{ev['note']}*"]
+        ref = sh.get("evaluation_vs_ewma_reference")
+        if ref:
+            L += ["", "**Against the no-fitting reference (E019), on the same hours.**"]
+            if ref.get("unavailable"):
+                L.append(f"Not computed: {ref['unavailable']}")
+            else:
+                L += [f"- n={ref['hours_compared']} · large moves actually happened in {ref['observed_large_move_share']:.0%} of them",
+                      f"- model Brier {ref['model_brier']:.4f} (skill {ref['model_skill'] * 100:+.1f}%) "
+                      f"vs reference Brier {ref['reference_brier']:.4f} (skill {ref['reference_skill'] * 100:+.1f}%) · "
+                      f"difference {ref['model_brier_minus_reference']:+.4f} (negative = the model is ahead)",
+                      f"- {ref['development_expectation']}", f"- *{ref['note']}*"]
     pr = rep.get("paper_move_size_1h")
     L += ["", "## 3b. Paper record (after the fact) — same model on all live hours, from candle features", ""]
     if not pr:

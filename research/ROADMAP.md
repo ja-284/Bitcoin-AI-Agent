@@ -93,6 +93,16 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   sitting on the edge of its interval should be checked against data-quality flags before it is
   believed.** Scoring 0.2.0 is now the object under test; E001 stays the record for 0.1.0.
 
+- **WATCH ITEM (opened 2026-09-22, do not act on it): the first 18 prospective shadow hours ran BEHIND
+  the no-fitting reference.** Model Brier 0.2574 vs the E019 EWMA rule's 0.2258 — the model is 0.032 worse,
+  where development data said it should be roughly twice as skilful. Large moves occurred in 33% of those
+  hours against ~47% in development, and the model kept stating 0.47–0.55: a quieter market than it was
+  fitted on, which the purely recency-based reference tracked down faster than the model did. **n = 18.
+  The report itself says intervals need 192 hours.** This is recorded here so that it cannot be quietly
+  forgotten if it persists, and so that it cannot be treated as a finding if it disappears — which at this
+  sample size it very well might. Read it at the 500-hour checkpoint, not before. Nothing changes now.
+  (The comparison was wired into the weekly report BEFORE this was visible, which is the only reason it
+  can be believed at all later.)
 - **A fancier model does not help, and that is now tested rather than assumed (E020, 2026-09-22).** Three
   families with settings fixed in advance, run once each on identical rows. Gradient-boosted trees reach 1.04x
   the logistic's validation skill — the paired interval excludes zero (+0.00093 [+0.00006, +0.00178]) but the
