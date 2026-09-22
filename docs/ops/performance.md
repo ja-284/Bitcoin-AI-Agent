@@ -43,6 +43,27 @@ small logistic model per fold (seconds).
 - **Known weak points:** a database outage across all slots of an hour loses that hour of the
   live record; the healthchecks.io external alarm is still not configured.
 
+## Storage growth (measured 2026-09-22)
+
+| table | size | rows |
+|---|---|---|
+| predictions | 1008 kB | 68 |
+| prediction_outcomes | 80 kB | 175 |
+| shadow_move_size | 64 kB | 14 |
+| others | 56 kB | |
+
+A recent prediction row carries **14.3 KB**: `news_items` 11.9 KB, `category_scores` 1.5 KB
+(the per-headline assessments), `raw_indicators` 0.4 KB, `run_meta` 0.8 KB. At 24 rows/day
+that is **0.35 MB/day ≈ 128 MB/year**, against Supabase's 500 MB free tier — roughly 3–4 years
+at today's news volume, less if the news window keeps growing (the `news_items` payload
+already grew 2.6× in three days, from 4.6 KB to 11.9 KB, as the 24-hour window filled).
+
+Most of that is the stored headline **summaries**, which the scorer never reads (it uses
+headlines only). They are kept deliberately: they are the only point-in-time news archive this
+project will ever have, and Phase J needs it. Options if space ever matters: strip the HTML
+from summaries (they are raw feed HTML), or keep summaries only for items the scorer judged
+relevant. Neither is needed now, and neither changes what the system *uses*.
+
 ## Decision
 
 No optimisation is warranted. The one change that would reduce wall time (reusing one database

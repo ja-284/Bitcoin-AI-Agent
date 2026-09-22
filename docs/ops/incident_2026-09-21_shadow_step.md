@@ -135,6 +135,13 @@ and it touched the live signal.
 - **What the record shows:** all 17 rows are self-describing — `completeness_score` 0.85 (not
   1.0), news weight 0.0, `ai_model_news` NULL, and the error text in `run_meta.news_error`.
   Nothing is wrong in those rows; a category was missing and they say so.
+- **How much the missing news could have mattered** (bounded, not guessed): with news present
+  the overall score is `0.85 × (technical score) + 0.15 × (news score)`, and a news score can
+  only lie in [−1, +1]. Applying that range to each of the 17 hours: **10 hours would have kept
+  their signal whatever the news said; 7 hours (09-22 04, 05, 06, 07, 10, 11, 12 UTC) were
+  close enough to the BUY/HOLD threshold that a sufficiently negative news score would have
+  made them HOLD instead of BUY.** What those 7 would actually have been is unknowable —
+  the headlines are stored, but the score they would have produced is not.
 - **Fix:** `max_tokens` 2048 → 16384 (a named constant, ~350 headlines). The prompt and schema
   are unchanged, so E009's validation of this component still applies, and only tokens actually
   generated are billed, so the higher cap costs nothing by itself. A parsing failure now names

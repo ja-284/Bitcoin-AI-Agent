@@ -18,15 +18,15 @@ from agent.shared.types import CategoryScore, ConfidenceBreakdown, NewsItem
 
 
 class _Client:
-    def __init__(self, exc=None, content=None, parsed=None):
-        self._exc, self._content, self._parsed = exc, content, parsed
+    def __init__(self, exc=None, content=None, parsed=None, stop_reason="end_turn"):
+        self._exc, self._content, self._parsed, self._stop = exc, content, parsed, stop_reason
         outer = self
 
         class Messages:
             def create(self, **kw):
                 if outer._exc:
                     raise outer._exc
-                return type("R", (), {"content": outer._content})()
+                return type("R", (), {"content": outer._content, "stop_reason": outer._stop})()
 
             def parse(self, **kw):
                 if outer._exc:
@@ -111,3 +111,35 @@ def test_a_truncated_answer_names_the_cause(monkeypatch):
     monkeypatch.setattr(news_scorer, "Anthropic", lambda **kw: Boom())
     with pytest.raises(ValueError, match="truncated answer arrives as invalid JSON"):
         news_scorer.score_news([NewsItem(f"h{i}", "s", f"u{i}", None) for i in range(60)])
+
+
+def _explain():
+    return explainer.write_explanation(signal="HOLD", overall_score=0.0, confidence=ConfidenceBreakdown(0.5, 1.0, 0.6),
+                                       category_scores=[], close_price=1.0)
+
+
+def test_a_truncated_explanation_is_refused_rather_than_stored_as_complete(monkeypatch):
+    """
+    Unlike the news answer, a cut-off explanation is still readable text, so nothing would
+    notice it. Same class of defect as the 2026-09-21 news truncation, caught before it bit.
+    """
+    block = type("B", (), {"type": "text", "text": "The signal is BUY because the trend"})()
+
+    class R:
+        content = [block]
+        stop_reason = "max_tokens"
+
+    monkeypatch.setattr(explainer, "Anthropic", lambda **kw: _Client(content=R.content, stop_reason="max_tokens"))
+    with pytest.raises(ValueError, match="truncated at max_tokens"):
+        _explain()
+
+    monkeypatch.setattr(explainer, "Anthropic", lambda **kw: _Client(content=R.content, stop_reason="end_turn"))
+    assert _explain().startswith("The signal is BUY")
+
+
+def test_explanations_have_headroom_over_what_the_model_actually_writes():
+    # longest live explanation on 2026-09-22: 1061 characters, i.e. roughly 265 tokens
+    assert explainer.MAX_TOKENS >= 3 * 265
+    import inspect
+
+    assert "max_tokens=MAX_TOKENS" in inspect.getsource(explainer.write_explanation)

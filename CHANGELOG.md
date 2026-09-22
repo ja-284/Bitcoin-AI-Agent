@@ -40,6 +40,12 @@ research shadow step added on 2026-09-21.
   truncation as the likely cause. Verified on the real volume (59 headlines scored).
 - **The test suite now runs on GitHub's runners on every push** (`.github/workflows/tests.yml`)
   — the check that would have caught the first defect before it reached production.
+- **Third defect of the same class, found by auditing for it and closed before it bit:** a
+  truncated *explanation* would have been stored silently (unlike the news answer, cut-off
+  prose is still readable text). `write_explanation` now refuses a response whose
+  `stop_reason` is `max_tokens`, so the hour is recorded with `explanation_error` and no text
+  rather than half a sentence presented as a whole one. Live explanations run 170–265 tokens
+  against a 1024-token cap (~4× headroom), so nothing was affected in practice.
 
 ## pipeline 0.2.0 — hardening 2026-09-21 (Backend Phase B; information rules unchanged, version kept)
 

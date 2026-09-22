@@ -21,6 +21,8 @@ point-in-time form.
 | news model assesses fewer headlines than given | score used, mismatch flagged | `category_scores[news].detail.assessment_count_mismatch` | yes | `test_failure_modes.py` |
 | news model returns out-of-range numbers | rejected by the schema (pydantic) → news_error | `run_meta.news_error` | yes | `test_failure_modes.py` |
 | explainer fails / times out | prediction saved without text; decision untouched | `run_meta.explanation_error`, `explanation = null` | yes | `test_failure_modes.py`, `test_explainer_isolation.py` |
+| explainer answer hits its token cap | refused (`stop_reason == max_tokens`) → no text stored, rather than half a sentence stored as if complete | `run_meta.explanation_error` | yes | `test_llm_robustness.py` |
+| news answer hits its token cap | the JSON is invalid → news unavailable (weight 0), and the error names truncation as the likely cause | `run_meta.news_error` | yes, four categories | `test_llm_robustness.py`; this actually happened, see `docs/ops/incident_2026-09-21_shadow_step.md` |
 | database unreachable before the run | `prediction_exists` raises → run fails before any AI call | job step red | no; next slot retries | code order (`orchestrator.run_once`) |
 | database unreachable at save time | run raises; the AI cost is spent, the row is lost; next slot recomputes | job step red | no (this slot) | `test_failure_modes.py` |
 | the same hour runs twice (four cron slots + dispatch) | second run exits before any AI call; `INSERT … ON CONFLICT (as_of) DO NOTHING` as the last line of defence | log "already exists" | one row, never two | `test_orchestrator_cutoff.py`, `test_failure_modes.py`, `UNIQUE(as_of)` |

@@ -15,6 +15,13 @@ from agent.shared.types import CategoryScore, ConfidenceBreakdown
 
 MODEL = "claude-sonnet-5"  # a person reads this text directly, so it gets a bit more nuance than the news step
 
+# Explanations run 170-265 tokens in practice (measured over the live record on 2026-09-22),
+# so 1024 leaves ~4x headroom. The cap matters anyway: unlike the news call, where truncation
+# breaks the JSON and fails loudly, a truncated explanation is still readable text and would be
+# stored as if it were complete. stop_reason is therefore checked below. Only generated tokens
+# are billed, so the headroom itself is free.
+MAX_TOKENS = 1024
+
 SYSTEM_PROMPT = (
     "You write short, plain-English explanations of a Bitcoin analysis system's output "
     "for a beginner audience. You are given a signal, an overall score, a confidence "
@@ -63,11 +70,15 @@ def write_explanation(
     client = Anthropic(api_key=ANTHROPIC_API_KEY, timeout=AI_TIMEOUT_S, max_retries=AI_MAX_RETRIES)  # bounded: an hourly job cannot wait the SDK's 10-minute default
     response = client.messages.create(
         model=MODEL,
-        max_tokens=1024,
+        max_tokens=MAX_TOKENS,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_content}],
     )
     text = next((block.text for block in response.content if block.type == "text"), "").strip()
     if not text:
         raise ValueError("explanation model returned no text")  # recorded as explanation_error; the decision is untouched
+    if getattr(response, "stop_reason", None) == "max_tokens":
+        # Half an explanation reads like a whole one. Better no text than a sentence that stops
+        # mid-thought and is stored as if the model had finished (cf. the news truncation, 2026-09-21).
+        raise ValueError(f"explanation truncated at max_tokens={MAX_TOKENS} ({len(text)} characters produced)")
     return text
