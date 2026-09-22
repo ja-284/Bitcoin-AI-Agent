@@ -145,7 +145,11 @@ def combine_scores(category_scores: list[CategoryScore]) -> ScoringResult:
     nominal_total = sum(NOMINAL_WEIGHTS.values())
 
     overall = sum(c.score * c.weight for c in active) / total_weight if total_weight > 0 else 0.0
-    completeness = total_weight / nominal_total if nominal_total > 0 else 0.0
+    # Completeness is "how much of the nominal weight had usable data", so it is a share and can
+    # never exceed 1. Today every scorer returns either its nominal weight or 0, so the clamp
+    # never binds -- it is here because a future weighting scheme that overshoots must not leak a
+    # completeness above 1 into the confidence figure and the stored record. Found by fuzzing.
+    completeness = min(1.0, total_weight / nominal_total) if nominal_total > 0 else 0.0
 
     return ScoringResult(overall_score=overall, category_scores=category_scores, completeness=completeness)
 

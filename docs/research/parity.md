@@ -32,6 +32,23 @@ about a different system than the one running.*
    do blank any window touching a gap. Both are deliberate: the live scoring is the frozen
    thing under test; the research features follow the stricter no-fill rule. A gap inside the
    live window is recorded in `run_meta.price_data.gaps` so such hours can be excluded later.
+
+   **Quantified 2026-09-22, and worse than "the indicators are slightly stale":** 6,357 of the
+   68,619 replayed hours (**9.26%**) have at least one missing hour inside their 250-candle
+   window — up to 33 missing hours in a single window — concentrated in 2017–2021 and ending
+   2023-04. For those hours two things are off. The indicators are computed over a window that
+   silently spans more than 250 hours; and `score_volume` compares `bars[-1]` with
+   `bars[-1-24]` **by position**, so its direction term can be reading a candle up to 33 hours
+   away from the 24 it intends. This is the same class of mistake that pipeline 0.2.0 fixed in
+   the outcome lookup (row counting instead of timestamps), surviving inside frozen scoring.
+
+   It is **not** being fixed here: scoring 0.1.0 is the object under test and changing it
+   silently would invalidate every comparison made against it. It is recorded instead, with
+   two consequences: the live record is unaffected so far (0 gap-affected hours since go-live,
+   and `run_meta` marks any that occur), and any future *fitted* work on the replay should run
+   a robustness check excluding the 9.26% of gap-affected hours. The decision on whether
+   scoring should switch to timestamp-based lookups belongs with the user (it is a scoring
+   change, so a version bump and a re-run of the affected baselines).
 3. **Fallback rows** (`price_is_synthetic = true`) have no research counterpart and are
    excluded from parity and from any research use of the live record. Count so far: 0.
 4. **Pipeline 0.1.0 rows** (the first four predictions) were written before the news cutoff

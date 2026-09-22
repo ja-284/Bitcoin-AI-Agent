@@ -32,7 +32,10 @@ def wilson_interval(successes: int, n: int, z: float = 1.96) -> tuple[float, flo
     denom = 1 + z * z / n
     centre = (p + z * z / (2 * n)) / denom
     half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
-    return (max(0.0, centre - half), min(1.0, centre + half))
+    # A Wilson interval always contains its own point estimate; floating point can put the bound
+    # a whisker on the wrong side of it (observed 0.0 with a lower bound of 7e-18, found by
+    # fuzzing), which reads as a contradiction in a reliability table. Clamp to the estimate.
+    return (min(p, max(0.0, centre - half)), max(p, min(1.0, centre + half)))
 
 
 @dataclass

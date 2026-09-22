@@ -1,0 +1,33 @@
+{
+  "id": "E015",
+  "date": "2026-09-22",
+  "git_commit": "(filled after run)",
+  "status": "exploratory (pre-registered criterion; fit-free, written before any result was seen)",
+  "why_now": "Phase L says directional research happens only when justified, and the standing position after E011 is that nothing is. The user asked for a genuine search for new signals, so this is run as an explicit, logged, fit-free exploration under the existing Phase 8 rules -- not as a reopening of E011's conclusion, and not as a change to anything live. A negative result is the expected outcome and is recorded as such.",
+  "hypothesis": "Information about the next hours survives in the SHAPE of recent candles, in where price sits inside its recent range, in how big the average trade is, and in how strongly returns are currently autocorrelated -- none of which the 47 features of E003-E008 extracted. The strongest prior is on autocorr_lag1_168: E002, E005 and E008 all found a weak short-horizon REVERSAL, so a direct per-hour measure of whether the market is currently reverting should carry at least as much as those did.",
+  "features": {
+    "body_ratio_1h": "|close-open| / (high-low): how much of the hour's range the market committed to",
+    "wick_asym_1h": "(upper wick - lower wick) / (high-low): which side was rejected",
+    "close_loc_24": "position of the close inside the last 24h high-low range",
+    "donchian_pos_168": "position of the close inside the last 168h range (breakout literature)",
+    "trade_size_rel_24": "mean trade size (volume/trades) vs its trailing 24h mean, the hour excluded from its own baseline (informed-flow proxy; E008 tested trade COUNT, never SIZE)",
+    "amihud_rel_168": "Amihud illiquidity |return|/volume over 24h vs its 168h mean (price impact per unit of volume)",
+    "autocorr_lag1_168": "lag-1 autocorrelation of hourly returns over the past week (is the market reverting or trending right now)",
+    "up_streak_6": "signed run length of same-direction closes, capped at +/-6"
+  },
+  "data": "Existing free snapshots only: Binance spot candles (btcusdt_1h_2026-09-19.csv) and the kline trade-count/taker-buy fields (klines_extra_btcusdt_1h_2026-09-20.csv). No new source, no paid data, nothing revised after the fact.",
+  "method": "The unchanged Phase 8 harness (agent/research/feature_test.py --group shape): fit-free Spearman rank correlations of each feature against the forward return (direction) and its absolute value (magnitude), at 1h/6h/24h/72h/168h, computed separately in exploration (2017-08 -> 2023-12) and validation (2024-01 -> 2025-06), with circular block-bootstrap 95% intervals (block = max(48, 2H), 500 resamples). Decile tables show the shape so a non-monotone relationship is not missed by a rank correlation. Nothing is fitted; no threshold is chosen by looking at outcomes.",
+  "acceptance_criterion": "PRE-REGISTERED, identical to E003-E008 so the result is comparable: a feature 'carries information' at a horizon only if the correlation has the SAME SIGN in both periods AND both 95% intervals exclude zero AND |rho| >= 0.10 in both periods (the magnitude floor). 'Consistent but below size floor' is reported separately and is NOT a pass. A pass at one horizon is a finding for that horizon only.",
+  "tripwire": "|rho| > 0.5 for any past-only feature is not credible and raises SuspiciousResultError before anything is recorded (the E004 lesson).",
+  "what_a_pass_would_and_would_not_mean": "A pass would make the feature a candidate for a future pre-registered fitted test (Phase 9 style, walk-forward, purged) -- it would NOT change scoring 0.1.0, the live system, or any earlier conclusion, and it would NOT be evaluated on the sealed holdout.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.1.0 (untouched)",
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "holdout": "sealed, not read (the loader truncates at 2025-07-01)"},
+  "horizons_hours": [1, 6, 24, 72, 168],
+  "leakage_guards": "Point-in-time by construction (trailing windows, min_periods = window, baselines exclude the hour itself); tests/test_shape_features.py garbles the future and asserts the past does not move, checks that a gap blanks every window touching it, and checks each formula against hand-built candles. The harness's reserved-prefix rule already caught one of these names before any result existed.",
+  "metrics": "(filled after run)",
+  "results": "(filled after run)",
+  "consistent_across_time": "(filled after run)",
+  "affected_design": "(filled after run)",
+  "notes": "Eight features x five horizons x two targets = 80 tests. With this many comparisons some will look interesting by chance; the two-period same-sign requirement plus the size floor is the guard against that, and it is the same guard every earlier group faced."
+}

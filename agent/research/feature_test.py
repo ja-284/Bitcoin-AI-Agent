@@ -34,6 +34,7 @@ from agent.research.metrics import block_bootstrap
 from agent.research.microstructure import MICROSTRUCTURE_FEATURES, load_klines_extra, microstructure_features
 from agent.research.onchain import ONCHAIN_FEATURES, load_difficulty, load_onchain, onchain_features
 from agent.research.periods import HOLDOUT, period_of
+from agent.research.shape import SHAPE_FEATURES, shape_features
 from agent.research.regimes import trend_regime
 from agent.research.replay import replay_cached
 from agent.scoring.scorer import SCORING_VERSION
@@ -51,6 +52,7 @@ GROUPS = {
     "onchain": ONCHAIN_FEATURES,
     "microstructure": MICROSTRUCTURE_FEATURES,
     "calendar": CALENDAR_FEATURES,
+    "shape": SHAPE_FEATURES,
 }
 
 
@@ -70,6 +72,8 @@ def compute_group_features(group: str, bars) -> pd.DataFrame:
     if group == "microstructure":
         grid = bars_to_frame(bars).index
         return microstructure_features(grid, load_klines_extra())
+    if group == "shape":
+        return shape_features(bars_to_frame(bars), load_klines_extra())
     raise ValueError(group)
 
 

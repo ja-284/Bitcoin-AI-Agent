@@ -70,6 +70,17 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
 
 ## Standing findings that constrain later phases
 
+- **9.26% of replayed hours have a gap inside their scoring window** (6,357 of 68,619; up to 33
+  missing hours in one window; 2017–2021 and one stretch ending 2023-04). Scoring 0.1.0 treats
+  the 250 candles as consecutive, and `score_volume` compares `bars[-1]` with `bars[-1-24]` by
+  position, so on those hours its direction term can read a candle up to 33 hours off. Found
+  2026-09-22 by reading the live scoring path; quantified from the replay cache; documented in
+  `docs/research/parity.md`. **Not fixed**: 0.1.0 is the frozen object under test, so changing
+  it would invalidate every comparison against it — the fix is a user decision with a version
+  bump. **Consequence for research:** any future fitted work on the replay must include a
+  robustness check that excludes gap-affected hours. E001/E002's conclusions were null results
+  and are not overturned by this, but they were computed with those hours included.
+
 - Scoring 0.1.0 has no predictive value (E001) and none of its four categories does alone (E002). Re-weighting it (Phase 10) is pointless unless a feature with signal is found in Phase 8. If none is, Phase 10 collapses to "drop redundant categories" and the honest deliverable is calibrated *uncertainty* rather than direction.
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.
 - Historical news is UNAVAILABLE; news is evaluated on the live archive only, once it is large enough (hundreds of hours).
