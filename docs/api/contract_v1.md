@@ -103,7 +103,32 @@ function and a test pins the behaviour just before an hourly run.)
 - **Do not add a "buy now" affordance.** The backend places no orders and holds no funds; a UI
   implying otherwise would misrepresent it.
 
-## Transport — not decided yet, deliberately
+## Transport — decided, and half built
+
+**Option 1 below was chosen and implemented on 2026-09-22.** `agent/api/publish.py` assembles the
+contract and stores it as a single row in `backend_state`; a frontend reads that one row from
+Supabase instead of the raw tables. Verified working against the live database (contract v1,
+health `ok`, ~4.7 KB per snapshot).
+
+**Not yet wired into the hourly workflow.** The step is deliberately left unadded so it can be
+introduced and then watched on the next run rather than deployed unattended. Adding it means one
+step after `agent.shadow.outcomes`:
+
+```yaml
+      - name: Publish the backend state
+        run: python -m agent.api.publish
+```
+
+It is written so it can never fail the job — any error is logged and the exit code is still 0,
+leaving the previous snapshot in place, visibly older because the state carries its own
+`generated_at` and `age_hours`. That is the 2026-09-21 lesson: an add-on must never be able to
+cost an hour of the record it describes.
+
+`backend_state` is the only mutable table in the project, which is a deliberate exception
+justified in `agent/api/schema.sql`: it is a **cache**, not a record. It holds no history,
+nothing is derived from it, and `python -m agent.api.publish` rebuilds it at any time.
+
+### The options as they were weighed
 
 The contract is defined and tested; how it reaches a browser is a separate choice, and making it
 now would be guessing. The three realistic options:
@@ -117,9 +142,8 @@ now would be guessing. The three realistic options:
 3. **The frontend reads the tables directly** and does the labelling itself. Cheapest to start and
    the worst of the three: it puts the honesty rules in the UI, where they will drift.
 
-Recommendation: **option 1**, and only move to option 2 if a screen genuinely needs sub-hour
-freshness. It should be added the same way the shadow step was — after the live record is written
-and self-checked, so that a failure in it can never cost an hour of the live record.
+Option 1 was chosen, for the reasons above. Move to option 2 only if a screen genuinely needs
+sub-hour freshness.
 
 ## Compatibility
 
