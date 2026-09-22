@@ -1,0 +1,31 @@
+{
+  "id": "E020",
+  "date": "2026-09-22",
+  "git_commit": "(pre-registration commit; results appended in a later commit)",
+  "status": "PRE-REGISTERED before any result was computed.",
+  "phase": "Master plan sections 24-25: model architecture research and model selection. 'The model must earn its complexity through robust out-of-sample evidence.'",
+  "why_now": "E019 showed the fitted logistic is worth its complexity against rules that need no fitting. The next question up the ladder is whether it is the right KIND of model. It was chosen in E012 because it is the simplest thing that could work, not because anything was compared against it. Section 24 says to start simple and only add complexity if the evidence demands it -- so the test is not 'can a bigger model fit better' (it always can) but 'does a bigger model predict better out of sample, by enough to matter'.",
+  "hypothesis": "A model family able to represent non-linearity and interactions predicts next-hour move size better than the L2 logistic, by enough to be worth the extra complexity.",
+  "candidates": {
+    "L_logistic_incumbent": "L2 logistic regression, C = 0.1, standardised inside each fold, on the nine declared inputs with their six log transforms (E012 + E013). The incumbent.",
+    "I_logistic_interactions": "The same logistic on the nine inputs PLUS every squared term and pairwise product of the six continuous inputs (21 products + 6 squares = 27 extra columns, 36 in total). A middle step: still linear in its parameters, but able to represent curvature and two-way interactions. Same C, same standardisation, same calibration.",
+    "T_gradient_boosted_trees": "sklearn HistGradientBoostingClassifier with hyperparameters FIXED IN ADVANCE and never tuned: max_iter 200, learning_rate 0.05, max_leaf_nodes 15, min_samples_leaf 200, l2_regularization 1.0, early_stopping False, random_state 0. Trees are invariant to the monotone log transforms, so it sees the same frame as the others."
+  },
+  "no_search": "Three candidates, declared here, run once each. No hyperparameter search, no variant selection, no re-running with different settings and reporting the best. If a candidate's fixed settings turn out to be poor that is reported as its result, not fixed and re-run -- a search over settings on the same validation period is how an apparent edge gets manufactured.",
+  "method": "Identical to E013 and E018 in everything except the model: expanding walk-forward, min_train 365d, quarterly test blocks, purge = 1h, 24h embargo, Platt calibration on the last purged 90 days of each training range, the same 27 folds, the same 64,180 common hours, the same 54,472 out-of-sample rows (13,127 in validation). Every candidate is scored on identical rows, so a difference can only come from the model.",
+  "acceptance_criterion": "PRE-REGISTERED. A more complex family REPLACES the logistic as the research deliverable only if BOTH hold on the VALIDATION period: (i) PRACTICAL -- its skill (1 - Brier / Brier of the period base rate) is at least 1.10x the logistic's; AND (ii) STATISTICAL -- the paired block-bootstrap 95% interval (48-hour blocks, 2000 resamples, seed 31) of (logistic Brier minus its Brier) excludes zero in its favour. If (ii) holds but (i) fails, the recorded verdict is 'statistically better, practically equivalent -- the complexity is not earned' and the logistic stands. A candidate that fails calibration (validation ECE > 0.03, or any bucket with >= 100 rows more than 0.05 from its stated probability) cannot replace the incumbent whatever its Brier, because the deliverable is a calibrated probability, not a ranking.",
+  "tripwire": "Any candidate reaching more than 1.5x the logistic's validation skill is treated as suspicious and investigated for leakage before being recorded. Tree models can memorise; the walk-forward purge and embargo are what prevent it, and a large jump would be evidence that something escaped them.",
+  "what_would_change_the_conclusion": "If the logistic wins or ties, the deliverable stays exactly as it is and the answer to 'should we use a fancier model?' is a recorded no rather than an untested assumption. If a complex family clears both bars AND stays calibrated, the frozen artefact and the live shadow record would have to be reconsidered -- which is a user decision, not a research side-effect, for the same reason as in E018: swapping the artefact resets the only prospective evidence this project will ever have.",
+  "decision_this_experiment_may_not_make": "It may not change scoring, may not change the live BUY/HOLD/SELL path, may not silently replace move_size_1h_v1, and may not touch the sealed holdout.",
+  "pipeline_version": "0.2.0",
+  "periods": {
+    "exploration": "out-of-sample test blocks before 2024-01-01 (reported)",
+    "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (the criterion is judged here)",
+    "holdout": "sealed, not read"
+  },
+  "target": {"definition": "large_move: 1 if |return over 1h| > 0.0025", "reference": "close at cutoff", "outcome": "close of the candle opening at as_of + 1h"},
+  "also_reported": "Every candidate is also compared against the E019 standing reference (the 24-hour EWMA of the large-move indicator), because a comparison to the base rate alone flatters any model.",
+  "metrics": "filled in after the run",
+  "results": "filled in after the run",
+  "affected_design": "filled in after the run"
+}
