@@ -5,6 +5,32 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## pipeline 0.2.0 — incident fix 2026-09-22 (information rules unchanged, version kept)
+
+Full post-mortem: `docs/ops/incident_2026-09-21_shadow_step.md`. The live record was never
+affected (18 of 18 hourly predictions in the window, no fallback data, no timestamp
+violations, parity 62/62); the hourly job went red on ~half of all runs because of the
+research shadow step added on 2026-09-21.
+
+- **Root cause fixed.** The feature-definition guard hashed feature values printed to 12
+  significant digits; GitHub's runners differ from the development machine in the last few
+  bits, so `load_model()` raised on ~half of all runs (measured: a 1e-14 relative difference
+  flips that hash 56% of the time). The guard now stores feature reference **values** in the
+  model artefact and compares them with `rtol = 1e-6` — a real definition change is caught,
+  platform floating-point noise is not.
+- `move_size_1h_v1` regenerated with the new guard metadata; every model number and all
+  training metadata verified identical first, so the model and its prospective record are
+  unchanged. Artefact hash re-pinned.
+- **A shadow failure is now recorded, not crashed on.** New append-only table
+  `shadow_run_errors` (stage, error type, message, git commit, expected hour). The step exits
+  0 once the failure is recorded and 1 if it cannot record it. The live prediction is saved
+  and self-checked before this step regardless.
+- **Watchdog alarm** for persistent shadow failures (> 2 in 6 h): `agent.healthcheck
+  --shadow-errors-max`.
+- **Weekly report**: shadow-job errors section; the pre-registered prospective rule is now
+  enforced in code (a row written after its outcome candle closed is shown separately and
+  excluded from the evaluation).
+
 ## pipeline 0.2.0 — hardening 2026-09-21 (Backend Phase B; information rules unchanged, version kept)
 
 Robustness only. Nothing about what a prediction may know, or how it is scored, changed;

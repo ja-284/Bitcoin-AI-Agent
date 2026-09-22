@@ -70,7 +70,29 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.
 - Historical news is UNAVAILABLE; news is evaluated on the live archive only, once it is large enough (hundreds of hours).
 
-## Paused 2026-09-21 19:58 UTC — exact resume point
+## Incident 2026-09-21/22 — the hourly job failed on ~half of all runs (fixed 2026-09-22)
+
+Full post-mortem: `docs/ops/incident_2026-09-21_shadow_step.md`. Summary for this roadmap:
+
+- **What broke:** only the research shadow step (added 2026-09-21 19:12). Its
+  feature-definition guard hashed values printed to 12 significant digits; GitHub runners
+  differ from the development machine in the last few bits, so `load_model()` raised on about
+  half of all runs (measured locally: a 1e-14 relative difference flips that hash 56% of the
+  time; failing steps took 0 s, i.e. before any network call).
+- **What was affected:** the live record, not at all (18/18 hourly predictions in the window,
+  no fallback data, no timestamp violations, outcomes complete, parity 62/62). The shadow
+  record lost **8 hours** (2026-09-21 19:00; 09-22 01, 02, 04, 05, 07, 09, 11 UTC).
+- **No backfill.** Recomputing those hours now would create numbers that look prospective but
+  are not (`LIVE_EVALUATION.md` rule 1). The gap stays, visible in the weekly report.
+- **Fixed** (`d222bd7`): tolerance-based guard (`rtol = 1e-6`) with regression tests in both
+  directions; artefact regenerated with model numbers proven identical; shadow failures
+  recorded in `shadow_run_errors` instead of failing the job; watchdog alarm for persistent
+  shadow failures; weekly report shows the errors. Also closed while here: the pre-registered
+  prospective rule is now enforced in code, not only documented.
+- **Readiness gate reopened and revised** (`docs/research/readiness_gate.md`): two rows
+  corrected, judgement re-dated to after the fix.
+
+## Paused 2026-09-21 19:58 UTC — resume point (history; superseded by the incident work above)
 
 **State.** Everything in the "Backend hardening roadmap" above is recorded as done except the calendar-bound stages (Phase 13 continuing; H, J, K continuing/deferred; L nothing justified; the final holdout decision). Last commit `2fdf7bb` (readiness gate, pinned requirements, README); tree clean, `main` = `origin/main`. Tests: 185 pass + 7 opt-in integration. Holdout: **sealed** (`research/HOLDOUT_ACCESS.log` does not exist). Live system: healthy; shadow record running from GitHub since 19:12 UTC (rows for 17:00 and 18:00 UTC; the 17:00 row graded).
 

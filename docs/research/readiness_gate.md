@@ -1,4 +1,14 @@
-# Backend readiness gate — assessment of 2026-09-21
+# Backend readiness gate — assessment of 2026-09-21, **reopened and revised 2026-09-22**
+
+> **Reopened after an incident.** Hours after this assessment was written, the hourly workflow
+> began failing on roughly half of all runs for ~17 hours. The live record was never affected
+> (18 of 18 predictions, parity 62/62), but the assessment below had two things wrong: it
+> listed the feature-definition guard as evidence of good version control when that guard was
+> itself the defect, and it did not notice that a research add-on could fail the job carrying
+> the live record. Both are fixed (`docs/ops/incident_2026-09-21_shadow_step.md`,
+> commit `d222bd7`); the affected rows are corrected below and dated. The engineering
+> conclusion holds **after** that fix, not before it. Nothing about the research conclusions
+> or the sealed holdout changed.
 
 The strict checklist from the master operating prompt, item by item, with the evidence and
 an honest status. **Verified** = checked and proven today; **Partial** = in place but
@@ -38,11 +48,11 @@ prototype. It does **not** mean the system predicts the market.
 | item | status | evidence |
 |---|---|---|
 | hourly execution monitored | **Verified** | self-check step, 3-hourly watchdog, weekly report §1; 100% of hours since the trigger fix |
-| failures detectable | **Partial** | job failures email via GitHub; missed hours fail the next job; weekly report lists them. The external alarm (healthchecks.io heartbeat) is **still not set up** — a user action (`HEARTBEAT_URL` secret) |
+| failures detectable | **Partial** (revised 2026-09-22) | job failures email via GitHub; missed hours fail the next job; weekly report lists them. **Corrected after the incident:** a research add-on could turn the hourly job red every hour while the live record was healthy — alert fatigue, and it hid which failures mattered. Shadow failures are now recorded in `shadow_run_errors`, printed in the weekly report, and alarmed by the watchdog only when they persist (> 2 in 6 h). The external alarm (healthchecks.io heartbeat) is **still not set up** — a user action (`HEARTBEAT_URL` secret) |
 | data-source failures handled safely | **Verified** | fallback + flags; stale → failure; news degrade → weight 0; `docs/research/failure_modes.md` |
 | logs useful | **Verified** | every degradation lands in `run_meta`; step logs name the endpoint/attempt/reason; no secrets |
 | state persisted | **Verified** | predictions, outcomes, shadow rows (append-only); research state in `research/`; roadmap/CLAUDE.md kept current |
-| model/version identification reliable | **Verified** | `docs/research/versions.md`; golden pin, fingerprint, artefact hash, schema version, git SHA per row |
+| model/version identification reliable | **Verified after a correction** (2026-09-22) | `docs/research/versions.md`; golden pin, feature reference values, artefact hash, schema version, git SHA per row. The 2026-09-21 version of the feature guard was bit-exact across machines and broke the live shadow job; it now compares values with a tolerance, with regression tests in both directions |
 
 ## Security
 
@@ -79,10 +89,17 @@ prototype. It does **not** mean the system predicts the market.
 
 ## Judgement
 
-**Engineering: release-candidate quality.** Every engineering, security and maintainability
-item is verified except two that are not code: the external heartbeat alarm and a
-least-privilege database role — both user actions in external services, both mitigated,
-neither blocking a frontend that only *reads* the record.
+**Engineering: release-candidate quality — as of 2026-09-22, after the incident fix.** Every
+engineering, security and maintainability item is verified except two that are not code: the
+external heartbeat alarm and a least-privilege database role — both user actions in external
+services, both mitigated, neither blocking a frontend that only *reads* the record.
+
+The incident is part of this judgement, not an exception to it. What it showed: the live
+pipeline and its guards held (no bad data, no missed prediction, no silent corruption — the
+failure was loud and in the right place), but two design choices were wrong and are now
+corrected. A backend of this age should be expected to produce a few more such findings; the
+test is whether they surface loudly, get diagnosed from evidence, and end in a smaller class
+of possible failures. This one did.
 
 **Research: correct, honest, and early.** The research is valid and fully documented, but the
 prospective live evidence is hours old. That is not a defect of the backend; it is the

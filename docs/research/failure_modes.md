@@ -28,9 +28,10 @@ point-in-time form.
 | a run is missed entirely | the hour stays missing (no back-fill by design); healthcheck fails the next job if > 2 h stale; watchdog every 3 h; weekly report lists missing hours | Actions failure email; weekly report | no | `agent/healthcheck.py`, `watchdog.yml` |
 | outcome candle missing (exchange gap) | outcome `unavailable` after a 6 h grace — never the neighbouring candle | `prediction_outcomes.status` | — | `test_outcome_tracker.py`, `test_horizon_lookup.py` |
 | outcome lookup fails (network) | left ungraded; retried next hour | warning | — | `test_outcome_tracker.py` |
-| shadow: Binance down / malformed | shadow step fails **after** the live prediction is saved and self-checked; live record unaffected | step red | live yes; shadow no | workflow step order |
+| shadow: **any** failure (exchange down, malformed answer, artefact missing, guard mismatch, DB write refused) | recorded in `shadow_run_errors` with the stage and the exception; the step exits 0 so the live record's job stays green; that hour has no shadow row | `shadow_run_errors`; weekly report §3; watchdog fails on > 2 errors in 6 h | live yes; shadow no | `test_shadow.py::test_run_and_record_*`, `test_healthcheck.py`, integration test |
+| shadow: failure that cannot even be recorded (database unreachable) | step exits 1 → job red, because an unrecorded failure would be invisible | Actions failure email | live yes (saved earlier) | `test_shadow.py` |
 | shadow: missing input (gap, zero-trade candle) | row stored as `unavailable` with the reason; no probability | `shadow_move_size.status_reason` | shadow blank | `test_shadow.py` |
-| shadow: artefact missing / inconsistent | `load_model` raises → step fails | step red | live unaffected | `test_shadow.py` (consistency checks) |
+| shadow: feature definitions changed since the model was fitted | `load_model` raises `ModelVersionError` (values compared with `rtol = 1e-6`, so platform noise never triggers it) → recorded as above | `shadow_run_errors` | live unaffected | `test_shadow.py` (both directions) |
 | shadow: concurrent duplicate | `ON CONFLICT (as_of) DO NOTHING` | log | one row | `agent/shadow/db.py` |
 | research: holdout requested by accident | loader truncates at the holdout start unless `allow_holdout=True` with a reason (logged to `research/HOLDOUT_ACCESS.log`) | log file | — | `test_research_guards.py` |
 
