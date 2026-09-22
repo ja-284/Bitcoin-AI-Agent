@@ -1,0 +1,34 @@
+{
+  "id": "E019",
+  "date": "2026-09-22",
+  "git_commit": "(pre-registration commit; results appended in a later commit)",
+  "status": "PRE-REGISTERED before any result was computed.",
+  "phase": "Master plan sections 24-25 (model selection: the model must earn its complexity) and section 43 (do not confuse statistical significance with practical usefulness).",
+  "why_now": "E012 compared the 1h move-size model against the BASE RATE and against chance. It has never been compared against a simple rule that adapts. 'How often has a large move happened lately?' is a direct empirical estimate of exactly the quantity the model predicts, it needs no fitting, no calibration, no walk-forward machinery and no artefact -- and if it matches the model, the model's nine inputs, its quarterly refits and its Platt calibration are buying nothing. This is the cheapest possible way to find out that the one positive result in the project is not worth its complexity, and it must be asked BEFORE any more complex model family is considered.",
+  "hypothesis": "The fitted, calibrated nine-input logistic model predicts next-hour move size better than a simple trailing-frequency rule, by enough to be worth its complexity.",
+  "candidates": {
+    "A_expanding_base_rate": "P = share of all hours BEFORE this one whose |1h return| exceeded the threshold (a point-in-time prior; the trivial reference).",
+    "B_trailing_24h": "P = share of the last 24 hours of completed one-hour returns whose |return| exceeded the threshold.",
+    "C_trailing_168h": "same over 168 hours.",
+    "D_trailing_720h": "same over 720 hours.",
+    "E_ewma_halflife_24h": "exponentially weighted mean of the same 0/1 indicator, half-life 24 hours, computed causally.",
+    "F_one_feature_logistic": "the simplest FITTED model: L2 logistic on tr_mean_14_rel alone, same walk-forward and Platt calibration as the incumbent (this is E018's k = 1 set).",
+    "G_incumbent": "the frozen research deliverable: L2 logistic on all nine inputs with Platt calibration (E012 + E013), model_version move_size_1h_v1."
+  },
+  "point_in_time_argument": "The label for reference hour s is |close(s+1h)/close(s) - 1| > 0.0025, i.e. the size of the candle that OPENS at s+1h. At decision hour t the reference candle (opening at t) has closed, so every close up to and including close(t) is known, hence every label-return for s <= t-1. Rules B-E use a window of completed one-hour returns ending at the candle that opens at t, which is exactly those hours and no later one. Windows are measured in TIME, not in rows, so a data gap shortens the window instead of silently reaching further back -- the same rule scoring 0.2.0 now applies. Rule A uses only hours strictly before t.",
+  "method": "Every candidate is scored on EXACTLY the rows the incumbent produces in its walk-forward (27 folds, 54,472 out-of-sample hours; 13,127 of them in validation), so the comparison is like-for-like. The non-fitted rules B-E are evaluated AS THEY ARE, uncalibrated: their appeal is that they need no fitting, and a simple rule that needs a calibrator fitted on a purged slice is no longer simple. Their ECE is reported so their honesty is visible. Uncertainty on every difference is a circular block bootstrap, blocks of 48 hours, 2000 resamples, seed 31, PAIRED on identical rows.",
+  "acceptance_criterion": "PRE-REGISTERED. The incumbent EARNS ITS COMPLEXITY only if BOTH hold on the validation period: (i) PRACTICAL -- its skill (1 - Brier/Brier of the period base rate) is at least 1.10x the best simple rule's skill, i.e. at least 10% more skill; AND (ii) STATISTICAL -- the paired block-bootstrap 95% interval of (Brier of that best simple rule minus Brier of the incumbent) excludes zero. If (ii) holds but (i) fails, the recorded verdict is 'statistically better, practically equivalent -- the complexity is not earned'. Both parts are required because E018 showed that on 13,127 paired rows a paired test detects differences far too small to matter; the practical bar is what keeps that honest.",
+  "tripwire": "If ANY simple rule beats the incumbent on validation Brier, that is investigated before being recorded -- it would mean either that the fitted model adds nothing over recent history, or that there is an implementation error. Investigation comes first, the result is reported either way.",
+  "what_would_change_the_conclusion": "If the simple rules match the incumbent, the honest deliverable becomes a trailing-frequency estimate rather than a fitted model, Phase 12 should confirm THAT, and the whole E012/E013 apparatus is revealed as complexity without benefit. If the incumbent clears both bars, its complexity is justified and model-family research (section 24) can proceed from a defended starting point.",
+  "decision_this_experiment_may_not_make": "It may not change scoring, may not change the live BUY/HOLD/SELL path, may not silently replace move_size_1h_v1, and may not touch the sealed holdout.",
+  "pipeline_version": "0.2.0",
+  "periods": {
+    "exploration": "out-of-sample test blocks before 2024-01-01 (reported)",
+    "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (the criterion is judged here)",
+    "holdout": "sealed, not read"
+  },
+  "target": {"definition": "large_move: 1 if |return over 1h| > 0.0025", "reference": "close at cutoff", "outcome": "close of the candle opening at as_of + 1h"},
+  "metrics": "filled in after the run",
+  "results": "filled in after the run",
+  "affected_design": "filled in after the run"
+}
