@@ -5,6 +5,24 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## backend — 2026-09-22 (contract version 1: what the backend says about itself)
+
+New, read-only, and not yet wired to anything that runs.
+
+- **`agent/api/state.py`** assembles everything a frontend should ever need, in one place. The
+  rule it exists to enforce: *a number that is not a validated probability must not be able to
+  look like one*. Every quantity arrives as `{value, kind, is_probability, meaning}` rather than
+  as a bare number, the signal always travels with its evidence status ("no demonstrated
+  predictive value", naming the experiments), an unavailable category is distinguishable from a
+  neutral one, and the explanation carries the fact that it is written after the decision.
+- **One test walks the whole structure** and asserts that the only field flagged as a probability
+  is the calibrated move-size one. Nineteen tests in total, none needing a database.
+- **Staleness is no longer defined twice.** The contract first invented its own rule and called a
+  healthy system stale; `agent/healthcheck.check` now owns the definition and the self-check, the
+  watchdog and the contract all call it, with a test pinned to the minutes just before an hourly run.
+- **`docs/api/contract_v1.md`** documents the fields, what a frontend must not do, and the three
+  transport options with a recommendation. Transport is deliberately not decided yet.
+
 ## research — 2026-09-22 (E020: a fancier model does not help)
 
 Nothing that runs changed.

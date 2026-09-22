@@ -21,9 +21,15 @@ from datetime import datetime, timedelta, timezone
 from agent.database.db import latest_prediction_as_of
 
 
-def check(max_age_hours: float, now: datetime | None = None) -> tuple[bool, str]:
+def check(max_age_hours: float, now: datetime | None = None, latest: datetime | None = None) -> tuple[bool, str]:
+    """
+    `latest` lets a caller that has already read the newest `as_of` pass it in instead of
+    causing a second query. It exists so that everything judging staleness -- the self-check,
+    the watchdog and the outward-facing state in agent/api/state.py -- uses THIS definition
+    and cannot drift into disagreeing about whether the system is healthy.
+    """
     now = now or datetime.now(tz=timezone.utc)
-    latest = latest_prediction_as_of()
+    latest = latest if latest is not None else latest_prediction_as_of()
     if latest is None:
         return False, "no predictions in the database at all"
     # as_of is the open of the reference candle; the run for it can't happen before as_of + 1h.
