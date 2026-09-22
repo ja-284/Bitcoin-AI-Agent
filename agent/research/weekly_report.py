@@ -75,11 +75,16 @@ def health(pred_rows: list[dict], outcome_rows: list[dict], now: datetime, since
     delays = [(r["fetched_at"] - r["as_of"] - HOUR).total_seconds() / 60 for r in rows]
     invariant_violations = [r["as_of"] for r in rows if r["cutoff_at"] != r["as_of"] + HOUR or r["fetched_at"] < r["cutoff_at"]]
     errors = Counter()
+    failed_sources = Counter()
     for r in rows:
         meta = r.get("run_meta") or {}
         for key in ("news_error", "explanation_error"):
             if meta.get(key):
                 errors[key] += 1
+        # A PARTIAL news failure still produces a number, so it has to be counted somewhere or
+        # it is invisible: two of three feeds down looks exactly like a normal hour otherwise.
+        for name in ((meta.get("news") or {}).get("sources_failed") or []):
+            failed_sources[name] += 1
     outcome_cov = {}
     for h in HORIZONS:
         due = [r for r in rows if r["as_of"] + timedelta(hours=h) + 2 * HOUR < now]  # target candle closed + 1h grace
@@ -96,7 +101,8 @@ def health(pred_rows: list[dict], outcome_rows: list[dict], now: datetime, since
         "rows_without_explanation": sum(1 for r in rows if not r["has_explanation"]),
         "rows_with_zero_news": sum(1 for r in rows if r["news_items_n"] == 0),
         "mean_news_items": float(np.mean([r["news_items_n"] for r in rows])) if rows else None,
-        "run_errors": dict(errors), "timestamp_rule_violations": [t.isoformat() for t in invariant_violations],
+        "run_errors": dict(errors), "hours_with_a_failed_news_source": dict(failed_sources),
+        "timestamp_rule_violations": [t.isoformat() for t in invariant_violations],
         "outcome_coverage": outcome_cov,
     }
 
@@ -505,6 +511,8 @@ def render(rep: dict) -> str:
          f"- Price sources (7d): {h7['price_sources']}; synthetic rows: {h7['synthetic_rows']}; pipeline versions: {h7['pipeline_versions']}",
          f"- Rows without explanation: {h7['rows_without_explanation']}; rows with zero news: {h7['rows_with_zero_news']}; mean news items: {h7['mean_news_items']:.1f}" if h7["predictions"] else "",
          f"- Run errors recorded in run_meta (7d): {h7['run_errors'] or 'none'}; timestamp-rule violations: {h7['timestamp_rule_violations'] or 'none'}",
+         f"- Hours where a news feed was down (7d): {h7.get('hours_with_a_failed_news_source') or 'none'} "
+         f"— a partial news failure still produces a number, so it is counted here rather than left invisible",
          "- Outcome coverage (since go-live): " + " · ".join(f"{k}: {v['ok']} ok / {v['unavailable']} unavailable / **{v['overdue']} overdue** of {v['due']} due" for k, v in hall["outcome_coverage"].items()),
          "", "## 2. Live signal record — the scoring under test", "",
          f"Rows (pipeline 0.2.0): {sr['rows_pipeline_0_2_0']} · signal mix {sr['signal_mix']} · scoring versions {sr['scoring_versions']}", "",

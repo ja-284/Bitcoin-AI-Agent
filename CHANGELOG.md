@@ -23,6 +23,28 @@ New, read-only, and not yet wired to anything that runs.
 - **`docs/api/contract_v1.md`** documents the fields, what a frontend must not do, and the three
   transport options with a recommendation. Transport is deliberately not decided yet.
 
+## backend — 2026-09-22 (observability review: can a failure be told apart from a normal run?)
+
+Every failure handler in the live path read against one standard: a failure must never be
+indistinguishable from a real observation. Written up in `docs/ops/observability.md`.
+
+- **Found: a partial news failure was invisible.** A feed going down is the quiet case — unlike
+  a total outage it still produces a number, and nothing downstream distinguished "three feeds,
+  all healthy" from "one feed, two down". It has never happened in 69 live runs, which is
+  exactly why it needed a test rather than a watch. Now shown in the backend contract
+  (`sources_failed`, `sources_used`, `sources_total`), counted in the weekly report, and covered
+  by four tests.
+- **Decided against, deliberately:** reducing the news category's weight in proportion to how
+  many feeds answered. It would change live scoring — the thing currently under test — for an
+  effect that has never once occurred. The honesty goal is met by making the shortfall visible.
+  Recorded so that a future revisit starts from a decision rather than an oversight.
+- **One real gap remains, and it is not code:** every alarm lives inside GitHub, so if GitHub
+  stops running the workflow, silence looks exactly like success. The heartbeat step is written
+  and inert, waiting on one repository secret.
+- **Data quality measured rather than assumed:** across 69 runs, 95.2 news items fetched per
+  hour and 34.7 used; every exclusion is an intended rule (59.8 outside the 24-hour window, 0.4
+  after the cutoff, 0.2 duplicates, 0.0 undated).
+
 ## research — 2026-09-22 (E022: the part of the skill that is ours may be trade intensity)
 
 Nothing that runs changed, and nothing was adopted.

@@ -147,3 +147,63 @@ def test_news_scorer_flags_partial_and_rejects_empty_model_answers(monkeypatch):
 
     with pytest.raises(Exception):  # out-of-range values never pass the schema
         news_scorer.HeadlineAssessment(headline="x", relevance_to_bitcoin=2.0, sentiment=0.0)
+
+
+# ---------------------------------------------------------------- partial news failure
+# A news feed going down is the quiet failure: unlike a total outage it still produces a
+# number, so without these it would look exactly like a normal hour. Never seen live in 69
+# runs, which is precisely why it needs testing rather than watching.
+def test_one_failed_feed_is_recorded_and_the_others_still_work(monkeypatch):
+    from agent.news import rss_source
+
+    def fake_fetch(name, url):
+        if name == "Cointelegraph":
+            raise RuntimeError("feed returned 503")
+        return [NewsItem("%s headline" % name, name, "http://x/1", START)]
+
+    monkeypatch.setattr(rss_source, "fetch_feed", fake_fetch)
+    items, failed = rss_source.fetch_all_feeds()
+    assert failed == ["Cointelegraph"]
+    assert len(items) == len(rss_source.FEEDS) - 1, "the healthy feeds must still be collected"
+
+
+def test_every_feed_failing_yields_no_items_and_a_full_failure_list(monkeypatch):
+    from agent.news import rss_source
+
+    monkeypatch.setattr(rss_source, "fetch_feed", lambda name, url: (_ for _ in ()).throw(RuntimeError("down")))
+    items, failed = rss_source.fetch_all_feeds()
+    assert items == []
+    assert sorted(failed) == sorted(rss_source.FEEDS)
+
+
+def test_no_news_is_unavailable_rather_than_neutral():
+    """Weight 0, not score 0: an absent category must never look like a category with no opinion."""
+    from agent.ai.news_scorer import score_news
+
+    cat = score_news([])
+    assert cat.weight == 0.0
+    assert cat.is_independent is True
+    assert "no recent news" in str(cat.detail)
+
+
+def test_the_contract_shows_a_partial_news_failure():
+    from datetime import datetime, timedelta, timezone
+
+    from agent.api import state as api
+
+    now = datetime(2026, 9, 22, 19, 5, tzinfo=timezone.utc)
+    pred = {
+        "as_of": now - timedelta(hours=2), "cutoff_at": now - timedelta(hours=1),
+        "fetched_at": now - timedelta(minutes=53), "close_price": 1.0, "price_source": "binance",
+        "price_is_synthetic": False, "overall_score": 0.1, "signal": "HOLD", "agreement_score": 0.5,
+        "completeness_score": 1.0, "overall_confidence": 0.5, "pipeline_version": "0.2.0",
+        "scoring_version": "0.2.0", "ai_model_news": "m", "ai_model_explanation": "m",
+        "explanation": "x", "category_scores": [], "news_items": [{"headline": "h"}],
+        "run_meta": {"news": {"sources_failed": ["Decrypt", "CoinDesk"]}},
+    }
+    counts = {"predictions": 1, "first_prediction": None, "latest_prediction": None,
+              "missing_hours_last_48h": 0, "shadow_rows": 0, "shadow_errors_last_24h": 0}
+    news = api.assemble(pred, None, counts, {"by_horizon": [], "latest_1h": [], "note": ""}, now)["latest"]["news"]
+    assert news["sources_failed"] == ["Decrypt", "CoinDesk"]
+    assert news["sources_used"] == news["sources_total"] - 2
+    assert news["available"] is True, "it still produced news -- the point is that the shortfall is visible"

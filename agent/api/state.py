@@ -31,6 +31,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from agent.database.db import get_connection
+from agent.news.rss_source import FEEDS
 from agent.healthcheck import check as staleness_check
 from agent.version import PIPELINE_VERSION
 
@@ -41,6 +42,7 @@ CONTRACT_VERSION = "1"
 # reference candle CLOSED, not since it opened -- and the self-check, the watchdog and this
 # contract all call it, so they cannot drift into disagreeing about whether the system is healthy.
 STALE_AFTER_HOURS = 2.0
+news_sources_total = len(FEEDS)
 
 # Research conclusions, quoted from the committed experiment records. Changing a conclusion
 # here without an experiment to back it would be a silent methodology change, so each one
@@ -208,6 +210,7 @@ def assemble(pred: dict | None, shadow: dict | None, counts: dict, outcomes: dic
     run_meta = pred["run_meta"] or {}
     news_items = pred["news_items"] or []
     news_error = run_meta.get("news_error")
+    news_meta = run_meta.get("news") or {}
     categories = pred["category_scores"] or []
 
     state["latest"] = {
@@ -239,6 +242,11 @@ def assemble(pred: dict | None, shadow: dict | None, counts: dict, outcomes: dic
                                       "counted as neutral" if news_error else
                                       (None if news_items else "no stories were published before the cutoff")),
                  "error_type": run_meta.get("news_error_type") if news_error else None,
+                 # A PARTIAL failure is the quiet one: two of three feeds down still produces a
+                 # number, and without this a reader could not tell it from a complete fetch.
+                 "sources_failed": news_meta.get("sources_failed") or [],
+                 "sources_used": news_sources_total - len(news_meta.get("sources_failed") or []),
+                 "sources_total": news_sources_total,
                  "detail": ("Only stories that were published and retrievable before the information cutoff "
                             "are used. An hour with no usable news is scored on the other categories and "
                             "says so here.")},
