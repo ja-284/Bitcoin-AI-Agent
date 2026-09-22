@@ -83,6 +83,14 @@ While fixing this, a related gap was found and closed: the report evaluated *eve
 shadow row, including any written late by a catch-up run. The prospective rule is now
 enforced in code (`fetched_at < as_of + horizon + 1h`), and late rows are shown separately.
 
+The same reasoning applies to the 17 news-less predictions (second defect below). Their
+headlines *were* collected and are stored in the rows, so a news score could be computed for
+them today — but the prediction those hours actually produced was made without one, and the
+`predictions` table is append-only by trigger precisely so that history cannot be rewritten
+into something the system never said. If a future analysis wants "what would news have added
+in those hours", that is a separate, clearly labelled research artefact — never a repair of
+the live record.
+
 ## The fix (commit `d222bd7`)
 
 1. **The guard compares values with a tolerance** (`rtol = 1e-6`) instead of hashing digits.
