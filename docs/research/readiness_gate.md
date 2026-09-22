@@ -1,4 +1,6 @@
-# Backend readiness gate — assessment of 2026-09-21, **reopened and revised 2026-09-22**
+# Backend readiness gate
+
+*Assessed 2026-09-21; reopened and revised 2026-09-22 after an incident; **revision 2 the same evening**, scoring the master plan's 22 categories (jump to it below).*
 
 > **Reopened after an incident.** Hours after this assessment was written, the hourly workflow
 > began failing on roughly half of all runs for ~17 hours. The live record was never affected
@@ -9,6 +11,56 @@
 > commit `d222bd7`); the affected rows are corrected below and dated. The engineering
 > conclusion holds **after** that fix, not before it. Nothing about the research conclusions
 > or the sealed holdout changed.
+
+## Revision 2 — 2026-09-22 evening: the 22 categories of the master plan, scored
+
+The master plan (section 50) names 22 categories and requires each to be marked **PASS**,
+**PARTIAL**, **FAIL** or **UNKNOWN**, with no PARTIAL or UNKNOWN hidden behind a general
+"ready". Here they are. The detailed evidence for most rows is in the sections further down;
+rows changed by the work of 2026-09-22 say so.
+
+| # | category | status | why |
+|---|---|---|---|
+| 1 | Research correctness | **PASS** | E000–E020: every experiment pre-registered with a falsifiable criterion, negative results recorded and kept (E001, E011, E015, E017, E020), methodology changes documented before acting |
+| 2 | Point-in-time safety | **PASS** | cutoff enforced by CHECK constraints; news limited to the cutoff; perturbation tests (garble the future, the past must not move) in `test_point_in_time.py`, `test_features_point_in_time.py` and now `test_simple_baselines.py`; 0 timestamp violations in 72 live rows |
+| 3 | Validation | **PASS** | E010 verified the walk-forward bench against 5 pre-registered checks on real data; purge = horizon plus a 24h embargo on both sides of any fitted slice |
+| 4 | Target/label correctness | **PASS** | `test_labels.py`, `test_horizon_lookup.py`; the live outcome tracker equals the research label rule across a data gap (`test_parity.py`, 46/46 hours to 1e-16) |
+| 5 | Feature quality | **PASS** | 55 candidate features tested fit-free across eight groups; each judged by a pre-registered rank-correlation bar in two separate periods; nothing adopted on a single period |
+| 6 | Feature redundancy | **PASS (new, 2026-09-22)** | **Was UNKNOWN until today.** E018 measured it: one of the nine model inputs is exactly arithmetic (`vol_ratio_24_168` = `rv_24` − `rv_168`, 1.0e-15 over 51,053 hours), and six inputs carry 99.4% of the model's skill |
+| 7 | Model behaviour | **PASS (new, 2026-09-22)** | E019: the model beats the best non-fitted rule by 2.47× on validation, and still by 2.33× after that rule is given the same calibration. E020: gradient-boosted trees and an interaction model were tried once with fixed settings and did not clear the bars. The complexity is defended, not assumed |
+| 8 | Calibration | **PASS on validation, PARTIAL prospectively** | E013: Platt chosen by a pre-registered rule, validation ECE 0.014, ≤ 0.03 every year. Prospectively it is 18 hours old — the first checkpoint is at 500 |
+| 9 | Live/research parity | **PASS** | `agent/research/parity.py`: every live hour re-analysed from candles and committed code; 64/64 identical at the last weekly audit |
+| 10 | Data quality | **PASS** | candle validation (impossible data raises, gaps flagged and never filled), schema checks, staleness rule, fallback flagged per row; 0 synthetic rows live |
+| 11 | Failure recovery | **PASS** | `test_failure_modes.py`, `test_data_hardening.py`, `test_llm_robustness.py`; `docs/research/failure_modes.md`; proven in production by the 2026-09-21/22 incident, where the failure was loud and the live record untouched |
+| 12 | Idempotency | **PASS** | early exit before the AI call; `ON CONFLICT DO NOTHING` throughout; proven against real Postgres in a scratch schema (`tests/integration`, 8/8) |
+| 13 | Database integrity | **PASS** | UNIQUE keys, CHECK constraints for the cutoff and fetch rules, append-only triggers on all four tables, schema version pinned to the code |
+| 14 | Reproducibility | **PASS** | `docs/research/reproducibility.md`; and today, unplanned but strong: E018's nine-feature run reproduced E013 **to the digit** from an independently written evaluation path |
+| 15 | Versioning | **PASS after a correction** | golden scoring pin, feature reference values, artefact hash, schema version, git SHA per row. The 2026-09-21 feature guard was bit-exact across machines and broke the live shadow job; it now compares with a tolerance, with regression tests in both directions |
+| 16 | Automation | **PARTIAL** | Supabase `pg_cron` dispatch at :12 plus GitHub's own slots as backup; self-check, 3-hourly watchdog, tests on every push; 0 missing hours in the last 48. **The external heartbeat alarm is still not set up** — every alarm currently lives inside GitHub, so GitHub going quiet looks like success. User action, five minutes: `docs/ops/open_user_actions.md` |
+| 17 | Security | **PARTIAL** | secrets absent from git and logs (scanned), workflow permissions `contents: read`, pinned requirements, no execution code anywhere. **The job still connects as the project's `postgres` role**; the exact grants a restricted role needs are written out in `docs/ops/open_user_actions.md`. Mitigated by append-only triggers |
+| 18 | Observability | **PASS** | every degradation lands in `run_meta`; shadow failures recorded in their own table and alarmed only when persistent; weekly report with health, record, parity and drift; and now `agent/api/state.py`, which reports health and problems in words |
+| 19 | Performance | **PASS** | `docs/ops/performance.md`; a full hourly run takes about 40 seconds, dominated by two AI calls; no bottleneck worth optimising |
+| 20 | Maintainability | **PASS** | narrow, swappable modules; README module map; 266 tests, each guard with a test that fails when the guard is removed |
+| 21 | Prospective monitoring | **PARTIAL — by the calendar, not by a defect** | the shadow record is running correctly and is 18 hours old; the checkpoints are 500 / 2,000 / 5,000 hours. Nothing can make this PASS faster than time passes |
+| 22 | Known limitations | **PASS** | documented in the README, the data-source and failure-mode docs, every experiment summary — and now machine-readable in contract v1, so a frontend receives them rather than having to look them up |
+
+**Score: 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN.** The three PARTIALs are the heartbeat (yours,
+five minutes), the database role (yours, ten minutes) and the prospective record (nobody's —
+it needs 500 hours of elapsed time).
+
+### What this does and does not say
+
+It says the backend is **trustworthy as an instrument**: what it records is correct, timestamped
+honestly, reproducible, versioned, hard to corrupt, and it fails loudly.
+
+It does **not** say the system predicts the market. The BUY/HOLD/SELL signal still has no
+demonstrated predictive value at any horizon (E001, E017). The one thing that does work is the
+calibrated *uncertainty* estimate — how big the next hour's move is likely to be, not which way —
+and its out-of-sample evidence is validation-period only until the prospective record grows.
+
+"Backend finished" is therefore **not** claimed. The honest statement is: **ready to be built
+against, not finished.**
+
 
 The strict checklist from the master operating prompt, item by item, with the evidence and
 an honest status. **Verified** = checked and proven today; **Partial** = in place but
@@ -113,8 +165,13 @@ confirmation waits for the Phase H checkpoints (see `research/ROADMAP.md`).
 
 ## What the frontend may rely on (read-only contract)
 
-`predictions` (signal, scores, confidence with its two components, explanation, versions,
-data-quality flags), `prediction_outcomes` (raw returns per horizon; "right/wrong" is decided
-by the reader with a stated rule), `shadow_move_size` (calibrated probability, honest blanks,
-outcomes), `research/monitoring/weekly_*.json` (health, record, parity, drift). All
-append-only; the frontend must never write to them.
+**Since 2026-09-22 this is a defined, versioned and tested contract, not a list of tables:**
+`agent/api/state.py` and `docs/api/contract_v1.md`. Read the doc before building any screen.
+Its rule is that a number which is not a validated probability must not be able to look like
+one, so every quantity arrives with `kind`, `is_probability` and a `meaning` sentence, and the
+signal always travels with its evidence status.
+
+The underlying tables remain readable and append-only — `predictions`, `prediction_outcomes`,
+`shadow_move_size`, `shadow_run_errors`, plus `research/monitoring/weekly_*.json` — but a
+frontend that reads them directly takes on the job of labelling the numbers honestly, which is
+exactly the job the contract exists to do once, in one place. The frontend must never write.
