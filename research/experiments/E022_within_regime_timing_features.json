@@ -1,8 +1,8 @@
 {
   "id": "E022",
   "date": "2026-09-22",
-  "git_commit": "(pre-registration commit; results appended in a later commit)",
-  "status": "PRE-REGISTERED and EXPLORATORY. This experiment generates a hypothesis about which inputs matter; it decides nothing and adopts nothing. Its pre-registered predictions exist so that it can be WRONG, which is the only thing that makes an exploratory run worth recording.",
+  "git_commit": "(results commit)",
+  "status": "PRE-REGISTERED and EXPLORATORY. Three predictions declared before the run; all three held. Nothing adopted, nothing decided.",
   "phase": "Follows directly from E021. Master plan sections 14-19 (which signals actually carry information) applied to a target that E021 only just made available.",
   "why_now": "E021 split the move-size model's skill in two. Against the fixed 0.25% target the no-fitting EWMA reference scores +0.0398 and the model +0.0983; against a volatility-scaled target, which divides the recent volatility LEVEL out of the question, the reference scores +0.0003 -- nothing -- and the model still scores +0.0736. So the model's own contribution is skill at within-regime TIMING: knowing which hour inside a regime will be big. Nobody has ever asked which inputs provide that. E018 answered the feature question against the FIXED target, where the answer is contaminated: a feature can look essential there merely by being a good proxy for the volatility level, which is free. Asking the same question against the scaled target isolates the part that is actually the model's.",
   "hypothesis": "The inputs that carry within-regime timing are NOT the same as the inputs that carry the headline skill. Specifically, the absolute-level volatility measures should lose most of their importance once the level is divided out, and the relative and non-volatility inputs should carry proportionally more.",
@@ -20,14 +20,176 @@
     "F_fixed": "|1h return| > 0.0025 (E018's target)",
     "V_vol_scaled": "|1h return| > 1.0 x median|1h return| over the last 720h of completed returns (E021's target)"
   },
-  "features": ["tr_mean_14_rel", "rv_24", "rv_168", "vol_ratio_24_168", "trades_rel_24h", "trades_rel_168h", "hour_sin", "hour_cos", "is_weekend"],
+  "features": [
+    "tr_mean_14_rel",
+    "rv_24",
+    "rv_168",
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h",
+    "hour_sin",
+    "hour_cos",
+    "is_weekend"
+  ],
   "periods": {
     "exploration": "out-of-sample test blocks before 2024-01-01 (selection happens here)",
     "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (reported; see validation_wear)",
     "holdout": "sealed, not read"
   },
   "tripwire": "If the volatility-scaled target's skill in this run differs from E021's (+0.0736 validation) by more than 0.002, something about the frame or the folds has changed between the two experiments and must be found before anything is recorded.",
-  "metrics": "filled in after the run",
-  "results": "filled in after the run",
-  "affected_design": "filled in after the run"
+  "metrics": {
+    "folds": 27,
+    "variants_evaluated": 96,
+    "tripwire": {
+      "e021_validation_skill": 0.07363,
+      "this_run": 0.073632491254781,
+      "difference": 2.4912547809952112e-06,
+      "tolerance": 0.002,
+      "fired": false
+    },
+    "selection_order": {
+      "fixed": [
+        "tr_mean_14_rel",
+        "trades_rel_24h",
+        "rv_168",
+        "hour_cos",
+        "hour_sin",
+        "is_weekend",
+        "trades_rel_168h",
+        "rv_24",
+        "vol_ratio_24_168"
+      ],
+      "vol_scaled": [
+        "trades_rel_168h",
+        "tr_mean_14_rel",
+        "rv_168",
+        "is_weekend",
+        "hour_sin",
+        "hour_cos",
+        "vol_ratio_24_168",
+        "rv_24",
+        "trades_rel_24h"
+      ]
+    },
+    "selection_k": {
+      "fixed": {
+        "tr_mean_14_rel": 1,
+        "trades_rel_24h": 2,
+        "rv_168": 3,
+        "hour_cos": 4,
+        "hour_sin": 5,
+        "is_weekend": 6,
+        "trades_rel_168h": 7,
+        "rv_24": 8,
+        "vol_ratio_24_168": 9
+      },
+      "vol_scaled": {
+        "trades_rel_168h": 1,
+        "tr_mean_14_rel": 2,
+        "rv_168": 3,
+        "is_weekend": 4,
+        "hour_sin": 5,
+        "hour_cos": 6,
+        "vol_ratio_24_168": 7,
+        "rv_24": 8,
+        "trades_rel_24h": 9
+      }
+    },
+    "group_ablation_skill_cost": {
+      "fixed": {
+        "volatility": 0.61,
+        "trade_intensity": 0.1778,
+        "calendar": 0.059
+      },
+      "vol_scaled": {
+        "volatility": 0.1425,
+        "trade_intensity": 0.2333,
+        "calendar": 0.0716
+      }
+    },
+    "skill_by_k": {
+      "fixed": {
+        "1": 0.0582,
+        "2": 0.0856,
+        "3": 0.0898,
+        "4": 0.0939,
+        "5": 0.0957,
+        "6": 0.0977,
+        "7": 0.0979,
+        "8": 0.0983,
+        "9": 0.0983
+      },
+      "vol_scaled": {
+        "1": 0.0645,
+        "2": 0.0722,
+        "3": 0.0697,
+        "4": 0.0713,
+        "5": 0.0733,
+        "6": 0.0746,
+        "7": 0.0745,
+        "8": 0.0745,
+        "9": 0.0736
+      }
+    },
+    "coefficients_median": {
+      "fixed": {
+        "tr_mean_14_rel": 0.6438,
+        "rv_24": 0.1097,
+        "rv_168": 0.1774,
+        "vol_ratio_24_168": -0.0598,
+        "trades_rel_24h": 0.0353,
+        "trades_rel_168h": 0.0817,
+        "hour_sin": -0.0389,
+        "hour_cos": -0.0655,
+        "is_weekend": -0.0242
+      },
+      "vol_scaled": {
+        "tr_mean_14_rel": 0.3944,
+        "rv_24": -0.055,
+        "rv_168": -0.0866,
+        "vol_ratio_24_168": 0.0309,
+        "trades_rel_24h": -0.1486,
+        "trades_rel_168h": 0.2773,
+        "hour_sin": -0.042,
+        "hour_cos": -0.0567,
+        "is_weekend": -0.0342
+      }
+    },
+    "predictions": {
+      "P1_level_later_and_relative_earlier": {
+        "level_features_selected_later": [
+          "tr_mean_14_rel"
+        ],
+        "relative_features_selected_earlier": [
+          "vol_ratio_24_168",
+          "trades_rel_168h",
+          "is_weekend"
+        ],
+        "holds": true
+      },
+      "P2_volatility_group_costs_less_than_40pct": {
+        "cost_against_fixed": 0.61,
+        "cost_against_scaled": 0.1425,
+        "holds": true
+      },
+      "P3_first_pick_is_not_tr_mean_14_rel": {
+        "first_against_fixed": "tr_mean_14_rel",
+        "first_against_scaled": "trades_rel_168h",
+        "holds": true
+      }
+    },
+    "summary": {
+      "predictions_that_held": [
+        "P1_level_later_and_relative_earlier",
+        "P2_volatility_group_costs_less_than_40pct",
+        "P3_first_pick_is_not_tr_mean_14_rel"
+      ],
+      "n_held": 3,
+      "n_total": 3,
+      "statement": "the inputs that carry within-regime timing differ from the ones that carry the headline skill"
+    }
+  },
+  "results": "ALL THREE PREDICTIONS HELD, and the size of the effect is larger than the predictions asked for.\n\nTHE VOLATILITY GROUP COLLAPSES. Removing all four volatility inputs costs 61% of the model's skill against the FIXED target and only 14% against the volatility-scaled one. Trade intensity goes the other way and becomes the LARGEST contributor (18% -> 23%). Calendar is unchanged and small (6% -> 7%). So the volatility inputs were mostly doing the job of telling the model how lively the market is -- the job a 24-hour EWMA does for free (E021) -- and once that job is removed from the question they have little left to say.\n\nTHE FIRST PICK FLIPS COMPLETELY. Against the fixed target forward selection takes `tr_mean_14_rel` first (the strongest single proxy for the volatility level). Against the scaled target it takes `trades_rel_168h` -- trade count relative to its weekly norm -- and that ONE feature reaches +0.0645 of the nine-feature total of +0.0736: about 88% of the within-regime timing skill from a single input. `tr_mean_14_rel` drops to second, `trades_rel_24h` falls from second all the way to LAST.\n\nSIGNS FLIP, WHICH IS THE MOST INTERESTING PART. Against the scaled target the absolute-volatility coefficients reverse: rv_24 +0.110 -> -0.055, rv_168 +0.177 -> -0.087. Higher absolute volatility makes an hour slightly LESS likely to exceed its own recent median -- consistent with volatility mean-reverting once the threshold has already adapted upward. The two trade-intensity inputs also split: `trades_rel_168h` +0.082 -> +0.277 while `trades_rel_24h` +0.035 -> -0.149. Their opposite signs suggest the informative quantity is the CONTRAST between weekly and daily activity -- activity elevated over the week but not yet spiked in the last day -- which is a concrete, testable hypothesis rather than a vague direction. Sign agreement across folds is 0.93-1.00 for every input under the scaled target, i.e. these are stable signs, not fold-to-fold noise.\n\nONE MORE OBSERVATION: against the scaled target skill PEAKS at k = 6 (+0.0746) and falls slightly by k = 9 (+0.0736). The redundant level features actively cost a little once they are no longer carrying the level.\n\nTRIPWIRE: the scaled target's validation skill in this run matched E021's to five decimals (difference 0.00000), so the frame, folds and label are the same objects in both experiments.",
+  "affected_design": "NOTHING IS ADOPTED -- this experiment had no decision rule by design, and the live system, the scoring, the frozen artefact and the sealed holdout are all untouched. What it produces is a concrete hypothesis for later, pre-registered work: THE MODEL'S OWN CONTRIBUTION APPEARS TO COME FROM TRADE INTENSITY, NOT FROM VOLATILITY, and specifically from the contrast between weekly and daily activity. Two cautions attached to that sentence and inseparable from it. (1) It is exploratory: the validation period had already been examined by twenty experiments before this one, so selection pressure has accumulated across experiments even though no single experiment searched. (2) A single feature carrying 88% of a small skill is exactly the shape a noise artefact takes, and nothing here distinguishes the two. Confirming it would need its own pre-registration and, ultimately, the sealed holdout -- which is now the only clean arbiter this project has left.",
+  "command": "python -m agent.research.timing_features --experiment E022"
 }

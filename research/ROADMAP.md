@@ -93,6 +93,23 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   sitting on the edge of its interval should be checked against data-quality flags before it is
   believed.** Scoring 0.2.0 is now the object under test; E001 stays the record for 0.1.0.
 
+- **A hypothesis, not a finding: the model's own contribution may come from TRADE INTENSITY, not volatility
+  (E022, 2026-09-22, exploratory).** Running E018's feature machinery against E021's volatility-scaled target —
+  which removes the freely-available level signal from the question — flips the picture. The volatility group's
+  ablation cost falls from 61% to **14%** of skill while trade intensity rises to **23%**, the largest of the
+  three. Forward selection's first pick changes from `tr_mean_14_rel` to **`trades_rel_168h`**, which on its own
+  reaches 88% of the nine-feature skill. The absolute-volatility coefficients REVERSE sign (rv_24 +0.110 → −0.055,
+  rv_168 +0.177 → −0.087), and the two trade-intensity inputs take opposite signs (+0.277 vs −0.149), pointing at
+  the weekly-versus-daily activity *contrast* as the informative quantity. Sign agreement is 0.93–1.00, so these
+  are stable across folds. **Not adopted, and not to be adopted from this:** validation had been examined by
+  twenty experiments before this one, and one feature carrying 88% of a small skill is exactly the shape of a
+  noise artefact. Confirming it needs its own pre-registration and, in the end, the sealed holdout.
+- **VALIDATION WEAR (recorded 2026-09-22, applies from here on).** Twenty experiments had examined the validation
+  period before E022. Each was pre-registered and honest, but selection pressure accumulates ACROSS experiments
+  even when no single one searches. Three consequences, now binding: (1) validation results are
+  hypothesis-generating, not confirmatory; (2) **the sealed holdout is the only clean arbiter left**, which is an
+  argument for keeping it sealed until there is something definite to confirm, not for spending it sooner;
+  (3) any future claim that something "works" must state how many experiments had already seen the data it works on.
 - **Where the move-size model's skill actually comes from (E021, 2026-09-22).** Scoring the E019
   reference against two target definitions splits it in two. Against the FIXED 0.25% target the no-fitting
   24h EWMA scores +0.0398 and the model +0.0983. Against a VOLATILITY-SCALED target — which divides the

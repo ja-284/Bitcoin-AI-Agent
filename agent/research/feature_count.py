@@ -80,9 +80,14 @@ def prepare() -> tuple[pd.DataFrame, WalkForwardSpec, list]:
 
 
 # ---------------------------------------------------------------- one variant
-def evaluate(df: pd.DataFrame, spec, folds, cols: list[str], cache: dict) -> dict:
-    """Walk-forward + Platt for one feature set; per-period metrics and the per-row predictions."""
-    key = tuple(sorted(cols))
+def evaluate(df: pd.DataFrame, spec, folds, cols: list[str], cache: dict, label_col: str = "y") -> dict:
+    """
+    Walk-forward + Platt for one feature set; per-period metrics and the per-row predictions.
+
+    `label_col` lets the same machinery be pointed at a different target definition (E022 runs
+    it against E021's volatility-scaled label). The default reproduces E018 exactly.
+    """
+    key = (tuple(sorted(cols)), label_col)
     if key in cache:
         return cache[key]
     fitted: list[LogisticModel] = []
@@ -92,7 +97,7 @@ def evaluate(df: pd.DataFrame, spec, folds, cols: list[str], cache: dict) -> dic
         fitted.append(m)
         return m
 
-    preds, _ = run_walk_forward(df, list(cols), "y", make_model, spec, folds=folds, make_calibrator=PlattCalibrator)
+    preds, _ = run_walk_forward(df, list(cols), label_col, make_model, spec, folds=folds, make_calibrator=PlattCalibrator)
     joined = preds.join(df[["period", "fwd_%dh" % HORIZON]], how="left")
     per_fold = [m.coefficients(list(cols)) for m in fitted]
     out = {
@@ -168,14 +173,14 @@ def redundancy(df: pd.DataFrame) -> dict:
             "rows": int(len(expl))}
 
 
-def ablation(df, spec, folds, cache) -> dict:
+def ablation(df, spec, folds, cache, label_col: str = "y") -> dict:
     """Q2: does removing a whole group measurably hurt? Paired against the full nine."""
-    full = evaluate(df, spec, folds, FULL, cache)
+    full = evaluate(df, spec, folds, FULL, cache, label_col)
     out = {"full": {"n_features": full["n_features"],
                     "exploration": full["exploration"], "validation": full["validation"]}}
     for name, cols in GROUPS_UNDER_TEST.items():
         kept = [c for c in FULL if c not in cols]
-        var = evaluate(df, spec, folds, kept, cache)
+        var = evaluate(df, spec, folds, kept, cache, label_col)
         d_expl, se_expl = paired_brier_se(var, full, "exploration")
         d_vali, se_vali = paired_brier_se(var, full, "validation")
         out["without_" + name] = {
@@ -192,7 +197,7 @@ def ablation(df, spec, folds, cache) -> dict:
     return out
 
 
-def forward_selection(df, spec, folds, cache) -> dict:
+def forward_selection(df, spec, folds, cache, label_col: str = "y") -> dict:
     """Q3: greedy forward selection by EXPLORATION out-of-sample Brier; validation is untouched."""
     selected: list[str] = []
     remaining = list(FULL)
@@ -200,12 +205,12 @@ def forward_selection(df, spec, folds, cache) -> dict:
     while remaining:
         scored = []
         for f in remaining:
-            res = evaluate(df, spec, folds, selected + [f], cache)
+            res = evaluate(df, spec, folds, selected + [f], cache, label_col)
             scored.append((res["exploration"]["brier"], f))
         scored.sort()
         best = scored[0][1]
         selected = selected + [best]
-        res = evaluate(df, spec, folds, selected, cache)
+        res = evaluate(df, spec, folds, selected, cache, label_col)
         steps.append({
             "k": len(selected), "added": best, "set": list(selected),
             "exploration_brier": res["exploration"]["brier"], "exploration_skill": res["exploration"]["skill"],

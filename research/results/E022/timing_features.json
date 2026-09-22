@@ -1,0 +1,223 @@
+{
+  "by_target": {
+    "F_fixed": {
+      "validation": {
+        "n": 13127,
+        "base_rate": 0.4752037784718519,
+        "brier": 0.22486794688851872,
+        "skill": 0.09831058812130411,
+        "ece": 0.013908212033160137,
+        "rho_p_vs_abs_return": 0.360210573019641
+      },
+      "exploration": {
+        "n": 41345,
+        "base_rate": 0.4994316120449873,
+        "brier": 0.21357448100603457,
+        "skill": 0.1457009719998531,
+        "ece": 0.004369180522486359
+      },
+      "selection_order": [
+        "tr_mean_14_rel",
+        "trades_rel_24h",
+        "rv_168",
+        "hour_cos",
+        "hour_sin",
+        "is_weekend",
+        "trades_rel_168h",
+        "rv_24",
+        "vol_ratio_24_168"
+      ],
+      "selection_k": {
+        "tr_mean_14_rel": 1,
+        "trades_rel_24h": 2,
+        "rv_168": 3,
+        "hour_cos": 4,
+        "hour_sin": 5,
+        "is_weekend": 6,
+        "trades_rel_168h": 7,
+        "rv_24": 8,
+        "vol_ratio_24_168": 9
+      },
+      "skill_by_k": {
+        "1": 0.0582,
+        "2": 0.0856,
+        "3": 0.0898,
+        "4": 0.0939,
+        "5": 0.0957,
+        "6": 0.0977,
+        "7": 0.0979,
+        "8": 0.0983,
+        "9": 0.0983
+      },
+      "group_ablation_skill_cost": {
+        "volatility": 0.61,
+        "trade_intensity": 0.1778,
+        "calendar": 0.059
+      },
+      "coefficient_sign_agreement": {
+        "tr_mean_14_rel": 1.0,
+        "rv_24": 1.0,
+        "rv_168": 1.0,
+        "vol_ratio_24_168": 1.0,
+        "trades_rel_24h": 0.8888888888888888,
+        "trades_rel_168h": 1.0,
+        "hour_sin": 0.9629629629629629,
+        "hour_cos": 0.9629629629629629,
+        "is_weekend": 0.7777777777777778
+      },
+      "coefficients_median": {
+        "tr_mean_14_rel": 0.6438,
+        "rv_24": 0.1097,
+        "rv_168": 0.1774,
+        "vol_ratio_24_168": -0.0598,
+        "trades_rel_24h": 0.0353,
+        "trades_rel_168h": 0.0817,
+        "hour_sin": -0.0389,
+        "hour_cos": -0.0655,
+        "is_weekend": -0.0242
+      }
+    },
+    "V_vol_scaled": {
+      "validation": {
+        "n": 13127,
+        "base_rate": 0.49531499961910563,
+        "brier": 0.2315715441341164,
+        "skill": 0.073632491254781,
+        "ece": 0.012499386668718887,
+        "rho_p_vs_abs_return": 0.33782272886942527
+      },
+      "exploration": {
+        "n": 41345,
+        "base_rate": 0.4930221308501633,
+        "brier": 0.23908619717036209,
+        "skill": 0.04346891480729864,
+        "ece": 0.021170566312780588
+      },
+      "selection_order": [
+        "trades_rel_168h",
+        "tr_mean_14_rel",
+        "rv_168",
+        "is_weekend",
+        "hour_sin",
+        "hour_cos",
+        "vol_ratio_24_168",
+        "rv_24",
+        "trades_rel_24h"
+      ],
+      "selection_k": {
+        "trades_rel_168h": 1,
+        "tr_mean_14_rel": 2,
+        "rv_168": 3,
+        "is_weekend": 4,
+        "hour_sin": 5,
+        "hour_cos": 6,
+        "vol_ratio_24_168": 7,
+        "rv_24": 8,
+        "trades_rel_24h": 9
+      },
+      "skill_by_k": {
+        "1": 0.0645,
+        "2": 0.0722,
+        "3": 0.0697,
+        "4": 0.0713,
+        "5": 0.0733,
+        "6": 0.0746,
+        "7": 0.0745,
+        "8": 0.0745,
+        "9": 0.0736
+      },
+      "group_ablation_skill_cost": {
+        "volatility": 0.1425,
+        "trade_intensity": 0.2333,
+        "calendar": 0.0716
+      },
+      "coefficient_sign_agreement": {
+        "tr_mean_14_rel": 1.0,
+        "rv_24": 1.0,
+        "rv_168": 1.0,
+        "vol_ratio_24_168": 1.0,
+        "trades_rel_24h": 0.9629629629629629,
+        "trades_rel_168h": 1.0,
+        "hour_sin": 0.9259259259259259,
+        "hour_cos": 0.9259259259259259,
+        "is_weekend": 0.9629629629629629
+      },
+      "coefficients_median": {
+        "tr_mean_14_rel": 0.3944,
+        "rv_24": -0.055,
+        "rv_168": -0.0866,
+        "vol_ratio_24_168": 0.0309,
+        "trades_rel_24h": -0.1486,
+        "trades_rel_168h": 0.2773,
+        "hour_sin": -0.042,
+        "hour_cos": -0.0567,
+        "is_weekend": -0.0342
+      }
+    }
+  },
+  "frame": {
+    "snapshot": "btcusdt_1h_2026-09-19.csv",
+    "rows_before": 64180,
+    "rows_common": 64180,
+    "dropped_no_vol_threshold": 0,
+    "median_threshold_pct": 0.25628300660791303
+  },
+  "tripwire": {
+    "e021_validation_skill": 0.07363,
+    "this_run": 0.073632491254781,
+    "difference": 2.4912547809952112e-06,
+    "tolerance": 0.002,
+    "fired": false
+  },
+  "predictions": {
+    "P1_level_later_and_relative_earlier": {
+      "level_features_selected_later": [
+        "tr_mean_14_rel"
+      ],
+      "relative_features_selected_earlier": [
+        "vol_ratio_24_168",
+        "trades_rel_168h",
+        "is_weekend"
+      ],
+      "holds": true
+    },
+    "P2_volatility_group_costs_less_than_40pct": {
+      "cost_against_fixed": 0.61,
+      "cost_against_scaled": 0.1425,
+      "holds": true
+    },
+    "P3_first_pick_is_not_tr_mean_14_rel": {
+      "first_against_fixed": "tr_mean_14_rel",
+      "first_against_scaled": "trades_rel_168h",
+      "holds": true
+    }
+  },
+  "summary": {
+    "predictions_that_held": [
+      "P1_level_later_and_relative_earlier",
+      "P2_volatility_group_costs_less_than_40pct",
+      "P3_first_pick_is_not_tr_mean_14_rel"
+    ],
+    "n_held": 3,
+    "n_total": 3,
+    "statement": "the inputs that carry within-regime timing differ from the ones that carry the headline skill"
+  },
+  "experiment": "E022",
+  "generated_at": "2026-09-22T19:46:23.312118+00:00",
+  "pipeline_version": "0.2.0",
+  "folds": 27,
+  "level_features": [
+    "rv_24",
+    "rv_168",
+    "tr_mean_14_rel"
+  ],
+  "relative_features": [
+    "vol_ratio_24_168",
+    "trades_rel_24h",
+    "trades_rel_168h",
+    "hour_sin",
+    "hour_cos",
+    "is_weekend"
+  ],
+  "variants_evaluated": 96
+}

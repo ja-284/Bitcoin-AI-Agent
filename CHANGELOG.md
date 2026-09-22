@@ -23,6 +23,25 @@ New, read-only, and not yet wired to anything that runs.
 - **`docs/api/contract_v1.md`** documents the fields, what a frontend must not do, and the three
   transport options with a recommendation. Transport is deliberately not decided yet.
 
+## research — 2026-09-22 (E022: the part of the skill that is ours may be trade intensity)
+
+Nothing that runs changed, and nothing was adopted.
+
+- **E021 showed most of the model's skill is knowing the volatility level, free from an EWMA.**
+  This asks which inputs carry what is left. Running E018's machinery against the
+  volatility-scaled target — which removes the level from the question — flips the answer.
+- **The volatility group's ablation cost falls from 61% to 14%** of skill; trade intensity rises
+  to 23%, the largest of the three groups. Forward selection's first pick changes from
+  `tr_mean_14_rel` to `trades_rel_168h`, which alone reaches 88% of the nine-feature skill.
+- **Signs reverse**: rv_24 +0.110 → −0.055 and rv_168 +0.177 → −0.087, consistent with volatility
+  mean-reverting once the threshold has already adapted. The two trade-intensity inputs take
+  opposite signs (+0.277 and −0.149), pointing at the weekly-versus-daily contrast.
+- **Recorded as a hypothesis, not a result.** Validation had been seen by twenty experiments
+  before this one, and 88% from a single feature is the shape a noise artefact takes.
+- **Validation wear is now an explicit, binding caveat** in the roadmap.
+- Nine new tests: every pre-registered prediction is tested in both directions, because a
+  checker that only ever agrees with itself proves nothing.
+
 ## research — 2026-09-22 (E021: should "a large move" adapt to the market? Tested, and no)
 
 Nothing that runs changed.
