@@ -5,6 +5,20 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-09-22 (E020: a fancier model does not help)
+
+Nothing that runs changed.
+
+- **Gradient-boosted trees are better and it does not matter.** Validation skill +0.1020 against
+  the logistic's +0.0983 — 1.04x, against a pre-registered bar of 1.10x. The paired interval
+  excludes zero, so the statistical bar passes and the practical one fails. With 13,127 paired
+  rows a test can detect a 0.4% Brier improvement; detecting it is not the same as it being worth
+  a new model family, a new artefact and a reset prospective record.
+- **A logistic with squares and interactions fails on calibration**, not on Brier: 21 extra terms
+  bought 1.01x skill and pushed its worst reliability bucket to 0.054, past the 0.05 bar.
+- Six new tests: the interaction columns are exactly the declared set, adding them cannot change
+  which rows are available, and the tree model is deterministic.
+
 ## research — 2026-09-22 (E019: the move-size model is measured against a rule that needs no fitting)
 
 Again no version stamp moves: nothing that runs changed.

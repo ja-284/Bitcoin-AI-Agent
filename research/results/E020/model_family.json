@@ -1,0 +1,172 @@
+{
+  "by_family": {
+    "L_logistic_incumbent": {
+      "exploration": {
+        "n": 41345,
+        "base_rate": 0.4994316120449873,
+        "brier": 0.21357448100603457,
+        "brier_base_rate": 0.24999967693513264,
+        "skill": 0.1457009719998531,
+        "log_loss": 0.614687763804124,
+        "ece": 0.004369180522486359,
+        "mean_p": 0.5021247138149045,
+        "rho_p_vs_abs_return": 0.44007075964915265,
+        "max_bucket_gap_100": 0.018728399845809478
+      },
+      "validation": {
+        "n": 13127,
+        "base_rate": 0.4752037784718519,
+        "brier": 0.22486794688851872,
+        "brier_base_rate": 0.24938514739792703,
+        "skill": 0.09831058812130411,
+        "log_loss": 0.6402302180823582,
+        "ece": 0.013908212033160137,
+        "mean_p": 0.47115577507924306,
+        "rho_p_vs_abs_return": 0.360210573019641,
+        "max_bucket_gap_100": 0.029084177397575184
+      }
+    },
+    "I_logistic_interactions": {
+      "exploration": {
+        "n": 41345,
+        "base_rate": 0.4994316120449873,
+        "brier": 0.21297782579252428,
+        "brier_base_rate": 0.24999967693513264,
+        "skill": 0.14808759593803156,
+        "log_loss": 0.6132335173508894,
+        "ece": 0.005137029302254757,
+        "mean_p": 0.5004007499414522,
+        "rho_p_vs_abs_return": 0.44298047197868745,
+        "max_bucket_gap_100": 0.012609617748769675
+      },
+      "validation": {
+        "n": 13127,
+        "base_rate": 0.4752037784718519,
+        "brier": 0.22462470218102606,
+        "brier_base_rate": 0.24938514739792703,
+        "skill": 0.09928596580530269,
+        "log_loss": 0.6397200776739652,
+        "ece": 0.014937765467070445,
+        "mean_p": 0.47060063153187276,
+        "rho_p_vs_abs_return": 0.3619541476425346,
+        "max_bucket_gap_100": 0.054483219205967215
+      }
+    },
+    "T_gradient_boosted_trees": {
+      "exploration": {
+        "n": 41345,
+        "base_rate": 0.4994316120449873,
+        "brier": 0.21287274814370977,
+        "brier_base_rate": 0.24999967693513264,
+        "skill": 0.14850790707644068,
+        "log_loss": 0.6134116169073833,
+        "ece": 0.0032568893563984696,
+        "mean_p": 0.49915384792066303,
+        "rho_p_vs_abs_return": 0.4423392976633354,
+        "max_bucket_gap_100": 0.008995098736595458
+      },
+      "validation": {
+        "n": 13127,
+        "base_rate": 0.4752037784718519,
+        "brier": 0.2239360562490776,
+        "brier_base_rate": 0.24938514739792703,
+        "skill": 0.1020473408877155,
+        "log_loss": 0.6381561189907916,
+        "ece": 0.0068017196733876975,
+        "mean_p": 0.4699384801523818,
+        "rho_p_vs_abs_return": 0.36669902569388885,
+        "max_bucket_gap_100": 0.026948466501463875
+      }
+    }
+  },
+  "n_inputs": {
+    "L_logistic_incumbent": 9,
+    "I_logistic_interactions": 30,
+    "T_gradient_boosted_trees": 9
+  },
+  "ewma_reference": {
+    "exploration": {
+      "n": 41345,
+      "base_rate": 0.4994316120449873,
+      "brier": 0.219600534433471,
+      "brier_base_rate": 0.24999967693513264,
+      "skill": 0.12159672714116865,
+      "log_loss": 0.6292949783438728,
+      "ece": 0.012887664575863985,
+      "mean_p": 0.49908914854687836,
+      "rho_p_vs_abs_return": 0.4042415495315703,
+      "max_bucket_gap_100": 0.09695853398325949
+    },
+    "validation": {
+      "n": 13127,
+      "base_rate": 0.4752037784718519,
+      "brier": 0.2394624303810767,
+      "brier_base_rate": 0.24938514739792703,
+      "skill": 0.03978872487148288,
+      "log_loss": 0.6718549253588252,
+      "ece": 0.023902082938266223,
+      "mean_p": 0.4755755800458592,
+      "rho_p_vs_abs_return": 0.23499140399572488,
+      "max_bucket_gap_100": 0.05768759386416267
+    }
+  },
+  "verdict": {
+    "incumbent_validation_skill": 0.09831058812130411,
+    "by_candidate": {
+      "I_logistic_interactions": {
+        "skill": 0.09928596580530269,
+        "skill_ratio_vs_incumbent": 1.0099213899808541,
+        "incumbent_brier_minus_candidate": {
+          "diff": 0.00024324470749265137,
+          "ci_low": -0.00021207521559662434,
+          "ci_high": 0.0007341671765909225,
+          "se": 0.00024153818203612897
+        },
+        "stays_calibrated": false,
+        "practical_bar_10pct_more_skill": false,
+        "statistical_bar_interval_excludes_zero": false,
+        "replaces_the_incumbent": false,
+        "tripwire_skill_ratio_over_1_5": false,
+        "statement": "not calibrated enough to be the deliverable, whatever its Brier"
+      },
+      "T_gradient_boosted_trees": {
+        "skill": 0.1020473408877155,
+        "skill_ratio_vs_incumbent": 1.0380096675019446,
+        "incumbent_brier_minus_candidate": {
+          "diff": 0.0009318906394411297,
+          "ci_low": 5.660436936775899e-05,
+          "ci_high": 0.0017756779961995391,
+          "se": 0.0004486160381880193
+        },
+        "stays_calibrated": true,
+        "practical_bar_10pct_more_skill": false,
+        "statistical_bar_interval_excludes_zero": true,
+        "replaces_the_incumbent": false,
+        "tripwire_skill_ratio_over_1_5": false,
+        "statement": "statistically better, practically equivalent -- the complexity is not earned"
+      }
+    },
+    "replacement": null,
+    "statement": "no candidate clears the pre-registered bars -- the logistic stands"
+  },
+  "experiment": "E020",
+  "generated_at": "2026-09-22T19:03:02.646943+00:00",
+  "pipeline_version": "0.2.0",
+  "snapshot": "btcusdt_1h_2026-09-19.csv",
+  "threshold": 0.0025,
+  "folds": 27,
+  "oos_rows": 54472,
+  "tree_params": {
+    "max_iter": 200,
+    "learning_rate": 0.05,
+    "max_leaf_nodes": 15,
+    "min_samples_leaf": 200,
+    "l2_regularization": 1.0,
+    "early_stopping": false,
+    "random_state": 0
+  },
+  "n_boot": 2000,
+  "block_hours": 48,
+  "seed": 31,
+  "C": 0.1
+}

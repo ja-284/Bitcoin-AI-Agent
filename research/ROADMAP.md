@@ -93,6 +93,15 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   sitting on the edge of its interval should be checked against data-quality flags before it is
   believed.** Scoring 0.2.0 is now the object under test; E001 stays the record for 0.1.0.
 
+- **A fancier model does not help, and that is now tested rather than assumed (E020, 2026-09-22).** Three
+  families with settings fixed in advance, run once each on identical rows. Gradient-boosted trees reach 1.04x
+  the logistic's validation skill — the paired interval excludes zero (+0.00093 [+0.00006, +0.00178]) but the
+  practical bar of 1.10x fails: *statistically better, practically equivalent*. A logistic with 21 squared and
+  product terms reaches 1.01x and **fails calibration** (worst bucket 0.054 > 0.05), which disqualifies it
+  regardless of Brier because the deliverable is a calibrated probability, not a ranking. **Constraint on later
+  phases:** master plan section 24's ladder is satisfied at this rung — do not reach for a bigger model family
+  again without a new reason, and if the deliverable ever becomes calibration-critical, the trees' ECE of 0.007
+  is the recorded starting point.
 - **The move-size model's complexity is DEFENDED, not assumed (E019, 2026-09-22).** It had never been
   compared against a rule that adapts — E012 compared it to the base rate, which is a far lower bar than it
   looks. Against six alternatives on identical validation rows, the incumbent's skill (+0.098) is **2.47x**

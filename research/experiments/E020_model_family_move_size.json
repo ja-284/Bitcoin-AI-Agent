@@ -1,8 +1,8 @@
 {
   "id": "E020",
   "date": "2026-09-22",
-  "git_commit": "(pre-registration commit; results appended in a later commit)",
-  "status": "PRE-REGISTERED before any result was computed.",
+  "git_commit": "(results commit)",
+  "status": "PRE-REGISTERED; run once per candidate with settings fixed in advance; no search, no re-runs.",
   "phase": "Master plan sections 24-25: model architecture research and model selection. 'The model must earn its complexity through robust out-of-sample evidence.'",
   "why_now": "E019 showed the fitted logistic is worth its complexity against rules that need no fitting. The next question up the ladder is whether it is the right KIND of model. It was chosen in E012 because it is the simplest thing that could work, not because anything was compared against it. Section 24 says to start simple and only add complexity if the evidence demands it -- so the test is not 'can a bigger model fit better' (it always can) but 'does a bigger model predict better out of sample, by enough to matter'.",
   "hypothesis": "A model family able to represent non-linearity and interactions predicts next-hour move size better than the L2 logistic, by enough to be worth the extra complexity.",
@@ -23,9 +23,120 @@
     "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (the criterion is judged here)",
     "holdout": "sealed, not read"
   },
-  "target": {"definition": "large_move: 1 if |return over 1h| > 0.0025", "reference": "close at cutoff", "outcome": "close of the candle opening at as_of + 1h"},
+  "target": {
+    "definition": "large_move: 1 if |return over 1h| > 0.0025",
+    "reference": "close at cutoff",
+    "outcome": "close of the candle opening at as_of + 1h"
+  },
   "also_reported": "Every candidate is also compared against the E019 standing reference (the 24-hour EWMA of the large-move indicator), because a comparison to the base rate alone flatters any model.",
-  "metrics": "filled in after the run",
-  "results": "filled in after the run",
-  "affected_design": "filled in after the run"
+  "metrics": {
+    "folds": 27,
+    "oos_rows": 54472,
+    "tree_params": {
+      "max_iter": 200,
+      "learning_rate": 0.05,
+      "max_leaf_nodes": 15,
+      "min_samples_leaf": 200,
+      "l2_regularization": 1.0,
+      "early_stopping": false,
+      "random_state": 0
+    },
+    "n_inputs": {
+      "L_logistic_incumbent": 9,
+      "I_logistic_interactions": 30,
+      "T_gradient_boosted_trees": 9
+    },
+    "validation": {
+      "I_logistic_interactions": {
+        "brier": 0.22462,
+        "skill": 0.09929,
+        "ece": 0.01494,
+        "max_bucket_gap_100": 0.05448,
+        "rho_p_vs_abs_return": 0.36195
+      },
+      "L_logistic_incumbent": {
+        "brier": 0.22487,
+        "skill": 0.09831,
+        "ece": 0.01391,
+        "max_bucket_gap_100": 0.02908,
+        "rho_p_vs_abs_return": 0.36021
+      },
+      "T_gradient_boosted_trees": {
+        "brier": 0.22394,
+        "skill": 0.10205,
+        "ece": 0.0068,
+        "max_bucket_gap_100": 0.02695,
+        "rho_p_vs_abs_return": 0.3667
+      }
+    },
+    "exploration": {
+      "I_logistic_interactions": {
+        "brier": 0.21298,
+        "skill": 0.14809,
+        "ece": 0.00514,
+        "rho_p_vs_abs_return": 0.44298
+      },
+      "L_logistic_incumbent": {
+        "brier": 0.21357,
+        "skill": 0.1457,
+        "ece": 0.00437,
+        "rho_p_vs_abs_return": 0.44007
+      },
+      "T_gradient_boosted_trees": {
+        "brier": 0.21287,
+        "skill": 0.14851,
+        "ece": 0.00326,
+        "rho_p_vs_abs_return": 0.44234
+      }
+    },
+    "ewma_reference_validation": {
+      "brier": 0.23946,
+      "skill": 0.03979,
+      "ece": 0.0239,
+      "rho_p_vs_abs_return": 0.23499
+    },
+    "verdict": {
+      "incumbent_validation_skill": 0.09831058812130411,
+      "by_candidate": {
+        "I_logistic_interactions": {
+          "skill": 0.09928596580530269,
+          "skill_ratio_vs_incumbent": 1.0099213899808541,
+          "incumbent_brier_minus_candidate": {
+            "diff": 0.00024324470749265137,
+            "ci_low": -0.00021207521559662434,
+            "ci_high": 0.0007341671765909225,
+            "se": 0.00024153818203612897
+          },
+          "stays_calibrated": false,
+          "practical_bar_10pct_more_skill": false,
+          "statistical_bar_interval_excludes_zero": false,
+          "replaces_the_incumbent": false,
+          "tripwire_skill_ratio_over_1_5": false,
+          "statement": "not calibrated enough to be the deliverable, whatever its Brier"
+        },
+        "T_gradient_boosted_trees": {
+          "skill": 0.1020473408877155,
+          "skill_ratio_vs_incumbent": 1.0380096675019446,
+          "incumbent_brier_minus_candidate": {
+            "diff": 0.0009318906394411297,
+            "ci_low": 5.660436936775899e-05,
+            "ci_high": 0.0017756779961995391,
+            "se": 0.0004486160381880193
+          },
+          "stays_calibrated": true,
+          "practical_bar_10pct_more_skill": false,
+          "statistical_bar_interval_excludes_zero": true,
+          "replaces_the_incumbent": false,
+          "tripwire_skill_ratio_over_1_5": false,
+          "statement": "statistically better, practically equivalent -- the complexity is not earned"
+        }
+      },
+      "replacement": null,
+      "statement": "no candidate clears the pre-registered bars -- the logistic stands"
+    }
+  },
+  "results": "NO CANDIDATE CLEARS THE BARS -- THE LOGISTIC STANDS, and both failures are informative.\n\nGRADIENT-BOOSTED TREES are genuinely, measurably better and nowhere near enough to matter: validation skill +0.1020 against the logistic's +0.0983, a ratio of 1.04x against a pre-registered bar of 1.10x. The paired Brier difference is +0.00093 [+0.00006, +0.00178] -- the interval excludes zero, so the statistical bar PASSES while the practical bar FAILS. This is precisely the case the two-part criterion was written for after E018, and it is worth being explicit about what it means: with 13,127 paired rows a test can detect a 0.4% improvement in Brier, and detecting it is not the same as it being worth a different model family, a new artefact, a reset prospective record and a less inspectable system. The trees are slightly better calibrated too (ECE 0.007 vs 0.014), which is the one result that would be worth revisiting if the deliverable ever became calibration-critical.\n\nTHE INTERACTION MODEL FAILS ON CALIBRATION, not on Brier. Adding 21 squared and product terms moved skill from +0.0983 to +0.0993 (1.01x, interval [-0.00021, +0.00073] includes zero) while pushing its worst reliability bucket to 0.054 -- past the 0.05 bar. More parameters made the probabilities slightly less honest for no gain. Since the deliverable is a calibrated probability rather than a ranking, that alone disqualifies it, which is why the calibration condition was written into the criterion.\n\nTHE TRIPWIRE DID NOT FIRE: no candidate came close to 1.5x, which is the reassuring direction -- a tree model that suddenly leapt ahead would have been evidence of something escaping the purge and embargo, not of a better model. Exploration agrees with validation on the ordering (trees +0.1485, interactions +0.1481, logistic +0.1457), so this is not a one-period artefact; the differences are simply small everywhere. All three fitted families are far above the E019 standing reference (+0.0398).",
+  "affected_design": "Nothing changes. The research deliverable stays the Platt-calibrated L2 logistic on nine inputs, and the answer to 'should we use a fancier model?' is now a recorded, pre-registered NO rather than an untested assumption. Three things are carried forward: (1) master plan section 24's ladder is satisfied at this rung -- more complex families were tried once, with fixed settings, and did not earn their complexity; (2) if the deliverable ever becomes calibration-critical rather than Brier-critical, the trees' ECE of 0.007 is the one number worth revisiting, and it is recorded here so that revisit does not start from scratch; (3) the two-part criterion has now rejected a candidate on the practical bar alone, which is the behaviour E018's method lesson was meant to produce.",
+  "command": "python -m agent.research.model_family --experiment E020",
+  "correction_to_this_pre_registration": "The pre-registration described candidate I as '21 products + 6 squares = 27 extra columns, 36 in total'. That arithmetic was wrong: six continuous inputs give 15 pairwise products, not 21, so the candidate has 6 + 15 = 21 extra columns and 30 in total. The METHOD described -- every square and every pairwise product of the six continuous inputs -- is exactly what was run and is unchanged; only my count in the parenthetical was wrong. Recorded rather than quietly edited."
 }
