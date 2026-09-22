@@ -80,8 +80,16 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   output on all 62,262 gap-free hours (worst relative difference 3e-16), while on gap-affected
   hours mean completeness falls 0.850 → 0.568 and 42.5% of signals change (3.94% of the whole
   record). **Consequence:** E001, E002 and E011 are statements about scoring **0.1.0** and stay
-  valid as such; re-running the E001 baseline under 0.2.0 is the natural follow-up (the 0.2.0
-  replay is now cached, so it is cheap), and every future comparison must name its version.
+  valid as such; every future comparison must name its version.
+- **The baseline was re-run under 0.2.0 and the conclusion did not change (E017, 2026-09-22).**
+  No evidence of information beyond trivial baselines at any of the five horizons, by E001's own
+  criterion applied to both result files (`agent/research/compare_baselines.py`). Validation
+  figures are identical to E001 to the digit — that period contains no gap-affected hour, which
+  independently confirms E016. Every *exploration* edge shrank once the system stopped scoring
+  hours it could not see, and the one interval that had excluded zero (6h, +0.092% [+0.002,
+  +0.172]) now includes it (+0.076% [−0.011, +0.155]). **Lesson recorded: a borderline result
+  sitting on the edge of its interval should be checked against data-quality flags before it is
+  believed.** Scoring 0.2.0 is now the object under test; E001 stays the record for 0.1.0.
 
 - Scoring 0.1.0 has no predictive value (E001) and none of its four categories does alone (E002). Re-weighting it (Phase 10) is pointless unless a feature with signal is found in Phase 8. If none is, Phase 10 collapses to "drop redundant categories" and the honest deliverable is calibrated *uncertainty* rather than direction.
 - Momentum and volume are weakly anti-correlated with the next hour's return in both periods (|ρ| 0.02–0.04). Recorded; not acted on.

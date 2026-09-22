@@ -1,7 +1,7 @@
 {
   "id": "E017",
   "date": "2026-09-22",
-  "git_commit": "(filled after run)",
+  "git_commit": "(this commit)",
   "status": "exploratory (re-run of E001's pre-registered criterion against the corrected scoring)",
   "why": "E001 evaluated scoring 0.1.0 and found no information beyond trivial baselines at any horizon. Scoring 0.2.0 (2026-09-22) fixed a real flaw in that object: history was counted in rows, so 9.26% of hours were scored on windows that silently spanned more time than they claimed (E016). The live system now runs 0.2.0, so the baseline evaluation must be restated for the thing that is actually running. This is a re-run of an existing question against a corrected input -- not a new hypothesis, and not a second attempt at a result that was not liked.",
   "hypothesis": "Scoring 0.2.0 (technical categories only; news absent in replay) contains predictive information beyond trivial baselines at at least one horizon among 1h, 6h, 24h, 72h, 168h.",
@@ -10,16 +10,70 @@
   "method": "agent/research/evaluate.py, unchanged, on the cached scoring-0.2.0 replay of the same snapshot and the same 68,619 hours (2017-08-27 -> 2025-06-30; the holdout is not read). Same five horizons, same binary and three-class labels, same trivial baselines (always-HOLD, random with the system's own signal mix, momentum 24h, MA 200h, majority), same circular block bootstrap (block = max(48, 2H), 500 resamples), same per-year and per-regime slices, same confidence-reliability tables.",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.2.0 (E001 evaluated 0.1.0)",
-  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "holdout": "sealed, not read"},
+  "periods": {
+    "exploration": "2017-08-27 -> 2023-12-31",
+    "validation": "2024-01-01 -> 2025-06-30",
+    "holdout": "sealed, not read"
+  },
   "comparison_targets_from_E001": {
-    "edge_pct_BUY_minus_SELL": {"1h": "+0.01 / -0.00", "6h": "+0.09 / -0.01", "24h": "+0.18 / -0.10", "72h": "+0.75 / -0.40", "168h": "+1.20 / -1.08 (exploration / validation)"},
+    "edge_pct_BUY_minus_SELL": {
+      "1h": "+0.01 / -0.00",
+      "6h": "+0.09 / -0.01",
+      "24h": "+0.18 / -0.10",
+      "72h": "+0.75 / -0.40",
+      "168h": "+1.20 / -1.08 (exploration / validation)"
+    },
     "balanced_accuracy_3class": "system 0.32-0.35 vs baselines 0.31-0.34, chance 0.333",
     "acted_direction_accuracy": "system 0.47-0.50 vs always-UP 0.51-0.56",
     "confidence": "stated 0.68-0.91, observed 0.42-0.50 in every bucket; ECE 0.36-0.39",
     "verdict": "criterion not met at any horizon"
   },
-  "metrics": "(filled after run)",
-  "results": "(filled after run)",
-  "affected_design": "(filled after run)",
+  "metrics": {
+    "hours": 68619,
+    "tool": "agent/research/compare_baselines.py (re-applies E001 criterion to both result files)",
+    "verdict_per_horizon": {
+      "1h": "no evidence (both versions)",
+      "6h": "no evidence (both versions)",
+      "24h": "no evidence (both versions)",
+      "72h": "no evidence (both versions)",
+      "168h": "no evidence (both versions)"
+    },
+    "edge_BUY_minus_SELL_pct": {
+      "1h": {
+        "0.1.0": "+0.005 [-0.012,+0.022] / -0.005 [-0.029,+0.019]",
+        "0.2.0": "+0.003 [-0.014,+0.021] / -0.005 [-0.029,+0.019]"
+      },
+      "6h": {
+        "0.1.0": "+0.092 [+0.002,+0.172] / -0.011 [-0.130,+0.107]",
+        "0.2.0": "+0.076 [-0.011,+0.155] / -0.011 [-0.130,+0.107]"
+      },
+      "24h": {
+        "0.1.0": "+0.184 [-0.128,+0.498] / -0.099 [-0.486,+0.315]",
+        "0.2.0": "+0.078 [-0.215,+0.371] / -0.099 [-0.486,+0.315]"
+      },
+      "72h": {
+        "0.1.0": "+0.747 [-0.073,+1.537] / -0.401",
+        "0.2.0": "+0.404 [-0.367,+1.145] / -0.401"
+      },
+      "168h": {
+        "0.1.0": "+1.200 [-0.360,+2.852] / -1.076",
+        "0.2.0": "+0.611 [-0.864,+2.241] / -1.076"
+      },
+      "note": "exploration / validation"
+    },
+    "balanced_accuracy_3class_vs_best_baseline": {
+      "1h": "0.354 vs 0.334 (expl), 0.350 vs 0.339 (vali) -- above in both, but criterion (a) fails",
+      "6h": "0.344 vs 0.333 / 0.330 vs 0.333",
+      "24h": "0.329 vs 0.335 / 0.323 vs 0.333",
+      "72h": "0.334 vs 0.336 / 0.325 vs 0.333",
+      "168h": "0.331 vs 0.333 / 0.325 vs 0.333"
+    },
+    "acted_direction_accuracy": "0.475-0.493 (0.2.0) vs the majority baseline 0.508-0.561 -- still below always-UP at every horizon and period",
+    "acted_share": "72% exploration (was 73% under 0.1.0): the hours that lost every category now fall to HOLD",
+    "confidence_reliability": "ECE 0.357-0.380, hit rate 0.475-0.493 whatever confidence was stated -- unchanged and still uninformative",
+    "validation_period_identical": "Every validation figure matches E001 to the digit, because all 28 Binance gaps fall in 2017-2021 and one stretch ending 2023-04: the validation period has no gap-affected hour, so 0.2.0 IS 0.1.0 there. An independent confirmation of E016."
+  },
+  "results": "CONCLUSION UNCHANGED: no evidence of information beyond trivial baselines at any of the five horizons, under the corrected scoring, by E001s own criterion applied to both result files. The validation period is numerically identical to E001 (it contains no gap-affected hours), so only the exploration period could move -- and it moved the way a correctness fix should. The one substantive change: at 6h the exploration edge under 0.1.0 was +0.092% with an interval that EXCLUDED zero [+0.002, +0.172]; under 0.2.0 it is +0.076% with an interval that INCLUDES zero [-0.011, +0.155]. That borderline half-signal was partly an artefact of hours scored across data holes. The same shrinkage appears at 24h (+0.184 -> +0.078), 72h (+0.747 -> +0.404) and 168h (+1.200 -> +0.611): every apparent exploration edge got smaller when the system stopped scoring hours it could not actually see. Nothing improved and nothing new appeared: acted-direction accuracy stays at 0.475-0.493 against a majority baseline of 0.508-0.561, and the confidence heuristic remains uninformative (ECE 0.36-0.38, hit rate ~0.48 at every stated level).",
+  "affected_design": "The live system now runs scoring 0.2.0 and the baseline statement for it is this experiment; E001 remains the record for 0.1.0 and is not edited. No phase reopens: Phase 10 stays closed (there is still nothing to re-weight towards), E011s null stands, and the deliverable remains calibrated move-size uncertainty plus HOLD-heavy direction. One lesson recorded for future work: a borderline result that sits on the edge of its interval should be checked against data-quality flags before it is believed -- here the 6h exploration edge crossed zero once hours with holes in their window stopped being scored.",
   "notes": "E001 is not edited or superseded: it remains the record for scoring 0.1.0. This experiment is the record for 0.2.0. Both stay in the log, each naming its version, which is the entire reason the version stamps exist."
 }
