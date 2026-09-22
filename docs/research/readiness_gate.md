@@ -48,6 +48,27 @@ rows changed by the work of 2026-09-22 say so.
 five minutes), the database role (yours, ten minutes) and the prospective record (nobody's —
 it needs 500 hours of elapsed time).
 
+### Addendum, later the same evening
+
+Three rows strengthened after revision 2 was written, and are recorded here rather than edited
+into the table above, so the sequence stays readable:
+
+- **11 Failure recovery** — the last scenario from the master plan's list that had no test now
+  has one: a database on an older schema stops the run before anything is written
+  (`assert_schema_current`). Version 3 is what added the CHECK constraints and append-only
+  triggers, so an older database would have accepted rows this project believes are impossible.
+- **18 Observability** — every failure handler in the live path was read against one standard and
+  tabulated (`docs/ops/observability.md`). One invisible failure was found and fixed: a *partial*
+  news failure produced a number indistinguishable from a healthy hour.
+- **20 Maintainability** — the suite is now provably free of hidden database dependencies: CI runs
+  it with an unreachable `DATABASE_URL`, after the schema guard revealed five tests that had
+  quietly started needing one and still passed locally.
+
+**Feature redundancy (6) and model behaviour (7) also gained E022 and E021** as evidence, though
+both were already PASS.
+
+The score is unchanged at **19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN**, and so is the judgement.
+
 ### What this does and does not say
 
 It says the backend is **trustworthy as an instrument**: what it records is correct, timestamped
