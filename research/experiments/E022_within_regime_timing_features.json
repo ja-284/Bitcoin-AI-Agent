@@ -1,0 +1,33 @@
+{
+  "id": "E022",
+  "date": "2026-09-22",
+  "git_commit": "(pre-registration commit; results appended in a later commit)",
+  "status": "PRE-REGISTERED and EXPLORATORY. This experiment generates a hypothesis about which inputs matter; it decides nothing and adopts nothing. Its pre-registered predictions exist so that it can be WRONG, which is the only thing that makes an exploratory run worth recording.",
+  "phase": "Follows directly from E021. Master plan sections 14-19 (which signals actually carry information) applied to a target that E021 only just made available.",
+  "why_now": "E021 split the move-size model's skill in two. Against the fixed 0.25% target the no-fitting EWMA reference scores +0.0398 and the model +0.0983; against a volatility-scaled target, which divides the recent volatility LEVEL out of the question, the reference scores +0.0003 -- nothing -- and the model still scores +0.0736. So the model's own contribution is skill at within-regime TIMING: knowing which hour inside a regime will be big. Nobody has ever asked which inputs provide that. E018 answered the feature question against the FIXED target, where the answer is contaminated: a feature can look essential there merely by being a good proxy for the volatility level, which is free. Asking the same question against the scaled target isolates the part that is actually the model's.",
+  "hypothesis": "The inputs that carry within-regime timing are NOT the same as the inputs that carry the headline skill. Specifically, the absolute-level volatility measures should lose most of their importance once the level is divided out, and the relative and non-volatility inputs should carry proportionally more.",
+  "pre_registered_predictions": {
+    "P1": "In forward selection against the volatility-scaled target, at least one of `rv_24`, `rv_168`, `tr_mean_14_rel` is selected LATER (higher k) than it was against the fixed target, and at least one of `vol_ratio_24_168`, `trades_rel_24h`, `trades_rel_168h`, `hour_sin`, `hour_cos`, `is_weekend` is selected EARLIER.",
+    "P2": "Group ablation against the volatility-scaled target costs the volatility group materially less than the 61% of skill it costs against the fixed target -- concretely, less than 40%.",
+    "P3": "The first feature chosen against the volatility-scaled target is NOT `tr_mean_14_rel` (which is chosen first against the fixed target, being the strongest single proxy for the level).",
+    "how_these_can_fail": "If the same features are selected in nearly the same order and the volatility group still dominates, then within-regime timing is carried by the very same inputs and the decomposition, while still true about SKILL, says nothing useful about FEATURES. That is a perfectly publishable negative result and would close this line of enquiry."
+  },
+  "method": "E018's machinery (agent/research/feature_count.py) run unchanged against the volatility-scaled label from E021 instead of the fixed one: pairwise redundancy, leave-one-group-out ablation paired on identical rows, greedy forward selection by out-of-sample Brier on the EXPLORATION period only, and coefficient sign stability. Everything else is held at E013's settings -- expanding walk-forward, 27 folds, purge 1h, 24h embargo, Platt calibration on the last purged 90 days of each training range, L2 logistic C = 0.1. Both targets are scored on identical rows so the two orderings are directly comparable.",
+  "decision_rule": "NONE, deliberately. This experiment may not change scoring, may not change the live BUY/HOLD/SELL path, may not replace move_size_1h_v1, may not select a new feature set for anything, and may not touch the sealed holdout. Its only output is a recorded, falsifiable statement about which inputs carry within-regime timing, to inform later work that would have to be pre-registered on its own terms.",
+  "validation_wear": "A caveat that is getting more important and is recorded here rather than left implicit: TWENTY experiments have now examined the validation period (2024-01-01 -> 2025-06-30). Each one was pre-registered and each was honest, but a period that has been looked at twenty times is no longer a clean out-of-sample test -- selection pressure accumulates across experiments even when no single experiment searches. Consequences, applied from here on: (1) validation results are treated as hypothesis-generating rather than confirmatory, and this experiment is labelled exploratory for that reason among others; (2) the sealed holdout is the only clean arbiter this project still has, which strengthens rather than weakens the case for keeping it sealed until there is something definite to confirm; (3) any future claim that something 'works' must name how many experiments had already seen the data it works on.",
+  "pipeline_version": "0.2.0",
+  "targets_compared": {
+    "F_fixed": "|1h return| > 0.0025 (E018's target)",
+    "V_vol_scaled": "|1h return| > 1.0 x median|1h return| over the last 720h of completed returns (E021's target)"
+  },
+  "features": ["tr_mean_14_rel", "rv_24", "rv_168", "vol_ratio_24_168", "trades_rel_24h", "trades_rel_168h", "hour_sin", "hour_cos", "is_weekend"],
+  "periods": {
+    "exploration": "out-of-sample test blocks before 2024-01-01 (selection happens here)",
+    "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (reported; see validation_wear)",
+    "holdout": "sealed, not read"
+  },
+  "tripwire": "If the volatility-scaled target's skill in this run differs from E021's (+0.0736 validation) by more than 0.002, something about the frame or the folds has changed between the two experiments and must be found before anything is recorded.",
+  "metrics": "filled in after the run",
+  "results": "filled in after the run",
+  "affected_design": "filled in after the run"
+}
