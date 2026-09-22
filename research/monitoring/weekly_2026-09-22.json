@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T19:56:08.770017+00:00",
+  "generated_at": "2026-09-22T20:04:42.132799+00:00",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.2.0",
   "schema_version": {
@@ -8,10 +8,10 @@
     "match": true
   },
   "live_since": "2026-09-19T09:00:00+00:00",
-  "live_hours": 82.9,
+  "live_hours": 83.1,
   "health_last_7_days": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-22T19:56:08.770017+00:00",
+    "now": "2026-09-22T20:04:42.132799+00:00",
     "expected_hours": 82,
     "predictions": 73,
     "missing_hours": [
@@ -48,20 +48,20 @@
     "timestamp_rule_violations": [],
     "outcome_coverage": {
       "1h": {
-        "due": 71,
-        "ok": 71,
+        "due": 72,
+        "ok": 72,
         "unavailable": 0,
         "overdue": 0
       },
       "6h": {
-        "due": 66,
-        "ok": 66,
+        "due": 67,
+        "ok": 67,
         "unavailable": 0,
         "overdue": 0
       },
       "24h": {
-        "due": 48,
-        "ok": 48,
+        "due": 49,
+        "ok": 49,
         "unavailable": 0,
         "overdue": 0
       },
@@ -81,7 +81,7 @@
   },
   "health_since_go_live": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-22T19:56:08.770017+00:00",
+    "now": "2026-09-22T20:04:42.132799+00:00",
     "expected_hours": 82,
     "predictions": 73,
     "missing_hours": [
@@ -118,20 +118,20 @@
     "timestamp_rule_violations": [],
     "outcome_coverage": {
       "1h": {
-        "due": 71,
-        "ok": 71,
+        "due": 72,
+        "ok": 72,
         "unavailable": 0,
         "overdue": 0
       },
       "6h": {
-        "due": 66,
-        "ok": 66,
+        "due": 67,
+        "ok": 67,
         "unavailable": 0,
         "overdue": 0
       },
       "24h": {
-        "due": 48,
-        "ok": 48,
+        "due": 49,
+        "ok": 49,
         "unavailable": 0,
         "overdue": 0
       },
@@ -668,29 +668,29 @@
       ]
     ],
     "verdict": "PARITY",
-    "candles_fetched": 332
+    "candles_fetched": 333
   },
   "paper_move_size_1h": {
-    "n": 81,
-    "base_rate_large": 0.30864197530864196,
-    "mean_stated_p": 0.39780681207663077,
-    "brier": 0.20500463914964268,
-    "brier_base_rate": 0.21338210638622154,
-    "accuracy": 0.6790123456790124,
-    "naive_rate": 0.691358024691358,
-    "brier_rel_gain": 0.03926040181370993,
-    "rank_corr_p_vs_abs_return": 0.21287262872628723,
-    "ece": 0.10039467606522356,
+    "n": 82,
+    "base_rate_large": 0.3170731707317073,
+    "mean_stated_p": 0.3988226690685767,
+    "brier": 0.2057881174137357,
+    "brier_base_rate": 0.21653777513384886,
+    "accuracy": 0.6707317073170732,
+    "naive_rate": 0.6829268292682926,
+    "brier_rel_gain": 0.04964333688876432,
+    "rank_corr_p_vs_abs_return": 0.2210576724241138,
+    "ece": 0.0928423883743818,
     "accuracy_ci95": [
-      0.5712341939491306,
-      0.770579256056527
+      0.5633818520351263,
+      0.7628003253707004
     ],
     "base_rate_ci95": [
-      0.2186306293369854,
-      0.41598257927765636
+      0.22647919829889346,
+      0.4240398973377209
     ],
     "accuracy_beats_naive": false,
-    "interval_note": "no intervals yet: needs >= 192 hours (have 81)",
+    "interval_note": "no intervals yet: needs >= 192 hours (have 82)",
     "reliability": [
       {
         "lower": 0.1,
@@ -725,11 +725,11 @@
       {
         "lower": 0.4,
         "upper": 0.5,
-        "n": 17,
-        "mean_predicted": 0.4570171552332216,
-        "observed": 0.4117647058823529,
-        "ci_low": 0.21610786039131383,
-        "ci_high": 0.6399492561448447,
+        "n": 18,
+        "mean_predicted": 0.45835548468783155,
+        "observed": 0.4444444444444444,
+        "ci_low": 0.24559231101389126,
+        "ci_high": 0.6628393057174837,
         "enough_rows": false
       },
       {
@@ -784,10 +784,6 @@
     },
     "latest": [
       {
-        "as_of": "2026-09-22 13:00:00+00:00",
-        "p_large_move": 0.5656969843885805
-      },
-      {
         "as_of": "2026-09-22 14:00:00+00:00",
         "p_large_move": 0.6011965364290375
       },
@@ -802,7 +798,22 @@
       {
         "as_of": "2026-09-22 17:00:00+00:00",
         "p_large_move": 0.4835913551943763
+      },
+      {
+        "as_of": "2026-09-22 18:00:00+00:00",
+        "p_large_move": 0.4811070854162004
       }
-    ]
+    ],
+    "vs_ewma_reference": {
+      "hours_compared": 82,
+      "model_brier": 0.2057881174137357,
+      "reference_brier": 0.21918580745469107,
+      "model_skill": 0.04964333688876432,
+      "reference_skill": -0.012228962448724623,
+      "model_brier_minus_reference": -0.013397690040955368,
+      "observed_large_move_share": 0.3170731707317073,
+      "development_expectation": "2.47x the reference's skill on validation data (E019)",
+      "note": "Not prospective -- computed after the fact from candles -- but a fair comparison of two models on identical hours, and a larger sample than the shadow record. Both skill figures use a base rate from these same hours, an oracle at small n."
+    }
   }
 }

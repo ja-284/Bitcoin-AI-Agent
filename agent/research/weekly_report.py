@@ -256,7 +256,7 @@ def live_features(now: datetime, lookback_hours: int = 400) -> pd.DataFrame:
     return feats
 
 
-def paper_section(now: datetime, outcome_rows: list[dict]) -> dict:
+def paper_section(now: datetime, outcome_rows: list[dict], ewma: "pd.Series | None" = None) -> dict:
     model, cal, cols, fit_info = fit_move_size_model()
     from agent.research.holdout_eval import E012_LOG, E012_THRESHOLD_1H
 
@@ -275,6 +275,28 @@ def paper_section(now: datetime, outcome_rows: list[dict]) -> dict:
     rec["tracker_consistency"] = {"hours_compared": len(common), "max_abs_difference": max(diffs) if diffs else None, "agree_within_1e-9": bool(all(d < 1e-9 for d in diffs)) if diffs else None}
     rec["model"] = fit_info
     rec["latest"] = [{"as_of": str(t), "p_large_move": float(pp)} for t, pp in list(zip(usable.index, p))[-5:]]
+    # The same E019 comparison as the shadow section, on every live hour rather than only the
+    # hours the shadow record covers -- roughly four times the sample for the same question.
+    # After-the-fact is fine HERE: both sides are computed the same way and neither saw the
+    # future, so it is a fair comparison of two models even though it is not prospective
+    # evidence that either one works.
+    if ewma is not None and len(ewma) and len(usable):
+        ref = ewma.reindex(usable.index).to_numpy(dtype=float)
+        ok = ~np.isnan(ref)
+        if int(ok.sum()) >= 5:
+            ref_rec = paper_record(ref[ok], y[ok], usable["fwd_1h"].abs().to_numpy()[ok])
+            model_rec = paper_record(p[ok], y[ok], usable["fwd_1h"].abs().to_numpy()[ok])
+            rec["vs_ewma_reference"] = {
+                "hours_compared": int(ok.sum()),
+                "model_brier": model_rec["brier"], "reference_brier": ref_rec["brier"],
+                "model_skill": model_rec["brier_rel_gain"], "reference_skill": ref_rec["brier_rel_gain"],
+                "model_brier_minus_reference": model_rec["brier"] - ref_rec["brier"],
+                "observed_large_move_share": float(y[ok].mean()),
+                "development_expectation": "2.47x the reference's skill on validation data (E019)",
+                "note": ("Not prospective -- computed after the fact from candles -- but a fair comparison "
+                         "of two models on identical hours, and a larger sample than the shadow record. "
+                         "Both skill figures use a base rate from these same hours, an oracle at small n."),
+            }
     return rec
 
 
@@ -481,7 +503,7 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         rep["parity"] = {"verdict": "ERROR", "error": str(exc)}
     if with_paper:
         try:
-            rep["paper_move_size_1h"] = paper_section(now, outs)
+            rep["paper_move_size_1h"] = paper_section(now, outs, ewma=ewma)
         except Exception as exc:  # the report must still come out if the exchange is unreachable
             logger.exception("paper section failed")
             rep["paper_move_size_1h"] = {"error": str(exc)}
@@ -574,6 +596,15 @@ def render(rep: dict) -> str:
               f"Brier {pr['brier']:.4f} vs base-rate {pr['brier_base_rate']:.4f} ({pr['brier_rel_gain'] * 100:+.1f}%{_ci(pr, 'brier_rel_gain', 100)}) · accuracy {pr['accuracy']:.3f} [{pr['accuracy_ci95'][0]:.3f}, {pr['accuracy_ci95'][1]:.3f}] vs naive {pr['naive_rate']:.3f} ({'clears it' if pr['accuracy_beats_naive'] else 'overlaps: nothing established'}) · ρ(p, |move|) {pr['rank_corr_p_vs_abs_return']:+.3f}{_ci(pr, 'rank_corr_p_vs_abs_return')} · ECE {pr['ece']:.3f}{_ci(pr, 'ece')} · {pr['interval_note']}",
               "", "| stated | observed | 95% interval | n |", "|---|---|---|---|"]
         L += [f"| {b['mean_predicted']:.2f} | {b['observed']:.2f} | [{b['ci_low']:.2f}, {b['ci_high']:.2f}] | {b['n']} |" for b in pr["reliability"]]
+        vs = pr.get("vs_ewma_reference")
+        if vs:
+            L += ["", "**Against the no-fitting reference (E019), on all %d of these hours** — large moves actually "
+                  "happened in %.0f%% of them:" % (vs["hours_compared"], vs["observed_large_move_share"] * 100),
+                  "model Brier %.4f (skill %+.1f%%) vs reference Brier %.4f (skill %+.1f%%) · difference %+.4f "
+                  "(negative = the model is ahead). Development expectation: %s." % (
+                      vs["model_brier"], vs["model_skill"] * 100, vs["reference_brier"], vs["reference_skill"] * 100,
+                      vs["model_brier_minus_reference"], vs["development_expectation"]),
+                  "*%s*" % vs["note"], ""]
         tc = pr["tracker_consistency"]
         L += ["", f"Consistency with the live outcome tracker: {tc['hours_compared']} hours compared, max difference {tc['max_abs_difference']}, agree: {tc['agree_within_1e-9']}",
               f"Model: fitted on {pr['model']['fit_rows']} rows to {pr['model']['fit_end'][:10]}, Platt on {pr['model']['calib_rows']} rows ({pr['model']['calib_range'][0][:10]} → {pr['model']['calib_range'][1][:10]}), a={pr['model']['platt']['a']:.3f} b={pr['model']['platt']['b']:.3f}",

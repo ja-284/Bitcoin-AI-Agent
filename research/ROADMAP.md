@@ -125,6 +125,17 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   **Constraint on later phases:** this instability belongs in the contract's limitations; and if the
   2026-09-22 live watch item survives the 500-hour checkpoint, the scaled target is the first thing to
   reconsider — as a deliberate trade of skill for stability, made with the user, never as a side-effect.
+- **WATCH ITEM UPDATE, same day: it largely dissolved on a larger sample, exactly as it was written to be
+  able to.** The 18-hour reading below was taken on the shadow record alone. The paper record covers **82**
+  live hours — every hour since go-live, not just the ones the shadow existed for — and on those the model is
+  **ahead** of the no-fitting reference, not behind: Brier 0.2058 against 0.2192, a difference of −0.0134 in
+  the model's favour, skill +5.0% against −1.2%. The market was still quiet (large moves in 32% of hours
+  against ~47% in development) and the model was still the better forecaster in it. Two honest qualifications:
+  the 18 shadow hours are a SUBSET of these 82, so this is the same question on more data rather than
+  independent confirmation; and the paper record is computed after the fact, which is fine for comparing two
+  models on identical rows but is not prospective evidence that either works. **Status: the concern is much
+  weaker than it looked, and still not settled. Read at the 500-hour checkpoint.** This is what the watch
+  item was for — it could not be forgotten if it persisted, and it could not become a finding when it did not.
 - **WATCH ITEM (opened 2026-09-22, do not act on it): the first 18 prospective shadow hours ran BEHIND
   the no-fitting reference.** Model Brier 0.2574 vs the E019 EWMA rule's 0.2258 — the model is 0.032 worse,
   where development data said it should be roughly twice as skilful. Large moves occurred in 33% of those
