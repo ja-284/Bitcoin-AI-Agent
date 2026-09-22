@@ -93,6 +93,15 @@ Order is binding unless a documented reason changes it. Each stage: check the sy
   sitting on the edge of its interval should be checked against data-quality flags before it is
   believed.** Scoring 0.2.0 is now the object under test; E001 stays the record for 0.1.0.
 
+- **The move-size model's complexity is DEFENDED, not assumed (E019, 2026-09-22).** It had never been
+  compared against a rule that adapts — E012 compared it to the base rate, which is a far lower bar than it
+  looks. Against six alternatives on identical validation rows, the incumbent's skill (+0.098) is **2.47x**
+  the best non-fitted rule's (a 24-hour EWMA of "did the last hours move a lot?", +0.040), with a paired
+  Brier difference of +0.01459 [+0.01261, +0.01652]. Giving every simple rule the incumbent's own Platt
+  calibration helps them and changes nothing (2.33x, both bars still pass). **Consequences:** model-family
+  research may proceed from a defended starting point; and **every future move-size result must be reported
+  against the 24h EWMA rule, not only against the base rate** — 40% of the model's skill is available with
+  no fitting at all, so a comparison to the base rate alone flatters any model.
 - **The move-size model is over-featured, and one of its nine inputs is arithmetic (E018, 2026-09-22).**
   After the declared log transforms `vol_ratio_24_168` equals `rv_24` minus `rv_168` **exactly**
   (largest disagreement 1.0e-15 over 51,053 hours), so `move_size_1h_v1` carries **eight**

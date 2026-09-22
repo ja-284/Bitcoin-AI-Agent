@@ -1,8 +1,8 @@
 {
   "id": "E019",
   "date": "2026-09-22",
-  "git_commit": "(pre-registration commit; results appended in a later commit)",
-  "status": "PRE-REGISTERED before any result was computed.",
+  "git_commit": "(results commit)",
+  "status": "PRE-REGISTERED (primary verdict) plus one labelled secondary fairness check added after the primary result, to answer the obvious objection to the pre-registered scoring choice.",
   "phase": "Master plan sections 24-25 (model selection: the model must earn its complexity) and section 43 (do not confuse statistical significance with practical usefulness).",
   "why_now": "E012 compared the 1h move-size model against the BASE RATE and against chance. It has never been compared against a simple rule that adapts. 'How often has a large move happened lately?' is a direct empirical estimate of exactly the quantity the model predicts, it needs no fitting, no calibration, no walk-forward machinery and no artefact -- and if it matches the model, the model's nine inputs, its quarterly refits and its Platt calibration are buying nothing. This is the cheapest possible way to find out that the one positive result in the project is not worth its complexity, and it must be asked BEFORE any more complex model family is considered.",
   "hypothesis": "The fitted, calibrated nine-input logistic model predicts next-hour move size better than a simple trailing-frequency rule, by enough to be worth its complexity.",
@@ -27,8 +27,91 @@
     "validation": "out-of-sample test blocks 2024-01-01 -> 2025-06-30 (the criterion is judged here)",
     "holdout": "sealed, not read"
   },
-  "target": {"definition": "large_move: 1 if |return over 1h| > 0.0025", "reference": "close at cutoff", "outcome": "close of the candle opening at as_of + 1h"},
-  "metrics": "filled in after the run",
-  "results": "filled in after the run",
-  "affected_design": "filled in after the run"
+  "target": {
+    "definition": "large_move: 1 if |return over 1h| > 0.0025",
+    "reference": "close at cutoff",
+    "outcome": "close of the candle opening at as_of + 1h"
+  },
+  "metrics": {
+    "oos_rows": 54472,
+    "folds": 27,
+    "common_validation_rows": 13127,
+    "dropped_for_missing_values": 0,
+    "validation_skill": {
+      "A_expanding_base_rate": -0.0094,
+      "B_trailing_24h": 0.0321,
+      "C_trailing_168h": 0.021,
+      "D_trailing_720h": 0.0098,
+      "E_ewma_halflife_24h": 0.0398,
+      "F_one_feature_logistic": 0.0582,
+      "G_incumbent": 0.0983
+    },
+    "validation_brier": {
+      "A_expanding_base_rate": 0.25174,
+      "B_trailing_24h": 0.24137,
+      "C_trailing_168h": 0.24414,
+      "D_trailing_720h": 0.24694,
+      "E_ewma_halflife_24h": 0.23946,
+      "F_one_feature_logistic": 0.23488,
+      "G_incumbent": 0.22487
+    },
+    "validation_ece": {
+      "A_expanding_base_rate": 0.05,
+      "B_trailing_24h": 0.056,
+      "C_trailing_168h": 0.019,
+      "D_trailing_720h": 0.015,
+      "E_ewma_halflife_24h": 0.024,
+      "F_one_feature_logistic": 0.018,
+      "G_incumbent": 0.014
+    },
+    "validation_rho": {
+      "A_expanding_base_rate": 0.043,
+      "B_trailing_24h": 0.248,
+      "C_trailing_168h": 0.174,
+      "D_trailing_720h": 0.115,
+      "E_ewma_halflife_24h": 0.235,
+      "F_one_feature_logistic": 0.268,
+      "G_incumbent": 0.36
+    },
+    "verdict": {
+      "best_simple_rule": "E_ewma_halflife_24h",
+      "best_simple_skill": 0.03978872487148288,
+      "incumbent_skill": 0.09831058812130411,
+      "skill_ratio": 2.47081524826056,
+      "practical_bar_10pct_more_skill": true,
+      "statistical_bar_interval_excludes_zero": true,
+      "paired_brier_difference": {
+        "diff": 0.014594483492557986,
+        "ci_low": 0.012611756091962877,
+        "ci_high": 0.01651934785855354,
+        "se": 0.0009948735085465632
+      },
+      "earns_its_complexity": true,
+      "statement": "the fitted model earns its complexity",
+      "tripwire_a_simple_rule_beats_the_incumbent": false
+    },
+    "secondary_fair_calibration": {
+      "best": "B_trailing_24h",
+      "best_skill": 0.042126250464602055,
+      "skill_ratio": 2.333713231941038,
+      "verdict_unchanged": true,
+      "skill_by_candidate": {
+        "A_expanding_base_rate": -0.0097,
+        "B_trailing_24h": 0.0421,
+        "C_trailing_168h": 0.0198,
+        "D_trailing_720h": -0.014,
+        "E_ewma_halflife_24h": 0.0412
+      },
+      "ece_by_candidate": {
+        "A_expanding_base_rate": 0.03,
+        "B_trailing_24h": 0.013,
+        "C_trailing_168h": 0.004,
+        "D_trailing_720h": 0.039,
+        "E_ewma_halflife_24h": 0.005
+      }
+    }
+  },
+  "results": "THE FITTED MODEL CLEARS BOTH PRE-REGISTERED BARS, COMFORTABLY. On the 13,127 validation hours (no row dropped; every candidate had a value everywhere), validation skill is: expanding base rate -0.0094, trailing 720h +0.0098, trailing 168h +0.0210, trailing 24h +0.0321, EWMA half-life 24h +0.0398, one-feature logistic +0.0582, incumbent +0.0983. The best NON-FITTED rule is the 24-hour EWMA; the incumbent has 2.47x its skill (practical bar: 1.10x -- PASS) and the paired block-bootstrap interval on the Brier difference is +0.01459 [+0.01261, +0.01652], far from zero (statistical bar -- PASS). The tripwire did not fire: no simple rule beat the incumbent anywhere.\n\nFAIRNESS CHECK (secondary, not pre-registered). The obvious objection is that the simple rules were scored uncalibrated while the incumbent carries Platt calibration, so the check was run: every simple rule was given the incumbent's exact advantage -- a Platt re-map fitted on the same purged 90-day slice of each fold, applied to the same test block. It helps them, and it does not change the answer. The 24-hour trailing rule improves most (ECE 0.056 -> 0.013, skill +0.0321 -> +0.0421) and becomes the best simple rule, but the incumbent is still 2.33x more skilful and both bars still pass. Two rules get WORSE when calibrated (expanding prior, trailing 720h), which is what a re-map fitted on 90 days does to a slow-moving rule in a changing regime.\n\nWHAT THIS ACTUALLY SHOWS. Recent realised volatility is genuinely most of the signal -- a 24-hour EWMA of 'did the last hours move a lot?' already reaches 40% of the model's skill with no fitting at all -- but the model is not merely re-reading it. It more than doubles that skill, ranks better (rho +0.360 vs +0.235) and is better calibrated out of the box (ECE 0.014 vs 0.024). The exploration period tells the same story with bigger numbers throughout (incumbent +0.1457 vs best simple +0.1216), so this is not a one-period effect.",
+  "affected_design": "The 1h move-size model's complexity is now DEFENDED, not assumed: it beats the honest non-fitted alternative by a factor of two on validation, before and after giving that alternative the same calibration. Nothing about any running system changed. Two consequences for later work: (1) model-family research (master plan section 24) may proceed from a defended starting point rather than from an unexamined one; (2) the EWMA rule is worth keeping as the standing reference in any future move-size experiment -- comparing to the base rate alone, as E012 did, sets the bar far too low, and every future move-size result should be reported against this rule as well.",
+  "command": "python -m agent.research.simple_baselines --experiment E019"
 }

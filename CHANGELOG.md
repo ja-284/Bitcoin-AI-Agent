@@ -5,6 +5,22 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-09-22 (E019: the move-size model is measured against a rule that needs no fitting)
+
+Again no version stamp moves: nothing that runs changed.
+
+- **The model had never been compared against an adaptive baseline.** E012 compared it to the
+  base rate. "What share of the last hours moved more than 0.25%?" estimates the same quantity
+  with no fitting, no calibration and no artefact, and it reaches **40% of the model's skill**.
+- **The model still wins clearly:** validation skill +0.098 against +0.040 for the best
+  non-fitted rule (2.47x), paired Brier difference +0.01459 [+0.01261, +0.01652]. Giving the
+  simple rules the incumbent's own Platt calibration does not change the answer (2.33x).
+- **New standing reference.** Every future move-size result is reported against the 24-hour EWMA
+  rule as well as the base rate.
+- Seven new tests, including a point-in-time perturbation test (garble every candle after a cut
+  hour; every rule's earlier values must be bit-identical) and a gap test (a 168-hour window with
+  200 hours missing reports nothing rather than reaching back 368 hours).
+
 ## research — 2026-09-22 (E018: the move-size model is over-featured; no code that runs changed)
 
 No version stamp moves: nothing in the live path, the scoring or the frozen artefact changed.
