@@ -99,6 +99,46 @@ findings of steadily decreasing trustworthiness while spending the credibility o
 arbiter left. The correct action is to stop and let time pass, which is what the monitoring
 rhythm is for.
 
+## Paused 2026-09-22 ~20:15 UTC — resume point
+
+**State.** Tree clean, `main` = `origin/main`, last commit `9c60010`. **296 tests pass, and they
+pass with no database reachable** (CI enforces that with an unreachable `DATABASE_URL`).
+Holdout **sealed** (`research/HOLDOUT_ACCESS.log` does not exist). Live system healthy: 73+
+predictions, 0 missing hours in 48, 0 shadow errors, 0 fallback rows, 0 timestamp violations.
+
+**Done today, second pass** (all committed): E018 (feature count / redundancy), E019 (the
+no-fitting baseline), E020 (model family), E021 (threshold definition), E022 (which inputs carry
+the isolated signal); backend contract v1 + its transport; observability review; schema-mismatch
+guard; readiness gate scored across 22 categories; README and open-user-actions docs.
+
+**THE ONE THING TO CHECK FIRST ON RESUME.** The schema guard (`assert_schema_current`, commit
+`2cef624`) is the only change today that touches the hourly job's live path, and it had **not yet
+been observed in a production run** when work stopped — the 19:00 prediction was due at 20:12 UTC
+and the last confirmed row was 18:00, written by `da35e78`. Verify: a prediction exists for
+19:00 UTC or later, written by a commit at or after `2cef624`, with a shadow row and no
+`shadow_run_errors`. The guard was verified against the live database by hand (0.5s, database 3 =
+code 3) and the hourly path imports nothing else that changed today (checked explicitly), so this
+is a confirmation rather than a worry. If it *did* fail, the symptom would be a red hourly job
+with a `RuntimeError` naming the schema versions, and the fix is to revert that one commit.
+
+**Then, in order:**
+1. Wire the publish step into `.github/workflows/hourly.yml` — one step after
+   `agent.shadow.outcomes`, exact YAML in `docs/api/contract_v1.md`. Deliberately left unadded so
+   it can be introduced and then watched on the next run rather than deployed unattended. It
+   cannot fail the job by construction (logged, exit 0), but watch a run anyway.
+2. Resume the monitoring rhythm: weekly report + audit. Nothing else is due.
+
+**There is no non-gated research work left** (see the section above). Everything waits on elapsed
+time, on a user decision, or on evidence that does not exist — and validation wear is now an
+argument against inventing more.
+
+**Open user actions, unchanged:** healthchecks.io heartbeat (the one worth hurrying — every alarm
+lives inside GitHub, so GitHub going quiet looks like success); least-privilege database role;
+the news-cost judgement; PAT renewal before 2027-09-20. Details in `docs/ops/open_user_actions.md`.
+
+**Do not**, on resume: re-run completed experiments, tune anything against validation, change
+scoring, swap the frozen artefact, or touch the holdout.
+
 ## Roadmap adjustments (documented before acting)
 
 1. **Phases 5 and 7 completed together (E002).** For a rules-based system, ablation is a recombination of the same stored category scores — running it separately from the diagnosis would repeat identical work. Nothing was skipped: every category was tested alone, and every leave-one-out variant was evaluated in both periods with uncertainty.
