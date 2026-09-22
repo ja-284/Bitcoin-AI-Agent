@@ -1,0 +1,25 @@
+{
+  "id": "E017",
+  "date": "2026-09-22",
+  "git_commit": "(filled after run)",
+  "status": "exploratory (re-run of E001's pre-registered criterion against the corrected scoring)",
+  "why": "E001 evaluated scoring 0.1.0 and found no information beyond trivial baselines at any horizon. Scoring 0.2.0 (2026-09-22) fixed a real flaw in that object: history was counted in rows, so 9.26% of hours were scored on windows that silently spanned more time than they claimed (E016). The live system now runs 0.2.0, so the baseline evaluation must be restated for the thing that is actually running. This is a re-run of an existing question against a corrected input -- not a new hypothesis, and not a second attempt at a result that was not liked.",
+  "hypothesis": "Scoring 0.2.0 (technical categories only; news absent in replay) contains predictive information beyond trivial baselines at at least one horizon among 1h, 6h, 24h, 72h, 168h.",
+  "acceptance_criterion": "COPIED VERBATIM FROM E001, unchanged, so the two are comparable: For a horizon to count as 'information present': (a) the system's edge (mean forward return after BUY minus after SELL) is positive with a block-bootstrap 95% interval excluding zero in BOTH exploration and validation, AND (b) its three-class balanced accuracy (fixed 0.5% band) exceeds every trivial baseline's in BOTH periods. Anything less is reported as 'no evidence of information beyond baselines' for that horizon. No horizon is chosen as primary from this experiment alone.",
+  "what_would_change_the_conclusion": "A horizon meeting both parts of the criterion under 0.2.0 that failed under 0.1.0 would mean the gap flaw had been masking a real signal -- a genuinely new finding, to be reported as such and then re-tested, never adopted from one run. The expected outcome is that the conclusion is unchanged: 0.2.0 differs from 0.1.0 on only 9.26% of hours, and there it REMOVES inputs rather than adding information. A worse result is equally possible and equally publishable: on those hours the system now abstains, so its remaining acted hours are a different, smaller sample.",
+  "method": "agent/research/evaluate.py, unchanged, on the cached scoring-0.2.0 replay of the same snapshot and the same 68,619 hours (2017-08-27 -> 2025-06-30; the holdout is not read). Same five horizons, same binary and three-class labels, same trivial baselines (always-HOLD, random with the system's own signal mix, momentum 24h, MA 200h, majority), same circular block bootstrap (block = max(48, 2H), 500 resamples), same per-year and per-regime slices, same confidence-reliability tables.",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.2.0 (E001 evaluated 0.1.0)",
+  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "holdout": "sealed, not read"},
+  "comparison_targets_from_E001": {
+    "edge_pct_BUY_minus_SELL": {"1h": "+0.01 / -0.00", "6h": "+0.09 / -0.01", "24h": "+0.18 / -0.10", "72h": "+0.75 / -0.40", "168h": "+1.20 / -1.08 (exploration / validation)"},
+    "balanced_accuracy_3class": "system 0.32-0.35 vs baselines 0.31-0.34, chance 0.333",
+    "acted_direction_accuracy": "system 0.47-0.50 vs always-UP 0.51-0.56",
+    "confidence": "stated 0.68-0.91, observed 0.42-0.50 in every bucket; ECE 0.36-0.39",
+    "verdict": "criterion not met at any horizon"
+  },
+  "metrics": "(filled after run)",
+  "results": "(filled after run)",
+  "affected_design": "(filled after run)",
+  "notes": "E001 is not edited or superseded: it remains the record for scoring 0.1.0. This experiment is the record for 0.2.0. Both stay in the log, each naming its version, which is the entire reason the version stamps exist."
+}

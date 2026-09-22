@@ -32,6 +32,22 @@ Hypothesis, pre-registered criterion, data snapshot names and ranges, periods, h
 | the frozen model equals the research fit | artefact fit rows/ranges/Platt (a, b) vs the E013-style fit in the weekly paper record | identical (61,971 rows to 2025-03-30; a = 1.034, b = 0.196) |
 | the live outcome tracker equals the research label rule | weekly report consistency check; `tests/test_parity.py` | 46/46 hours equal to 1e-16; unit test across a gap |
 
+## Numeric precision (verified 2026-09-22)
+
+- **The replay is bit-reproducible.** Computing the same hours directly, through one worker
+  process, and through the full worker pool gives identical values to the last bit; running the
+  same call twice gives identical values; and the stored caches agree exactly with a fresh
+  computation when read correctly.
+- **Reading is where precision is lost.** `pandas.read_csv` with its default (or `"high"`) float
+  parser is *not* bit-exact: on the replay cache it loses up to **7.28e-12** on a price-level
+  value. The csv module is exact, and so is `float_precision="round_trip"`.
+- **Rule:** anything reading numbers this project wrote uses the csv module (`read_replay`) or
+  passes `float_precision="round_trip"`. Every loader in `agent/research/` does, and
+  `tests/test_numeric_precision.py` fails if one stops.
+- This was not academic: an apparent 1.46e-11 difference between scoring 0.1.0 and 0.2.0 on
+  clean hours (reported in E016's first write-up) was entirely the reader. The true difference
+  is zero, and the record was corrected.
+
 ## Secrets
 
 `.env` is git-ignored; only `.env.example` (placeholders) is tracked. Secrets live in `.env`

@@ -25,8 +25,13 @@ an exchange outage — was treated as consecutive.
 **Verified against history before deployment (E016, principle 7).** Full replay of 68,619 hours
 under both versions:
 - on the 62,262 hours whose window has **no gap — every live hour so far — the output is
-  identical** (worst relative difference 3e-16, i.e. CSV round-trip noise; signals and patterns
-  exactly equal). This is the safety property, and `tests/test_scoring_golden.py` pins it.
+  identical**: same signals, same patterns, and **zero** numeric difference in every field
+  checked. This is the safety property, and `tests/test_scoring_golden.py` pins it.
+  *(Correction, same day: the first write-up quoted a worst difference of 1.46e-11 and blamed
+  CSV precision. Both were wrong — the comparison script read the cache with pandas' default
+  float parser, which loses up to 7.28e-12. The csv module and `float_precision="round_trip"`
+  are exact, and the two replays agree bit for bit. Every research CSV loader now passes
+  `round_trip`, and `tests/test_numeric_precision.py` keeps it that way.)*
 - on the 6,357 gap-affected hours (9.26%), mean completeness falls 0.850 → 0.568 and the signal
   changes on 2,702 of them (42.5%), because trend becomes unavailable on 81%, chart pattern on
   32%, volume on 8% and momentum on 6%. Across the whole record 3.94% of hours change signal.

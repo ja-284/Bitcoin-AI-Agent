@@ -1,4 +1,4 @@
-﻿"""
+"""
 On-chain data for research (Phase 8.5): daily network statistics from blockchain.info's
 free charts API (values derived from immutable block data) and difficulty adjustments
 with exact block timestamps from mempool.space.
@@ -83,7 +83,7 @@ def _latest(prefix: str) -> Path | None:
 
 def load_onchain(path: Path | None = None) -> pd.DataFrame:
     path = path or _latest("onchain") or download_onchain()
-    df = pd.read_csv(path, index_col="day", parse_dates=True)
+    df = pd.read_csv(path, index_col="day", parse_dates=True, float_precision="round_trip")
     df.index = pd.DatetimeIndex(df.index, tz="UTC") if df.index.tz is None else df.index.tz_convert("UTC")
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:
         raise ValueError("on-chain history must be strictly increasing by day")
@@ -92,7 +92,7 @@ def load_onchain(path: Path | None = None) -> pd.DataFrame:
 
 def load_difficulty(path: Path | None = None) -> pd.DataFrame:
     path = path or _latest("difficulty_adjustments") or download_difficulty()
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, float_precision="round_trip")
     df.index = pd.to_datetime(df["adjusted_at"], utc=True, format="ISO8601")
     df = df.drop(columns=["adjusted_at"])
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:

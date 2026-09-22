@@ -69,7 +69,7 @@ def _latest() -> Path | None:
 
 def load_klines_extra(path: Path | None = None) -> pd.DataFrame:
     path = path or _latest() or download_klines_extra()
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, float_precision="round_trip")
     df.index = pd.to_datetime(df["as_of"], utc=True, format="ISO8601")
     df = df.drop(columns=["as_of"])
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:

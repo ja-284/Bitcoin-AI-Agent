@@ -1,4 +1,4 @@
-﻿"""
+"""
 Macro / cross-market data for research (Phase 8.4): daily closes of US stocks, the
 dollar index, gold, oil and the 10-year yield, from Yahoo Finance's free chart API.
 
@@ -69,7 +69,7 @@ def _latest() -> Path | None:
 def load_macro(path: Path | None = None) -> pd.DataFrame:
     """Daily closes, index = trading date (naive), one column per series; NaN on days a market was closed."""
     path = path or _latest() or download_macro()
-    df = pd.read_csv(path, index_col="trading_date", parse_dates=True)
+    df = pd.read_csv(path, index_col="trading_date", parse_dates=True, float_precision="round_trip")
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:
         raise ValueError("macro history must be strictly increasing by trading date")
     return df

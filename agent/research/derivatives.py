@@ -96,7 +96,7 @@ def _latest(prefix: str) -> Path | None:
 def load_funding(path: Path | None = None) -> pd.Series:
     """Settled funding rates indexed by settlement time (UTC). Validated: increasing, finite, ~8h spacing."""
     path = path or _latest(f"funding_{SYMBOL.lower()}") or download_funding()
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, float_precision="round_trip")
     s = pd.Series(df["funding_rate"].to_numpy(dtype=float), index=pd.to_datetime(df["funding_time"], utc=True, format="ISO8601"), name="funding_rate")
     if not s.index.is_monotonic_increasing or s.index.has_duplicates:
         raise ValueError("funding history must be strictly increasing in time")
@@ -111,7 +111,7 @@ def load_funding(path: Path | None = None) -> pd.Series:
 
 def load_premium(path: Path | None = None) -> pd.DataFrame:
     path = path or _latest(f"premium_{SYMBOL.lower()}_1h") or download_premium()
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, float_precision="round_trip")
     df.index = pd.to_datetime(df["as_of"], utc=True, format="ISO8601")
     df = df.drop(columns=["as_of"])
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:
