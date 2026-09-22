@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T13:22:43.262899+00:00",
+  "generated_at": "2026-09-22T14:17:26.067680+00:00",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.1.0",
   "schema_version": {
@@ -8,12 +8,12 @@
     "match": true
   },
   "live_since": "2026-09-19T09:00:00+00:00",
-  "live_hours": 76.4,
+  "live_hours": 77.3,
   "health_last_7_days": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-22T13:22:43.262899+00:00",
+    "now": "2026-09-22T14:17:26.067680+00:00",
     "expected_hours": 76,
-    "predictions": 67,
+    "predictions": 68,
     "missing_hours": [
       "2026-09-19T10:00:00+00:00",
       "2026-09-19T12:00:00+00:00",
@@ -27,40 +27,40 @@
     ],
     "fetch_delay_min": {
       "min": 1.0371253,
-      "median": 12.535106616666667,
+      "median": 12.538791566666667,
       "max": 59.32737363333333
     },
     "price_sources": {
-      "binance": 67
+      "binance": 68
     },
     "synthetic_rows": 0,
     "pipeline_versions": {
       "0.1.0": 4,
-      "0.2.0": 63
+      "0.2.0": 64
     },
     "rows_without_explanation": 0,
     "rows_with_zero_news": 0,
-    "mean_news_items": 32.46268656716418,
+    "mean_news_items": 32.794117647058826,
     "run_errors": {
       "news_error": 17
     },
     "timestamp_rule_violations": [],
     "outcome_coverage": {
       "1h": {
-        "due": 65,
-        "ok": 65,
+        "due": 66,
+        "ok": 66,
         "unavailable": 0,
         "overdue": 0
       },
       "6h": {
-        "due": 60,
-        "ok": 60,
+        "due": 61,
+        "ok": 61,
         "unavailable": 0,
         "overdue": 0
       },
       "24h": {
-        "due": 42,
-        "ok": 42,
+        "due": 43,
+        "ok": 43,
         "unavailable": 0,
         "overdue": 0
       },
@@ -80,9 +80,9 @@
   },
   "health_since_go_live": {
     "since": "2026-09-19T09:00:00+00:00",
-    "now": "2026-09-22T13:22:43.262899+00:00",
+    "now": "2026-09-22T14:17:26.067680+00:00",
     "expected_hours": 76,
-    "predictions": 67,
+    "predictions": 68,
     "missing_hours": [
       "2026-09-19T10:00:00+00:00",
       "2026-09-19T12:00:00+00:00",
@@ -96,40 +96,40 @@
     ],
     "fetch_delay_min": {
       "min": 1.0371253,
-      "median": 12.535106616666667,
+      "median": 12.538791566666667,
       "max": 59.32737363333333
     },
     "price_sources": {
-      "binance": 67
+      "binance": 68
     },
     "synthetic_rows": 0,
     "pipeline_versions": {
       "0.1.0": 4,
-      "0.2.0": 63
+      "0.2.0": 64
     },
     "rows_without_explanation": 0,
     "rows_with_zero_news": 0,
-    "mean_news_items": 32.46268656716418,
+    "mean_news_items": 32.794117647058826,
     "run_errors": {
       "news_error": 17
     },
     "timestamp_rule_violations": [],
     "outcome_coverage": {
       "1h": {
-        "due": 65,
-        "ok": 65,
+        "due": 66,
+        "ok": 66,
         "unavailable": 0,
         "overdue": 0
       },
       "6h": {
-        "due": 60,
-        "ok": 60,
+        "due": 61,
+        "ok": 61,
         "unavailable": 0,
         "overdue": 0
       },
       "24h": {
-        "due": 42,
-        "ok": 42,
+        "due": 43,
+        "ok": 43,
         "unavailable": 0,
         "overdue": 0
       },
@@ -148,32 +148,32 @@
     }
   },
   "signal_record": {
-    "rows_pipeline_0_2_0": 63,
+    "rows_pipeline_0_2_0": 64,
     "signal_mix": {
-      "BUY": 52,
+      "BUY": 53,
       "SELL": 1,
       "HOLD": 10
     },
     "by_horizon": {
       "1h": {
-        "n": 62,
-        "base_rate_up": 0.5806451612903226,
-        "naive_rate": 0.5806451612903226,
-        "acted_share": 0.8387096774193549,
-        "acted_accuracy": 0.5769230769230769,
-        "acted_n": 52,
+        "n": 63,
+        "base_rate_up": 0.5873015873015873,
+        "naive_rate": 0.5873015873015873,
+        "acted_share": 0.8412698412698413,
+        "acted_accuracy": 0.5849056603773585,
+        "acted_n": 53,
         "edge": {
-          "point": 0.0018792765149420253,
+          "point": 0.0019280176106694171,
           "ci_low": NaN,
           "ci_high": NaN,
           "interval_available": false,
           "hours_needed_for_interval": 96
         },
-        "buy_and_hold_mean_return": 0.0010724695045911641,
+        "buy_and_hold_mean_return": 0.0011148611158479783,
         "mean_return_by_signal": {
           "BUY": {
-            "n": 51,
-            "mean": 0.0012086040359460702
+            "n": 52,
+            "mean": 0.0012573451316734623
           },
           "HOLD": {
             "n": 10,
@@ -185,7 +185,7 @@
           }
         },
         "confidence_reliability": {
-          "ece": 0.3240684431841597,
+          "ece": 0.315374019443491,
           "buckets": [
             {
               "lower": 0.7,
@@ -200,11 +200,11 @@
             {
               "lower": 0.8,
               "upper": 0.9,
-              "n": 21,
-              "mean_predicted": 0.8604755854047459,
-              "observed": 0.47619047619047616,
-              "ci_low": 0.28343712296762946,
-              "ci_high": 0.6763078209973324,
+              "n": 22,
+              "mean_predicted": 0.8606023308376538,
+              "observed": 0.5,
+              "ci_low": 0.3072180469247956,
+              "ci_high": 0.6927819530752044,
               "enough_rows": false
             },
             {
@@ -231,24 +231,24 @@
         }
       },
       "6h": {
-        "n": 57,
-        "base_rate_up": 0.6842105263157895,
-        "naive_rate": 0.6842105263157895,
-        "acted_share": 0.8245614035087719,
-        "acted_accuracy": 0.6808510638297872,
-        "acted_n": 47,
+        "n": 58,
+        "base_rate_up": 0.6896551724137931,
+        "naive_rate": 0.6896551724137931,
+        "acted_share": 0.8275862068965517,
+        "acted_accuracy": 0.6875,
+        "acted_n": 48,
         "edge": {
-          "point": 0.006906777744830714,
+          "point": 0.007013957484982006,
           "ci_low": NaN,
           "ci_high": NaN,
           "interval_available": false,
           "hours_needed_for_interval": 96
         },
-        "buy_and_hold_mean_return": 0.006303473946891721,
+        "buy_and_hold_mean_return": 0.006397221587167116,
         "mean_return_by_signal": {
           "BUY": {
-            "n": 46,
-            "mean": 0.006703389295753865
+            "n": 47,
+            "mean": 0.006810569035905157
           },
           "HOLD": {
             "n": 10,
@@ -260,7 +260,7 @@
           }
         },
         "confidence_reliability": {
-          "ece": 0.22112861011849785,
+          "ece": 0.21358759776800784,
           "buckets": [
             {
               "lower": 0.7,
@@ -275,11 +275,11 @@
             {
               "lower": 0.8,
               "upper": 0.9,
-              "n": 19,
-              "mean_predicted": 0.8598628378335093,
-              "observed": 0.5789473684210527,
-              "ci_low": 0.36275551465160105,
-              "ci_high": 0.7685837960796962,
+              "n": 20,
+              "mean_predicted": 0.8598276968065827,
+              "observed": 0.6,
+              "ci_low": 0.3865779423152061,
+              "ci_high": 0.7811960325858074,
               "enough_rows": false
             },
             {
@@ -306,24 +306,24 @@
         }
       },
       "24h": {
-        "n": 39,
-        "base_rate_up": 0.8974358974358975,
-        "naive_rate": 0.8974358974358975,
-        "acted_share": 0.7435897435897436,
-        "acted_accuracy": 0.8275862068965517,
-        "acted_n": 29,
+        "n": 40,
+        "base_rate_up": 0.9,
+        "naive_rate": 0.9,
+        "acted_share": 0.75,
+        "acted_accuracy": 0.8333333333333334,
+        "acted_n": 30,
         "edge": {
-          "point": 0.028923305924166018,
+          "point": 0.02787863618682334,
           "ci_low": NaN,
           "ci_high": NaN,
           "interval_available": false,
           "hours_needed_for_interval": 96
         },
-        "buy_and_hold_mean_return": 0.03912434757619026,
+        "buy_and_hold_mean_return": 0.03840355363783252,
         "mean_return_by_signal": {
           "BUY": {
-            "n": 28,
-            "mean": 0.04058801242481852
+            "n": 29,
+            "mean": 0.03954334268747584
           },
           "HOLD": {
             "n": 10,
@@ -335,7 +335,7 @@
           }
         },
         "confidence_reliability": {
-          "ece": 0.09462614257407125,
+          "ece": 0.08839561273954334,
           "buckets": [
             {
               "lower": 0.7,
@@ -360,11 +360,11 @@
             {
               "lower": 0.9,
               "upper": 0.95,
-              "n": 14,
-              "mean_predicted": 0.939659581266331,
-              "observed": 0.9285714285714286,
-              "ci_low": 0.6853073044604219,
-              "ci_high": 0.9872781138877085,
+              "n": 15,
+              "mean_predicted": 0.9375296256844579,
+              "observed": 0.9333333333333333,
+              "ci_low": 0.7018292244757601,
+              "ci_high": 0.9881334113938051,
               "enough_rows": false
             },
             {
@@ -389,7 +389,7 @@
     }
   },
   "shadow_record": {
-    "n": 13,
+    "n": 14,
     "first_hour": "2026-09-21T17:00:00+00:00",
     "expected_hours": 20,
     "missing_hours": [
@@ -406,10 +406,10 @@
     "live_close_mismatch": 0,
     "live_close_unchecked": 0,
     "model_versions": {
-      "move_size_1h_v1": 13
+      "move_size_1h_v1": 14
     },
     "outcomes": {
-      "ok_prospective": 12,
+      "ok_prospective": 13,
       "unavailable": 0,
       "pending": 1
     },
@@ -422,17 +422,17 @@
       "latest": null
     },
     "evaluation": {
-      "n": 12,
-      "base_rate_large": 0.4166666666666667,
-      "mean_stated_p": 0.494454104903133,
-      "brier": 0.23837521432122752,
-      "brier_base_rate": 0.24305555555555555,
-      "accuracy": 0.6666666666666666,
-      "naive_rate": 0.5833333333333333,
-      "brier_rel_gain": 0.01925626107837819,
-      "rank_corr_p_vs_abs_return": 0.3356643356643357,
-      "ece": 0.14346462873312932,
-      "interval_note": "no intervals yet: needs >= 192 hours (have 12)",
+      "n": 13,
+      "base_rate_large": 0.46153846153846156,
+      "mean_stated_p": 0.4930915929188341,
+      "brier": 0.24110016022593184,
+      "brier_base_rate": 0.24852071005917167,
+      "accuracy": 0.6153846153846154,
+      "naive_rate": 0.5384615384615384,
+      "brier_rel_gain": 0.029858879090893575,
+      "rank_corr_p_vs_abs_return": 0.2912087912087912,
+      "ece": 0.09217823030036915,
+      "interval_note": "no intervals yet: needs >= 192 hours (have 13)",
       "reliability": [
         {
           "lower": 0.3,
@@ -447,11 +447,11 @@
         {
           "lower": 0.4,
           "upper": 0.5,
-          "n": 6,
-          "mean_predicted": 0.46116014954147483,
-          "observed": 0.3333333333333333,
-          "ci_low": 0.09676933255921683,
-          "ci_high": 0.7000116786584712,
+          "n": 7,
+          "mean_predicted": 0.4633860494794423,
+          "observed": 0.42857142857142855,
+          "ci_low": 0.15821692226262685,
+          "ci_high": 0.7495457695909742,
           "enough_rows": false
         },
         {
@@ -480,7 +480,7 @@
   },
   "watch_list": {
     "news_hours": {
-      "have": 63,
+      "have": 64,
       "need": 500,
       "ready": false
     },
@@ -498,79 +498,79 @@
     "reference": "development period 2017-08-27 -> 2025-06-30 (snapshot btcusdt_1h_2026-09-19.csv); raw feature values (before log)",
     "features": {
       "tr_mean_14_rel": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.008219970356210995,
         "dev_iqr": 0.0062625525281903545,
-        "live_median": 0.007289779661575987,
-        "median_shift_iqr": -0.14853219840437779,
+        "live_median": 0.0070932405104356154,
+        "median_shift_iqr": -0.1799154323582117,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "rv_24": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.005213735518525552,
         "dev_iqr": 0.004240295289740068,
-        "live_median": 0.005897441201439364,
-        "median_shift_iqr": 0.16124011093475604,
+        "live_median": 0.005872243295530115,
+        "median_shift_iqr": 0.15529762245518755,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "rv_168": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.005764971032744351,
         "dev_iqr": 0.0034698771587411527,
-        "live_median": 0.004292136196056587,
-        "median_shift_iqr": -0.424463106129699,
+        "live_median": 0.004297325618476734,
+        "median_shift_iqr": -0.4229675424014345,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "vol_ratio_24_168": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.8807932168054635,
         "dev_iqr": 0.4531093482009425,
-        "live_median": 1.386270304847078,
-        "median_shift_iqr": 1.1155741766277754,
+        "live_median": 1.3810428039425076,
+        "median_shift_iqr": 1.1040372243990781,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "trades_rel_24h": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.8714218327168003,
         "dev_iqr": 0.48413926586490463,
-        "live_median": 0.7204612914434434,
-        "median_shift_iqr": -0.3118122241204069,
+        "live_median": 0.7625024827761675,
+        "median_shift_iqr": -0.22497524497636162,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "trades_rel_168h": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.8531530324057546,
         "dev_iqr": 0.5489125694216114,
-        "live_median": 0.9801067381124521,
-        "median_shift_iqr": 0.2312821982569437,
+        "live_median": 1.0520992006415733,
+        "median_shift_iqr": 0.3624368967273751,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "hour_sin": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.0,
         "dev_iqr": 1.4142135623730954,
-        "live_median": 0.0,
-        "median_shift_iqr": 0.0,
+        "live_median": -0.1294095225512604,
+        "median_shift_iqr": -0.09150635094610965,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "hour_cos": {
-        "n": 13,
+        "n": 14,
         "dev_median": -1.8369701987210297e-16,
         "dev_iqr": 1.4142135623730954,
-        "live_median": 6.123233995736766e-17,
-        "median_shift_iqr": 1.7319121124709863e-16,
+        "live_median": -6.123233995736765e-17,
+        "median_shift_iqr": 8.659560562354932e-17,
         "share_outside_dev_1_99": 0.0,
         "status": "too few rows to flag"
       },
       "is_weekend": {
-        "n": 13,
+        "n": 14,
         "dev_median": 0.0,
         "dev_iqr": 1.0,
         "live_median": 0.0,
@@ -580,38 +580,38 @@
       }
     },
     "probability": {
-      "n": 13,
+      "n": 14,
       "dev_median": 0.4683123149656863,
       "dev_q05_q95": [
         0.20662709854077255,
         0.7428892643106039
       ],
-      "live_median": 0.481960431752392,
+      "live_median": 0.4847881308359435,
       "live_q05_q95": [
-        0.4179581315001024,
-        0.601255229969305
+        0.4202149940498243,
+        0.6008650943817453
       ],
       "share_above_dev_q95": 0.0,
       "share_below_dev_q05": 0.0,
       "status": "too few rows to flag"
     },
     "outcomes": {
-      "n": 12,
+      "n": 13,
       "dev_share": 0.517990960781455,
       "validation_share": 0.4752037784718519,
-      "live_share": 0.4166666666666667,
+      "live_share": 0.46153846153846156,
       "live_share_ci95": [
-        0.13772189581554434,
-        0.6956114375177891
+        0.19054070966539732,
+        0.7325362134115259
       ],
       "status": "too few rows to flag"
     },
     "missing_and_timing": {
       "shadow_unavailable_share": 0.0,
-      "shadow_rows": 13,
+      "shadow_rows": 14,
       "fetch_delay_by_week_median_min": {
         "2026-W38": 12.415510699999999,
-        "2026-W39": 12.552776216666672
+        "2026-W39": 12.557378225
       },
       "status": "too few rows to flag"
     },
@@ -619,7 +619,7 @@
     "note": "Flags are descriptive: investigate and document; never retrain or retune from them. Reference distributions are frozen."
   },
   "parity": {
-    "compared": 63,
+    "compared": 64,
     "parity_breaks": 0,
     "breaks": [],
     "skipped": [
@@ -641,20 +641,20 @@
       ]
     ],
     "verdict": "PARITY",
-    "candles_fetched": 326
+    "candles_fetched": 327
   },
   "paper_move_size_1h": {
-    "n": 75,
-    "base_rate_large": 0.32,
-    "mean_stated_p": 0.3868677696953515,
-    "brier": 0.19776851574534804,
-    "brier_base_rate": 0.21759999999999996,
-    "accuracy": 0.72,
-    "naive_rate": 0.6799999999999999,
-    "brier_rel_gain": 0.09113733572909888,
-    "rank_corr_p_vs_abs_return": 0.24970128022759597,
-    "ece": 0.08483467228021968,
-    "interval_note": "no intervals yet: needs >= 192 hours (have 75)",
+    "n": 76,
+    "base_rate_large": 0.32894736842105265,
+    "mean_stated_p": 0.3880503181086659,
+    "brier": 0.19876892357873008,
+    "brier_base_rate": 0.22074099722991694,
+    "accuracy": 0.7105263157894737,
+    "naive_rate": 0.6710526315789473,
+    "brier_rel_gain": 0.09953780188961203,
+    "rank_corr_p_vs_abs_return": 0.26118933697881064,
+    "ece": 0.07683344565952269,
+    "interval_note": "no intervals yet: needs >= 192 hours (have 76)",
     "reliability": [
       {
         "lower": 0.1,
@@ -689,11 +689,11 @@
       {
         "lower": 0.4,
         "upper": 0.5,
-        "n": 15,
-        "mean_predicted": 0.4539305889775429,
-        "observed": 0.4,
-        "ci_low": 0.19824228082594664,
-        "ci_high": 0.642535572434923,
+        "n": 16,
+        "mean_predicted": 0.4553562677356494,
+        "observed": 0.4375,
+        "ci_low": 0.2309836333518552,
+        "ci_high": 0.6682180439322347,
         "enough_rows": false
       },
       {
@@ -729,7 +729,7 @@
     ],
     "note": "Paper record computed after the fact from point-in-time candle features; the model is fitted on data before the sealed holdout only. Not a live shadow run. Read intervals, not points, until n is in the thousands.",
     "tracker_consistency": {
-      "hours_compared": 66,
+      "hours_compared": 67,
       "max_abs_difference": 1.0495077029659683e-16,
       "agree_within_1e-9": true
     },
@@ -748,10 +748,6 @@
     },
     "latest": [
       {
-        "as_of": "2026-09-22 07:00:00+00:00",
-        "p_large_move": 0.4232741603162364
-      },
-      {
         "as_of": "2026-09-22 08:00:00+00:00",
         "p_large_move": 0.48196043175239217
       },
@@ -766,6 +762,10 @@
       {
         "as_of": "2026-09-22 11:00:00+00:00",
         "p_large_move": 0.45396818774314995
+      },
+      {
+        "as_of": "2026-09-22 12:00:00+00:00",
+        "p_large_move": 0.4767414491072465
       }
     ]
   }

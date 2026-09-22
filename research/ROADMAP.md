@@ -102,6 +102,28 @@ Full post-mortem: `docs/ops/incident_2026-09-21_shadow_step.md`. Summary for thi
   (`.github/workflows/tests.yml`) — the check that would have caught the first defect before
   deployment, since the guard test loads the model on a GitHub runner.
 
+## Where the project stands after the incident response (2026-09-22)
+
+Done today: root cause found and fixed, second defect found and fixed, both documented, CI
+test workflow added, full post-fix audit clean (67 predictions, 0 cutoff/fetch/version
+violations, 0 fallback rows, parity 63/63, shadow rows reproduce their probabilities, all
+append-only guards in place, schema 3 = code 3, holdout untouched), 194 tests pass locally
+**and on GitHub's runners**.
+
+**Next actions, in order:**
+1. Confirm the 14:12 UTC run writes the 13:00 prediction **with news present** (the first run
+   after the news fix) and a shadow row for 13:00. Then confirm a few more hourly runs stay
+   green — one success does not disprove a ~50% failure rate.
+2. Re-run the weekly report and commit it (the Phase 13 weekly audit).
+3. Resume the monitoring rhythm: weekly report + audit; Phase H checkpoints at 500 / 2,000 /
+   5,000 **prospective** shadow hours; Phase J when ≥ 500 live hours with news; watch-list
+   re-tests at 6 months; the holdout decision only after those, and only with the user.
+
+**Open user decisions:** healthchecks.io heartbeat; least-privilege database role; whether to
+halve the AI cost by dropping the echoed headline from the news schema (a change to the AI's
+task — would need E009 re-run); whether to automate the weekly report commit. PAT renewal
+before 2027-09-20.
+
 ## Paused 2026-09-21 19:58 UTC — resume point (history; superseded by the incident work above)
 
 **State.** Everything in the "Backend hardening roadmap" above is recorded as done except the calendar-bound stages (Phase 13 continuing; H, J, K continuing/deferred; L nothing justified; the final holdout decision). Last commit `2fdf7bb` (readiness gate, pinned requirements, README); tree clean, `main` = `origin/main`. Tests: 185 pass + 7 opt-in integration. Holdout: **sealed** (`research/HOLDOUT_ACCESS.log` does not exist). Live system: healthy; shadow record running from GitHub since 19:12 UTC (rows for 17:00 and 18:00 UTC; the 17:00 row graded).
