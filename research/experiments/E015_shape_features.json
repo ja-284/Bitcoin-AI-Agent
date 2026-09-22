@@ -1,7 +1,7 @@
 {
   "id": "E015",
   "date": "2026-09-22",
-  "git_commit": "(filled after run)",
+  "git_commit": "(this commit)",
   "status": "exploratory (pre-registered criterion; fit-free, written before any result was seen)",
   "why_now": "Phase L says directional research happens only when justified, and the standing position after E011 is that nothing is. The user asked for a genuine search for new signals, so this is run as an explicit, logged, fit-free exploration under the existing Phase 8 rules -- not as a reopening of E011's conclusion, and not as a change to anything live. A negative result is the expected outcome and is recorded as such.",
   "hypothesis": "Information about the next hours survives in the SHAPE of recent candles, in where price sits inside its recent range, in how big the average trade is, and in how strongly returns are currently autocorrelated -- none of which the 47 features of E003-E008 extracted. The strongest prior is on autocorr_lag1_168: E002, E005 and E008 all found a weak short-horizon REVERSAL, so a direct per-hour measure of whether the market is currently reverting should carry at least as much as those did.",
@@ -22,12 +22,61 @@
   "what_a_pass_would_and_would_not_mean": "A pass would make the feature a candidate for a future pre-registered fitted test (Phase 9 style, walk-forward, purged) -- it would NOT change scoring 0.1.0, the live system, or any earlier conclusion, and it would NOT be evaluated on the sealed holdout.",
   "pipeline_version": "0.2.0",
   "scoring_version": "0.1.0 (untouched)",
-  "periods": {"exploration": "2017-08-27 -> 2023-12-31", "validation": "2024-01-01 -> 2025-06-30", "holdout": "sealed, not read (the loader truncates at 2025-07-01)"},
-  "horizons_hours": [1, 6, 24, 72, 168],
+  "periods": {
+    "exploration": "2017-08-27 -> 2023-12-31",
+    "validation": "2024-01-01 -> 2025-06-30",
+    "holdout": "sealed, not read (the loader truncates at 2025-07-01)"
+  },
+  "horizons_hours": [
+    1,
+    6,
+    24,
+    72,
+    168
+  ],
   "leakage_guards": "Point-in-time by construction (trailing windows, min_periods = window, baselines exclude the hour itself); tests/test_shape_features.py garbles the future and asserts the past does not move, checks that a gap blanks every window touching it, and checks each formula against hand-built candles. The harness's reserved-prefix rule already caught one of these names before any result existed.",
-  "metrics": "(filled after run)",
-  "results": "(filled after run)",
-  "consistent_across_time": "(filled after run)",
-  "affected_design": "(filled after run)",
+  "metrics": {
+    "hours": 68619,
+    "tests": "8 features x 5 horizons x 2 targets = 80",
+    "passing_the_pre_registered_bar": 0,
+    "consistent_but_below_the_0.10_floor (direction, both periods, CIs exclude zero)": {
+      "up_streak_6 @1h": "expl -0.080 [-0.087,-0.073], vali -0.060 [-0.075,-0.045]",
+      "up_streak_6 @6h": "expl -0.035, vali -0.035",
+      "close_loc_24 @1h": "expl -0.044, vali -0.050",
+      "close_loc_24 @6h": "expl -0.025, vali -0.039",
+      "wick_asym_1h @1h": "expl +0.034, vali +0.044",
+      "wick_asym_1h @6h": "expl +0.012, vali +0.026",
+      "body_ratio_1h @72h": "expl +0.010, vali +0.019 (tiny; expected among 80 tests)"
+    },
+    "nothing at all": [
+      "donchian_pos_168",
+      "trade_size_rel_24",
+      "amihud_rel_168",
+      "autocorr_lag1_168"
+    ],
+    "magnitude side": "no feature passes; body_ratio_1h looked promising in exploration (+0.039 at 1h) and collapsed in validation (+0.008)",
+    "mean next-hour return by streak (exploration)": {
+      "-6": "+0.146%",
+      "-5": "+0.102%",
+      "-4": "+0.089%",
+      "-3": "+0.031%",
+      "-2": "+0.028%",
+      "-1": "+0.007%",
+      "+1": "+0.007%",
+      "+2": "-0.017%",
+      "+3": "-0.028%",
+      "+4": "-0.024%",
+      "+5": "-0.038%",
+      "+6": "-0.040%"
+    },
+    "economic test (rule and cost fixed in advance: act at |streak| >= 3, 0.10% round trip)": {
+      "1h exploration": "gross +0.0426% per acted hour [+0.026,+0.062] on 19.6% of hours -> 0.43x the cost -> loses money",
+      "1h validation": "gross +0.0398% [+0.023,+0.060] on 21.6% of hours -> 0.40x the cost -> loses money",
+      "6h": "gross edge indistinguishable from zero in exploration; 0.54x the cost in validation"
+    }
+  },
+  "results": "NO PASS. Zero of 80 tests meet the pre-registered bar (|rho| >= 0.10 in both periods): the largest effect in the whole group is 0.080. Seven direction tests are consistent and statistically clear but far below the size floor, and every one of them is a REVERSAL at 1-6h: a longer run of up-closes, a close higher in the 24h range, and a smaller upper-wick rejection all precede slightly lower returns. up_streak_6 at 1h (-0.080 / -0.060) is the strongest directional consistency the programme has found -- the previous best in the reversal family was |rho| <= 0.05 -- and the mean next-hour return falls monotonically across all twelve streak levels, from +0.146% after six down-closes to -0.040% after six up-closes. The economic test settles it: a fixed rule acting at |streak| >= 3 earns a gross +0.043% (exploration) and +0.040% (validation) per acted hour against a 0.10% round-trip cost -- 0.4x the cost of acting, i.e. a clear loss before slippage. My strongest prior going in (autocorr_lag1_168, a direct measure of whether the market is currently reverting) found nothing at any horizon. Trade size, illiquidity and the weekly range position found nothing.",
+  "consistent_across_time": "The 1-6h reversal effects hold in both periods with the same sign and non-overlapping-with-zero intervals; the 72h body_ratio result is the kind of thing 80 tests produce by chance and is not treated as a finding.",
+  "affected_design": "Nothing changes. E011s conclusion stands and is if anything reinforced: the reversal family is real, better measured now, and still an order of magnitude too small to act on. up_streak_6 and close_loc_24 are recorded as the best available directional inputs IF a future pre-registered fitted test is ever justified, with the standing caveat that E011 already combined weaker members of this same family and found zero return edge. Scoring 0.1.0, the live system and the sealed holdout are untouched.",
   "notes": "Eight features x five horizons x two targets = 80 tests. With this many comparisons some will look interesting by chance; the two-period same-sign requirement plus the size floor is the guard against that, and it is the same guard every earlier group faced."
 }
