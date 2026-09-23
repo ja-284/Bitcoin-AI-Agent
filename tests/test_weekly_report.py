@@ -241,3 +241,55 @@ def test_a_missing_reference_never_costs_the_shadow_evaluation():
     sh = shadow_record(rows, rows[-1]["as_of"] + timedelta(hours=3), [], ewma=None)
     assert sh["evaluation"]["n"] == 12
     assert "evaluation_vs_ewma_reference" not in sh
+
+
+# ---------------------------------------------------------------- AI cost, from recorded token usage
+def _usage_meta(news=(1753, 2188), expl=(509, 266)):
+    u = {}
+    if news:
+        u["news"] = {"model": "claude-haiku-4-5", "input_tokens": news[0], "output_tokens": news[1]}
+    if expl:
+        u["explanation"] = {"model": "claude-sonnet-5", "input_tokens": expl[0], "output_tokens": expl[1]}
+    return {"ai_usage": u}
+
+
+def test_ai_cost_prices_the_recorded_tokens_exactly():
+    from agent.research.weekly_report import ai_cost
+
+    c = ai_cost([_pred(T0, meta=_usage_meta())], T0)
+    # 1753 x $1 + 2188 x $5 (Haiku 4.5) + 509 x $2 + 266 x $10 (Sonnet 5), per million tokens
+    expected = (1753 * 1 + 2188 * 5 + 509 * 2 + 266 * 10) / 1e6
+    assert c["mean_cost_per_run_usd"] == pytest.approx(expected, rel=1e-12)
+    assert c["projected_30_days_usd"] == pytest.approx(expected * 720, rel=1e-12)
+    assert c["steps"]["news"]["mean_output_tokens"] == 2188
+
+
+def test_ai_cost_never_counts_an_unknown_as_zero():
+    """A run with a part lacking figures, or an unpriced model, has an unknown total: left out and counted."""
+    from agent.research.weekly_report import ai_cost
+
+    rows = [_pred(T0, meta=_usage_meta()),
+            _pred(T0 + H, meta={"ai_usage": {"news": {"model": "claude-haiku-4-5", "usage_unavailable": True},
+                                             "explanation": {"model": "claude-sonnet-5", "input_tokens": 1, "output_tokens": 1}}}),
+            _pred(T0 + 2 * H, meta={"ai_usage": {"news": {"model": "some-new-model", "input_tokens": 9, "output_tokens": 9}}}),
+            _pred(T0 + 3 * H)]  # before usage was recorded
+    c = ai_cost(rows, T0)
+    assert (c["rows"], c["rows_with_usage"], c["runs_priced"]) == (4, 3, 1)
+    assert c["steps"]["news"]["usage_unavailable"] == 1 and c["unpriced_models"] == {"some-new-model": 1}
+    assert c["mean_cost_per_run_usd"] == pytest.approx((1753 * 1 + 2188 * 5 + 509 * 2 + 266 * 10) / 1e6)
+
+
+def test_a_run_whose_news_failed_is_priced_as_what_it_really_cost():
+    """No news call means no news cost -- a real saving, not a gap."""
+    from agent.research.weekly_report import ai_cost
+
+    c = ai_cost([_pred(T0, meta=_usage_meta(news=None))], T0)
+    assert c["runs_priced"] == 1 and c["mean_cost_per_run_usd"] == pytest.approx((509 * 2 + 266 * 10) / 1e6)
+
+
+def test_ai_cost_renders_before_and_after_measurement_begins():
+    from agent.research.weekly_report import _render_ai_cost, ai_cost
+
+    assert "not measured yet" in _render_ai_cost(ai_cost([_pred(T0)], T0))
+    line = _render_ai_cost(ai_cost([_pred(T0, meta=_usage_meta())], T0))
+    assert "per run" in line and "2026-09-23" in line and "news" in line

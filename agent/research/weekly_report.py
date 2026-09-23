@@ -107,6 +107,57 @@ def health(pred_rows: list[dict], outcome_rows: list[dict], now: datetime, since
     }
 
 
+#  List prices, USD per million tokens (input, output), read from Anthropic's pricing page on the date
+#  below. Only this report turns tokens into money: the live record stores the API's token counts,
+#  which never go stale, so a price change means editing this table, not the history.
+AI_PRICES_USD_PER_MTOK = {"claude-haiku-4-5": (1.0, 5.0), "claude-sonnet-5": (2.0, 10.0)}
+AI_PRICES_AS_OF = "2026-09-23"
+CACHE_WRITE_X, CACHE_READ_X = 1.25, 0.10  # standard multipliers on the input price (both calls use no caching today)
+
+
+def ai_cost(pred_rows: list[dict], since: datetime) -> dict:
+    """What the AI calls actually consumed (run_meta["ai_usage"], recorded since 2026-09-23), and its price."""
+    rows = [r for r in pred_rows if r["as_of"] >= since]
+    measured = [r for r in rows if (r.get("run_meta") or {}).get("ai_usage")]
+    steps: dict = {}
+    run_costs, unpriced = [], Counter()
+    for r in measured:
+        cost, priced = 0.0, True
+        for step, u in r["run_meta"]["ai_usage"].items():
+            s = steps.setdefault(step, {"calls": 0, "usage_unavailable": 0, "input": [], "output": []})
+            if "input_tokens" not in u or "output_tokens" not in u:
+                s["usage_unavailable"] += 1
+                priced = False  # a run with an unknown part has an unknown total: left out, and counted
+                continue
+            s["calls"] += 1
+            s["input"].append(u["input_tokens"])
+            s["output"].append(u["output_tokens"])
+            price = AI_PRICES_USD_PER_MTOK.get(u.get("model"))
+            if price is None:
+                unpriced[u.get("model")] += 1
+                priced = False
+                continue
+            p_in, p_out = price
+            cost += (u["input_tokens"] * p_in + u["output_tokens"] * p_out
+                     + u.get("cache_creation_input_tokens", 0) * p_in * CACHE_WRITE_X
+                     + u.get("cache_read_input_tokens", 0) * p_in * CACHE_READ_X) / 1e6
+        if priced:
+            run_costs.append(cost)
+    return {
+        "rows": len(rows), "rows_with_usage": len(measured),
+        "steps": {k: {"calls": v["calls"], "usage_unavailable": v["usage_unavailable"],
+                      "mean_input_tokens": float(np.mean(v["input"])) if v["input"] else None,
+                      "mean_output_tokens": float(np.mean(v["output"])) if v["output"] else None,
+                      "max_output_tokens": max(v["output"]) if v["output"] else None} for k, v in steps.items()},
+        "runs_priced": len(run_costs),
+        "mean_cost_per_run_usd": float(np.mean(run_costs)) if run_costs else None,
+        "max_cost_per_run_usd": max(run_costs) if run_costs else None,
+        # one priced run per hour: the extra schedule slots find the hour saved and make no AI call
+        "projected_30_days_usd": float(np.mean(run_costs)) * 24 * 30 if run_costs else None,
+        "unpriced_models": dict(unpriced), "prices_usd_per_mtok": AI_PRICES_USD_PER_MTOK, "prices_as_of": AI_PRICES_AS_OF,
+    }
+
+
 # ---------------------------------------------------------------- 2. signal record (scoring 0.1.0)
 def signal_record(pred_rows: list[dict], outcome_rows: list[dict]) -> dict:
     """Live scoring 0.1.0 vs naive per horizon. Only pipeline 0.2.0 rows (the corrected pipeline)."""
@@ -477,6 +528,7 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "live_since": LIVE.start.isoformat(), "live_hours": round((now - LIVE.start).total_seconds() / 3600, 1),
         "health_last_7_days": health(preds, outs, now, max(week_ago, LIVE.start)),
         "health_since_go_live": health(preds, outs, now, LIVE.start),
+        "ai_cost_last_7_days": ai_cost(preds, max(week_ago, LIVE.start)),
         "signal_record": signal_record(preds, outs),
         "watch_list": watch_list(preds, now),
     }
@@ -523,6 +575,19 @@ def _ci(d: dict, key: str, scale: float = 1.0) -> str:
     return " [" + fmt.format(ci[0] * scale) + ", " + fmt.format(ci[1] * scale) + "]"
 
 
+def _render_ai_cost(c: dict | None) -> str:
+    if not c or not c["rows_with_usage"]:
+        return "- AI cost (7d): not measured yet — each run records the API's own token counts from 2026-09-23"
+    if not c["runs_priced"]:
+        return f"- AI cost (7d): {c['rows_with_usage']} runs recorded usage, none could be fully priced (unpriced models: {c['unpriced_models'] or 'none'})"
+    steps = "; ".join(f"{k} ≈ {v['mean_input_tokens']:.0f} in / {v['mean_output_tokens']:.0f} out tokens"
+                      + (f" ({v['usage_unavailable']} without figures)" if v["usage_unavailable"] else "")
+                      for k, v in c["steps"].items() if v["calls"])
+    return (f"- AI cost (7d, measured on {c['runs_priced']} of {c['rows']} runs): ${c['mean_cost_per_run_usd']:.4f} per run "
+            f"(max ${c['max_cost_per_run_usd']:.4f}), ≈ ${c['projected_30_days_usd']:.2f} per 30 days at the list prices of "
+            f"{c['prices_as_of']}; {steps}")
+
+
 def render(rep: dict) -> str:
     h7, hall, sr = rep["health_last_7_days"], rep["health_since_go_live"], rep["signal_record"]
     L = [f"# Weekly live report — {rep['generated_at'][:16]} UTC", "",
@@ -537,6 +602,7 @@ def render(rep: dict) -> str:
          f"- Hours where a news feed was down (7d): {h7.get('hours_with_a_failed_news_source') or 'none'} "
          f"— a partial news failure still produces a number, so it is counted here rather than left invisible",
          "- Outcome coverage (since go-live): " + " · ".join(f"{k}: {v['ok']} ok / {v['unavailable']} unavailable / **{v['overdue']} overdue** of {v['due']} due" for k, v in hall["outcome_coverage"].items()),
+         _render_ai_cost(rep.get("ai_cost_last_7_days")),
          "", "## 2. Live signal record — the scoring under test", "",
          f"Rows (pipeline 0.2.0): {sr['rows_pipeline_0_2_0']} · signal mix {sr['signal_mix']} · scoring versions {sr['scoring_versions']}", "",
          "| horizon | graded n | acted | acted accuracy | naive | edge (BUY − SELL) | 95% interval | buy-and-hold mean |", "|---|---|---|---|---|---|---|---|"]

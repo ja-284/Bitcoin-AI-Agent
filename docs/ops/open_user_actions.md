@@ -117,14 +117,22 @@ report showing hours covered only by GitHub's own slots. Put a calendar reminder
 ## 4. Decide about the AI cost of news — a judgement call, not a task
 
 **What it is.** The news scorer sends each hour's headlines to Claude Haiku and gets back a
-structured score. The schema asks it to echo each headline back. At roughly 60 headlines an hour
-that costs about **$0.02 a run, near $15 a month** — above the "well under $10/month" estimate
-made when the window held about 16 headlines.
+structured score. The schema asks it to echo each headline back.
+
+**Measured, no longer estimated (2026-09-23).** Every run now records the token counts the API
+itself reports (`run_meta.ai_usage`), and the weekly report prices them. First real measurement,
+56 headlines: news 1,753 in / 2,188 out tokens ($0.0127), explanation 509 in / 266 out ($0.0037),
+**$0.0164 a run ≈ $11.80 a month** at today's list prices (Haiku 4.5 $1/$5, Sonnet 5 $2/$10 per
+million tokens). The earlier "$0.02 a run, near $15 a month" was a little high. It still exceeds the
+original "well under $10/month" estimate, made when the window held about 16 headlines. Most of the
+news cost is the answer (2,188 of the 3,941 news tokens, at five times the input price), and
+echoing the headline is a large share of that answer.
 
 **The options.**
 
 - **Leave it.** Simplest, and the news component has been validated as it stands (E009).
-- **Drop the echoed headline from the schema.** Roughly halves the cost. But it changes the AI's
+- **Drop the echoed headline from the schema.** Roughly halves the news cost (a few dollars a
+  month at today's volume; the weekly report will show the real before-and-after). But it changes the AI's
   task, so E009's validation would no longer apply and would need re-running (a few API calls and
   an afternoon). It also makes debugging harder: today a mis-scored headline is visible in the
   stored answer.

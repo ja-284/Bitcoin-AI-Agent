@@ -5,6 +5,22 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## backend — 2026-09-23 (the AI cost is measured, not estimated; the backend state is published hourly)
+
+- **Each run records what its AI calls really consumed** (`run_meta.ai_usage`: model, input and
+  output tokens, straight from the API's own figures). The one open cost decision (news cost,
+  `docs/ops/open_user_actions.md` item 4) rested on an estimate; it now rests on a measurement.
+  First real reading, 56 headlines: **$0.0164 a run ≈ $11.80 a month** at today's list prices
+  (the estimate had been ~$0.02 / ~$15). The weekly report prices the record, and a price change
+  means editing one dated table, never the history. The calls, prompts, schemas and limits are
+  untouched (a test pins that the recording sits after each call), so E009 still applies. Missing
+  figures are recorded as *unavailable*, never as zero; a refused answer is still counted, because it
+  was still billed. Pipeline and scoring versions unchanged: no input to any decision moved.
+- **`python -m agent.api.publish` runs every hour** as the last real step, after the migration change
+  was seen working in a scheduled run. It cannot fail the job.
+- Mutation testing: two new guards (usage no longer recorded; missing figures priced as zero), both
+  caught by the tests written for them. **28 of 28.**
+
 ## research — 2026-09-23 (testing the tests; the live checkpoints' own error rates; E023 registered)
 
 Nothing that runs changed.
