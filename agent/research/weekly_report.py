@@ -467,12 +467,13 @@ def fetch_rows() -> tuple[list[dict], list[dict]]:
 def build(now: datetime, with_paper: bool = True) -> dict:
     preds, outs = fetch_rows()
     week_ago = now - timedelta(days=7)
-    from agent.database.db import SCHEMA_VERSION, schema_version
+    from agent.database.db import SCHEMA_VERSION, schema_is_compatible, schema_version
 
     db_schema = schema_version()
     rep = {
         "generated_at": now.isoformat(), "pipeline_version": PIPELINE_VERSION, "scoring_version": SCORING_VERSION,
-        "schema_version": {"database": db_schema, "code": SCHEMA_VERSION, "match": db_schema == SCHEMA_VERSION},
+        # the same test the live job applies before writing -- one definition, not two
+        "schema_version": {"database": db_schema, "code": SCHEMA_VERSION, "match": schema_is_compatible(db_schema)},
         "live_since": LIVE.start.isoformat(), "live_hours": round((now - LIVE.start).total_seconds() / 3600, 1),
         "health_last_7_days": health(preds, outs, now, max(week_ago, LIVE.start)),
         "health_since_go_live": health(preds, outs, now, LIVE.start),

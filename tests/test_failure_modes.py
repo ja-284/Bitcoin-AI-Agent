@@ -220,8 +220,9 @@ def test_a_stale_database_schema_stops_the_run_before_anything_is_written(monkey
     """
     from agent.database import db
 
-    monkeypatch.setattr(db, "schema_version", lambda: "2")
-    with pytest.raises(RuntimeError, match="expects"):
+    older = str(int(db.SCHEMA_VERSION) - 1)
+    monkeypatch.setattr(db, "schema_version", lambda: older)
+    with pytest.raises(RuntimeError, match="expects at least"):
         db.assert_schema_current()
 
     monkeypatch.setattr(db, "schema_version", lambda: None)  # schema_meta does not exist at all
@@ -230,6 +231,35 @@ def test_a_stale_database_schema_stops_the_run_before_anything_is_written(monkey
 
     monkeypatch.setattr(db, "schema_version", lambda: db.SCHEMA_VERSION)
     db.assert_schema_current()  # matching version: no exception
+
+
+def test_a_database_ahead_of_the_code_is_accepted(monkeypatch):
+    """
+    Migrations are additive, so a database AHEAD of the code still has everything the code needs.
+    Accepting it is what lets a migration be applied first and the code deployed second, with no
+    moment in which the two disagree and the hourly job fails for nothing.
+    """
+    from agent.database import db
+
+    monkeypatch.setattr(db, "schema_version", lambda: str(int(db.SCHEMA_VERSION) + 1))
+    db.assert_schema_current()
+
+
+@pytest.mark.parametrize("garbage", ["", "four", "3.5", " "])
+def test_a_schema_version_that_is_not_a_number_fails_closed(monkeypatch, garbage):
+    from agent.database import db
+
+    monkeypatch.setattr(db, "schema_version", lambda: garbage)
+    with pytest.raises(RuntimeError):
+        db.assert_schema_current()
+
+
+def test_the_compatibility_rule_is_numeric_not_textual():
+    """'10' > '9' numerically but not as text -- a string comparison would be a latent bug."""
+    from agent.database import db
+
+    assert db.schema_is_compatible(str(int(db.SCHEMA_VERSION) + 10))
+    assert not db.schema_is_compatible(str(int(db.SCHEMA_VERSION) - 1))
 
 
 def test_the_schema_guard_runs_before_the_duplicate_check(monkeypatch):

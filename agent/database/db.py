@@ -46,22 +46,44 @@ def schema_version() -> Optional[str]:
         return row[0] if row else None
 
 
+def schema_is_compatible(found: Optional[str]) -> bool:
+    """
+    True when the database has AT LEAST the schema this code was written against.
+
+    "At least", not "exactly" (changed 2026-09-23). Migrations in this project are additive: they
+    add constraints, triggers and access rules and never remove anything older code relies on, so
+    a database that is AHEAD of the code still has everything the code needs. Requiring exact
+    equality turned every migration into a two-sided deployment with a window in which the running
+    code and the database disagree and the hourly job fails for no reason. With "at least", the
+    order is simply: migrate the database first, then deploy the code. A migration that ever
+    REMOVES or CHANGES something older code relies on breaks this assumption and must say so at
+    the top of its section in schema.sql.
+
+    Anything that is not a version number fails closed.
+    """
+    try:
+        return found is not None and int(found) >= int(SCHEMA_VERSION)
+    except ValueError:
+        return False
+
+
 def assert_schema_current() -> None:
     """
-    Fail loudly, before anything is written, if the database is not on the schema this code was
-    written against.
+    Fail loudly, before anything is written, if the database is OLDER than the schema this code
+    was written against.
 
-    A mismatch is not a cosmetic problem. Version 3 is what added the CHECK constraints (the
-    cutoff rule, fetch-after-cutoff, outcome consistency) and the append-only triggers, and a
-    good deal of code elsewhere is written on the assumption that those exist -- an older
-    database would quietly accept rows this project believes are impossible. Checking costs one
-    small query an hour; not checking costs a corrupted record that looks fine.
+    An older database is not a cosmetic problem. Version 3 added the CHECK constraints (the cutoff
+    rule, fetch-after-cutoff, outcome consistency) and the append-only triggers; version 4 locked
+    every table against Supabase's public API. Code elsewhere assumes those exist -- an older
+    database would quietly accept rows this project believes are impossible, or accept them from
+    anyone holding the public key. Checking costs one small query an hour; not checking costs a
+    corrupted record that looks fine.
     """
     found = schema_version()
-    if found != SCHEMA_VERSION:
+    if not schema_is_compatible(found):
         raise RuntimeError(
-            f"database schema is {found!r} but this code expects {SCHEMA_VERSION!r}. "
-            "The invariants and append-only triggers this code relies on may be missing. "
+            f"database schema is {found!r} but this code expects at least {SCHEMA_VERSION!r}. "
+            "The invariants, append-only triggers or access lockdown this code relies on may be missing. "
             "Apply the migrations first: python -c \"from agent.database.db import init_schema; init_schema()\""
         )
 
