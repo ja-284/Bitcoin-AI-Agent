@@ -72,7 +72,10 @@ hostname and the key are in every visitor's browser.
 **What the data cannot show is whether anyone read it** — reads leave no trace in tables. Only
 Supabase's API logs can answer that: *Supabase dashboard → Logs → API Gateway*, filtered to
 requests made with the anon key. That check needs the dashboard, so it is the user's
-(`docs/ops/open_user_actions.md`).
+(`docs/ops/open_user_actions.md`). **It has a deadline:** the Free plan keeps API logs for 1 day
+(supabase.com/pricing, read 2026-09-23), so the logs can only ever cover about the last day of the
+exposure, and from ~13:45 UTC on 2026-09-24 none of it. The days before that are UNKNOWN
+permanently, and are recorded as such rather than as "not read".
 
 ## The fix — two independent layers, in the repository and live
 

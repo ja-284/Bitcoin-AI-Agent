@@ -20,6 +20,15 @@ analysis can always tell which version produced a row.
   was seen working in a scheduled run. It cannot fail the job.
 - Mutation testing: two new guards (usage no longer recorded; missing figures priced as zero), both
   caught by the tests written for them. **28 of 28.**
+- **Both verified live at the 16:12 UTC run** (59c4c76): every step green, snapshot describing the
+  15:00 hour, `ai_usage` for both calls (58 headlines, ≈ $0.0170).
+- **Weekly report count fixed:** run just after an hourly run, it counted that run's row (for an hour not
+  yet due) among the expected hours, so "94 of 102" hid one of the 9 missing hours; now "93 of 102 (+1 row
+  for an hour not yet due)". The test checks each line separately — a first version passed on the old
+  counting because the other line happened to contain the right text, which the proof run exposed.
+- **The Supabase API-log check now has a recorded deadline:** the Free plan keeps logs 1 day, so the
+  exposure's logs are gone after ~13:45 UTC on 2026-09-24, and the days before the last one were never
+  checkable. Recorded as UNKNOWN, not as "not read".
 
 ## research — 2026-09-23 (testing the tests; the live checkpoints' own error rates; E023 registered)
 

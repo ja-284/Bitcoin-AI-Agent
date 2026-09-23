@@ -1,0 +1,886 @@
+{
+  "generated_at": "2026-09-23T16:20:10.494354+00:00",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.2.0",
+  "schema_version": {
+    "database": "4",
+    "code": "4",
+    "match": true
+  },
+  "live_since": "2026-09-19T09:00:00+00:00",
+  "live_hours": 103.3,
+  "health_last_7_days": {
+    "since": "2026-09-19T09:00:00+00:00",
+    "now": "2026-09-23T16:20:10.494354+00:00",
+    "expected_hours": 102,
+    "predictions": 94,
+    "missing_hours": [
+      "2026-09-19T10:00:00+00:00",
+      "2026-09-19T12:00:00+00:00",
+      "2026-09-19T13:00:00+00:00",
+      "2026-09-19T15:00:00+00:00",
+      "2026-09-19T16:00:00+00:00",
+      "2026-09-19T18:00:00+00:00",
+      "2026-09-19T19:00:00+00:00",
+      "2026-09-20T01:00:00+00:00",
+      "2026-09-20T02:00:00+00:00"
+    ],
+    "present_hours": 93,
+    "rows_not_yet_due": 1,
+    "fetch_delay_min": {
+      "min": 1.0371253,
+      "median": 12.544561575,
+      "max": 59.32737363333333
+    },
+    "price_sources": {
+      "binance": 94
+    },
+    "synthetic_rows": 0,
+    "pipeline_versions": {
+      "0.1.0": 4,
+      "0.2.0": 90
+    },
+    "rows_without_explanation": 0,
+    "rows_with_zero_news": 0,
+    "mean_news_items": 38.787234042553195,
+    "run_errors": {
+      "news_error": 17
+    },
+    "hours_with_a_failed_news_source": {},
+    "timestamp_rule_violations": [],
+    "outcome_coverage": {
+      "1h": {
+        "due": 92,
+        "ok": 92,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "6h": {
+        "due": 87,
+        "ok": 87,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "24h": {
+        "due": 69,
+        "ok": 69,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "72h": {
+        "due": 21,
+        "ok": 21,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "168h": {
+        "due": 0,
+        "ok": 0,
+        "unavailable": 0,
+        "overdue": 0
+      }
+    }
+  },
+  "health_since_go_live": {
+    "since": "2026-09-19T09:00:00+00:00",
+    "now": "2026-09-23T16:20:10.494354+00:00",
+    "expected_hours": 102,
+    "predictions": 94,
+    "missing_hours": [
+      "2026-09-19T10:00:00+00:00",
+      "2026-09-19T12:00:00+00:00",
+      "2026-09-19T13:00:00+00:00",
+      "2026-09-19T15:00:00+00:00",
+      "2026-09-19T16:00:00+00:00",
+      "2026-09-19T18:00:00+00:00",
+      "2026-09-19T19:00:00+00:00",
+      "2026-09-20T01:00:00+00:00",
+      "2026-09-20T02:00:00+00:00"
+    ],
+    "present_hours": 93,
+    "rows_not_yet_due": 1,
+    "fetch_delay_min": {
+      "min": 1.0371253,
+      "median": 12.544561575,
+      "max": 59.32737363333333
+    },
+    "price_sources": {
+      "binance": 94
+    },
+    "synthetic_rows": 0,
+    "pipeline_versions": {
+      "0.1.0": 4,
+      "0.2.0": 90
+    },
+    "rows_without_explanation": 0,
+    "rows_with_zero_news": 0,
+    "mean_news_items": 38.787234042553195,
+    "run_errors": {
+      "news_error": 17
+    },
+    "hours_with_a_failed_news_source": {},
+    "timestamp_rule_violations": [],
+    "outcome_coverage": {
+      "1h": {
+        "due": 92,
+        "ok": 92,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "6h": {
+        "due": 87,
+        "ok": 87,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "24h": {
+        "due": 69,
+        "ok": 69,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "72h": {
+        "due": 21,
+        "ok": 21,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "168h": {
+        "due": 0,
+        "ok": 0,
+        "unavailable": 0,
+        "overdue": 0
+      }
+    }
+  },
+  "ai_cost_last_7_days": {
+    "rows": 94,
+    "rows_with_usage": 1,
+    "steps": {
+      "news": {
+        "calls": 1,
+        "usage_unavailable": 0,
+        "mean_input_tokens": 1782.0,
+        "mean_output_tokens": 2310.0,
+        "max_output_tokens": 2310
+      },
+      "explanation": {
+        "calls": 1,
+        "usage_unavailable": 0,
+        "mean_input_tokens": 509.0,
+        "mean_output_tokens": 268.0,
+        "max_output_tokens": 268
+      }
+    },
+    "runs_priced": 1,
+    "mean_cost_per_run_usd": 0.01703,
+    "max_cost_per_run_usd": 0.01703,
+    "projected_30_days_usd": 12.2616,
+    "unpriced_models": {},
+    "prices_usd_per_mtok": {
+      "claude-haiku-4-5": [
+        1.0,
+        5.0
+      ],
+      "claude-sonnet-5": [
+        2.0,
+        10.0
+      ]
+    },
+    "prices_as_of": "2026-09-23"
+  },
+  "signal_record": {
+    "rows_pipeline_0_2_0": 90,
+    "signal_mix": {
+      "BUY": 77,
+      "SELL": 3,
+      "HOLD": 10
+    },
+    "scoring_versions": {
+      "0.1.0": 65,
+      "0.2.0": 25
+    },
+    "by_horizon": {
+      "1h": {
+        "n": 89,
+        "base_rate_up": 0.5393258426966292,
+        "naive_rate": 0.5393258426966292,
+        "acted_share": 0.8876404494382022,
+        "acted_accuracy": 0.5443037974683544,
+        "acted_n": 79,
+        "edge": {
+          "point": 0.004093583537977063,
+          "ci_low": NaN,
+          "ci_high": NaN,
+          "interval_available": false,
+          "hours_needed_for_interval": 96
+        },
+        "buy_and_hold_mean_return": 0.0004815582897082369,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 77,
+            "mean": 0.0005762136573365654
+          },
+          "HOLD": {
+            "n": 10,
+            "mean": 0.0005524975930398543
+          },
+          "SELL": {
+            "n": 2,
+            "mean": -0.0035173698806404974
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.3647974017962629,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 3,
+              "mean_predicted": 0.7716325687071367,
+              "observed": 0.6666666666666666,
+              "ci_low": 0.2076549551264879,
+              "ci_high": 0.9385096847238394,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 25,
+              "mean_predicted": 0.8616845802829193,
+              "observed": 0.52,
+              "ci_low": 0.334982179531473,
+              "ci_high": 0.6996899607103998,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 35,
+              "mean_predicted": 0.9291633768282911,
+              "observed": 0.6,
+              "ci_low": 0.43572419581519467,
+              "ci_high": 0.7444949506669274,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 16,
+              "mean_predicted": 0.965079021232512,
+              "observed": 0.4375,
+              "ci_low": 0.2309836333518552,
+              "ci_high": 0.6682180439322347,
+              "enough_rows": false
+            }
+          ]
+        }
+      },
+      "6h": {
+        "n": 84,
+        "base_rate_up": 0.6190476190476191,
+        "naive_rate": 0.6190476190476191,
+        "acted_share": 0.8809523809523809,
+        "acted_accuracy": 0.6081081081081081,
+        "acted_n": 74,
+        "edge": {
+          "point": 0.0037445335504354706,
+          "ci_low": NaN,
+          "ci_high": NaN,
+          "interval_available": false,
+          "hours_needed_for_interval": 96
+        },
+        "buy_and_hold_mean_return": 0.003683877378182498,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 73,
+            "mean": 0.0035411451013586215
+          },
+          "HOLD": {
+            "n": 10,
+            "mean": 0.005114549581722718
+          },
+          "SELL": {
+            "n": 1,
+            "mean": -0.000203388449076849
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.30392109737265655,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 2,
+              "mean_predicted": 0.7788789559843595,
+              "observed": 0.5,
+              "ci_low": 0.09452865480086614,
+              "ci_high": 0.9054713451991339,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 23,
+              "mean_predicted": 0.8607364068388894,
+              "observed": 0.6521739130434783,
+              "ci_low": 0.4488997690689164,
+              "ci_high": 0.8118894536301776,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 33,
+              "mean_predicted": 0.9301273211088854,
+              "observed": 0.696969696969697,
+              "ci_low": 0.5266154602526555,
+              "ci_high": 0.8262465218545277,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 16,
+              "mean_predicted": 0.965079021232512,
+              "observed": 0.375,
+              "ci_low": 0.18480982554752806,
+              "ci_high": 0.613593529020652,
+              "enough_rows": false
+            }
+          ]
+        }
+      },
+      "24h": {
+        "n": 66,
+        "base_rate_up": 0.7575757575757576,
+        "naive_rate": 0.7575757575757576,
+        "acted_share": 0.8484848484848485,
+        "acted_accuracy": 0.6964285714285714,
+        "acted_n": 56,
+        "edge": {
+          "point": 0.00959641560631569,
+          "ci_low": NaN,
+          "ci_high": NaN,
+          "interval_available": false,
+          "hours_needed_for_interval": 96
+        },
+        "buy_and_hold_mean_return": 0.023617377628178067,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 55,
+            "mean": 0.02126112210696819
+          },
+          "HOLD": {
+            "n": 10,
+            "mean": 0.03777205010758492
+          },
+          "SELL": {
+            "n": 1,
+            "mean": 0.0116647065006525
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.20432555854777687,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 2,
+              "mean_predicted": 0.7788789559843595,
+              "observed": 0.0,
+              "ci_low": 0.0,
+              "ci_high": 0.6576280471103807,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 23,
+              "mean_predicted": 0.8607364068388894,
+              "observed": 0.6521739130434783,
+              "ci_low": 0.4488997690689164,
+              "ci_high": 0.8118894536301776,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 24,
+              "mean_predicted": 0.9298448089918162,
+              "observed": 0.7916666666666666,
+              "ci_low": 0.5952915551476452,
+              "ci_high": 0.9075531089521192,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 7,
+              "mean_predicted": 0.9673229419441057,
+              "observed": 0.7142857142857143,
+              "ci_low": 0.35892909014821267,
+              "ci_high": 0.9177828342909844,
+              "enough_rows": false
+            }
+          ]
+        }
+      },
+      "72h": {
+        "n": 18,
+        "base_rate_up": 1.0,
+        "naive_rate": 1.0,
+        "acted_share": 0.5,
+        "acted_accuracy": 0.8888888888888888,
+        "acted_n": 9,
+        "edge": {
+          "point": -0.01965817531416713,
+          "ci_low": NaN,
+          "ci_high": NaN,
+          "interval_available": false,
+          "hours_needed_for_interval": 288
+        },
+        "buy_and_hold_mean_return": 0.06548195986796712,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 8,
+            "mean": 0.057595765041952775
+          },
+          "HOLD": {
+            "n": 9,
+            "mean": 0.07118391299240734
+          },
+          "SELL": {
+            "n": 1,
+            "mean": 0.0772539403561199
+          }
+        }
+      },
+      "168h": {
+        "n": 0
+      }
+    }
+  },
+  "watch_list": {
+    "news_hours": {
+      "have": 90,
+      "need": 500,
+      "ready": false
+    },
+    "live_months": {
+      "have": 0.13,
+      "need": 6,
+      "ready": false,
+      "tests_waiting": [
+        "funding_last 24h contrarian (E005)",
+        "dxy_ret_5d / tnx_chg_5d 168h negative (E006)"
+      ]
+    }
+  },
+  "shadow_record": {
+    "n": 40,
+    "first_hour": "2026-09-21T17:00:00+00:00",
+    "expected_hours": 46,
+    "missing_hours": [
+      "2026-09-21T19:00:00+00:00",
+      "2026-09-22T01:00:00+00:00",
+      "2026-09-22T02:00:00+00:00",
+      "2026-09-22T04:00:00+00:00",
+      "2026-09-22T05:00:00+00:00",
+      "2026-09-22T07:00:00+00:00",
+      "2026-09-22T09:00:00+00:00"
+    ],
+    "unavailable": 0,
+    "unavailable_reasons": {},
+    "live_close_mismatch": 0,
+    "live_close_unchecked": 0,
+    "model_versions": {
+      "move_size_1h_v1": 40
+    },
+    "outcomes": {
+      "ok_prospective": 39,
+      "unavailable": 0,
+      "pending": 1
+    },
+    "not_prospective": [],
+    "errors": {
+      "n": 0,
+      "by_step": {},
+      "by_type": {},
+      "last_24h": 0,
+      "latest": null
+    },
+    "evaluation": {
+      "n": 39,
+      "base_rate_large": 0.41025641025641024,
+      "mean_stated_p": 0.45489215891907575,
+      "brier": 0.24607621407573887,
+      "brier_base_rate": 0.24194608809993431,
+      "accuracy": 0.5641025641025641,
+      "naive_rate": 0.5897435897435898,
+      "brier_rel_gain": -0.017070439155431272,
+      "rank_corr_p_vs_abs_return": 0.13866396761133606,
+      "ece": 0.07454124851459298,
+      "accuracy_ci95": [
+        0.40975423474522105,
+        0.7069547583829534
+      ],
+      "base_rate_ci95": [
+        0.27079089435400483,
+        0.5658165152665509
+      ],
+      "accuracy_beats_naive": false,
+      "interval_note": "no intervals yet: needs >= 192 hours (have 39)",
+      "reliability": [
+        {
+          "lower": 0.3,
+          "upper": 0.4,
+          "n": 15,
+          "mean_predicted": 0.36870794057353323,
+          "observed": 0.4,
+          "ci_low": 0.19824228082594664,
+          "ci_high": 0.642535572434923,
+          "enough_rows": false
+        },
+        {
+          "lower": 0.4,
+          "upper": 0.5,
+          "n": 13,
+          "mean_predicted": 0.46006293019276845,
+          "observed": 0.38461538461538464,
+          "ci_low": 0.17709446581236818,
+          "ci_high": 0.6447751902773146,
+          "enough_rows": false
+        },
+        {
+          "lower": 0.5,
+          "upper": 0.6,
+          "n": 8,
+          "mean_predicted": 0.5428916690563187,
+          "observed": 0.375,
+          "ci_low": 0.13684175946152105,
+          "ci_high": 0.6942621454161981,
+          "enough_rows": false
+        },
+        {
+          "lower": 0.6,
+          "upper": 0.7,
+          "n": 3,
+          "mean_predicted": 0.6287412147614714,
+          "observed": 0.6666666666666666,
+          "ci_low": 0.2076549551264879,
+          "ci_high": 0.9385096847238394,
+          "enough_rows": false
+        }
+      ],
+      "note": "LIVE shadow record, prospective rows only (the probability was stored before the outcome candle closed). Read intervals, not points, until n is in the thousands."
+    },
+    "evaluation_vs_ewma_reference": {
+      "why": "E019: a 24-hour EWMA of 'did recent hours move a lot?' needs no fitting at all and reached 40% of the model's skill on development data. Comparing the model only against the base rate, as E012 did, sets the bar far too low.",
+      "hours_compared": 39,
+      "model_brier": 0.24607621407573887,
+      "reference_brier": 0.24777454675201682,
+      "model_skill": -0.017070439155431272,
+      "reference_skill": -0.02408990654841703,
+      "model_brier_minus_reference": -0.0016983326762779472,
+      "observed_large_move_share": 0.41025641025641024,
+      "development_expectation": "the model had 2.47x the reference's skill on validation data (E019)",
+      "note": "Pre-committed before the live sample was large enough to judge, so the comparison could not be chosen after seeing the answer. Far too few hours to mean anything yet -- this line exists to be read at the 500-hour checkpoint. Both skill figures are measured against a base rate computed on these very hours, which at small n is an ORACLE that knew whether the period turned out calm or wild; it flatters neither side but makes both look worse than they are. The difference between the two Briers is the part that is comparable."
+    }
+  },
+  "drift": {
+    "reference": "development period 2017-08-27 -> 2025-06-30 (snapshot btcusdt_1h_2026-09-19.csv); raw feature values (before log)",
+    "features": {
+      "tr_mean_14_rel": {
+        "n": 40,
+        "dev_median": 0.008219970356210995,
+        "dev_iqr": 0.0062625525281903545,
+        "live_median": 0.006179600435606765,
+        "median_shift_iqr": -0.3258048393877219,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      },
+      "rv_24": {
+        "n": 40,
+        "dev_median": 0.005213735518525552,
+        "dev_iqr": 0.004240295289740068,
+        "live_median": 0.0037528708352558143,
+        "median_shift_iqr": -0.3445195637210656,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      },
+      "rv_168": {
+        "n": 40,
+        "dev_median": 0.005764971032744351,
+        "dev_iqr": 0.0034698771587411527,
+        "live_median": 0.004155032761801031,
+        "median_shift_iqr": -0.46397558106275877,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      },
+      "vol_ratio_24_168": {
+        "n": 40,
+        "dev_median": 0.8807932168054635,
+        "dev_iqr": 0.4531093482009425,
+        "live_median": 0.8799845343770483,
+        "median_shift_iqr": -0.0017847401110264063,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      },
+      "trades_rel_24h": {
+        "n": 40,
+        "dev_median": 0.8714218327168003,
+        "dev_iqr": 0.48413926586490463,
+        "live_median": 0.8384074927558698,
+        "median_shift_iqr": -0.06819182472619956,
+        "share_outside_dev_1_99": 0.05,
+        "status": "too few rows to flag"
+      },
+      "trades_rel_168h": {
+        "n": 40,
+        "dev_median": 0.8531530324057546,
+        "dev_iqr": 0.5489125694216114,
+        "live_median": 1.044112772889713,
+        "median_shift_iqr": 0.34788735241601876,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      },
+      "hour_sin": {
+        "n": 40,
+        "dev_median": 0.0,
+        "dev_iqr": 1.4142135623730954,
+        "live_median": -0.1294095225512604,
+        "median_shift_iqr": -0.09150635094610965,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      },
+      "hour_cos": {
+        "n": 40,
+        "dev_median": -1.8369701987210297e-16,
+        "dev_iqr": 1.4142135623730954,
+        "live_median": -1.8369701987210297e-16,
+        "median_shift_iqr": 0.0,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      },
+      "is_weekend": {
+        "n": 40,
+        "dev_median": 0.0,
+        "dev_iqr": 1.0,
+        "live_median": 0.0,
+        "median_shift_iqr": 0.0,
+        "share_outside_dev_1_99": 0.0,
+        "status": "too few rows to flag"
+      }
+    },
+    "probability": {
+      "n": 40,
+      "dev_median": 0.4683123149656863,
+      "dev_q05_q95": [
+        0.20662709854077255,
+        0.7428892643106039
+      ],
+      "live_median": 0.45909044601798354,
+      "live_q05_q95": [
+        0.3422656177602324,
+        0.6070714109653262
+      ],
+      "share_above_dev_q95": 0.0,
+      "share_below_dev_q05": 0.0,
+      "status": "too few rows to flag"
+    },
+    "outcomes": {
+      "n": 39,
+      "dev_share": 0.517990960781455,
+      "validation_share": 0.4752037784718519,
+      "live_share": 0.41025641025641024,
+      "live_share_ci95": [
+        0.2558792420856332,
+        0.5646335784271873
+      ],
+      "status": "too few rows to flag"
+    },
+    "missing_and_timing": {
+      "shadow_unavailable_share": 0.0,
+      "shadow_rows": 40,
+      "fetch_delay_by_week_median_min": {
+        "2026-W38": 12.415510699999999,
+        "2026-W39": 12.557378225
+      },
+      "status": "too few rows to flag"
+    },
+    "flags": [],
+    "note": "Flags are descriptive: investigate and document; never retrain or retune from them. Reference distributions are frozen."
+  },
+  "parity": {
+    "compared": 90,
+    "parity_breaks": 0,
+    "breaks": [],
+    "skipped": [
+      [
+        "2026-09-19T09:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T11:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T14:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T17:00:00+00:00",
+        "pipeline version differs"
+      ]
+    ],
+    "verdict": "PARITY",
+    "candles_fetched": 353
+  },
+  "paper_move_size_1h": {
+    "n": 102,
+    "base_rate_large": 0.3431372549019608,
+    "mean_stated_p": 0.4002198790799776,
+    "brier": 0.2114618476274528,
+    "brier_base_rate": 0.22539407920030763,
+    "accuracy": 0.6666666666666666,
+    "naive_rate": 0.6568627450980392,
+    "brier_rel_gain": 0.06181276643240152,
+    "rank_corr_p_vs_abs_return": 0.2300071811864225,
+    "ece": 0.06989727611202953,
+    "accuracy_ci95": [
+      0.5706045117876962,
+      0.7506302390097218
+    ],
+    "base_rate_ci95": [
+      0.25820365661589834,
+      0.43945775439829654
+    ],
+    "accuracy_beats_naive": false,
+    "interval_note": "no intervals yet: needs >= 192 hours (have 102)",
+    "reliability": [
+      {
+        "lower": 0.1,
+        "upper": 0.2,
+        "n": 3,
+        "mean_predicted": 0.18173050282066408,
+        "observed": 0.3333333333333333,
+        "ci_low": 0.0614903152761605,
+        "ci_high": 0.7923450448735121,
+        "enough_rows": false
+      },
+      {
+        "lower": 0.2,
+        "upper": 0.3,
+        "n": 26,
+        "mean_predicted": 0.2548011825233737,
+        "observed": 0.11538461538461539,
+        "ci_low": 0.04003171821149494,
+        "ci_high": 0.28976293086898336,
+        "enough_rows": false
+      },
+      {
+        "lower": 0.3,
+        "upper": 0.4,
+        "n": 30,
+        "mean_predicted": 0.3600420414301119,
+        "observed": 0.36666666666666664,
+        "ci_low": 0.21873702204017678,
+        "ci_high": 0.5448675356639506,
+        "enough_rows": false
+      },
+      {
+        "lower": 0.4,
+        "upper": 0.5,
+        "n": 22,
+        "mean_predicted": 0.45558254681455834,
+        "observed": 0.4090909090909091,
+        "ci_low": 0.23255559668820378,
+        "ci_high": 0.6126552261710619,
+        "enough_rows": false
+      },
+      {
+        "lower": 0.5,
+        "upper": 0.6,
+        "n": 8,
+        "mean_predicted": 0.5428916690563186,
+        "observed": 0.375,
+        "ci_low": 0.13684175946152105,
+        "ci_high": 0.6942621454161981,
+        "enough_rows": false
+      },
+      {
+        "lower": 0.6,
+        "upper": 0.7,
+        "n": 11,
+        "mean_predicted": 0.641939675624531,
+        "observed": 0.6363636363636364,
+        "ci_low": 0.35379677689163724,
+        "ci_high": 0.8483377638586862,
+        "enough_rows": false
+      },
+      {
+        "lower": 0.7,
+        "upper": 0.8,
+        "n": 2,
+        "mean_predicted": 0.7119291774719878,
+        "observed": 0.5,
+        "ci_low": 0.09452865480086614,
+        "ci_high": 0.9054713451991339,
+        "enough_rows": false
+      }
+    ],
+    "note": "Paper record computed after the fact from point-in-time candle features; the model is fitted on data before the sealed holdout only. Not a live shadow run. Read intervals, not points, until n is in the thousands.",
+    "tracker_consistency": {
+      "hours_compared": 93,
+      "max_abs_difference": 1.0495077029659683e-16,
+      "agree_within_1e-9": true
+    },
+    "model": {
+      "fit_rows": 61971,
+      "fit_end": "2025-03-30 22:00:00+00:00",
+      "calib_rows": 2160,
+      "calib_range": [
+        "2025-03-31 23:00:00+00:00",
+        "2025-06-29 23:00:00+00:00"
+      ],
+      "platt": {
+        "a": 1.0340720463708053,
+        "b": 0.195681707761432
+      }
+    },
+    "latest": [
+      {
+        "as_of": "2026-09-23 10:00:00+00:00",
+        "p_large_move": 0.3842293357381983
+      },
+      {
+        "as_of": "2026-09-23 11:00:00+00:00",
+        "p_large_move": 0.4295485959929413
+      },
+      {
+        "as_of": "2026-09-23 12:00:00+00:00",
+        "p_large_move": 0.46453106939770705
+      },
+      {
+        "as_of": "2026-09-23 13:00:00+00:00",
+        "p_large_move": 0.5277179184601943
+      },
+      {
+        "as_of": "2026-09-23 14:00:00+00:00",
+        "p_large_move": 0.6790902508353535
+      }
+    ],
+    "vs_ewma_reference": {
+      "hours_compared": 102,
+      "model_brier": 0.2114618476274528,
+      "reference_brier": 0.22672087294174378,
+      "model_skill": 0.06181276643240152,
+      "reference_skill": -0.005886550996120121,
+      "model_brier_minus_reference": -0.015259025314290992,
+      "observed_large_move_share": 0.3431372549019608,
+      "development_expectation": "2.47x the reference's skill on validation data (E019)",
+      "note": "Not prospective -- computed after the fact from candles -- but a fair comparison of two models on identical hours, and a larger sample than the shadow record. Both skill figures use a base rate from these same hours, an oracle at small n."
+    }
+  }
+}

@@ -46,6 +46,29 @@ def test_health_finds_missing_hours_late_runs_and_errors():
     assert cov["ok"] == 25 and cov["overdue"] == cov["due"] - 25  # the last rows are not due yet or overdue
 
 
+def test_a_row_for_an_hour_not_yet_due_cannot_hide_a_missing_hour():
+    """
+    Found in the 2026-09-23 report: run at 16:17, it counted the 15:00 row (written at 16:12, not
+    yet "expected" until 16:22) among 102 expected hours, and printed 94 of 102 with 9 missing.
+    """
+    from agent.research.weekly_report import render
+
+    now = T0 + 10 * H + timedelta(minutes=17)  # this hour's run has written its row; allowance not over
+    rows = [_pred(T0 + i * H) for i in range(10) if i != 4]  # hour 4 missing; hour 9 written early
+    hlt = health(rows, [], now, T0)
+    assert hlt["expected_hours"] == 9 and hlt["missing_hours"] == [(T0 + 4 * H).isoformat()]
+    assert hlt["present_hours"] == 8 and hlt["rows_not_yet_due"] == 1
+    assert hlt["present_hours"] + len(hlt["missing_hours"]) == hlt["expected_hours"]  # the line must add up
+    rep = {"generated_at": now.isoformat(), "pipeline_version": "0.2.0", "scoring_version": "0.2.0",
+           "schema_version": {"database": "4", "code": "4", "match": True}, "live_since": T0.isoformat(), "live_hours": 10,
+           "health_last_7_days": hlt, "health_since_go_live": hlt,
+           "signal_record": {"rows_pipeline_0_2_0": 0, "signal_mix": {}, "scoring_versions": {}, "by_horizon": {}},
+           "watch_list": watch_list(rows, now), "drift": {"error": "not part of this test"}}
+    text = render(rep)
+    for line in ("- Last 7 days: ", "- Since go-live: "):  # each line on its own: one correct line must not cover the other
+        assert line + "8 of 9 expected hours (+1 row for an hour not yet due)" in text, line
+
+
 def test_health_flags_a_timestamp_rule_violation():
     now = T0 + 10 * H
     rows = [_pred(T0 + i * H) for i in range(5)]

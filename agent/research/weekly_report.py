@@ -95,6 +95,9 @@ def health(pred_rows: list[dict], outcome_rows: list[dict], now: datetime, since
     return {
         "since": since.isoformat(), "now": now.isoformat(),
         "expected_hours": len(expected), "predictions": len(rows), "missing_hours": [t.isoformat() for t in missing],
+        # "N of M expected" must count only rows FOR expected hours: a row already written for an hour
+        # not yet due (the report ran just after this hour's run) would otherwise hide one missing hour.
+        "present_hours": len(expected) - len(missing), "rows_not_yet_due": len(got - set(expected)),
         "fetch_delay_min": {"min": min(delays) if delays else None, "median": float(np.median(delays)) if delays else None, "max": max(delays) if delays else None},
         "price_sources": dict(Counter(r["price_source"] for r in rows)), "synthetic_rows": sum(1 for r in rows if r["price_is_synthetic"]),
         "pipeline_versions": dict(Counter(r["pipeline_version"] for r in rows)),
@@ -575,6 +578,11 @@ def _ci(d: dict, key: str, scale: float = 1.0) -> str:
     return " [" + fmt.format(ci[0] * scale) + ", " + fmt.format(ci[1] * scale) + "]"
 
 
+def _not_yet_due(h: dict) -> str:
+    n = h.get("rows_not_yet_due", 0)
+    return f" (+{n} row{'s' if n != 1 else ''} for an hour not yet due)" if n else ""
+
+
 def _render_ai_cost(c: dict | None) -> str:
     if not c or not c["rows_with_usage"]:
         return "- AI cost (7d): not measured yet — each run records the API's own token counts from 2026-09-23"
@@ -593,8 +601,8 @@ def render(rep: dict) -> str:
     L = [f"# Weekly live report — {rep['generated_at'][:16]} UTC", "",
          f"pipeline {rep['pipeline_version']} · scoring {rep['scoring_version']} (frozen, under test) · schema {rep['schema_version']['database']} (code {rep['schema_version']['code']}{'' if rep['schema_version']['match'] else ' — MISMATCH'}) · live since {rep['live_since'][:16]} · {rep['live_hours']} live hours", "",
          "## 1. Health", "",
-         f"- Last 7 days: {h7['predictions']} of {h7['expected_hours']} expected hours; missing: {h7['missing_hours'] or 'none'}",
-         f"- Since go-live: {hall['predictions']} of {hall['expected_hours']} expected hours; missing: {len(hall['missing_hours'])} ({', '.join(t[5:16] for t in hall['missing_hours'][:8])}{'…' if len(hall['missing_hours']) > 8 else ''})",
+         f"- Last 7 days: {h7['present_hours']} of {h7['expected_hours']} expected hours{_not_yet_due(h7)}; missing: {h7['missing_hours'] or 'none'}",
+         f"- Since go-live: {hall['present_hours']} of {hall['expected_hours']} expected hours{_not_yet_due(hall)}; missing: {len(hall['missing_hours'])} ({', '.join(t[5:16] for t in hall['missing_hours'][:8])}{'…' if len(hall['missing_hours']) > 8 else ''})",
          f"- Fetch delay after candle close (7d): min {h7['fetch_delay_min']['min']:.1f} / median {h7['fetch_delay_min']['median']:.1f} / max {h7['fetch_delay_min']['max']:.1f} min" if h7["predictions"] else "- no rows in the last 7 days",
          f"- Price sources (7d): {h7['price_sources']}; synthetic rows: {h7['synthetic_rows']}; pipeline versions: {h7['pipeline_versions']}",
          f"- Rows without explanation: {h7['rows_without_explanation']}; rows with zero news: {h7['rows_with_zero_news']}; mean news items: {h7['mean_news_items']:.1f}" if h7["predictions"] else "",

@@ -142,7 +142,15 @@ a technical one. Tell me either way and I will implement it or close the item.
 
 ---
 
-## 5. Check Supabase's API logs for anonymous requests — once, soon
+## 5. Check Supabase's API logs for anonymous requests — once, BEFORE 2026-09-24 ~13:45 UTC
+
+**Deadline, and why.** Supabase's Free plan keeps API and database logs for **1 day** (Pro 7, Team
+28, Enterprise 90 — supabase.com/pricing, read 2026-09-23). The exposure closed at ~13:45 UTC on
+2026-09-23, so by ~13:45 UTC on **2026-09-24** the last log line from the exposed period is gone and
+this question becomes permanently unanswerable. Even checked today, the logs reach back only one day:
+they cover roughly the last 21 hours of an exposure that existed since the project was created
+(2026-09-19). **"No anonymous requests in the logs" therefore means "none in the last day of the
+exposure", not "none ever"** — the earlier days stay UNKNOWN whatever the logs show.
 
 **What it is.** Until 2026-09-23 every table was readable and writable through Supabase's public API
 by anyone holding the project's anon key (`docs/ops/security_2026-09-23_public_api_exposure.md`).
