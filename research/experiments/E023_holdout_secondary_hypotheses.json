@@ -1,0 +1,48 @@
+{
+  "id": "E023",
+  "date": "2026-09-23",
+  "git_commit": "(pre-registration commit)",
+  "status": "PRE-REGISTERED, CONFIRMATORY, SECONDARY to E014. Registered while the holdout is still sealed (research/HOLDOUT_ACCESS.log does not exist). Nothing here is run until the user gives the explicit go-ahead to unseal, and then only once, together with E014.",
+  "why": "Validation wear. Every finding from E018 to E022 was generated on a validation period that more than twenty experiments had already examined. Each was pre-registered and honest, but selection pressure accumulates ACROSS experiments even when no single experiment searches, so those findings are hypotheses, not confirmations. The only clean test left is the sealed holdout. Writing the hypotheses down NOW -- with their exact test, their numbers and their pass rules -- is what makes the eventual test confirmatory instead of one more look at worn data. Registering them after unsealing would be worthless.",
+  "relation_to_E014": "E014's objects (A-D), pass rules and verdict are NOT changed in any way. These hypotheses are evaluated on the same holdout window, with the same walk-forward layout and the same frozen settings, reported in a separate section, and cannot rescue or sink E014's primary verdict. If E014's object D fails, every hypothesis below that concerns D is reported but carries no weight.",
+  "hypotheses": {
+    "H1_model_beats_the_free_rule (from E019)": {
+      "claim": "Object D (the Platt-calibrated 1h move-size model) is worth its complexity on the holdout.",
+      "test": "On identical holdout rows: D against the E019 standing reference -- a causal 24-hour EWMA (half-life 24h) of the indicator 'did the candle move more than 0.25%', uncalibrated, exactly as agent/research/simple_baselines.simple_rules computes it.",
+      "pass": "D's skill (1 - Brier / Brier of the window's base rate) >= 1.10 x the reference's skill AND the paired circular block-bootstrap 95% interval (48-hour blocks, 2000 resamples, seed 31) of (reference Brier - D Brier) excludes zero.",
+      "development_value": "2.47x on validation; paired difference +0.01459 [+0.01261, +0.01652]"
+    },
+    "H2_fixed_threshold_is_the_more_predictable_target (from E021)": {
+      "claim": "Predicting 'a move bigger than 0.25%' is easier than predicting 'a move bigger than the recent typical move'.",
+      "test": "The same nine inputs, logistic C = 0.1, Platt on the purged 90-day slice, trained twice on identical rows: once on the fixed target, once on the volatility-scaled target (k = 1.0 x median |1h return| over the last 720h of completed returns, agent/research/threshold_test.py). Each scored against its own base rate.",
+      "pass": "skill on the fixed target > skill on the volatility-scaled target.",
+      "development_value": "0.0983 vs 0.0736 on validation"
+    },
+    "H3_the_free_rule_knows_only_the_volatility_level (from E021)": {
+      "claim": "Once the volatility level is divided out of the question, the no-fitting reference has essentially no skill left.",
+      "test": "The E019 reference scored against the volatility-scaled target on identical rows.",
+      "pass": "reference skill against the volatility-scaled target < 0.01.",
+      "development_value": "+0.0003 on validation"
+    },
+    "H4_trade_intensity_carries_the_within_regime_timing (from E022)": {
+      "claim": "The part of the model's skill that is not freely available comes mainly from trade intensity, not from volatility.",
+      "test": "Against the volatility-scaled target on the holdout: (a) nine single-input models, one per input, each fitted by the same walk-forward -- which input has the highest skill; (b) group ablation -- the nine-input model with the four volatility inputs removed, paired against all nine.",
+      "pass": "(a) `trades_rel_168h` has the highest single-input skill of the nine AND (b) removing the volatility group costs less than 40% of the nine-input skill.",
+      "development_value": "(a) trades_rel_168h first (single-input skill +0.0645); (b) 14% on validation, against 61% on the fixed target",
+      "note": "This involves eleven fits on holdout data, but it is not a search: the procedure, the candidates and the pass rule are fixed here, and the prediction can fail."
+    },
+    "H5_six_inputs_are_enough (from E018)": {
+      "claim": "The frozen model is over-featured.",
+      "test": "Against the fixed target: the six-input model built from E018's exploration-fixed order (tr_mean_14_rel, trades_rel_24h, rv_168, hour_cos, hour_sin, is_weekend) versus all nine, on identical rows.",
+      "pass": "the six-input skill >= 0.95 x the nine-input skill.",
+      "development_value": "99.4% on validation"
+    }
+  },
+  "multiple_comparisons": "Five secondary hypotheses on one 13.5-month window. No family-wise correction is applied to the pass rules, which are written as fixed thresholds rather than significance tests (except H1, which has its own interval). The report will state plainly how many held. Five out of five is still one window; a mixture is expected and will be reported as a mixture, hypothesis by hypothesis, not summarised into one verdict.",
+  "prerequisites_before_unsealing": "agent/research/holdout_eval.py must be extended to compute H1-H5 and the extension dry-run on the validation period (as E014 requires for itself), reproducing the development values above within their bootstrap noise. That code does not exist yet. Unsealing without it would test E014 only; these hypotheses would then be untestable on clean data forever.",
+  "what_this_may_not_do": "It may not change scoring, the live path, the frozen artefact move_size_1h_v1, or E014. It may not be amended after the holdout is opened. It may not be used to choose anything on the holdout.",
+  "pipeline_version": "0.2.0",
+  "window": "identical to E014: 2025-07-01 00:00 UTC -> 2026-08-20 00:00 UTC (exclusive)",
+  "metrics": "(filled after the one-time run, if the user ever authorises it)",
+  "results": "(filled after the one-time run, if the user ever authorises it)"
+}
