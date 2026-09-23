@@ -16,6 +16,7 @@ import logging
 from anthropic import Anthropic, AnthropicError
 from pydantic import BaseModel, Field
 
+from agent.ai import usage as ai_usage
 from agent.config.settings import AI_MAX_RETRIES, AI_TIMEOUT_S, ANTHROPIC_API_KEY
 from agent.shared.types import CategoryScore, NewsItem
 
@@ -74,6 +75,7 @@ def score_news(news_items: list[NewsItem]) -> CategoryScore:
             f"news model answer unusable for {len(news_items)} headlines (max_tokens={MAX_TOKENS}; "
             f"a truncated answer arrives as invalid JSON): {type(exc).__name__}: {exc}"
         ) from exc
+    ai_usage.record("news", MODEL, response)  # before any check below: an unusable answer is still billed
     analysis = response.parsed_output
     if analysis is None or not analysis.assessments:
         # Schema-valid but empty is NOT "nothing relevant": it is a missing answer. Raising makes

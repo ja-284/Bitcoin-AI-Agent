@@ -10,6 +10,7 @@ the AI (CLAUDE.md rule 6).
 
 from anthropic import Anthropic
 
+from agent.ai import usage as ai_usage
 from agent.config.settings import AI_MAX_RETRIES, AI_TIMEOUT_S, ANTHROPIC_API_KEY
 from agent.shared.types import CategoryScore, ConfidenceBreakdown
 
@@ -74,6 +75,7 @@ def write_explanation(
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_content}],
     )
+    ai_usage.record("explanation", MODEL, response)  # before the checks: a refused answer is still billed
     text = next((block.text for block in response.content if block.type == "text"), "").strip()
     if not text:
         raise ValueError("explanation model returned no text")  # recorded as explanation_error; the decision is untouched

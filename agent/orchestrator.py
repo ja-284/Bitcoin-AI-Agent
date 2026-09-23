@@ -22,6 +22,7 @@ from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
 
 from agent.ai import explainer, news_scorer
+from agent.ai import usage as ai_usage
 from agent.data_providers.market_data import get_market_data
 from agent.database.db import assert_schema_current, prediction_exists, save_prediction
 from agent.decision.decision import compute_confidence, decide_signal
@@ -74,35 +75,40 @@ def run_once(save: bool = True) -> Prediction | None:
 
     news_items = []
     news_score = None
-    try:
-        news = get_recent_news(cutoff=cutoff)
-        news_items = news.items
-        run_meta["news"] = news.summary()
-        news_score = news_scorer.score_news(news_items)
-    except Exception as exc:  # noqa: BLE001 -- a failed news step degrades the run, it doesn't end it
-        logger.warning("News step failed, continuing with reduced confidence: %s", exc)
-        run_meta["news_error"] = str(exc)
-        # The full message is kept for diagnosis (it is what identified the 2026-09-21
-        # truncation); the TYPE is stored separately so failures can be counted and grouped
-        # without anything having to parse free text or repeat it to a reader.
-        run_meta["news_error_type"] = type(exc).__name__
+    # Tokens each AI call actually consumed, straight from the API's answers (agent/ai/usage.py):
+    # the running cost is measured, not estimated.
+    with ai_usage.recording() as usage:
+        try:
+            news = get_recent_news(cutoff=cutoff)
+            news_items = news.items
+            run_meta["news"] = news.summary()
+            news_score = news_scorer.score_news(news_items)
+        except Exception as exc:  # noqa: BLE001 -- a failed news step degrades the run, it doesn't end it
+            logger.warning("News step failed, continuing with reduced confidence: %s", exc)
+            run_meta["news_error"] = str(exc)
+            # The full message is kept for diagnosis (it is what identified the 2026-09-21
+            # truncation); the TYPE is stored separately so failures can be counted and grouped
+            # without anything having to parse free text or repeat it to a reader.
+            run_meta["news_error_type"] = type(exc).__name__
 
-    result = score_all(bars, indicators, patterns, news_score=news_score)
-    signal = decide_signal(result.overall_score)
-    confidence = compute_confidence(result)
+        result = score_all(bars, indicators, patterns, news_score=news_score)
+        signal = decide_signal(result.overall_score)
+        confidence = compute_confidence(result)
 
-    explanation = None
-    try:
-        explanation = explainer.write_explanation(
-            signal=signal,
-            overall_score=result.overall_score,
-            confidence=confidence,
-            category_scores=result.category_scores,
-            close_price=indicators.close,
-        )
-    except Exception as exc:  # noqa: BLE001 -- the explanation is commentary; losing it must not lose the analysis
-        logger.warning("Explanation step failed, continuing without one: %s", exc)
-        run_meta["explanation_error"] = str(exc)
+        explanation = None
+        try:
+            explanation = explainer.write_explanation(
+                signal=signal,
+                overall_score=result.overall_score,
+                confidence=confidence,
+                category_scores=result.category_scores,
+                close_price=indicators.close,
+            )
+        except Exception as exc:  # noqa: BLE001 -- the explanation is commentary; losing it must not lose the analysis
+            logger.warning("Explanation step failed, continuing without one: %s", exc)
+            run_meta["explanation_error"] = str(exc)
+    if usage:
+        run_meta["ai_usage"] = usage
 
     prediction = Prediction(
         as_of=reference.as_of,

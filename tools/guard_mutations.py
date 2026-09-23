@@ -145,6 +145,15 @@ MUTATIONS = [
              '"confidence": Quantity(pred["overall_confidence"], "heuristic", False, CONFIDENCE_MEANING).as_dict()',
              '"confidence": Quantity(pred["overall_confidence"], "heuristic", True, CONFIDENCE_MEANING).as_dict()',
              "the heuristic confidence published as if it were a probability"),
+    # ---- 2026-09-23: the AI cost record
+    Mutation("cost", "agent/ai/news_scorer.py",
+             '    ai_usage.record("news", MODEL, response)',
+             "    pass",
+             "the news call's token usage is no longer recorded"),
+    Mutation("cost", "agent/ai/usage.py",
+             'else {"model": model, "usage_unavailable": True}',
+             'else {"model": model, "input_tokens": 0, "output_tokens": 0}',
+             "missing usage figures recorded as zero cost instead of unavailable"),
 ]
 
 
