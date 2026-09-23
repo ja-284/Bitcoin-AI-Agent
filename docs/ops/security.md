@@ -1,5 +1,12 @@
 # Security audit — 2026-09-21
 
+> **Superseded in one important respect — read this first.** This audit checked secrets, logs,
+> workflow permissions and the trading boundary, and **never checked what the database exposes to
+> Supabase's own public API**. On 2026-09-23 Supabase's advisor showed that every table was
+> readable and writable by anyone holding the project's public anon key. That is now closed, with
+> evidence, in [`security_2026-09-23_public_api_exposure.md`](security_2026-09-23_public_api_exposure.md).
+> The text below is left as it was written, so the sequence stays honest.
+
 Scope: a research-only backend that runs on GitHub Actions, writes to Supabase Postgres, and
 calls Binance (public), RSS feeds (public), CoinGecko (free key), and the Anthropic API.
 **It never trades, never holds funds, never touches an exchange account.** There is no web

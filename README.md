@@ -80,7 +80,9 @@ agent/
   scoring/ decision/     category scores -> overall score -> signal; confidence heuristic
   news/                  RSS feeds, availability-time rules, de-duplication
   ai/                    the two narrow Claude calls (news score; explanation)
-  database/              schema (append-only, invariants as CHECKs/triggers), writes
+  database/              schema (append-only, invariants as CHECKs/triggers, locked against
+                         Supabase's public API), writes, security.py (the live exposure check)
+  migrate.py             the ONLY way to change the schema: all schema files, one transaction
   outcome_tracker.py     grades predictions by the exact target candle; 'unavailable' on gaps
   healthcheck.py         fails the job if the newest prediction is stale
   shadow/                frozen move-size model (JSON artefact), features, run, grading
