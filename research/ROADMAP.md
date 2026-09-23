@@ -178,6 +178,38 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## Paused 2026-09-23 ~20:15 UTC — resume point (read this first tomorrow)
+
+**State.** `main` = `origin/main`, tree clean. 415 unit tests pass with no database reachable; 19
+integration tests on real Postgres; mutation testing 36 of 36. Holdout **sealed**
+(`research/HOLDOUT_ACCESS.log` does not exist). Schema version 4. Live system healthy: the 19:00 UTC
+prediction was written 20:12:33 by `12a9519`, carrying `ai_usage` and the new `db_role = postgres`
+stamp — both verified live. 0 shadow errors. 42 of 500 prospective shadow hours.
+
+**Pushed at the pause, NOT yet seen in a scheduled run** (first thing to check tomorrow): the heartbeat
+workflow change (`d71c09f` — `continue-on-error` on the ping, a new *Heartbeat failure signal* step).
+Both steps are inert without the `HEARTBEAT_URL` secret, and the YAML was reviewed character by
+character, but the next hourly run is the first to read the new file. **Check: the hourly runs after
+20:15 UTC on 2026-09-23 are green, and both heartbeat steps show *skipped*.** If a run failed to start,
+revert `d71c09f` first and investigate second. Also confirm the watchdog's next run passes with the
+widened security check (views / functions / default grants).
+
+**Done today, evening:** API-log check recorded with its limits (earlier days UNKNOWN permanently);
+root cause of the exposure closed live (default privileges 24 → 0); detector widened; `net` rights
+proven unrevocable by the project; least-privilege switch made checkable (`agent.database.role_check`,
+`run_meta.db_role`); heartbeat hardened; news cost decided (~$12/month, flag above $15); report
+counting fixes; live checkpoints prepared with three clarifications registered before any data.
+
+**Waiting on the user (none blocking):** *Exposed schemas* check, 10 s — now the single control over
+`net`; least-privilege role, ~10 min (steps + `role_check` in `docs/ops/open_user_actions.md` item 2);
+heartbeat retry (tell me what failed); optionally dispatch the watchdog from Supabase (GitHub ran 3 of
+8 watchdog slots in a day).
+
+**Then, in order:** verify the above; weekly rhythm (report + `BITCOIN_AGENT_DB_TESTS=1` drift check);
+run `python -m agent.database.role_check` the moment the user creates the role; the 500-hour checkpoint
+computes itself around 2026-10-12 (`python -m agent.research.live_checkpoint`). **Do not:** tune
+anything on validation, change scoring, swap the frozen artefact, or touch the holdout.
+
 ## Paused 2026-09-22 ~20:15 UTC — resume point
 
 **State.** Tree clean, `main` = `origin/main`, last commit `9c60010`. **296 tests pass, and they
