@@ -1,0 +1,12 @@
+{
+  "what": "volatility regime cut points for the 5,000-hour checkpoint (research/LIVE_EVALUATION.md rule 5)",
+  "feature": "rv_168 (raw, before log): realised volatility of the previous 168 hours",
+  "built_from": "development period, 2017-08-27T13:00:00+00:00 -> 2025-06-30T23:00:00+00:00, n = 64206",
+  "reproduces_reference_quantiles": true,
+  "tercile_cut_points": [
+    0.004758731036681508,
+    0.006966200120580275
+  ],
+  "frozen_at": "2026-09-23T19:59:22.412152+00:00",
+  "rule": "low < cut 1 <= mid < cut 2 <= high; never recomputed, never fitted to live data"
+}

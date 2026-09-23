@@ -179,6 +179,14 @@ MUTATIONS = [
              "        if: failure() && env.HEARTBEAT_URL != ''",
              "        if: env.HEARTBEAT_URL != ''",
              "the heartbeat's FAIL signal is sent after every successful hour too"),
+    Mutation("validation", "agent/research/live_checkpoint.py",
+             "    first = graded[:checkpoint]\n    p = np.array",
+             "    first = graded[-checkpoint:]\n    p = np.array",
+             "a live checkpoint reads the LATEST N hours (a movable window) instead of the first N"),
+    Mutation("validation", "agent/research/live_checkpoint.py",
+             '"rho_ge_0_10_interval_above_0": s["rho"] >= E012_RHO_BAR and "rho_ci95" in s and s["rho_ci95"][0] > 0}',
+             '"rho_ge_0_10_interval_above_0": s["rho"] >= E012_RHO_BAR}',
+             "E012's rho part passes without its interval excluding zero"),
 ]
 
 

@@ -38,6 +38,28 @@ exist when the model was fitted?
    development data *and* prospectively. It does not trigger any change to the live signal.
 7. **Regime slices are descriptive**, never the basis for switching models on the fly.
 
+## Clarifications registered 2026-09-23 ~20:00 UTC — before any checkpoint data exists (42 of 500 hours)
+
+Rules 1–7 above are unchanged. These settle three things they left open, now, while no checkpoint
+can yet be computed, so none of them can be chosen after seeing an answer. Implemented in
+`agent/research/live_checkpoint.py` (`python -m agent.research.live_checkpoint`), tested in
+`tests/test_live_checkpoint.py`.
+
+8. **A checkpoint reads a fixed prefix.** The N-hour checkpoint uses exactly the first N prospective
+   graded hours in time order — not however many exist on the day it is run. Reading "whenever it
+   looks good" would be optional stopping; a fixed prefix is reproducible and cannot be picked.
+   Later hours belong to the next checkpoint. The script refuses to compute a checkpoint early.
+9. **The pass rules are E024's code.** `e013_passes` and the E012 bars are imported from
+   `agent/research/checkpoint_power.py`, the study of these rules' own error rates, so the rule that
+   is judged and the rule whose chance-failure rate was measured are one implementation. The rho part
+   of E012 passes only with its interval (48 h blocks, **500 resamples** as rule 3 says, seed 17).
+10. **The 5,000-hour regime cut points are frozen now:** `research/monitoring/regime_terciles_v1.json`
+    — terciles of `rv_168` (realised volatility of the previous 168 h) on the development period,
+    **0.004759 and 0.006966**. Built by the model's own feature code from candles loaded up to the
+    holdout boundary (the holdout was not read), and written only after it reproduced the frozen drift
+    reference's `rv_168` quartiles exactly (n = 64,206, identical). Never recomputed, never fitted to
+    live data.
+
 ## Operating characteristics of these rules (measured 2026-09-23, E024) — read every checkpoint against them
 
 **No rule above is changed.** These are the rules' own error rates, measured before any checkpoint
