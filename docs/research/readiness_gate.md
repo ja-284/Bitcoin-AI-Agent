@@ -153,6 +153,18 @@ Re-opened on the user's instruction to resolve the public-access issue properly 
 with a stated condition** — it rests on Supabase's default exposed-schemas list, which is unverified
 until the user looks. Everything the project's own role can close is closed and watched.
 
+### The three PARTIALs, 2026-09-23 ~20:00 UTC — what moved, what cannot move without the user
+
+| row | status | what was done this evening | what still stands between it and PASS |
+|---|---|---|---|
+| 16 Automation | **PARTIAL** | heartbeat steps hardened (a ping hiccup cannot turn a good hour red; a failed run signals `/fail` at once), pinned by tests and a mutation; the watchdog's real cadence measured (3 of 8 slots ran in a day) | the user's heartbeat account and secret — attempted today, did not work, deferred by the user |
+| 17 Security | **PARTIAL** | root cause closed live; detector covers views, functions, default grants; the least-privilege role made *verifiable* (`python -m agent.database.role_check` against the proven file) and every prediction now records the role that wrote it (`run_meta.db_role`) | the user creates the login role (a password) and switches the secret — ~10 min, steps in `open_user_actions.md`; plus the 10-second *Exposed schemas* check |
+| 21 Prospective monitoring | **PARTIAL — the calendar** | nothing can be done but wait; the shadow record runs every hour with 0 errors | ~45 of 500 prospective hours; the first checkpoint is about three weeks away |
+
+Tests: 395 unit (no database reachable), 19 integration on real Postgres, mutation testing 34 of 34.
+**Still RELEASE CANDIDATE, not FINAL** — and none of the three remaining gaps can be closed from the
+repository.
+
 ## Holdout readiness review, 2026-09-23 — NOT READY (one condition unmet), and never opened without the user
 
 The master plan (section 51) lists what must be true before unsealing is even worth proposing. Each

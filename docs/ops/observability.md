@@ -44,6 +44,14 @@ secret exists, placed after every other step so a ping means the whole hour genu
 It needs a free healthchecks.io account and one repository secret — a user action, five minutes,
 written up in [`open_user_actions.md`](open_user_actions.md).
 
+**Measured 2026-09-23, and it matters:** the watchdog itself is scheduled by GitHub, and GitHub ran
+**3 of its 8 three-hourly slots** in the preceding day (05:04, 12:02, 17:25 UTC — the 15:33 slot ran
+1 h 52 min late). Its checks all passed when it ran, including the first public-API security check
+from GitHub's side, but "every 3 hours" is really "every 5–7 hours" on this repository. The hourly
+analysis is unaffected (it is dispatched from Supabase at :12). An option for the user, not taken
+without asking because it adds a standing job to Supabase: dispatch the watchdog from the same
+Supabase `pg_cron` trigger. The heartbeat remains the only alarm that does not depend on GitHub.
+
 Until then the mitigations are: the Supabase `pg_cron` trigger (independent of GitHub's own
 scheduler), the self-check, the 3-hourly watchdog, and the weekly report's missing-hours list.
 All of them still require GitHub to run *something*.
