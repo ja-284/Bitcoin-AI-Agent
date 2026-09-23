@@ -32,6 +32,7 @@ import re
 import sys
 
 API_ROLES = ("anon", "authenticated")
+PUBLIC_REACHING = {"anon", "authenticated", "public"}  # roles a policy can name that the public API acts as
 PRIVILEGES = ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER")
 LOCKDOWN_MARKER = "Access lockdown"
 
@@ -100,8 +101,14 @@ def posture(schema: str = "public") -> dict:
                 if extra:
                     problems.append(f"{name}: `{role}` holds {', '.join(extra)}")
             for pol in policies:
+                # Only a policy that reaches the public API is an exposure. A policy scoped to a
+                # private backend role (the least-privilege role in docs/ops/open_user_actions.md
+                # needs exactly that) is not -- and flagging it would teach people to ignore this
+                # check. No TO clause means PUBLIC, which includes the API roles.
+                if not set(pol["roles"]) & PUBLIC_REACHING:
+                    continue
                 if allowed is None:
-                    problems.append(f"{name}: policy `{pol['name']}` exists on a table no frontend is meant to read")
+                    problems.append(f"{name}: policy `{pol['name']}` opens a table no frontend is meant to read")
                 elif pol["command"] not in ("SELECT",):
                     problems.append(f"{name}: policy `{pol['name']}` allows {pol['command']}, only SELECT is intended")
     return {"ok": not problems, "problems": problems, "tables": tables, "api_roles_present": present}

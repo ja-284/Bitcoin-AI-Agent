@@ -69,6 +69,33 @@ both were already PASS.
 
 The score is unchanged at **19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN**, and so is the judgement.
 
+### CORRECTION, 2026-09-23 — row 17 (Security) was wrong: it should have been FAIL
+
+Row 17 above scored Security **PARTIAL**, naming only the least-privilege database role as a gap.
+That was wrong, and it is left unedited above so the sequence stays honest. On 2026-09-23 Supabase's
+own security advisor flagged what the audit behind this row had never checked: **every table in the
+database was readable and writable through Supabase's public API** (Row Level Security off, full
+privileges for the `anon` role that any holder of the public anon key acts as). The 2026-09-21 audit
+looked at secrets, logs, workflow permissions and the trading boundary, and not at what the database
+itself exposes. That is a critical item, and a critical item is a FAIL whatever the other rows say.
+
+The exposure is now closed and verified (`docs/ops/security_2026-09-23_public_api_exposure.md`):
+two independent layers on every table, 48 of 48 anonymous probes refused, each layer proven on its
+own against real Postgres, schema version 4, and a detector the watchdog runs every three hours. No
+sign in the data of any outside write; whether anything was *read* can only be answered from
+Supabase's API logs.
+
+**Row 17 now: PARTIAL again — for honest reasons.** The critical exposure is closed. Still open:
+the least-privilege database role (user action, and — found while fixing this — it now also needs
+the hourly job to stop re-applying schema DDL, since only a table's owner can); and the API-log
+check for past reads (user, dashboard only).
+
+**Revised score: 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN** — the same numbers as before, reached for
+a different and truer reason. Between 2026-09-21 and 2026-09-23 the real score was 18 PASS,
+3 PARTIAL, **1 FAIL**, and the gate did not know it. The lesson recorded for every future audit:
+**check what a service exposes by default, not only what this code does** — a platform's defaults
+are part of the attack surface even when the code never touches them.
+
 ### What this does and does not say
 
 It says the backend is **trustworthy as an instrument**: what it records is correct, timestamped

@@ -162,6 +162,23 @@ def test_posture_flags_a_policy_on_a_table_nobody_should_read(monkeypatch):
     assert "policy `allow_all`" in r["problems"][0]
 
 
+def test_posture_flags_a_policy_with_no_role_named_because_that_means_public(monkeypatch):
+    r = _fake_posture(monkeypatch, {"predictions": {"rls": True, "grants": {}}},
+                      policies={"predictions": [("careless", ["public"], "SELECT")]})
+    assert not r["ok"]
+
+
+def test_posture_ignores_a_policy_scoped_to_a_private_backend_role(monkeypatch):
+    """
+    A least-privilege backend role needs policies of its own once RLS is on. Those reach no public
+    API role, so they are not an exposure -- and a detector that cried wolf about them would soon
+    be ignored.
+    """
+    r = _fake_posture(monkeypatch, {"predictions": {"rls": True, "grants": {}}},
+                      policies={"predictions": [("backend_writes", ["bitcoin_agent"], "ALL")]})
+    assert r["ok"], r["problems"]
+
+
 def test_posture_allows_only_select_on_an_intended_public_table(monkeypatch):
     monkeypatch.setattr(security, "INTENDED_PUBLIC_READ", {"backend_state": "SELECT"})
     ok = _fake_posture(monkeypatch, {"backend_state": {"rls": True, "grants": {"anon": ("SELECT",)}}},

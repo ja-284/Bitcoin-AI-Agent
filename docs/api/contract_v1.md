@@ -128,6 +128,24 @@ cost an hour of the record it describes.
 justified in `agent/api/schema.sql`: it is a **cache**, not a record. It holds no history,
 nothing is derived from it, and `python -m agent.api.publish` rebuilds it at any time.
 
+### Reading it from a frontend — locked until deliberately opened
+
+Since 2026-09-23 every table, `backend_state` included, is closed to Supabase's public API
+(`docs/ops/security_2026-09-23_public_api_exposure.md`). A frontend using the anon key therefore
+reads **nothing** until access is granted on purpose. When a frontend actually exists, opening
+exactly one table, read-only, takes three things together:
+
+```sql
+GRANT SELECT ON backend_state TO anon;
+CREATE POLICY public_read_backend_state ON backend_state FOR SELECT TO anon USING (true);
+```
+
+plus one line in `agent/database/security.py`:
+`INTENDED_PUBLIC_READ = {"backend_state": "SELECT"}` — which is what tells the watchdog that this
+one exposure is intended. Anything beyond SELECT, or any other table, is still reported. Never
+open the raw record tables to the frontend; the whole point of this contract is that the honesty
+labels live here, not in a UI.
+
 ### The options as they were weighed
 
 The contract is defined and tested; how it reaches a browser is a separate choice, and making it
