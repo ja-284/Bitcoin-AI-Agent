@@ -126,8 +126,14 @@ CREATE TABLE IF NOT EXISTS schema_meta (
     value TEXT NOT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-INSERT INTO schema_meta (key, value) VALUES ('schema_version', '3')
-ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now();
+-- Version 4 (2026-09-23) is the access lockdown below. Additive, like every migration so far:
+-- it removes nothing older code relies on, so it is applied BEFORE the code that expects it.
+-- The value is written with GREATEST so re-running an older copy of this file can never move a
+-- database's recorded version backwards.
+INSERT INTO schema_meta (key, value) VALUES ('schema_version', '4')
+ON CONFLICT (key) DO UPDATE SET
+    value = GREATEST(schema_meta.value::int, EXCLUDED.value::int)::text,
+    updated_at = now();
 
 -- Access lockdown (2026-09-23). Supabase publishes every table in the `public` schema through
 -- its REST and GraphQL APIs to the `anon` and `authenticated` roles -- the roles used by anyone

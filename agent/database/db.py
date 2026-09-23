@@ -24,7 +24,7 @@ def get_connection() -> psycopg.Connection:
     return psycopg.connect(DATABASE_URL, connect_timeout=DB_CONNECT_TIMEOUT_S)
 
 
-SCHEMA_VERSION = "3"  # 1: original tables; 2: cutoff/version/status migrations (pipeline 0.2.0); 3: invariants + append-only triggers + schema_meta
+SCHEMA_VERSION = "4"  # 1: original tables; 2: cutoff/version/status migrations (pipeline 0.2.0); 3: invariants + append-only triggers + schema_meta; 4: public-API lockdown (RLS on, API roles revoked, 2026-09-23)
 # The value written by schema.sql's schema_meta upsert must match this constant (checked by a test).
 
 
