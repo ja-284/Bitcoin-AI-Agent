@@ -1,6 +1,6 @@
 # E014 — DRY RUN on validation: 2024-01-01 → 2025-07-01
 
-pipeline 0.2.0 / scoring 0.1.0 · snapshot btcusdt_1h_2026-09-19.csv · candles in window 13128
+pipeline 0.2.0 / scoring 0.2.0 · snapshot btcusdt_1h_2026-09-19.csv · candles in window 13128
 
 ## A — scoring 0.1.0 (the live signal), direction
 
@@ -59,3 +59,19 @@ Brier 0.2250 vs base 0.2494 (+9.8%) · accuracy 0.628 vs naive 0.525 (+10.3 pts)
 
 Per year (accuracy − naive, points / ECE): 2024: +10.8 / 0.014 · 2025: +9.2 / 0.024
 Folds (test start → gap hours): 2024-01-01 → 26, 2024-03-31 → 26, 2024-06-29 → 26, 2024-09-27 → 26, 2024-12-26 → 26, 2025-03-26 → 26, 2025-06-24 → 26
+
+## E023 — secondary hypotheses (registered before unsealing; they cannot change E014's verdict)
+
+*Dry run on the already-seen validation period: these numbers prove the code and should sit close to the development values in E023 -- they are NOT evidence.*
+
+Identical rows for every comparison: 13127 (13127 with the free-rule reference).
+
+| # | hypothesis | measured | pass |
+|---|---|---|---|
+| H1 | model ≥ 1.10× the free rule's skill, interval excluding zero | +0.0976 vs +0.0398 (2.45×), lead +0.01443 [+0.01249, +0.01631] | YES |
+| H2 | fixed target more predictable than volatility-scaled | +0.0976 vs +0.0724 | YES |
+| H3 | free rule's skill on the scaled target < 0.01 | +0.0003 | YES |
+| H4 | `trades_rel_168h` best single input on the scaled target; volatility group < 40% of its skill | best `trades_rel_168h`; volatility cost 18% | YES |
+| H5 | six inputs keep ≥ 95% of the nine-input skill | 99.2% | YES |
+
+Held: 5 of 5 (H1, H2, H3, H4, H5).

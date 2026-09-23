@@ -9,6 +9,10 @@ runs, and nothing about the objects under test may change afterwards:
   C  E012 raw 1h move-size model -- E012's criterion
   D  E012 + Platt (E013's choice) 1h move-size model -- E012's and E013's criteria
 
+plus, AFTER E014's verdict is fixed, the five secondary hypotheses registered in E023
+(agent/research/holdout_secondary.py) -- evaluated on the same candles and folds, unable to
+change E014's verdict.
+
 Models B-D keep walking forward: every holdout quarter is scored by a model fitted only on
 data before it (with the usual purge/embargo and, for D, the purged calibration slice), so the
 holdout sees exactly what a live deployment would have produced.
@@ -47,6 +51,17 @@ E012_FEATURES = ["tr_mean_14_rel", "rv_24", "rv_168", "vol_ratio_24_168", "trade
 E012_LOG = ["tr_mean_14_rel", "rv_24", "rv_168", "vol_ratio_24_168", "trades_rel_24h", "trades_rel_168h"]
 E012_THRESHOLD_1H = 0.0025
 C = 0.1
+# The scoring version E014 tests as object A (amended 2026-09-23 from 0.1.0, while sealed). The run
+# refuses to start if the code's scoring version differs: a scoring change must never silently change
+# what the one-time evaluation tests -- it needs a dated amendment to E014 first.
+REGISTERED_SCORING_VERSION = "0.2.0"
+
+
+def assert_registered_versions() -> None:
+    if SCORING_VERSION != REGISTERED_SCORING_VERSION:
+        raise RuntimeError(
+            f"scoring is {SCORING_VERSION} but E014 registers {REGISTERED_SCORING_VERSION} as object A. "
+            "Amend research/experiments/E014_holdout_evaluation.json (dated, while sealed) before running.")
 
 
 def _window(df: pd.DataFrame, window: Period) -> pd.DataFrame:
@@ -90,6 +105,7 @@ def _scoring_block(bars, rows, window: Period) -> dict:
 def run(experiment: str, unseal: bool, dry_run: bool) -> Path:
     if unseal == dry_run:
         raise ValueError("choose exactly one of --unseal (the real, one-time run) or --dry-run")
+    assert_registered_versions()  # before a single candle is loaded
     if dry_run:
         window = VALIDATION
         bars, quality, snapshot = load_bars(end=HOLDOUT.start)
@@ -123,7 +139,13 @@ def run(experiment: str, unseal: bool, dry_run: bool) -> Path:
     results["C_E012_size_1h_raw"] = _model_block(df_sz, cols, 1, window, 90, "none")
     results["D_E012_size_1h_platt"] = _model_block(df_sz, cols, 1, window, 90, "platt")
 
-    results["verdicts"] = verdicts(results)
+    results["verdicts"] = verdicts(results)  # E014's verdict, fixed BEFORE the secondary hypotheses run
+
+    logger.info("E023: secondary hypotheses (cannot change E014's verdict)")
+    from agent.research import holdout_secondary
+
+    # Same candles, same frame, same walk-forward as object D -- no new route to the data.
+    results["E023_secondary"] = holdout_secondary.evaluate(df_sz, cols, bars, window, _fit_and_score)
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "results.json").write_text(json.dumps(results, indent=2, default=str), encoding="utf-8")
     (out_dir / "summary.md").write_text(render(results), encoding="utf-8")
@@ -199,6 +221,10 @@ def render(res: dict) -> str:
         yrs = res[key]["by_year"]
         L.append("\nPer year (accuracy − naive, points / ECE): " + " · ".join(f"{yr}: {(d2['acted_accuracy'] - d2['naive_rate']) * 100:+.1f} / {d2['ece']:.3f}" for yr, d2 in yrs.items() if d2.get("n")))
         L.append("Folds (test start → gap hours): " + ", ".join(f"{f['test_range'][0][:10]} → {int(f['gap_hours_between_last_fit_row_and_test_start'])}" for f in res[key]["folds"]))
+    if "E023_secondary" in res:
+        from agent.research import holdout_secondary
+
+        L += holdout_secondary.render(res["E023_secondary"], res["dry_run"])
     return "\n".join(L)
 
 

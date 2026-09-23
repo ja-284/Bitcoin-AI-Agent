@@ -4,7 +4,12 @@
   "git_commit": "(filled after the one-time run)",
   "status": "CONFIRMATORY -- the one-time evaluation on the sealed holdout. Pre-registered here; the holdout is opened only with the user's explicit go-ahead, once, and never again.",
   "why_once": "Every earlier decision (E001-E013) was made without looking at 2025-07-01 -> 2026-08-19. Once these candles are seen, they can never again serve as an untouched test. So the objects under test, the metrics and the pass rules are fixed here first, and the run happens exactly once. Any later idea is tested on live data (Phase 13), not on this period.",
-  "window": {"name": "holdout", "start": "2025-07-01 00:00 UTC", "end": "2026-08-20 00:00 UTC (exclusive)", "excluded": "the contaminated buffer 2026-08-20 -> 2026-09-19 and the live period are NOT part of this evaluation"},
+  "window": {
+    "name": "holdout",
+    "start": "2025-07-01 00:00 UTC",
+    "end": "2026-08-20 00:00 UTC (exclusive)",
+    "excluded": "the contaminated buffer 2026-08-20 -> 2026-09-19 and the live period are NOT part of this evaluation"
+  },
   "objects_under_test": {
     "A": "scoring 0.1.0 -- the live signal, replayed with pipeline 0.2.0 (news absent, weight 0, as in E001). Direction at 1h/6h/24h/72h/168h. Prediction from E001: no information.",
     "B": "E011 set-A direction model, 1h, expanding walk-forward (C = 0.1), refit each holdout quarter on data before it. Prediction from E011: no pass (zero return edge).",
@@ -22,10 +27,17 @@
   "dry_run": "The same script is first run with --dry-run: candles stop at the holdout start and the (already seen) validation period is evaluated. This proves the code path, the fold layout and the output before anything is unsealed. Dry-run numbers are NOT new evidence (validation was used in E012/E013) and are stored separately under research/results/E014_dryrun/.",
   "access_control": "Holdout candles enter only through load_bars(allow_holdout=True, reason=...) which appends to research/HOLDOUT_ACCESS.log; research/HOLDOUT_ACCESS.log does not exist at pre-registration time (never accessed).",
   "pipeline_version": "0.2.0",
-  "scoring_version": "0.1.0",
+  "scoring_version": "0.2.0 (amended 2026-09-23 from 0.1.0 -- see amendment_2026_09_23)",
   "snapshot": "btcusdt_1h_2026-09-19.csv (spot), klines_extra_btcusdt_1h_2026-09-20.csv (trades / taker-buy) -- both already on disk; the loader truncated them at the holdout until now",
   "metrics": "(filled after the one-time run)",
   "results": "(filled after the one-time run)",
   "affected_design": "(filled after the one-time run)",
-  "notes": "Nothing about the live system changes as a result of this run; wiring the calibrated move-size probability into the live output is a separate decision after Phase 13 monitoring."
+  "notes": "Nothing about the live system changes as a result of this run; wiring the calibrated move-size probability into the live output is a separate decision after Phase 13 monitoring.",
+  "amendment_2026_09_23": {
+    "made": "2026-09-23, while the holdout is SEALED (research/HOLDOUT_ACCESS.log does not exist) -- before any holdout access, so it cannot have been influenced by holdout data.",
+    "what": "Object A (and the category-score inputs of object B) is scoring 0.2.0, not 0.1.0. Nothing else changes: the objects' roles, every pass rule, the window, the fold layout and the verdict logic are exactly as registered above. The original text is left as written.",
+    "why": "E014 registered object A as 'scoring 0.1.0 -- the live signal'. Its stated intent is to test THE LIVE SIGNAL, and on 2026-09-22, on the user's decision, the live signal became scoring 0.2.0 (history counted in consecutive hours, not rows -- E016). The evaluation code replays with the current scorer, so registration and code had quietly come to disagree about what is being tested. Found by an audit of the dry run on 2026-09-23, and fixed here rather than at unsealing.",
+    "what_it_changes_in_practice": "On every hour whose 250-hour window contains no missing candle, 0.1.0 and 0.2.0 are identical to the last bit (E016, 62,262 of 62,262 clean hours). The validation dry run reproduces the 2026-09-21 dry run exactly for the live signal and for objects B, C and D; the only numbers that move are the random-mix baseline's, because it copies the live signal's BUY/HOLD/SELL mix from the exploration period, which 0.2.0 changed on gap-affected hours. On the holdout the two versions can differ only on hours whose window contains a data gap -- whether any exist is not known and will not be looked at before unsealing.",
+    "guard": "agent/research/holdout_eval.py now refuses to run -- before loading any candle -- unless the running scoring version equals REGISTERED_SCORING_VERSION, which this amendment sets to 0.2.0. A future scoring change can therefore never silently change what the one-time evaluation tests; it would require another dated amendment first."
+  }
 }
