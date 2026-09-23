@@ -127,6 +127,27 @@ FINAL** because three PARTIALs remain and one fact is UNKNOWN, none of which can
 repository. A frontend can be built against it now; "backend complete" is not claimed, and a model
 that "works" is not claimed either.
 
+## Holdout readiness review, 2026-09-23 — NOT READY (one condition unmet), and never opened without the user
+
+The master plan (section 51) lists what must be true before unsealing is even worth proposing. Each
+condition, checked:
+
+| condition | status | evidence |
+|---|---|---|
+| major development complete | **met** | backend is a release candidate (above); no open engineering change affects what the holdout tests |
+| major architecture decisions complete | **met** | the model family (E020), target definition (E021) and feature set (E018) were all tested and stand as they are |
+| calibration method fixed | **met** | Platt on a purged 90-day slice (E013), unchanged since |
+| the version under test explicitly frozen | **met, after a correction today** | E014 still named scoring 0.1.0 while the live signal is 0.2.0 — amended while sealed; the script now refuses to run on an unregistered version. Objects C and D are the *procedure* (walk-forward, refit each holdout quarter, as a deployment would), not the frozen artefact `move_size_1h_v1`, which is tested prospectively instead — both by design |
+| final evaluation code audited | **met** | dry run on validation reproduces the 2026-09-21 dry run for every object (only the random-mix baseline moves, explained); the E023 extension is dry-run too; one guarded route into the holdout, pinned by tests; the evaluation's own pass logic is mutation-tested |
+| no important known leakage | **met** | point-in-time perturbation tests across features, labels, news and replay; 26 of 26 guard mutations caught (tools/guard_mutations.py) — after round two found and closed two real gaps, one of them a possible future leak in the historical replay |
+| **meaningful prospective monitoring has occurred** | **NOT MET** | 37 prospective shadow hours of the 500 the protocol's first look needs; E024 shows the E012 verdict only becomes reliable near 2,000 hours. Opening the holdout before the live record has anything to say would spend the only clean arbiter while the other line of evidence is still silent |
+
+**Verdict: not ready.** Everything that can be prepared is prepared; what is missing is time. The
+earliest sensible moment to *propose* unsealing is after the 500-hour first look (about 19 days of
+shadow hours from 2026-09-23), and the protocol's own logic points closer to the 2,000-hour E012
+verdict. Either way the decision is the user's, explicitly, and the holdout stays sealed until then.
+`research/HOLDOUT_ACCESS.log` does not exist.
+
 ### What this does and does not say
 
 It says the backend is **trustworthy as an instrument**: what it records is correct, timestamped

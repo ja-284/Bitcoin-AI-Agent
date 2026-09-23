@@ -128,12 +128,19 @@ item: a Supabase security warning.
   scoring 0.1.0 gap bugs, stale data, the schema guard, the staleness check, the prospective rule, the
   exposure detector, the confidence label — and **all 18 caught**, each by the test written for that
   property. Two controls make that meaningful: the unmutated suite passes, and a comment-only change survives.
+  **Round two (8 more, research-validity guards) found two real gaps**: the historical replay (the engine behind
+  E001/E017) could read a candle from the future without any test noticing, and E023's evaluation could train its
+  two compared models on different rows. Both closed with new tests, each proven to kill its mutation. **26 of 26.**
 - [x] **E023 pre-registered (NOT run):** this week's findings (E018–E022) registered as secondary hypotheses
   for the sealed holdout, because validation wear means they can only be confirmed on clean data. Extending
   `holdout_eval.py` for them, and dry-running it on validation, is now a prerequisite of unsealing.
 - [x] **E024, power of the live checkpoints:** E012's 2,000-hour verdict is sound; E013's 5,000-hour bucket rule
   fails a perfectly calibrated forecaster 8% of the time and the real model 27%; ECE above 0.03 is expected at
   the 500-hour first look. No rule changed — the protocol now states these error rates.
+- [x] **Holdout readiness, part of it:** E023 made testable (`agent/research/holdout_secondary.py`) and dry-run on
+  validation; **E014 amended while sealed** — it still named scoring 0.1.0 as object A while the live signal is 0.2.0,
+  so registration and code disagreed about what the one-time run would test. The script now refuses to start on an
+  unregistered scoring version, before loading a single candle. Nothing about the seal changed.
 - [ ] **Wire `agent.api.publish` into the hourly workflow** — next, after the migration change is
   seen working in a scheduled run.
 

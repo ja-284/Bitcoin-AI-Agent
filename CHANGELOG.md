@@ -20,6 +20,18 @@ Nothing that runs changed.
   time and the real model 27%, because its calibration moves with the regime. ECE above 0.03 is expected
   at the 500-hour first look. **No rule changed**; `research/LIVE_EVALUATION.md` now states these error
   rates. The 18-hour watch item turns out to be a one-in-four event and is closed.
+- **Mutation testing, round two — two real gaps found and closed.** Eight more research-validity guards
+  (calibrator fitted on test rows, replay reading the future, the frozen model's feature guard disabled,
+  duplicate news, outcomes declared unavailable too early, the exposure detector ignoring policies, two
+  on E023's own evaluation). Six were caught. **Two survived:** the historical replay — the engine behind
+  E001 and E017 — could read one candle from the future and the whole suite still passed, because its
+  window slicing was separate from the backtest runner's tested code; and E023's evaluation could train
+  its fixed- and scaled-target models on different rows. New tests close both, each re-run against its
+  mutation and shown to kill it. **26 of 26 guards now protected.**
+- **Holdout readiness:** E023 made testable and dry-run on validation; **E014 amended while sealed** —
+  it still named scoring 0.1.0 as object A while the live signal is 0.2.0 — and the script now refuses to
+  start on an unregistered scoring version before loading a candle. Readiness review: not ready, because
+  prospective monitoring is immature (37 of 500 hours); everything else that can be prepared is.
 - **E023 pre-registered:** this week's validation-generated findings registered for the sealed holdout,
   before it is opened, so they can one day be confirmed on clean data.
 
