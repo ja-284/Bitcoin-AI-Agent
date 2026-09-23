@@ -45,7 +45,7 @@ GitHub running something. That is the hole.
 
 ---
 
-## 2. A least-privilege database role — ready for you once one scheduled run confirms it
+## 2. A least-privilege database role — ready for you
 
 **What it is.** The hourly job currently connects as the Supabase project's `postgres` role, which
 can do anything, including dropping tables and bypassing Row Level Security. It only ever needs to
@@ -76,18 +76,35 @@ the corrected version still had an UPDATE policy without `WITH CHECK`, which Pos
 to the updated row — so every shadow grading would have been refused with "new row violates
 row-level security policy". The test was run against that buggy version and fails exactly that way.
 
-**What to do**, when the item is ready:
+**READY (2026-09-23 evening).** Every prerequisite is done and two checks now make the switch
+verifiable instead of hopeful: `python -m agent.database.role_check` compares the live role with the
+proven file (it names any missing or extra grant or policy), and every prediction now records the
+database role that wrote it (`run_meta.db_role`, stamped by the database itself), so the switch is
+visible in the record.
 
-1. Supabase → *SQL Editor*: create the role with a long random password you generate yourself and
-   never paste anywhere else —
-   `CREATE ROLE bitcoin_agent LOGIN PASSWORD '...';`
-2. In the same editor, run the whole of `docs/ops/least_privilege_role.sql`.
-3. Build the connection string you already have, but with the new role and password (for Supabase's
-   pooler the username is usually `bitcoin_agent.<project-ref>`), and replace the `DATABASE_URL`
-   **repository secret** in GitHub. Keep the old `postgres` string for `python -m agent.migrate`.
-4. Run the hourly workflow once by hand (Actions → *Hourly Bitcoin analysis* → *Run workflow*) and
-   check it is green. If anything fails, put the old secret back: nothing is lost, the next hour
-   recomputes.
+**What to do** (about 10 minutes; tell me when you have done steps 1–2 and I can run the check):
+
+1. Generate a password on your own computer — URL-safe, so it can go straight into a connection
+   string: `.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"`.
+   Do not paste it into a chat.
+2. Supabase → *SQL Editor*: `CREATE ROLE bitcoin_agent LOGIN PASSWORD '<the password>';` then run the
+   whole of `docs/ops/least_privilege_role.sql` in the same editor.
+3. **Check before switching:** `python -m agent.database.role_check` (it uses your normal `.env`, i.e.
+   `postgres`). It must print `OK: bitcoin_agent holds exactly what ... grants`. If it prints
+   `DIFFERENT`, fix what it names first — the job has not been touched yet.
+4. Build the connection string you already have, with the new role and password (for Supabase's
+   pooler the username is `bitcoin_agent.<project-ref>` — the part after `postgres.` in today's
+   username), and replace the `DATABASE_URL` **repository secret** in GitHub. Keep the old `postgres`
+   string in your local `.env` for `python -m agent.migrate` and the weekly report.
+5. Run the hourly workflow once by hand (Actions → *Hourly Bitcoin analysis* → *Run workflow*) and
+   check it is green. **Proof it switched:** the new prediction's `run_meta.db_role` is
+   `bitcoin_agent`, not `postgres`. If anything fails, put the old secret back: nothing is lost, the
+   next hour recomputes.
+
+**One limit, stated plainly:** Supabase grants the `net` schema to PUBLIC, which every role belongs
+to, so `bitcoin_agent` could still read the dispatch queue in the seconds a request waits there.
+This project cannot revoke that. It is still far less than `postgres`, which can read the Vault
+where the token is kept — and the *Exposed schemas* check (item 5) keeps `net` off the internet.
 
 **What protects you meanwhile.** The secret is not in git, is not printed by any log, and
 psycopg's errors do not echo the connection string (checked). Append-only triggers on the four
