@@ -170,7 +170,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--controls-only", action="store_true", help="run only the two controls")
+    parser.add_argument("--only", default="", help="run only mutations whose description contains this text")
     args = parser.parse_args()
+    global MUTATIONS
+    if args.only:
+        MUTATIONS = [m for m in MUTATIONS if args.only.lower() in m.what.lower()]
+        if not MUTATIONS:
+            print(f"no mutation matches {args.only!r}")
+            return 2
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if args.list:
         for m in MUTATIONS:

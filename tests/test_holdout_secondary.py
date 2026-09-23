@@ -130,6 +130,30 @@ def test_h5_follows_the_share_of_skill_kept_by_the_six_inputs():
     assert strong_six["H5"]["share"] >= 0.95 and strong_six["H5"]["pass"]
 
 
+def test_the_fixed_and_scaled_models_are_trained_on_identical_rows():
+    """
+    Found by mutation testing: aligning only the SCORED rows is not enough. H2 compares a model on
+    the fixed target with one on the volatility-scaled target; if hours where the scaled label does
+    not exist (the first ~240 hours, or around a data gap) stayed in the fixed model's training data,
+    the two would be trained on different rows and H2 would compare unlike with unlike.
+    """
+    import pandas as pd
+
+    df, cols, bars, window = _world()
+    seen = []
+    inner = _fake_walk_forward({c: 0.1 for c in cols})
+
+    def recording(frame, use_cols, *a):
+        seen.append((tuple(use_cols), frame[frame[use_cols + ["y"]].notna().all(axis=1)].index))
+        return inner(frame, use_cols, *a)
+
+    hs.evaluate(df, cols, bars, window, recording)
+    nine = [idx for used, idx in seen if len(used) == len(cols)]
+    assert len(nine) == 2, "expected one nine-input fit per target"
+    assert nine[0].equals(nine[1]), "the fixed- and scaled-target models were trained on different rows"
+    assert len(nine[0]) < len(df), "the world must contain hours without a scaled label, or this proves nothing"
+
+
 def test_every_comparison_uses_only_rows_inside_the_window():
     import pandas as pd
 
