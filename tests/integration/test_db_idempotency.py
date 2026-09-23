@@ -14,6 +14,8 @@ What is proven at the SQL level (the unit tests fake the database):
   - a retry after a failed save produces exactly one row
   - the shadow table behaves the same way, and grading a shadow row twice keeps the first
   - the uniqueness constraints that make all of this true actually exist in the schema
+  - (2026-09-23) no table is reachable through Supabase's public API, and each of the two
+    protecting layers -- revoked privileges and Row Level Security -- works on its own
 """
 
 import os
@@ -230,3 +232,77 @@ def test_shadow_run_errors_are_recorded_and_append_only(scratch_db):
             with db.get_connection() as conn, conn.cursor() as cur:
                 cur.execute(sql, (first,))
                 conn.commit()
+
+
+# ---------------------------------------------------------------- public-API lockdown (2026-09-23)
+# Supabase's `anon` role is what anyone holding the project's public anon key acts as. Two layers
+# keep it out -- revoked privileges AND Row Level Security with no policies -- and each layer is
+# proven here on its own, because a test that only ever sees the first layer stop the probe
+# cannot tell you whether the second one works. Everything happens in the scratch schema.
+def _as_role(db, role: str, sql: str):
+    """Run one statement as an API role, inside a transaction that is always rolled back."""
+    import psycopg
+
+    with db.get_connection() as conn, conn.cursor() as cur:
+        try:
+            cur.execute(f"SET LOCAL ROLE {role}")
+            cur.execute(sql)
+            return cur.fetchone()[0] if cur.description else "ok"
+        except psycopg.Error as exc:
+            return exc
+        finally:
+            conn.rollback()
+
+
+def test_every_table_is_locked_against_the_public_api(scratch_db):
+    db, _ = scratch_db
+    from agent.api.publish import ensure_table
+
+    ensure_table()  # backend_state too, so all three schema files are covered
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("""SELECT c.relname, c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                       WHERE n.nspname = %s AND c.relkind = 'r' ORDER BY 1""", (SCHEMA,))
+        tables = dict(cur.fetchall())
+        assert set(tables) >= {"predictions", "prediction_outcomes", "schema_meta", "shadow_move_size",
+                               "shadow_run_errors", "backend_state"}
+        assert all(tables.values()), f"RLS is off on: {[t for t, on in tables.items() if not on]}"
+        for t in tables:
+            for role in ("anon", "authenticated"):
+                for priv in ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE"):
+                    cur.execute("SELECT has_table_privilege(%s, %s, %s)", (role, f"{SCHEMA}.{t}", priv))
+                    assert not cur.fetchone()[0], f"`{role}` still holds {priv} on {t}"
+
+
+def test_rls_alone_hides_every_row_even_if_a_privilege_is_regranted(scratch_db):
+    """
+    The second layer, isolated: hand `anon` the schema and SELECT on predictions -- exactly the
+    kind of mistake a future dashboard click could make -- and RLS must still show it nothing.
+    Then switch RLS off and the same query must see the row, which proves the test is measuring
+    RLS and not something else.
+    """
+    db, _ = scratch_db
+    db.save_prediction(_prediction(datetime(2026, 1, 5, tzinfo=timezone.utc)))
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute(f"GRANT USAGE ON SCHEMA {SCHEMA} TO anon")
+        cur.execute("GRANT SELECT ON predictions TO anon")
+        conn.commit()
+    assert _as_role(db, "anon", "SELECT count(*) FROM predictions") == 0, "RLS did not hide the row"
+
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("ALTER TABLE predictions DISABLE ROW LEVEL SECURITY")
+        conn.commit()
+    assert _as_role(db, "anon", "SELECT count(*) FROM predictions") == 1, (
+        "with RLS off the re-granted row should be visible -- if not, the test above measured nothing")
+
+
+def test_the_revoke_alone_blocks_writes_even_with_rls_off(scratch_db):
+    """The first layer, isolated: with RLS switched off, revoked privileges must still refuse a write."""
+    import psycopg
+
+    db, _ = scratch_db
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute(f"GRANT USAGE ON SCHEMA {SCHEMA} TO anon")
+        cur.execute("ALTER TABLE schema_meta DISABLE ROW LEVEL SECURITY")
+        conn.commit()
+    result = _as_role(db, "anon", "UPDATE schema_meta SET value = '0'")
+    assert isinstance(result, psycopg.errors.InsufficientPrivilege), result

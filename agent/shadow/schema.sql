@@ -83,3 +83,27 @@ BEGIN
 END $$;
 DROP TRIGGER IF EXISTS shadow_run_errors_append_only ON shadow_run_errors;
 CREATE TRIGGER shadow_run_errors_append_only BEFORE UPDATE OR DELETE ON shadow_run_errors FOR EACH ROW EXECUTE FUNCTION shadow_errors_forbid_change();
+
+-- Access lockdown (2026-09-23): RLS on with no policies, and the Supabase API roles' privileges
+-- revoked. The reasoning is written out in agent/database/schema.sql; it is repeated here as
+-- code, not as a reference, so this file stays self-contained and its tables are protected
+-- whichever schema file is applied first.
+DO $$
+DECLARE
+    t text;
+    r text;
+    s text;
+BEGIN
+    FOREACH t IN ARRAY ARRAY['shadow_move_size', 'shadow_run_errors'] LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
+        FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+                EXECUTE format('REVOKE ALL ON TABLE %I FROM %I', t, r);
+                s := pg_get_serial_sequence(t, 'id');
+                IF s IS NOT NULL THEN
+                    EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM %I', s, r);
+                END IF;
+            END IF;
+        END LOOP;
+    END LOOP;
+END $$;

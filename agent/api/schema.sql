@@ -19,6 +19,24 @@ CREATE TABLE IF NOT EXISTS backend_state (
     state JSONB NOT NULL                               -- the whole contract, exactly as the module emits it
 );
 
+-- Access lockdown (2026-09-23): RLS on with no policies, and the Supabase API roles' privileges
+-- revoked -- the same two layers as every other table (reasoning in agent/database/schema.sql).
+-- This table is the one a frontend WILL read, and that is exactly why it is locked by default:
+-- read access is granted deliberately, with one narrow read-only policy, when a frontend
+-- actually exists (docs/api/contract_v1.md). Being meant for display is not the same as being
+-- meant to be writable by anyone holding the public key.
+DO $$
+DECLARE
+    r text;
+BEGIN
+    EXECUTE 'ALTER TABLE backend_state ENABLE ROW LEVEL SECURITY';
+    FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+            EXECUTE format('REVOKE ALL ON TABLE backend_state FROM %I', r);
+        END IF;
+    END LOOP;
+END $$;
+
 COMMENT ON TABLE backend_state IS
     'Derived cache of agent/api/state.py, one row, safe to overwrite. Not a record: no history, '
     'nothing depends on it, rebuild with "python -m agent.api.publish". A frontend reads this; '

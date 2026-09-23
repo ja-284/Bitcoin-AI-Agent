@@ -128,3 +128,37 @@ CREATE TABLE IF NOT EXISTS schema_meta (
 );
 INSERT INTO schema_meta (key, value) VALUES ('schema_version', '3')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now();
+
+-- Access lockdown (2026-09-23). Supabase publishes every table in the `public` schema through
+-- its REST and GraphQL APIs to the `anon` and `authenticated` roles -- the roles used by anyone
+-- holding the project's anon key, which is designed to be public and ends up in every browser
+-- app -- and its default privileges give those roles full read, insert, update and delete on
+-- every new table. Row Level Security is what is supposed to make that safe, and it was off on
+-- every table here. Two independent layers now close it:
+--   1. RLS enabled with NO policies, which denies the API roles every row;
+--   2. the API roles' privileges revoked, so even a careless future policy grants nothing.
+-- The backend is unaffected: it connects as the tables' owner, `postgres`, which bypasses RLS.
+-- A frontend that needs to read something gets an explicit, narrow, read-only policy for that
+-- one table (docs/api/contract_v1.md) -- never a blanket one.
+-- Guarded so this file still runs on a plain Postgres where the Supabase roles do not exist.
+DO $$
+DECLARE
+    t text;
+    r text;
+    s text;
+BEGIN
+    FOREACH t IN ARRAY ARRAY['predictions', 'prediction_outcomes', 'schema_meta'] LOOP
+        EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
+        FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+            IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+                EXECUTE format('REVOKE ALL ON TABLE %I FROM %I', t, r);
+                IF EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = t::regclass AND attname = 'id' AND NOT attisdropped) THEN
+                    s := pg_get_serial_sequence(t, 'id');
+                    IF s IS NOT NULL THEN
+                        EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM %I', s, r);
+                    END IF;
+                END IF;
+            END IF;
+        END LOOP;
+    END LOOP;
+END $$;
