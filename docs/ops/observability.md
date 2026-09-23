@@ -22,6 +22,7 @@ Reviewed 2026-09-22 by reading every failure handler in the live path (`agent/`,
 | all news feeds down | zero items → news category **weight 0** | `news.available = false`, `completeness_score` drops |
 | the news AI call fails or is truncated | news left out entirely, never guessed at | `run_meta.news_error` + `news_error_type`, `ai_model_news` NULL, weight 0 |
 | the explanation fails or is truncated | the analysis is saved without it; the decision never depended on it | `run_meta.explanation_error`, `explanation_status` |
+| an AI answer arrives without token figures | recorded as `usage_unavailable`, **never as zero**; the run's cost is left out of the average and counted | `run_meta.ai_usage`; weekly report §1 ("without figures") (added 2026-09-23) |
 | a database write fails | the run fails; the next hour recomputes from scratch | job fails; writes are idempotent so a retry cannot duplicate |
 | the same hour runs twice | early exit **before** the AI calls | no duplicate row (`ON CONFLICT DO NOTHING`, proven on real Postgres) |
 | the research shadow step fails | recorded in `shadow_run_errors`; the hourly job stays green because the live record is unaffected | weekly report §3; watchdog alarms only if it persists (> 2 in 6h) |

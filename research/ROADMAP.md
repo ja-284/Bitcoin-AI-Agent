@@ -133,6 +133,8 @@ item: a Supabase security warning.
   **Round two (8 more, research-validity guards) found two real gaps**: the historical replay (the engine behind
   E001/E017) could read a candle from the future without any test noticing, and E023's evaluation could train its
   two compared models on different rows. Both closed with new tests, each proven to kill its mutation. **26 of 26.**
+  Two more for the AI cost record, then **one full pass: 28 of 28 caught, both controls held, every file
+  restored byte for byte** (2026-09-23 ~15:45 UTC).
 - [x] **E023 pre-registered (NOT run):** this week's findings (E018–E022) registered as secondary hypotheses
   for the sealed holdout, because validation wear means they can only be confirmed on clean data. Extending
   `holdout_eval.py` for them, and dry-running it on validation, is now a prerequisite of unsealing.
@@ -143,9 +145,18 @@ item: a Supabase security warning.
   validation; **E014 amended while sealed** — it still named scoring 0.1.0 as object A while the live signal is 0.2.0,
   so registration and code disagreed about what the one-time run would test. The script now refuses to start on an
   unregistered scoring version, before loading a single candle. Nothing about the seal changed.
-- [~] **Wire `agent.api.publish` into the hourly workflow** — deployed 2026-09-23 ~15:20 UTC, last among
+- [x] **Wire `agent.api.publish` into the hourly workflow** — deployed 2026-09-23 ~15:20 UTC, last among
   the real steps and unable to fail the job. Acceptance: the next hourly run is green in every step and
-  `backend_state.generated_at` advances to that run's time, describing the hour it just saved.
+  `backend_state.generated_at` advances to that run's time, describing the hour it just saved. **PASS** at
+  the 16:12 UTC run (59c4c76): every step green, snapshot written 16:13:14 describing the 15:00 hour, health ok.
+- [x] **AI cost measured, not estimated** — every run records the API's own token counts
+  (`run_meta.ai_usage`); the weekly report prices them against a dated list-price table. Real reading
+  before deploying (one unsaved run, 56 headlines): $0.0164 a run, ≈ $11.80 a month. Deployed
+  2026-09-23 ~15:30 UTC. Acceptance: the 15:00 UTC prediction carries `ai_usage` with figures for both
+  calls, every job step green. **PASS**: the 15:00 prediction (written 16:12:33 by 59c4c76, 58 headlines) carries
+  news 1,782 in / 2,310 out and explanation 509 in / 268 out tokens ≈ $0.0170; shadow row ok, 0 shadow errors.
+  (GitHub's own backup slots at :22/:37/:52 and the 15:33 watchdog did not fire this hour — its scheduler, not
+  the code; the watchdog's first security check now falls to 18:33 UTC.)
 
 **Quality assessment of the security step** (the addendum's 0-100 per dimension; a summary, never
 a substitute for the critical items below it): correctness 95 · robustness 90 · security 90 ·
