@@ -500,7 +500,10 @@ def fetch_shadow_rows() -> list[dict]:
 # ---------------------------------------------------------------- 4. watch list
 def watch_list(pred_rows: list[dict], now: datetime) -> dict:
     rows = [r for r in pred_rows if r["pipeline_version"] == PIPELINE_VERSION]
-    with_news = sum(1 for r in rows if r["news_items_n"] > 0)
+    # Hours the news evaluation can actually USE: headlines collected AND scored. Counting collected
+    # headlines alone included the 17 hours of 2026-09-21/22 whose news scoring failed (no score at
+    # all), overstating progress towards the 500-hour threshold (found 2026-09-23).
+    with_news = sum(1 for r in rows if r["news_items_n"] > 0 and not (r.get("run_meta") or {}).get("news_error"))
     months = (now - LIVE.start).days / 30.44
     return {
         "news_hours": {"have": with_news, "need": NEWS_HOURS_FOR_8_6, "ready": with_news >= NEWS_HOURS_FOR_8_6},
@@ -725,7 +728,7 @@ def render(rep: dict) -> str:
         L += ["", f"*{dr['note']}*"]
     wl = rep["watch_list"]
     L += ["", "## 6. Watch list", "",
-          f"- News evaluation (roadmap 8.6): {wl['news_hours']['have']} of {wl['news_hours']['need']} live hours with news — {'READY' if wl['news_hours']['ready'] else 'waiting'}",
+          f"- News evaluation (roadmap 8.6): {wl['news_hours']['have']} of {wl['news_hours']['need']} live hours with a usable news score — {'READY' if wl['news_hours']['ready'] else 'waiting'}",
           f"- Confirmatory re-tests on live data (funding 24h; dollar/yield 168h): {wl['live_months']['have']} of {wl['live_months']['need']} months — {'READY' if wl['live_months']['ready'] else 'waiting'}",
           "", "Reminders: healthchecks.io heartbeat not set up; GitHub token `supabase-dispatch` expires 2027-09-20; scheduled workflows on a public repo pause after 60 days without a commit."]
     return "\n".join(L)

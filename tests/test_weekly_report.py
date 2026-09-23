@@ -121,6 +121,14 @@ def test_watch_list_thresholds():
     assert watch_list(rows, T0 + timedelta(days=200))["live_months"]["ready"] is True
 
 
+def test_hours_whose_news_scoring_failed_do_not_count_towards_the_news_evaluation():
+    """Headlines collected but never scored (the 2026-09-21/22 truncation) are no evidence about news."""
+    rows = [_pred(T0 + i * H, news=20) for i in range(10)]
+    for r in rows[:3]:
+        r["run_meta"] = {"news_error": "news model answer unusable for 60 headlines"}
+    assert watch_list(rows, T0 + 10 * H)["news_hours"]["have"] == 7
+
+
 def test_shadow_record_coverage_blanks_and_evaluation():
     from agent.research.weekly_report import shadow_record
 

@@ -159,7 +159,7 @@ until the user looks. Everything the project's own role can close is closed and 
 |---|---|---|---|
 | 16 Automation | **PARTIAL** | heartbeat steps hardened (a ping hiccup cannot turn a good hour red; a failed run signals `/fail` at once), pinned by tests and a mutation; the watchdog's real cadence measured (3 of 8 slots ran in a day) | the user's heartbeat account and secret — attempted today, did not work, deferred by the user |
 | 17 Security | **PARTIAL** | root cause closed live; detector covers views, functions, default grants; the least-privilege role made *verifiable* (`python -m agent.database.role_check` against the proven file) and every prediction now records the role that wrote it (`run_meta.db_role`) | the user creates the login role (a password) and switches the secret — ~10 min, steps in `open_user_actions.md`; plus the 10-second *Exposed schemas* check |
-| 21 Prospective monitoring | **PARTIAL — the calendar** | nothing can be done but wait; the shadow record runs every hour with 0 errors | ~45 of 500 prospective hours; the first checkpoint is about three weeks away |
+| 21 Prospective monitoring | **PARTIAL — the calendar** | nothing can be done but wait; the shadow record runs every hour with 0 errors | 42 graded prospective hours of 500 (counted from the database at 19:55 UTC); the first checkpoint is about three weeks away |
 
 Tests: 395 unit (no database reachable), 19 integration on real Postgres, mutation testing 34 of 34.
 **Still RELEASE CANDIDATE, not FINAL** — and none of the three remaining gaps can be closed from the
