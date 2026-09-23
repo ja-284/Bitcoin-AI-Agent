@@ -5,6 +5,21 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## backend — 2026-09-23 late evening (the least-privilege switch made checkable; heartbeat hardened; honest counters)
+
+- `python -m agent.database.role_check`: the live `bitcoin_agent` role against the proven SQL file —
+  attributes, memberships, ownership, table and column privileges, policy count and scope. Its
+  expectations are parsed from the file, so the two cannot drift. Prints `NOT READY` until the user
+  creates the role. Proven on a throwaway role with the file applied, and shown to name an extra grant.
+- **Each prediction records the database role that wrote it** (`run_meta.db_role`), stamped by the
+  INSERT itself (`current_user`) — so the switch to the least-privilege role is visible in the record.
+- Heartbeat: the ping step can no longer fail a good hour (`continue-on-error`); a failed run sends
+  healthchecks.io's `/fail` at once. Both inert until the `HEARTBEAT_URL` secret exists.
+- Weekly report: the user's accepted news cost (~$12/month) recorded, with a flag above $15; the
+  shadow coverage line uses the due-hours rule; the news-evaluation counter counts only hours with a
+  usable news score (it had included the 17 hours whose scoring failed).
+- 397 unit tests, 19 integration tests, mutation testing 34 of 34.
+
 ## security — 2026-09-23 evening (the root cause of the exposure, and the doors the detector could not see)
 
 Schema version unchanged (4): nothing the code relies on moved; the migration is idempotent and was
