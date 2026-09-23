@@ -358,6 +358,9 @@ def test_the_least_privilege_role_can_do_everything_the_hourly_job_does(least_pr
     as_of = datetime(2026, 2, 1, tzinfo=timezone.utc)
     pid = db.save_prediction(_prediction(as_of))                 # INSERT ... RETURNING
     assert pid and db.prediction_exists(as_of) and db.latest_prediction_as_of() == as_of
+    with as_probe() as conn, conn.cursor() as cur:  # the database stamped the role that wrote it
+        cur.execute("SELECT run_meta->>'db_role' FROM predictions WHERE id = %s", (pid,))
+        assert cur.fetchone()[0] == PROBE_ROLE
     now = as_of + timedelta(hours=10)
     assert pid in [p[0] for p in db.predictions_awaiting_outcome(1, now)]
     db.save_outcome(pid, 1, 101.0, 0.01)
@@ -415,6 +418,28 @@ def test_the_least_privilege_role_cannot_do_anything_else(least_privileged):
             with pytest.raises(psycopg.Error, match="permission denied|must be owner|append-only"):
                 cur.execute(sql)
             conn.rollback()
+
+
+def test_the_role_check_passes_on_the_applied_file_and_catches_an_extra_grant(least_privileged):
+    """
+    agent.database.role_check against a role that received exactly the file (the fixture's probe,
+    NOLOGIN by design) -- and then one grant too many, which it must name.
+    """
+    from agent.database import role_check as rc
+
+    db, _, _, _ = least_privileged
+    expected = rc.expected_from_sql(rc.SQL_FILE.read_text(encoding="utf-8"))
+    facts = rc.facts(PROBE_ROLE, SCHEMA)
+    assert rc.judge(facts, expected, require_login=False) == [], rc.judge(facts, expected, require_login=False)
+    assert facts["notes"], "the Supabase PUBLIC grant on net should be noted for any role"
+    import psycopg
+
+    # db.get_connection acts as the probe inside this fixture; the grant needs the owner.
+    with psycopg.connect(db.DATABASE_URL) as conn, conn.cursor() as cur:
+        cur.execute(f"GRANT DELETE ON predictions TO {PROBE_ROLE}")
+        conn.commit()
+    problems = rc.judge(rc.facts(PROBE_ROLE, SCHEMA), expected, require_login=False)
+    assert "predictions: holds DELETE, which the file does not grant" in problems, problems
 
 
 def test_the_least_privilege_policies_are_invisible_to_the_security_check(least_privileged):

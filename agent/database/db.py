@@ -124,7 +124,10 @@ def save_prediction(prediction: Prediction) -> Optional[int]:
                 scoring_version, ai_model_news, ai_model_explanation, explanation,
                 category_scores, news_items, raw_indicators
             ) VALUES (
-                %s, %s, %s, %s, %s,
+                -- run_meta gains db_role: the database role that actually wrote the row, stamped by
+                -- the database itself in this statement (2026-09-23) -- so a switch to the
+                -- least-privilege role is visible in the record, not assumed.
+                %s, %s, %s, %s, %s || jsonb_build_object('db_role', current_user::text),
                 %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s,

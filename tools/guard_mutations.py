@@ -167,6 +167,14 @@ MUTATIONS = [
              "EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I REVOKE ALL ON TABLES FROM %I', current_schema(), r);",
              "NULL;",
              "the standing rule that grants every NEW table to the public API is left in place"),
+    Mutation("security", "agent/database/role_check.py",
+             "        for p in sorted(set(held) - want):",
+             "        for p in []:",
+             "the least-privilege role check ignores a privilege beyond the proven file"),
+    Mutation("provenance", "agent/database/db.py",
+             "%s, %s, %s, %s, %s || jsonb_build_object('db_role', current_user::text),",
+             "%s, %s, %s, %s, %s,",
+             "predictions no longer record which database role wrote them"),
 ]
 
 
