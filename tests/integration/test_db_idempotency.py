@@ -426,6 +426,90 @@ def test_the_least_privilege_policies_are_invisible_to_the_security_check(least_
     assert any(t["policies"] for t in result["tables"].values()), "the policies were not there to ignore"
 
 
+def _structure(cur, schema: str) -> dict:
+    """
+    Everything that defines a schema's behaviour, normalised so two schemas can be compared:
+    columns (type, nullability, default), constraints, indexes, triggers, RLS flags, policies and
+    the public API roles' privileges. Schema qualifiers are stripped, column ORDER is ignored
+    (a column added by a later migration sits at the end of a live table but in the middle of a
+    freshly built one -- that difference is cosmetic, a missing or different column is not).
+    """
+    import re
+
+    def norm(text):
+        return None if text is None else re.sub(rf"\b{re.escape(schema)}\.", "", text)
+
+    out: dict = {}
+    cur.execute("""SELECT table_name, column_name, data_type, is_nullable, column_default
+                   FROM information_schema.columns WHERE table_schema = %s""", (schema,))
+    out["columns"] = {(t, c, d, n, norm(dflt)) for t, c, d, n, dflt in cur.fetchall()}
+    cur.execute("""SELECT cl.relname, co.conname, pg_get_constraintdef(co.oid)
+                   FROM pg_constraint co JOIN pg_class cl ON cl.oid = co.conrelid
+                   JOIN pg_namespace n ON n.oid = cl.relnamespace WHERE n.nspname = %s""", (schema,))
+    out["constraints"] = {(t, name, norm(d)) for t, name, d in cur.fetchall()}
+    cur.execute("SELECT tablename, indexname, indexdef FROM pg_indexes WHERE schemaname = %s", (schema,))
+    out["indexes"] = {(t, i, norm(d)) for t, i, d in cur.fetchall()}
+    cur.execute("""SELECT cl.relname, t.tgname, t.tgenabled, pg_get_triggerdef(t.oid)
+                   FROM pg_trigger t JOIN pg_class cl ON cl.oid = t.tgrelid
+                   JOIN pg_namespace n ON n.oid = cl.relnamespace
+                   WHERE n.nspname = %s AND NOT t.tgisinternal""", (schema,))
+    out["triggers"] = {(t, name, enabled, norm(d)) for t, name, enabled, d in cur.fetchall()}
+    cur.execute("""SELECT cl.relname, cl.relrowsecurity, cl.relforcerowsecurity FROM pg_class cl
+                   JOIN pg_namespace n ON n.oid = cl.relnamespace WHERE n.nspname = %s AND cl.relkind = 'r'""", (schema,))
+    out["rls"] = set(cur.fetchall())
+    cur.execute("SELECT tablename, policyname, roles::text, cmd, qual, with_check FROM pg_policies WHERE schemaname = %s", (schema,))
+    out["policies"] = set(cur.fetchall())
+    cur.execute("""SELECT table_name, grantee, privilege_type FROM information_schema.role_table_grants
+                   WHERE table_schema = %s AND grantee IN ('anon', 'authenticated')""", (schema,))
+    out["api_grants"] = set(cur.fetchall())
+    return out
+
+
+def test_the_live_database_matches_what_the_repository_builds(scratch_db):
+    """
+    Reproducibility and drift, in one check: build the schema fresh from the repository (the
+    fixture did, through agent.migrate) and compare it, piece by piece, with the LIVE `public`
+    schema. A column, constraint, trigger, RLS flag, policy or public-API grant that exists in one
+    and not the other means the repository no longer describes production -- a change made by hand
+    in the dashboard, or a migration never applied. The live schema is only READ here.
+    """
+    db, _ = scratch_db
+    with db.get_connection() as conn, conn.cursor() as cur:
+        built = _structure(cur, SCHEMA)
+        live = _structure(cur, "public")
+    assert built["columns"], "the comparison would be vacuous"
+    differences = {}
+    for part in built:
+        only_live, only_built = live[part] - built[part], built[part] - live[part]
+        if only_live or only_built:
+            differences[part] = {"only in the live database": sorted(map(str, only_live)),
+                                 "only in what the repository builds": sorted(map(str, only_built))}
+    assert not differences, "the live database has drifted from the repository:\n" + "\n".join(
+        f"  {part}: {d}" for part, d in differences.items())
+
+
+def test_the_drift_check_actually_detects_drift(scratch_db):
+    """
+    The comparison above passed at its first run, which proves nothing unless it can fail. Make
+    three hand-made changes to the freshly built copy -- the kinds a dashboard click produces --
+    and each must show up as a difference against the live schema.
+    """
+    db, _ = scratch_db
+    with db.get_connection() as conn, conn.cursor() as cur:
+        before = _structure(cur, SCHEMA)
+        cur.execute("ALTER TABLE predictions ADD COLUMN added_by_hand integer")
+        cur.execute("ALTER TABLE backend_state DISABLE ROW LEVEL SECURITY")
+        cur.execute(f"GRANT USAGE ON SCHEMA {SCHEMA} TO anon")
+        cur.execute("GRANT SELECT ON schema_meta TO anon")
+        conn.commit()
+        after = _structure(cur, SCHEMA)
+        live = _structure(cur, "public")
+    assert before["columns"] == live["columns"] and before["rls"] == live["rls"]  # identical before
+    assert any(c[1] == "added_by_hand" for c in after["columns"] - live["columns"])
+    assert ("backend_state", False, False) in after["rls"] - live["rls"]
+    assert ("schema_meta", "anon", "SELECT") in after["api_grants"] - live["api_grants"]
+
+
 def test_the_revoke_alone_blocks_writes_even_with_rls_off(scratch_db):
     """The first layer, isolated: with RLS switched off, revoked privileges must still refuse a write."""
     import psycopg
