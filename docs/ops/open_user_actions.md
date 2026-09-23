@@ -7,11 +7,23 @@ name.
 
 None of these is blocking. The system runs correctly without them. They close gaps.
 
-Last reviewed: 2026-09-23 (item 2 corrected, item 5 added after the public-API finding).
+Last reviewed: 2026-09-23 evening (item 1 attempted and deferred by the user; item 2 ready and
+checkable; item 4 decided; item 5 logs done, one setting still to check).
+
+**Status at a glance:** 1 heartbeat — deferred (the setup did not work for you; to retry later) ·
+2 least-privilege role — ready, ~10 min · 3 token renewal — calendar, Sept 2027 · 4 news cost —
+decided: keep, monitored · 5 API logs — done; *Exposed schemas* setting — still to check (10 s).
 
 ---
 
 ## 1. Heartbeat alarm (healthchecks.io) — the only one I would actually hurry
+
+**2026-09-23 evening: attempted by the user, it did not work, deferred to later.** The `HEARTBEAT_URL`
+GitHub secret is not set (the job's heartbeat step shows *skipped*), so nothing half-configured is
+running. When you retry, tell me what went wrong — whether signing up, creating the check, or saving
+the secret — and I will adapt the steps. Improved in the meantime: a heartbeat hiccup can no longer
+turn a good hour red, and a *failed* run now tells healthchecks.io at once (its `/fail` signal)
+instead of the alarm waiting out the grace window.
 
 **What it is.** A free outside service that expects a ping from the hourly job. If the ping does
 not arrive within a grace window, it emails you.
@@ -131,7 +143,13 @@ report showing hours covered only by GitHub's own slots. Put a calendar reminder
 
 ---
 
-## 4. Decide about the AI cost of news — a judgement call, not a task
+## 4. Decide about the AI cost of news — DECIDED 2026-09-23: keep it, monitored
+
+**Decision (user, 2026-09-23 evening):** keep the news component as it is at roughly $12 a month,
+monitor it, and add no paid data sources or cost merely for experimentation. Implemented as a flag
+in the weekly report: a measured 30-day projection above $15 (the accepted $12 × 1.25) is marked
+**ABOVE the accepted level** — a prompt to look, never an automatic change. The options below are
+kept for when that happens.
 
 **What it is.** The news scorer sends each hour's headlines to Claude Haiku and gets back a
 structured score. The schema asks it to echo each headline back.

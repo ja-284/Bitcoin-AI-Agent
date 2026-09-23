@@ -115,6 +115,10 @@ def health(pred_rows: list[dict], outcome_rows: list[dict], now: datetime, since
 #  which never go stale, so a price change means editing this table, not the history.
 AI_PRICES_USD_PER_MTOK = {"claude-haiku-4-5": (1.0, 5.0), "claude-sonnet-5": (2.0, 10.0)}
 AI_PRICES_AS_OF = "2026-09-23"
+# The level the user accepted on 2026-09-23 ("keep the news cost at approximately $12/month for now").
+# The report flags a measured 30-day projection above ACCEPTED x TOLERANCE -- a prompt to look, never
+# an automatic change: the fix for a cost rise (e.g. dropping the echoed headline) is the user's call.
+AI_COST_ACCEPTED_USD_30D, AI_COST_TOLERANCE = 12.0, 1.25
 CACHE_WRITE_X, CACHE_READ_X = 1.25, 0.10  # standard multipliers on the input price (both calls use no caching today)
 
 
@@ -158,6 +162,8 @@ def ai_cost(pred_rows: list[dict], since: datetime) -> dict:
         # one priced run per hour: the extra schedule slots find the hour saved and make no AI call
         "projected_30_days_usd": float(np.mean(run_costs)) * 24 * 30 if run_costs else None,
         "unpriced_models": dict(unpriced), "prices_usd_per_mtok": AI_PRICES_USD_PER_MTOK, "prices_as_of": AI_PRICES_AS_OF,
+        "accepted_usd_30d": AI_COST_ACCEPTED_USD_30D,
+        "above_accepted": bool(run_costs) and float(np.mean(run_costs)) * 24 * 30 > AI_COST_ACCEPTED_USD_30D * AI_COST_TOLERANCE,
     }
 
 
@@ -591,9 +597,11 @@ def _render_ai_cost(c: dict | None) -> str:
     steps = "; ".join(f"{k} ≈ {v['mean_input_tokens']:.0f} in / {v['mean_output_tokens']:.0f} out tokens"
                       + (f" ({v['usage_unavailable']} without figures)" if v["usage_unavailable"] else "")
                       for k, v in c["steps"].items() if v["calls"])
+    flag = (f" — **ABOVE the accepted ~${c['accepted_usd_30d']:.0f}/month: look at the news volume; any change to the AI's task is "
+            "the user's decision**" if c.get("above_accepted") else f" (accepted level ~${c.get('accepted_usd_30d', 12):.0f}/month)")
     return (f"- AI cost (7d, measured on {c['runs_priced']} of {c['rows']} runs): ${c['mean_cost_per_run_usd']:.4f} per run "
             f"(max ${c['max_cost_per_run_usd']:.4f}), ≈ ${c['projected_30_days_usd']:.2f} per 30 days at the list prices of "
-            f"{c['prices_as_of']}; {steps}")
+            f"{c['prices_as_of']}{flag}; {steps}")
 
 
 def render(rep: dict) -> str:

@@ -310,6 +310,17 @@ def test_a_run_whose_news_failed_is_priced_as_what_it_really_cost():
     assert c["runs_priced"] == 1 and c["mean_cost_per_run_usd"] == pytest.approx((509 * 2 + 266 * 10) / 1e6)
 
 
+def test_a_cost_clearly_above_the_accepted_level_is_flagged_and_normal_cost_is_not():
+    from agent.research.weekly_report import AI_COST_ACCEPTED_USD_30D, AI_COST_TOLERANCE, _render_ai_cost, ai_cost
+
+    normal = ai_cost([_pred(T0, meta=_usage_meta())], T0)  # the measured 2026-09-23 run: ~$12/month
+    assert not normal["above_accepted"] and "ABOVE" not in _render_ai_cost(normal)
+    # a news answer three times as long (e.g. the headline window tripling) crosses the line
+    high = ai_cost([_pred(T0, meta=_usage_meta(news=(5000, 7000)))], T0)
+    assert high["projected_30_days_usd"] > AI_COST_ACCEPTED_USD_30D * AI_COST_TOLERANCE
+    assert high["above_accepted"] and "ABOVE the accepted" in _render_ai_cost(high)
+
+
 def test_ai_cost_renders_before_and_after_measurement_begins():
     from agent.research.weekly_report import _render_ai_cost, ai_cost
 
