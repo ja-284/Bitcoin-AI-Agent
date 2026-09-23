@@ -415,6 +415,8 @@ def shadow_record(rows: list[dict], now: datetime, errors: list[dict] | None = N
     not_prospective = [r for r in rows if not prospective(r)]
     out = {
         "n": len(rows), "first_hour": first.isoformat(), "expected_hours": len(expected), "missing_hours": [t.isoformat() for t in missing],
+        # the same count rule as section 1: "present" only counts rows for hours already due
+        "present_hours": len(expected) - len(missing), "rows_not_yet_due": len(got - set(expected)),
         "unavailable": sum(1 for r in rows if r["status"] == "unavailable"), "unavailable_reasons": dict(Counter(r["status_reason"] for r in rows if r["status"] == "unavailable")),
         "live_close_mismatch": sum(1 for r in rows if r["live_close_match"] is False), "live_close_unchecked": sum(1 for r in rows if r["live_close_match"] is None),
         "model_versions": dict(Counter(r["model_version"] for r in rows)),
@@ -646,7 +648,8 @@ def render(rep: dict) -> str:
     if not sh.get("n"):
         L.append("No shadow rows yet.")
     else:
-        L += [f"- Rows: {sh['n']} since {sh['first_hour'][:16]} · expected {sh['expected_hours']} · missing {len(sh['missing_hours'])} {sh['missing_hours'][:6]}",
+        L += [f"- Rows: {sh['n']} since {sh['first_hour'][:16]} · {sh.get('present_hours', sh['n'])} of {sh['expected_hours']} expected hours"
+              f"{_not_yet_due(sh)} · missing {len(sh['missing_hours'])} {sh['missing_hours'][:6]}",
               f"- Unavailable (honest blanks): {sh['unavailable']} {sh['unavailable_reasons'] or ''} · reference close ≠ live prediction's: **{sh['live_close_mismatch']}** (unchecked: {sh['live_close_unchecked']}) · model versions: {sh['model_versions']}",
               f"- Outcomes: {sh['outcomes']['ok_prospective']} graded (prospective) · {sh['outcomes']['unavailable']} unavailable · {sh['outcomes']['pending']} pending · written too late to count as prospective: {len(sh['not_prospective'])}"]
         ev = sh.get("evaluation")

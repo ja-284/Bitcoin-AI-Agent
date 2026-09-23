@@ -137,6 +137,10 @@ def test_shadow_record_coverage_blanks_and_evaluation():
     rows[5]["live_close_match"] = False
     sh = shadow_record(rows, now)
     assert sh["n"] == 11 and sh["expected_hours"] == 12 and [m[11:13] for m in sh["missing_hours"]] == ["13"]
+    assert sh["present_hours"] + len(sh["missing_hours"]) == sh["expected_hours"] and sh["rows_not_yet_due"] == 0
+    # just after the next run: its row exists, its hour is not yet due -- it must not hide a missing hour
+    early = shadow_record(rows + [dict(rows[-1], as_of=T0 + 12 * H)], T0 + 13 * H + timedelta(minutes=17))
+    assert early["rows_not_yet_due"] == 1 and early["present_hours"] + len(early["missing_hours"]) == early["expected_hours"]
     assert sh["unavailable"] == 1 and sh["live_close_mismatch"] == 1
     assert sh["outcomes"]["ok_prospective"] == 7 and sh["outcomes"]["pending"] == 3  # rows 9,10,11 ok+pending; row 2 unavailable excluded
     assert sh["evaluation"]["n"] == 7 and "prospective" in sh["evaluation"]["note"]
