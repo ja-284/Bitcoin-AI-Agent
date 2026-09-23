@@ -64,53 +64,74 @@ def unprotected_tables_in_schema(sql: str) -> set[str]:
     return created - named
 
 
+def judge(tables: dict[str, dict]) -> list[str]:
+    """
+    The judgement, separated from the reading so it can be tested without a database.
+    `tables`: name -> {"rls": bool, "api_privileges": {role: [privileges]}, "policies": [...]}.
+    """
+    problems: list[str] = []
+    for name, t in tables.items():
+        allowed = INTENDED_PUBLIC_READ.get(name)
+        if not t["rls"]:
+            problems.append(f"{name}: Row Level Security is OFF")
+        for role, granted in t["api_privileges"].items():
+            extra = [p for p in granted if p != allowed]
+            if extra:
+                problems.append(f"{name}: `{role}` holds {', '.join(extra)}")
+        for pol in t["policies"]:
+            # Only a policy that reaches the public API is an exposure. A policy scoped to a
+            # private backend role (the least-privilege role in docs/ops/open_user_actions.md
+            # needs exactly that) is not -- and flagging it would teach people to ignore this
+            # check. No TO clause means PUBLIC, which includes the API roles.
+            if not set(pol["roles"]) & PUBLIC_REACHING:
+                continue
+            if allowed is None:
+                problems.append(f"{name}: policy `{pol['name']}` opens a table no frontend is meant to read")
+            elif pol["command"] not in ("SELECT",):
+                problems.append(f"{name}: policy `{pol['name']}` allows {pol['command']}, only SELECT is intended")
+    return problems
+
+
 def posture(schema: str = "public") -> dict:
-    """What the public API roles can actually reach, table by table. Read-only."""
+    """
+    What the public API roles can actually reach, table by table. Read-only, three queries in
+    total however many tables exist -- the first version made one round trip per table, role
+    and privilege (about 90, 5 seconds) and would only have grown.
+    """
     from agent.database.db import get_connection
 
-    problems: list[str] = []
     tables: dict[str, dict] = {}
     with get_connection() as conn, conn.cursor() as cur:
-        cur.execute("SELECT rolname FROM pg_roles WHERE rolname = ANY(%s)", (list(API_ROLES),))
-        present = [r[0] for r in cur.fetchall()]
         cur.execute("""
-            SELECT c.relname, c.relrowsecurity
-            FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+            SELECT c.relname, c.relrowsecurity, r.rolname, p.priv,
+                   has_table_privilege(r.rolname, c.oid, p.priv) AS granted
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            CROSS JOIN (SELECT rolname FROM pg_roles WHERE rolname = ANY(%s)) r
+            CROSS JOIN unnest(%s::text[]) AS p(priv)
             WHERE n.nspname = %s AND c.relkind IN ('r', 'p')
-            ORDER BY c.relname
-        """, (schema,))
+            ORDER BY c.relname, r.rolname
+        """, (list(API_ROLES), list(PRIVILEGES), schema))
+        rows = cur.fetchall()
+        cur.execute("SELECT tablename, policyname, roles, cmd FROM pg_policies WHERE schemaname = %s", (schema,))
+        policies = cur.fetchall()
+        # Tables are listed even when no API role exists (a plain Postgres), so the RLS state is
+        # still visible; the role/privilege rows are simply absent then.
+        cur.execute("""SELECT c.relname, c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                       WHERE n.nspname = %s AND c.relkind IN ('r', 'p')""", (schema,))
         for name, rls in cur.fetchall():
-            held: dict[str, list[str]] = {}
-            for role in present:
-                granted = []
-                for p in PRIVILEGES:
-                    cur.execute("SELECT has_table_privilege(%s, %s, %s)", (role, f"{schema}.{name}", p))
-                    if cur.fetchone()[0]:
-                        granted.append(p)
-                held[role] = granted
-            cur.execute("SELECT policyname, roles, cmd FROM pg_policies WHERE schemaname = %s AND tablename = %s",
-                        (schema, name))
-            policies = [{"name": n, "roles": list(r), "command": c} for n, r, c in cur.fetchall()]
-            tables[name] = {"rls": bool(rls), "api_privileges": held, "policies": policies}
-
-            allowed = INTENDED_PUBLIC_READ.get(name)
-            if not rls:
-                problems.append(f"{name}: Row Level Security is OFF")
-            for role, granted in held.items():
-                extra = [p for p in granted if p != allowed]
-                if extra:
-                    problems.append(f"{name}: `{role}` holds {', '.join(extra)}")
-            for pol in policies:
-                # Only a policy that reaches the public API is an exposure. A policy scoped to a
-                # private backend role (the least-privilege role in docs/ops/open_user_actions.md
-                # needs exactly that) is not -- and flagging it would teach people to ignore this
-                # check. No TO clause means PUBLIC, which includes the API roles.
-                if not set(pol["roles"]) & PUBLIC_REACHING:
-                    continue
-                if allowed is None:
-                    problems.append(f"{name}: policy `{pol['name']}` opens a table no frontend is meant to read")
-                elif pol["command"] not in ("SELECT",):
-                    problems.append(f"{name}: policy `{pol['name']}` allows {pol['command']}, only SELECT is intended")
+            tables[name] = {"rls": bool(rls), "api_privileges": {}, "policies": []}
+    present: list[str] = []
+    for name, _rls, role, priv, granted in rows:
+        held = tables[name]["api_privileges"].setdefault(role, [])
+        if role not in present:
+            present.append(role)
+        if granted:
+            held.append(priv)
+    for table, pname, roles, cmd in policies:
+        if table in tables:
+            tables[table]["policies"].append({"name": pname, "roles": list(roles), "command": cmd})
+    problems = judge(tables)
     return {"ok": not problems, "problems": problems, "tables": tables, "api_roles_present": present}
 
 

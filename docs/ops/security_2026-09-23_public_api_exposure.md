@@ -45,10 +45,16 @@ unfiltered UPDATE or DELETE).
 
 ## How exposed it was in practice
 
-**Latent, not demonstrated.** No frontend exists, so the anon key is not published anywhere
-known; it is visible in the Supabase dashboard. A scan of the repository for key-shaped strings
-found none. But the anon key is not a secret by design, and the exposure would have become
-immediate the day any frontend shipped.
+**Latent, not demonstrated.** Using the exposure required two things together: the project's
+API hostname and its anon key. **This project never published either** — checked, not assumed:
+no Supabase hostname and no JWT-shaped key appears in any tracked file, and no commit in the
+repository's entire history ever added or removed one (the repository is public, so history
+matters as much as the current tree). No frontend exists to have leaked them. Both are visible in
+the Supabase dashboard, which only the account owner can reach.
+
+That is why this is "latent" and not "nothing": the anon key is **not a secret by design**, and
+the exposure would have become immediate the day any frontend shipped — at which point both the
+hostname and the key are in every visitor's browser.
 
 ## Was anything touched? — the data says no
 
