@@ -45,65 +45,54 @@ GitHub running something. That is the hole.
 
 ---
 
-## 2. A least-privilege database role — worth doing, but NOT yet (a prerequisite is missing)
+## 2. A least-privilege database role — ready for you once one scheduled run confirms it
 
 **What it is.** The hourly job currently connects as the Supabase project's `postgres` role, which
 can do anything, including dropping tables and bypassing Row Level Security. It only ever needs to
-read and insert.
+read and append rows.
 
 **Why it matters.** If the `DATABASE_URL` secret ever leaked, the damage would be bounded by what
 the role can do. Today that bound is "everything".
 
-**Why not yet (updated 2026-09-23).** The SQL this section originally gave would no longer work, and
-following it would have broken the hourly job:
+**What had to happen first (done 2026-09-23).**
 
-1. Since schema version 4, **every table has Row Level Security on with no policies**
-   (`docs/ops/security_2026-09-23_public_api_exposure.md`). `postgres` bypasses that; a new role
-   does not, so with grants alone it would see zero rows and be unable to insert anything. It needs
-   policies of its own, scoped to it and nothing else.
-2. **The hourly shadow step re-applies its schema file on every run**, which includes `ALTER TABLE`
-   statements, and only a table's owner may run those. Under a restricted role the shadow step
-   would fail every hour. This has to change first — schema application belongs to a deliberate
-   migration step, not to every hourly run. It is scheduled as the next controlled change.
+1. Since schema version 4 every table has Row Level Security on with no policies. `postgres`
+   bypasses that; a new role does not, so it needs policies of its own, scoped to it alone.
+2. The hourly job used to re-apply schema SQL every run, which only a table's owner may do. It no
+   longer does (commit `17093f8`; schema changes now go through `python -m agent.migrate`). **The
+   first scheduled run on that code is at 15:12 UTC on 2026-09-23** — once it is seen working, this
+   item is ready.
 
-**When the prerequisite is done**, the SQL will be this (run in Supabase → *SQL Editor*, with a long
-random password you generate yourself and never paste anywhere else):
+**The permissions are in one file that a test proves: [`least_privilege_role.sql`](least_privilege_role.sql).**
+An integration test creates a throwaway role, applies that exact file to it in a scratch schema, and
+runs every write path the hourly job uses *as that role* — saving predictions, grading outcomes,
+writing and grading shadow rows, recording errors, publishing the snapshot — then checks that
+rewriting, deleting, changing a probability, moving the schema version, switching RLS off and
+dropping a table are all refused.
 
-```sql
-CREATE ROLE bitcoin_agent LOGIN PASSWORD 'replace-with-a-long-random-password';
-GRANT USAGE ON SCHEMA public TO bitcoin_agent;
+That test exists because the SQL I first wrote here was **wrong twice on the same day**: the first
+version had grants but no policies (the role would have seen and inserted nothing under RLS), and
+the corrected version still had an UPDATE policy without `WITH CHECK`, which Postgres then applies
+to the updated row — so every shadow grading would have been refused with "new row violates
+row-level security policy". The test was run against that buggy version and fails exactly that way.
 
--- privileges: read and append the record, grade shadow rows, publish the snapshot
-GRANT SELECT, INSERT ON predictions, prediction_outcomes, shadow_move_size, shadow_run_errors TO bitcoin_agent;
-GRANT SELECT ON schema_meta TO bitcoin_agent;
-GRANT UPDATE (outcome_status, outcome_close, outcome_return, outcome_large, outcome_checked_at)
-  ON shadow_move_size TO bitcoin_agent;
-GRANT SELECT, INSERT, UPDATE ON backend_state TO bitcoin_agent;
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;
+**What to do**, when the item is ready:
 
--- RLS is on everywhere, and this role does not bypass it: it needs policies, scoped TO it only,
--- so none of them can ever be reached through the public API.
-CREATE POLICY backend_read   ON predictions         FOR SELECT TO bitcoin_agent USING (true);
-CREATE POLICY backend_insert ON predictions         FOR INSERT TO bitcoin_agent WITH CHECK (true);
-CREATE POLICY backend_read   ON prediction_outcomes FOR SELECT TO bitcoin_agent USING (true);
-CREATE POLICY backend_insert ON prediction_outcomes FOR INSERT TO bitcoin_agent WITH CHECK (true);
-CREATE POLICY backend_read   ON shadow_move_size    FOR SELECT TO bitcoin_agent USING (true);
-CREATE POLICY backend_insert ON shadow_move_size    FOR INSERT TO bitcoin_agent WITH CHECK (true);
-CREATE POLICY backend_grade  ON shadow_move_size    FOR UPDATE TO bitcoin_agent USING (outcome_status IS NULL);
-CREATE POLICY backend_read   ON shadow_run_errors   FOR SELECT TO bitcoin_agent USING (true);
-CREATE POLICY backend_insert ON shadow_run_errors   FOR INSERT TO bitcoin_agent WITH CHECK (true);
-CREATE POLICY backend_read   ON schema_meta         FOR SELECT TO bitcoin_agent USING (true);
-CREATE POLICY backend_all    ON backend_state       FOR ALL    TO bitcoin_agent USING (true) WITH CHECK (true);
-```
-
-The live security check (`python -m agent.database.security`) deliberately ignores policies scoped
-to a private role like this one, and would still fail loudly if any of them reached `anon`,
-`authenticated` or `public`.
+1. Supabase → *SQL Editor*: create the role with a long random password you generate yourself and
+   never paste anywhere else —
+   `CREATE ROLE bitcoin_agent LOGIN PASSWORD '...';`
+2. In the same editor, run the whole of `docs/ops/least_privilege_role.sql`.
+3. Build the connection string you already have, but with the new role and password (for Supabase's
+   pooler the username is usually `bitcoin_agent.<project-ref>`), and replace the `DATABASE_URL`
+   **repository secret** in GitHub. Keep the old `postgres` string for `python -m agent.migrate`.
+4. Run the hourly workflow once by hand (Actions → *Hourly Bitcoin analysis* → *Run workflow*) and
+   check it is green. If anything fails, put the old secret back: nothing is lost, the next hour
+   recomputes.
 
 **What protects you meanwhile.** The secret is not in git, is not printed by any log, and
 psycopg's errors do not echo the connection string (checked). Append-only triggers on the four
-record tables mean even a full-privilege connection cannot quietly rewrite history — a change
-attempt raises instead. And since 2026-09-23, nothing is reachable through the public API at all.
+record tables mean even a full-privilege connection cannot quietly rewrite history. And since
+2026-09-23 nothing is reachable through the public API at all.
 
 ---
 

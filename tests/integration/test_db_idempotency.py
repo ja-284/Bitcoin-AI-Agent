@@ -293,6 +293,139 @@ def test_rls_alone_hides_every_row_even_if_a_privilege_is_regranted(scratch_db):
         "with RLS off the re-granted row should be visible -- if not, the test above measured nothing")
 
 
+@pytest.fixture
+def least_privileged(scratch_db, monkeypatch):
+    """
+    The backend's own modules, connected as a throwaway role that holds EXACTLY the permissions in
+    docs/ops/least_privilege_role.sql -- the file applied verbatim, in the scratch schema only.
+    The role is NOLOGIN (it cannot be used to connect by anyone) and is dropped afterwards; the
+    test acts as it through SET ROLE on its own connection.
+    """
+    from pathlib import Path
+
+    import psycopg
+
+    import agent.api.publish as pub
+
+    db, sdb = scratch_db
+    base_url, scoped = os.getenv("DATABASE_URL"), db.DATABASE_URL
+    source = Path("docs/ops/least_privilege_role.sql").read_text(encoding="utf-8")
+    assert source.count("SCHEMA public") == 2, "the file changed shape -- update the substitution below"
+    sql = source.replace("bitcoin_agent", PROBE_ROLE).replace("SCHEMA public", f"SCHEMA {SCHEMA}")
+
+    def drop_role(cur):
+        cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (PROBE_ROLE,))
+        if cur.fetchone():
+            cur.execute(f"DROP OWNED BY {PROBE_ROLE}")
+            cur.execute(f"DROP ROLE {PROBE_ROLE}")
+
+    with psycopg.connect(base_url) as conn, conn.cursor() as cur:
+        drop_role(cur)  # a leftover from an interrupted run
+        cur.execute(f"CREATE ROLE {PROBE_ROLE} NOLOGIN")
+        cur.execute(f"GRANT {PROBE_ROLE} TO current_user WITH SET TRUE")  # PG 16+: needed to SET ROLE to it
+        conn.commit()
+    with db.get_connection() as conn, conn.cursor() as cur:  # the scratch schema, as the owner
+        cur.execute(sql)
+        conn.commit()
+
+    def as_probe():
+        conn = psycopg.connect(scoped)
+        conn.execute(f"SET ROLE {PROBE_ROLE}")
+        conn.commit()  # SET is transactional; commit makes it hold for the session
+        return conn
+
+    for module in (db, sdb, pub):
+        monkeypatch.setattr(module, "get_connection", as_probe)
+    yield db, sdb, pub, as_probe
+    # Drop the scratch schema first -- it holds every policy and grant naming the role -- then the role.
+    with psycopg.connect(base_url) as conn, conn.cursor() as cur:
+        cur.execute(f"DROP SCHEMA IF EXISTS {SCHEMA} CASCADE")
+        drop_role(cur)
+        conn.commit()
+
+
+PROBE_ROLE = "bitcoin_agent_ci_probe"
+
+
+def test_the_least_privilege_role_can_do_everything_the_hourly_job_does(least_privileged):
+    """Every write path the hourly job uses, run AS the restricted role, must work."""
+    db, sdb, pub, as_probe = least_privileged
+    with as_probe() as conn, conn.cursor() as cur:
+        cur.execute("SELECT current_user")
+        assert cur.fetchone()[0] == PROBE_ROLE, "the test is not actually running as the restricted role"
+
+    db.assert_schema_current()                                   # reads schema_meta
+    as_of = datetime(2026, 2, 1, tzinfo=timezone.utc)
+    pid = db.save_prediction(_prediction(as_of))                 # INSERT ... RETURNING
+    assert pid and db.prediction_exists(as_of) and db.latest_prediction_as_of() == as_of
+    now = as_of + timedelta(hours=10)
+    assert pid in [p[0] for p in db.predictions_awaiting_outcome(1, now)]
+    db.save_outcome(pid, 1, 101.0, 0.01)
+    db.save_outcome_unavailable(pid, 6)
+
+    row = {"as_of": as_of, "cutoff_at": as_of + HOUR, "fetched_at": as_of + HOUR + timedelta(minutes=12),
+           "model_version": "move_size_1h_v1", "pipeline_version": "0.2.0", "code_commit": None,
+           "price_source": "binance", "reference_close": 100.0, "live_close_match": True, "status": "ok",
+           "status_reason": None, "features": {"rv_24": 0.01}, "p_raw": 0.5, "p_calibrated": 0.55,
+           "threshold": 0.0025, "horizon_hours": 1}
+    sid = sdb.save_shadow(row)
+    assert sid and sdb.shadow_exists(as_of) and sdb.live_close_for(as_of) == 100.0
+    assert [r[0] for r in sdb.shadow_rows_awaiting_outcome(now)] == [sid]
+    # The case the hand-written policy got wrong: grading SETS outcome_status, so an UPDATE policy
+    # whose USING clause is also applied to the new row would refuse every single grading.
+    sdb.save_shadow_outcome(sid, 100.3, 0.003, True, "ok", now)
+    assert sdb.shadow_rows_awaiting_outcome(now) == [], "grading was silently refused"
+    sdb.save_shadow_outcome(sid, 1.0, -0.99, False, "ok", now)  # a second grading must change nothing
+    with as_probe() as conn, conn.cursor() as cur:
+        cur.execute("SELECT outcome_status, outcome_close FROM shadow_move_size WHERE id = %s", (sid,))
+        assert cur.fetchone() == ("ok", 100.3)
+
+    assert sdb.save_run_error({"expected_as_of": as_of, "step": "probe", "error_type": "Probe",
+                               "error_message": "least-privilege probe", "model_version": None,
+                               "pipeline_version": None, "code_commit": None})
+    assert [e["step"] for e in sdb.run_errors_since(as_of)] == ["probe"]
+
+    state = {"contract_version": "1", "generated_at": "2026-02-01T00:00:00+00:00", "health": {"status": "ok"}}
+    pub.publish(state)
+    pub.publish({**state, "generated_at": "2026-02-01T01:00:00+00:00"})  # the hourly replace
+    with as_probe() as conn, conn.cursor() as cur:
+        cur.execute("SELECT count(*), max(generated_at) FROM backend_state")
+        count, latest = cur.fetchone()
+        assert count == 1 and latest.hour == 1
+
+
+def test_the_least_privilege_role_cannot_do_anything_else(least_privileged):
+    """And everything outside the job's needs is refused -- privileges, policies and ownership each hold."""
+    import psycopg
+
+    db, _, _, as_probe = least_privileged
+    as_of = datetime(2026, 2, 2, tzinfo=timezone.utc)
+    pid = db.save_prediction(_prediction(as_of))
+    refused = {
+        "rewrite a prediction": f"UPDATE predictions SET signal = 'BUY' WHERE id = {pid}",
+        "delete a prediction": f"DELETE FROM predictions WHERE id = {pid}",
+        "change a shadow probability": "UPDATE shadow_move_size SET p_calibrated = 0",
+        "delete a shadow row": "DELETE FROM shadow_move_size",
+        "move the schema version": "UPDATE schema_meta SET value = '9'",
+        "switch RLS off": "ALTER TABLE predictions DISABLE ROW LEVEL SECURITY",
+        "drop a table": "DROP TABLE backend_state",
+    }
+    for what, sql in refused.items():
+        with as_probe() as conn, conn.cursor() as cur:
+            with pytest.raises(psycopg.Error, match="permission denied|must be owner|append-only"):
+                cur.execute(sql)
+            conn.rollback()
+
+
+def test_the_least_privilege_policies_are_invisible_to_the_security_check(least_privileged):
+    """Policies scoped to the backend role must not be reported as a public-API exposure."""
+    from agent.database.security import posture
+
+    result = posture(SCHEMA)
+    assert result["ok"], result["problems"]
+    assert any(t["policies"] for t in result["tables"].values()), "the policies were not there to ignore"
+
+
 def test_the_revoke_alone_blocks_writes_even_with_rls_off(scratch_db):
     """The first layer, isolated: with RLS switched off, revoked privileges must still refuse a write."""
     import psycopg
