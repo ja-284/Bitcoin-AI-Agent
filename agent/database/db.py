@@ -29,10 +29,14 @@ SCHEMA_VERSION = "4"  # 1: original tables; 2: cutoff/version/status migrations 
 
 
 def init_schema() -> None:
-    sql = SCHEMA_PATH.read_text()
-    with get_connection() as conn, conn.cursor() as cur:
-        cur.execute(sql)
-        conn.commit()
+    """
+    Kept so older notes still work, but it now does the COMPLETE migration. It used to apply only
+    this module's schema file, which left a freshly built database without the shadow tables or
+    `backend_state`. The real entry point is `python -m agent.migrate`.
+    """
+    from agent.migrate import migrate  # lazy: agent.migrate imports this module
+
+    migrate()
 
 
 def schema_version() -> Optional[str]:
@@ -84,7 +88,7 @@ def assert_schema_current() -> None:
         raise RuntimeError(
             f"database schema is {found!r} but this code expects at least {SCHEMA_VERSION!r}. "
             "The invariants, append-only triggers or access lockdown this code relies on may be missing. "
-            "Apply the migrations first: python -c \"from agent.database.db import init_schema; init_schema()\""
+            "Apply the migrations first: python -m agent.migrate"
         )
 
 

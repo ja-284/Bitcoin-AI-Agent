@@ -7,13 +7,7 @@ from psycopg.types.json import Jsonb
 
 from agent.database.db import get_connection
 
-SCHEMA_PATH = Path(__file__).parent / "schema.sql"
-
-
-def ensure_schema() -> None:
-    with get_connection() as conn, conn.cursor() as cur:
-        cur.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
-        conn.commit()
+SCHEMA_PATH = Path(__file__).parent / "schema.sql"  # applied by `python -m agent.migrate`, never at runtime
 
 
 def shadow_exists(as_of: datetime) -> bool:

@@ -99,6 +99,44 @@ findings of steadily decreasing trustworthiness while spending the credibility o
 arbiter left. The correct action is to stop and let time pass, which is what the monitoring
 rhythm is for.
 
+## 2026-09-23 — security finding, schema 4, and the migration entry point
+
+Resumed from the 2026-09-22 pause under the master-plan addendum (explicit exit gates, hard vs
+soft quality gates, validation wear enforced, security alerts first). The planned first step —
+wiring `agent.api.publish` into the hourly job — was deliberately put behind a higher-priority
+item: a Supabase security warning.
+
+- [x] **Security: every table was reachable through Supabase's public API** — RLS off on all six
+  tables, full privileges for `anon`/`authenticated`. Investigated before touching anything; no
+  sign in the data of any outside write. Closed with two independent layers in every schema file,
+  applied live, proven by behaviour (48/48 anonymous probes refused) and per layer against real
+  Postgres; detected every 3h by the watchdog. `docs/ops/security_2026-09-23_public_api_exposure.md`.
+- [x] **Schema version 4**, applied database-first then code, after changing the schema guard to
+  require "at least" the code's version (exact equality made every migration a failure window).
+- [x] **My 2026-09-21 security audit was wrong** — it never checked what the platform exposes by
+  default. The readiness gate carries a dated correction: Security was really FAIL until today.
+- [~] **One migration entry point (`python -m agent.migrate`), no schema DDL on the hourly path.**
+  Found while fixing the above: the shadow step re-applied its schema every hour, publishing did
+  the same, and the documented fresh-database command built only one of three schema files.
+  Acceptance criteria set before deploying: unit (every .sql migrated, in order, one transaction,
+  a failing file commits nothing, no hourly-path module applies schema SQL) PASS; integration 11/11
+  through `migrate()` PASS; `python -m agent.migrate` on the live database PASS (schema 4, nothing
+  exposed); manual run of the new shadow code against the live database PASS (found the hour,
+  exited 0, no errors). **Outstanding: the first scheduled run on the new code (15:12 UTC).**
+- [ ] **Wire `agent.api.publish` into the hourly workflow** — next, after the migration change is
+  seen working in a scheduled run.
+
+**Quality assessment of the security step** (the addendum's 0-100 per dimension; a summary, never
+a substitute for the critical items below it): correctness 95 · robustness 90 · security 90 ·
+data integrity 95 · reproducibility 95 · observability 90 · maintainability 88 · performance 95 —
+**about 92**. Critical items: exposure closed PASS; no outside writes PASS; live automation PASS
+once the scheduled run is confirmed; holdout sealed PASS; no trading capability PASS; whether the
+exposure was used to READ data **UNKNOWN** (only the dashboard's API logs can say — recorded as a
+user action, and not critical to integrity because nothing was written). The score was not
+tuned; the two lowest dimensions are held down by real things — the lockdown block is duplicated
+across three schema files (deliberate, so each file stays self-contained), and the least-privilege
+role and the API-log check remain open.
+
 ## Paused 2026-09-22 ~20:15 UTC — resume point
 
 **State.** Tree clean, `main` = `origin/main`, last commit `9c60010`. **296 tests pass, and they

@@ -198,7 +198,6 @@ def test_run_and_record_writes_a_failure_instead_of_crashing_the_hourly_job(monk
     import agent.shadow.run as srun
 
     recorded = []
-    monkeypatch.setattr(sdb, "ensure_schema", lambda: None)
     monkeypatch.setattr(sdb, "save_run_error", lambda row: recorded.append(row) or 1)
     monkeypatch.setattr(srun, "load_model", lambda v: (_ for _ in ()).throw(RuntimeError("artefact exploded")))
     assert srun.run_and_record() == 0

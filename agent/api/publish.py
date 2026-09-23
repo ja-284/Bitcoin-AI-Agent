@@ -31,19 +31,17 @@ from agent.database.db import get_connection
 
 logger = logging.getLogger(__name__)
 
-SCHEMA_PATH = Path(__file__).with_name("schema.sql")
-
-
-def ensure_table() -> None:
-    with get_connection() as conn, conn.cursor() as cur:
-        cur.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
-        conn.commit()
+SCHEMA_PATH = Path(__file__).with_name("schema.sql")  # applied by `python -m agent.migrate`, never at runtime
 
 
 def publish(state: dict | None = None) -> dict:
-    """Assemble the contract (unless one is supplied) and replace the single stored row."""
+    """
+    Assemble the contract (unless one is supplied) and replace the single stored row.
+
+    No DDL here: `backend_state` is created by `python -m agent.migrate`, like every other table.
+    If it is missing, the write fails and main() says exactly what to run.
+    """
     state = state if state is not None else backend_state()
-    ensure_table()
     with get_connection() as conn, conn.cursor() as cur:
         cur.execute(
             """
@@ -82,6 +80,8 @@ def main() -> int:
         # A failure here must not fail the hourly job. The previous snapshot stays, and because
         # the state carries its own timestamp, a reader can see it has stopped being refreshed.
         logger.error("Could not publish the backend state: %s: %s", type(exc).__name__, exc)
+        if type(exc).__name__ == "UndefinedTable":
+            logger.error("backend_state does not exist -- apply the schema: python -m agent.migrate")
         return 0
 
 

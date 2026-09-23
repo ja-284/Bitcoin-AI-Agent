@@ -80,12 +80,12 @@ def run_once(save: bool = True, version: str = DEFAULT_VERSION) -> dict | None:
     except Exception as exc:  # noqa: BLE001 -- re-raised with the stage attached
         raise ShadowRunError(step, exc) from exc
     if save:
-        from agent.shadow.db import ensure_schema, live_close_for, save_shadow, shadow_exists
+        # No schema DDL here (removed 2026-09-23). Re-applying the schema file every hour took
+        # brief exclusive locks to achieve nothing, and made a least-privilege role impossible
+        # because only a table's owner may run it. Schema changes go through `python -m
+        # agent.migrate`; if the tables are missing, the save below fails loudly and is recorded.
+        from agent.shadow.db import live_close_for, save_shadow, shadow_exists
 
-        try:
-            ensure_schema()
-        except Exception as exc:  # noqa: BLE001
-            raise ShadowRunError("save", exc) from exc
         try:
             if shadow_exists(row["as_of"]):
                 logger.info("Shadow row for %s already exists -- nothing to do", row["as_of"].isoformat())
@@ -119,7 +119,7 @@ def run_and_record(version: str = DEFAULT_VERSION) -> int:
     failure would otherwise be invisible.
     """
     from agent.data_providers.market_data import expected_last_closed
-    from agent.shadow.db import ensure_schema, save_run_error
+    from agent.shadow.db import save_run_error
 
     try:
         run_once(save=True, version=version)
@@ -129,7 +129,6 @@ def run_and_record(version: str = DEFAULT_VERSION) -> int:
         cause = getattr(exc, "cause", exc)
         logger.error("Shadow run failed at %s: %s: %s", step, type(cause).__name__, cause)
         try:
-            ensure_schema()
             save_run_error({
                 "expected_as_of": expected_last_closed(datetime.now(tz=timezone.utc)),
                 "step": step, "error_type": type(cause).__name__, "error_message": str(cause)[:4000],

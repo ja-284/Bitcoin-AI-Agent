@@ -117,4 +117,5 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 - `python -m agent.research.holdout_eval --dry-run` — proves the Phase 12 script on the validation period. **`--unseal` opens the sealed holdout once and forever — only on the user's explicit go-ahead.**
 - `python -m pytest tests/` — run the tests (no network or database needed).
 - `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` — database idempotency tests against real Postgres in a scratch schema it creates and drops (skipped by default).
-- Fresh database: `python -c "from agent.database.db import init_schema; init_schema()"` (safe to re-run; also applies migrations at the bottom of `schema.sql`).
+- `python -m agent.migrate` — **the only way to change the schema**: applies all three schema files (`agent/database`, `agent/shadow`, `agent/api`) in one transaction, then prints the schema version and the public-API posture. Safe to re-run. For a migration that raises `SCHEMA_VERSION`, run it against the database **before** deploying the code (the job accepts a database ahead of it, never behind). The hourly job never runs schema DDL.
+- `python -m agent.database.security` — exit 1 if any table is reachable through Supabase's public API (the watchdog runs it every 3h).
