@@ -168,3 +168,28 @@ BEGIN
         END LOOP;
     END LOOP;
 END $$;
+
+-- The root cause, closed as well (2026-09-23, evening). The block above locks the tables that
+-- exist; the exposure itself came from Supabase's DEFAULT privileges, a standing rule that every
+-- NEW table, view, sequence and function the owner role creates in this schema is granted in full
+-- to `anon` and `authenticated`. Left in place, the next table made from the dashboard -- or a view
+-- a frontend adds, which would run with its owner's rights and ignore RLS -- would be public the
+-- moment it existed. This removes the rule for objects created by the role applying this file
+-- (the owner, `postgres`); anything the public API may read is granted explicitly, per object.
+-- Supabase's own admin role keeps its defaults: they apply only to objects it creates, and this
+-- project's role cannot change them. Scoped to current_schema() so a test's scratch schema never
+-- touches `public`. Function EXECUTE also comes from a Postgres-wide default to PUBLIC that a
+-- per-schema rule cannot remove, so functions are additionally policed by
+-- `python -m agent.database.security`.
+DO $$
+DECLARE
+    r text;
+BEGIN
+    FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+            EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I REVOKE ALL ON TABLES FROM %I', current_schema(), r);
+            EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I REVOKE ALL ON SEQUENCES FROM %I', current_schema(), r);
+            EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I REVOKE ALL ON FUNCTIONS FROM %I', current_schema(), r);
+        END IF;
+    END LOOP;
+END $$;

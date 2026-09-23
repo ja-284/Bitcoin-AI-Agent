@@ -154,6 +154,19 @@ MUTATIONS = [
              'else {"model": model, "usage_unavailable": True}',
              'else {"model": model, "input_tokens": 0, "output_tokens": 0}',
              "missing usage figures recorded as zero cost instead of unavailable"),
+    # ---- 2026-09-23 evening: the wider public-API review
+    Mutation("security", "agent/database/security.py",
+             '        for role in f["callable_by"]:',
+             "        for role in []:",
+             "the exposure detector ignores functions callable at /rest/v1/rpc"),
+    Mutation("security", "agent/database/security.py",
+             '            if allowed is None or [p for p in granted if p != allowed]:',
+             "            if False:",
+             "the exposure detector ignores a view granted to the public API (views bypass RLS)"),
+    Mutation("security", "agent/database/schema.sql",
+             "EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I REVOKE ALL ON TABLES FROM %I', current_schema(), r);",
+             "NULL;",
+             "the standing rule that grants every NEW table to the public API is left in place"),
 ]
 
 

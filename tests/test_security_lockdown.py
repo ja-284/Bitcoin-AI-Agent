@@ -150,7 +150,9 @@ def test_posture_reads_in_a_constant_number_of_queries(monkeypatch):
 
         def execute(self, sql, params=None):
             queries.append(sql)
-            if "has_table_privilege" in sql:
+            if any(k in sql for k in ("relkind IN ('v', 'm')", "pg_proc", "pg_default_acl", "NOT c.relrowsecurity")):
+                self.result = []  # views, functions, default grants, notes: none in this fake database
+            elif "has_table_privilege" in sql:
                 self.result = [(t, True, r, p, False) for t in ("a", "b", "c") for r in ("anon", "authenticated")
                                for p in security.PRIVILEGES]
             elif "pg_policies" in sql:
@@ -180,6 +182,51 @@ def test_posture_reads_in_a_constant_number_of_queries(monkeypatch):
     import agent.database.db as db
     monkeypatch.setattr(db, "get_connection", lambda: Conn())
     result = security.posture()
-    assert len(queries) == 3
+    assert len(queries) == 7  # tables, policies, table list, views, functions, default grants, notes
     assert result["ok"] and set(result["tables"]) == {"a", "b", "c"}
     assert result["api_roles_present"] == ["anon", "authenticated"]
+
+
+# ---------------------------------------------------------------- views, functions, default privileges
+def test_a_view_the_api_can_read_is_reported_because_it_bypasses_rls():
+    """A view runs with its owner's rights: the tables' RLS does not protect what it selects."""
+    problems = security.judge_objects({"latest": {"api_privileges": {"anon": ["SELECT"]}, "security_invoker": False}}, [], [])
+    assert len(problems) == 1 and "view latest: `anon` holds SELECT" in problems[0] and "RLS" in problems[0]
+
+
+def test_a_view_granted_nothing_is_fine():
+    assert security.judge_objects({"latest": {"api_privileges": {"anon": [], "authenticated": []},
+                                              "security_invoker": False}}, [], []) == []
+
+
+def test_an_intended_public_view_must_also_be_security_invoker(monkeypatch):
+    monkeypatch.setattr(security, "INTENDED_PUBLIC_READ", {"latest": "SELECT"})
+    ok = {"latest": {"api_privileges": {"anon": ["SELECT"]}, "security_invoker": True}}
+    assert security.judge_objects(ok, [], []) == []
+    bypass = {"latest": {"api_privileges": {"anon": ["SELECT"]}, "security_invoker": False}}
+    assert "not security_invoker" in security.judge_objects(bypass, [], [])[0]
+    too_much = {"latest": {"api_privileges": {"anon": ["SELECT", "INSERT"]}, "security_invoker": True}}
+    assert "holds SELECT, INSERT" in security.judge_objects(too_much, [], [])[0]
+
+
+def test_a_callable_function_is_reported_and_security_definer_is_named():
+    fns = [{"name": "latest_state", "args": "", "security_definer": True, "callable_by": ["anon"]}]
+    (problem,) = security.judge_objects({}, fns, [])
+    assert "latest_state() is callable by `anon` at /rest/v1/rpc" in problem and "SECURITY DEFINER" in problem
+
+
+def test_standing_default_grants_are_reported_per_object_kind_and_role():
+    grants = [("r", "anon", "SELECT"), ("r", "anon", "INSERT"), ("f", "authenticated", "EXECUTE")]
+    problems = security.judge_objects({}, [], grants)
+    assert len(problems) == 2
+    assert any("NEW table or view" in p and "INSERT, SELECT to `anon`" in p for p in problems)
+    assert any("NEW function" in p and "EXECUTE to `authenticated`" in p for p in problems)
+
+
+def test_the_schema_file_removes_the_default_grants_for_every_object_kind():
+    """Static: the root-cause block must cover tables (and so views), sequences and functions, per API role."""
+    sql = Path("agent/database/schema.sql").read_text(encoding="utf-8")
+    block = sql[sql.index("The root cause, closed as well"):]
+    for kind in ("TABLES", "SEQUENCES", "FUNCTIONS"):
+        assert f"ALTER DEFAULT PRIVILEGES IN SCHEMA %I REVOKE ALL ON {kind} FROM %I" in block, kind
+    assert "current_schema()" in block and "ARRAY['anon', 'authenticated']" in block

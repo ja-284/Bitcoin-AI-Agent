@@ -462,6 +462,12 @@ def _structure(cur, schema: str) -> dict:
     cur.execute("""SELECT table_name, grantee, privilege_type FROM information_schema.role_table_grants
                    WHERE table_schema = %s AND grantee IN ('anon', 'authenticated')""", (schema,))
     out["api_grants"] = set(cur.fetchall())
+    # the standing rule for NEW objects (2026-09-23 evening): must grant the API roles nothing
+    cur.execute("""SELECT d.defaclobjtype, g.rolname, a.privilege_type FROM pg_default_acl d
+                   JOIN pg_namespace n ON n.oid = d.defaclnamespace CROSS JOIN LATERAL aclexplode(d.defaclacl) a
+                   JOIN pg_roles g ON g.oid = a.grantee
+                   WHERE n.nspname = %s AND g.rolname IN ('anon', 'authenticated') AND d.defaclrole = 'postgres'::regrole""", (schema,))
+    out["api_default_grants"] = set(cur.fetchall())
     return out
 
 
@@ -508,6 +514,74 @@ def test_the_drift_check_actually_detects_drift(scratch_db):
     assert any(c[1] == "added_by_hand" for c in after["columns"] - live["columns"])
     assert ("backend_state", False, False) in after["rls"] - live["rls"]
     assert ("schema_meta", "anon", "SELECT") in after["api_grants"] - live["api_grants"]
+
+
+def test_the_standing_rule_that_exposed_every_new_table_is_removed(scratch_db):
+    """
+    The root cause (2026-09-23 evening). Supabase's default privileges grant every NEW object in
+    `public` to the API roles. Recreate that rule in the scratch schema, prove it bites (control),
+    re-apply the schema files, and a table, a view and a sequence created afterwards must be closed
+    -- while the object created under the old rule keeps its grant, which shows the migration
+    changes the rule and not objects by accident.
+    """
+    db, _ = scratch_db
+    from agent.database.security import posture
+    from agent.migrate import migrate
+
+    with db.get_connection() as conn, conn.cursor() as cur:
+        for kind in ("TABLES", "SEQUENCES", "FUNCTIONS"):
+            cur.execute(f"ALTER DEFAULT PRIVILEGES IN SCHEMA {SCHEMA} GRANT ALL ON {kind} TO anon, authenticated")
+        cur.execute("CREATE TABLE made_under_the_old_rule (x int)")
+        conn.commit()
+        cur.execute("SELECT has_table_privilege('anon', %s, 'SELECT')", (f"{SCHEMA}.made_under_the_old_rule",))
+        assert cur.fetchone()[0], "control failed: the simulated Supabase rule did not grant the new table"
+    assert any(p.startswith("default privileges:") for p in posture(SCHEMA)["problems"]), \
+        "the detector must see the standing rule before the migration removes it"
+
+    migrate()  # the schema files again: idempotent, and they now remove the rule
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("CREATE TABLE made_after_the_fix (x int)")
+        cur.execute("CREATE SEQUENCE seq_after_the_fix")
+        cur.execute("CREATE VIEW view_after_the_fix AS SELECT count(*) AS n FROM predictions")
+        conn.commit()
+        for obj, priv in (("made_after_the_fix", "SELECT"), ("view_after_the_fix", "SELECT"),
+                          ("made_after_the_fix", "INSERT")):
+            for role in ("anon", "authenticated"):
+                cur.execute("SELECT has_table_privilege(%s, %s, %s)", (role, f"{SCHEMA}.{obj}", priv))
+                assert not cur.fetchone()[0], f"`{role}` got {priv} on {obj}, created after the fix"
+        cur.execute("SELECT has_sequence_privilege('anon', %s, 'USAGE')", (f"{SCHEMA}.seq_after_the_fix",))
+        assert not cur.fetchone()[0]
+        cur.execute("SELECT has_table_privilege('anon', %s, 'SELECT')", (f"{SCHEMA}.made_under_the_old_rule",))
+        assert cur.fetchone()[0], "existing grants are the table lockdown's job, not this block's"
+        cur.execute("DROP TABLE made_under_the_old_rule, made_after_the_fix")
+        cur.execute("DROP VIEW view_after_the_fix")
+        conn.commit()
+
+
+def test_the_detector_sees_a_view_and_a_callable_function(scratch_db):
+    """
+    The two objects the tables-only check could never see. A view granted to `anon` publishes
+    what it selects past RLS; a plain function is callable at /rest/v1/rpc -- and Postgres grants
+    EXECUTE to PUBLIC by default, which a per-schema rule cannot remove, so only the detector
+    stands between a new helper function and the internet. Closing both must make it pass again.
+    """
+    from agent.database.security import posture
+
+    db, _ = scratch_db
+    assert posture(SCHEMA)["ok"], posture(SCHEMA)["problems"]  # the trigger functions do not count
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("CREATE VIEW latest_by_hand AS SELECT as_of FROM predictions")
+        cur.execute("GRANT SELECT ON latest_by_hand TO anon")
+        cur.execute("CREATE FUNCTION helper_by_hand() RETURNS int LANGUAGE sql AS 'SELECT 1'")
+        conn.commit()
+    problems = posture(SCHEMA)["problems"]
+    assert any(p.startswith("view latest_by_hand: `anon` holds SELECT") for p in problems), problems
+    assert any("helper_by_hand() is callable by `anon`" in p for p in problems), problems
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("REVOKE ALL ON latest_by_hand FROM anon")
+        cur.execute("REVOKE EXECUTE ON FUNCTION helper_by_hand() FROM PUBLIC, anon, authenticated")
+        conn.commit()
+    assert posture(SCHEMA)["ok"], posture(SCHEMA)["problems"]
 
 
 def test_the_revoke_alone_blocks_writes_even_with_rls_off(scratch_db):

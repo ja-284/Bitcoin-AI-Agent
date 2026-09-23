@@ -145,6 +145,20 @@ one exposure is intended. Anything beyond SELECT, or any other table, is still r
 open the raw record tables to the frontend; the whole point of this contract is that the honesty
 labels live here, not in a UI.
 
+**Since 2026-09-23 (evening) nothing new is opened automatically**, so every exposure is a
+deliberate line of SQL. Three rules for whoever builds the frontend:
+
+- **A view needs `WITH (security_invoker = true)`.** A plain view runs with its owner's rights, so
+  the RLS on the tables beneath it does not apply — granting it to `anon` would publish everything
+  it selects. The watchdog reports a readable view that is not security_invoker, even if intended.
+- **Do not add functions to `public`.** Postgres lets everyone execute a new function by default
+  (a rule a schema-level setting cannot remove), and Supabase serves every function in `public` at
+  `/rest/v1/rpc/<name>`. The watchdog reports any callable one. If one is ever truly needed:
+  `REVOKE EXECUTE ON FUNCTION … FROM PUBLIC, anon, authenticated` and grant it narrowly.
+- **Grant to `anon`, not to `authenticated`, for public reads — and never treat `authenticated` as
+  "our own user".** If Supabase Auth sign-ups are enabled (a dashboard setting), anyone can become
+  `authenticated` in seconds. The project has no users (`auth.users` is empty) and needs none.
+
 ### The options as they were weighed
 
 The contract is defined and tested; how it reaches a browser is a separate choice, and making it
