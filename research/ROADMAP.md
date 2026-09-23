@@ -123,6 +123,17 @@ item: a Supabase security warning.
   through `migrate()` PASS; `python -m agent.migrate` on the live database PASS (schema 4, nothing
   exposed); manual run of the new shadow code against the live database PASS (found the hour,
   exited 0, no errors). **Outstanding: the first scheduled run on the new code (15:12 UTC).**
+- [x] **Test the tests (`tools/guard_mutations.py`)**: 18 critical guards broken on purpose — cutoff, news
+  cutoff, two feature leaks, label horizons, outcome timing, walk-forward purge, the holdout truncation, both
+  scoring 0.1.0 gap bugs, stale data, the schema guard, the staleness check, the prospective rule, the
+  exposure detector, the confidence label — and **all 18 caught**, each by the test written for that
+  property. Two controls make that meaningful: the unmutated suite passes, and a comment-only change survives.
+- [x] **E023 pre-registered (NOT run):** this week's findings (E018–E022) registered as secondary hypotheses
+  for the sealed holdout, because validation wear means they can only be confirmed on clean data. Extending
+  `holdout_eval.py` for them, and dry-running it on validation, is now a prerequisite of unsealing.
+- [x] **E024, power of the live checkpoints:** E012's 2,000-hour verdict is sound; E013's 5,000-hour bucket rule
+  fails a perfectly calibrated forecaster 8% of the time and the real model 27%; ECE above 0.03 is expected at
+  the 500-hour first look. No rule changed — the protocol now states these error rates.
 - [ ] **Wire `agent.api.publish` into the hourly workflow** — next, after the migration change is
   seen working in a scheduled run.
 
@@ -240,6 +251,11 @@ scoring, swap the frozen artefact, or touch the holdout.
   **Constraint on later phases:** this instability belongs in the contract's limitations; and if the
   2026-09-22 live watch item survives the 500-hour checkpoint, the scaled target is the first thing to
   reconsider — as a deliberate trade of skill for stability, made with the user, never as a side-effect.
+- **WATCH ITEM CLOSED (2026-09-23, E024): the 18-hour reading was a one-in-four event.** Measured on
+  every contiguous 18-hour window of the validation out-of-sample record, a model exactly as good as it was
+  on validation is BEHIND the free EWMA rule in 25% of them. Nothing about the model is suggested by that
+  reading, and the larger paper sample (100 hours) already had it ahead. Closed as explained; the
+  checkpoint comparisons continue as pre-registered.
 - **WATCH ITEM UPDATE, same day: it largely dissolved on a larger sample, exactly as it was written to be
   able to.** The 18-hour reading below was taken on the shadow record alone. The paper record covers **82**
   live hours — every hour since go-live, not just the ones the shadow existed for — and on those the model is

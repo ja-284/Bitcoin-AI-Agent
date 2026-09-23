@@ -38,6 +38,37 @@ exist when the model was fitted?
    development data *and* prospectively. It does not trigger any change to the live signal.
 7. **Regime slices are descriptive**, never the basis for switching models on the fly.
 
+## Operating characteristics of these rules (measured 2026-09-23, E024) — read every checkpoint against them
+
+**No rule above is changed.** These are the rules' own error rates, measured before any checkpoint
+data exists, so that a checkpoint result is read for what it is. Method: every contiguous N-hour
+window of the validation out-of-sample record (a live record is a contiguous stretch with its own
+regime), assuming the live model is exactly as good as it was on validation. If it is worse, passes
+are rarer than shown.
+
+| live hours | model ahead of the free EWMA rule | E012 passes (Brier / accuracy / rho point) | E013 ECE passes | E013 buckets pass | a *perfectly calibrated* forecaster passes E013 |
+|---|---|---|---|---|---|
+| 18 | 75% | 13% / 19% / 52% | 2% | 100% | 1% |
+| 100 | 92% | 39% / 31% / 89% | 1% | 100% | 1% |
+| 500 | 100% | 78% / 59% / 100% | 10% | 46% | 16% |
+| 2,000 | 100% | 100% / 98% / 100% | 62% | 37% | 30% |
+| 5,000 | 100% | 100% / 100% / 100% | 100% | 73% | 92% |
+
+What that means for each checkpoint:
+
+- **500 hours (first look, no verdict).** Expect ECE above 0.03 — a good model stays under it in only
+  about 10% of 500-hour stretches, because ECE is inflated by sampling noise at that size. A high ECE
+  here is not evidence of anything. Skill below the E012 bar also happens about one time in five.
+- **2,000 hours (E012 verdict).** Sound: a model as good as on validation passes every part in about
+  98% of stretches. A fail here means something.
+- **5,000 hours (E013 verdict).** The ECE part is sound. The bucket part fails a perfectly calibrated
+  forecaster 8% of the time from noise alone, and fails the real model in 27% of stretches, because
+  its calibration moves with the market regime. So a fail means "worse than a one-in-four event for a
+  model as good as on validation" — worth reporting, not proof of miscalibration — and the report
+  must show the bucket-by-bucket numbers with intervals so the reader can see which case it is.
+- **Short readings.** An 18-hour stretch shows the model behind the free rule one time in four even
+  when it is genuinely better. That is what happened on 2026-09-22.
+
 ## What is checked every week regardless of sample size (weekly report §3)
 
 Coverage (rows vs expected hours), honest blanks and their reasons, reference-close agreement

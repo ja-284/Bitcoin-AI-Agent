@@ -5,6 +5,24 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-09-23 (testing the tests; the live checkpoints' own error rates; E023 registered)
+
+Nothing that runs changed.
+
+- **Mutation testing of the critical guards** (`tools/guard_mutations.py`): 18 realistic single mistakes —
+  a cutoff an hour late, news an hour past the cutoff, a feature reading the next candle, a centred
+  window, labels an hour off, outcomes graded early, the purge dropped, the holdout left untruncated,
+  both scoring 0.1.0 gap bugs, stale data accepted, an old schema accepted, the confidence published as
+  a probability, and more. **All 18 caught**, each by the test for that property. The unmutated suite
+  passes and a comment-only change survives, so the result means what it says.
+- **E024 — how often would the live checkpoints give each answer?** E012's 2,000-hour verdict is sound
+  (~2% false failure). E013's 5,000-hour bucket rule fails a perfectly calibrated forecaster 8% of the
+  time and the real model 27%, because its calibration moves with the regime. ECE above 0.03 is expected
+  at the 500-hour first look. **No rule changed**; `research/LIVE_EVALUATION.md` now states these error
+  rates. The 18-hour watch item turns out to be a one-in-four event and is closed.
+- **E023 pre-registered:** this week's validation-generated findings registered for the sealed holdout,
+  before it is opened, so they can one day be confirmed on clean data.
+
 ## schema 4 — 2026-09-23 (every table was reachable through Supabase's public API; now locked)
 
 **The most serious finding in the project so far, and one my own earlier audit missed.**

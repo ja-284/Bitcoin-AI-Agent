@@ -1,0 +1,87 @@
+{
+  "id": "E024",
+  "date": "2026-09-23",
+  "git_commit": "(this commit)",
+  "status": "DESCRIPTIVE PLANNING -- no hypothesis, nothing fitted, nothing selected, nothing changed. Estimates the operating characteristics of the prospective checkpoint rules before the checkpoint data exists.",
+  "why": "The live evaluation protocol (research/LIVE_EVALUATION.md, pre-registered 2026-09-21) sets checkpoints at 500, 2,000 and 5,000 prospective shadow hours with verdicts on E012 (skill) at 2,000 and E013 (calibration) at 5,000. It was written without a power analysis, and on 2026-09-22 an 18-hour reading had the model behind the free reference. Both raise the same question: at a given number of live hours, how often would the rules give each answer if the model were exactly as good as it was on validation?",
+  "method": "Every contiguous N-hour window (step 24h) of the walk-forward out-of-sample validation record that reproduces E013 exactly -- because a live record is a contiguous stretch with its own regime, not a random sample of hours. Inside each window, every statistic is computed from that window alone, as a checkpoint would. A perfectly calibrated control uses outcomes simulated from the model's own probabilities (seed 7): its failure rate is a rule's failure rate from sampling noise alone. The rho interval is a 48h block bootstrap (300 resamples) on weekly-spaced windows at the verdict sizes.",
+  "command": "python -m agent.research.checkpoint_power --experiment E024",
+  "caveats": [
+    "Assumes the live advantage equals the validation advantage. If it is smaller, every 'hours needed' figure is an UNDER-estimate.",
+    "Uses the (worn) validation period -- acceptable for estimating variability, which selects nothing; it would not be acceptable for choosing anything.",
+    "Windows overlap, so the shares are not independent draws; they describe how often a checkpoint would land on each answer, not a formal probability with an interval."
+  ],
+  "metrics": {
+    "validation_rows": 13127,
+    "share_of_windows_with_model_ahead_of_free_rule": {
+      "18": 0.751,
+      "48": 0.824,
+      "100": 0.915,
+      "200": 0.974,
+      "500": 1.0,
+      "1000": 1.0,
+      "2000": 1.0,
+      "5000": 1.0
+    },
+    "E012_full_rule_pass_share": {
+      "500h": {
+        "brier": 0.777988614800759,
+        "accuracy": 0.5939278937381404,
+        "rho_point": 1.0,
+        "rho_interval": 1.0
+      },
+      "2000h": {
+        "brier": 1.0,
+        "accuracy": 0.9806034482758621,
+        "rho_point": 1.0,
+        "rho_interval": 1.0
+      }
+    },
+    "E013_pass_share_real_outcomes": {
+      "500": {
+        "ece": 0.09867172675521822,
+        "buckets": 0.45920303605313095,
+        "both": 0.0777988614800759
+      },
+      "1000": {
+        "ece": 0.28063241106719367,
+        "buckets": 0.2924901185770751,
+        "both": 0.21146245059288538
+      },
+      "2000": {
+        "ece": 0.625,
+        "buckets": 0.3728448275862069,
+        "both": 0.35560344827586204
+      },
+      "5000": {
+        "ece": 1.0,
+        "buckets": 0.7286135693215339,
+        "both": 0.7286135693215339
+      }
+    },
+    "E013_pass_share_perfectly_calibrated_control": {
+      "500": {
+        "ece": 0.17077798861480076,
+        "buckets": 0.5351043643263758,
+        "both": 0.15939278937381404
+      },
+      "1000": {
+        "ece": 0.5,
+        "buckets": 0.4426877470355731,
+        "both": 0.3794466403162055
+      },
+      "2000": {
+        "ece": 0.7780172413793104,
+        "buckets": 0.3125,
+        "both": 0.30387931034482757
+      },
+      "5000": {
+        "ece": 1.0,
+        "buckets": 0.9203539823008849,
+        "both": 0.9203539823008849
+      }
+    }
+  },
+  "results": "(1) THE 18-HOUR WATCH ITEM WAS UNREMARKABLE. With the model exactly as good as on validation, an 18-hour stretch shows it BEHIND the free EWMA rule in 25% of windows. The reading of 2026-09-22 was a one-in-four event; the watch item is closed as explained. The model leads in 92% of 100-hour windows, 97% at 200 and 100% from 500.\n\n(2) THE E012 VERDICT AT 2,000 HOURS IS SOUND: Brier bar 100%, accuracy bar 98%, rho point and interval 100% of windows -- a false-failure rate of about 2% for a model as good as on validation. At 500 hours the same rule would pass only 59-78% part by part, which is why the protocol gives no verdict there.\n\n(3) THE E013 VERDICT AT 5,000 HOURS: the ECE part passes in 100% of windows. The bucket part ('every bucket with >= 100 rows within 0.05') fails a PERFECTLY CALIBRATED forecaster in 8% of 5,000-hour windows from noise alone, and fails the real model in 27%. The difference between 8% and 27% is not noise: the model is calibrated on average but its calibration moves with the market regime (E013 already saw the Platt intercept drift from -0.2 to +0.2 across folds). A live 'not calibrated' verdict at 5,000 hours therefore has roughly a one-in-four prior chance even if the model is exactly as good as it was on validation.\n\n(4) AT THE 500-HOUR FIRST LOOK, ECE will exceed 0.03 in about 90% of cases even for a good model (10% pass; 17% for the perfectly calibrated control): ECE is inflated by sampling noise at that size. Anyone reading the 500-hour numbers must know this in advance.",
+  "affected_design": "NO RULE IS CHANGED. An 8% noise-failure rate does not justify weakening a pre-registered verdict rule, and changing one because of how it might come out is exactly what pre-registration exists to prevent. What changes is what the protocol says about its own rules: research/LIVE_EVALUATION.md gains a section stating these measured pass rates, so that every checkpoint is read against its known error rates -- a fail at 5,000 hours means 'worse than a one-in-four event for a model as good as on validation', not 'proven miscalibrated', and an ECE above 0.03 at 500 hours means almost nothing. The 2026-09-22 watch item is closed."
+}
