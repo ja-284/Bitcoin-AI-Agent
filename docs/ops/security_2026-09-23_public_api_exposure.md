@@ -77,6 +77,12 @@ requests made with the anon key. That check needs the dashboard, so it is the us
 exposure, and from ~13:45 UTC on 2026-09-24 none of it. The days before that are UNKNOWN
 permanently, and are recorded as such rather than as "not read".
 
+**Checked 2026-09-23 ~18:20 UTC (user):** API Gateway logs, last 24 hours, search `rest/v1` — **no
+results**; `graphql` searched as well, nothing reported. So: no REST reads between ≈ 2026-09-22 18:00 and the fix at 13:45 UTC. Neither this project
+nor my verification probes use the REST API (the probes ran as `anon` inside a direct database
+connection), so a single hit would have meant an outsider. 2026-09-19 → 2026-09-22 ~18:00: UNKNOWN,
+permanently.
+
 ## The fix — two independent layers, in the repository and live
 
 Each schema file now locks down the tables it creates, so a database rebuilt from the repository
@@ -114,6 +120,11 @@ needed the schema guard to accept a database *ahead* of the code — see `CHANGE
 - **Supabase's project-wide default privileges left alone.** Changing them would alter behaviour
   for tables the user may later create for a frontend; the per-table rule plus the detector covers
   the same risk without that.
+  **REVERSED the same evening — see "Evening review" below.** The reasoning above was weaker than it
+  looked: the detector then covered only *tables*, so a new *view* (which ignores RLS) or *function*
+  (callable at `/rest/v1/rpc`) would have been exposed with nothing to notice; and "a frontend table
+  that works without anyone deciding to open it" is exactly the behaviour least privilege forbids.
+  The original text is kept so the sequence of decisions stays visible.
 - **`service_role` left alone.** It is the secret-key role, bypasses RLS by design, is used by
   nothing here, and is not what the advisor flagged.
 - **No broad "allow all" policy, no data removed, no protection weakened.**
@@ -159,11 +170,81 @@ asked what the database exposes to Supabase's own public API — and a critical 
 the whole time. Security should have been **FAIL** until today. The gate is corrected, and the
 original text is left in place so the sequence stays honest.
 
+## Evening review (2026-09-23 ~19:00–19:45 UTC) — the root cause, and what the project cannot close
+
+Re-opened on the user's instruction to resolve the public-access issue *properly*: every schema,
+every grant, every policy, the intended access for each role, then least privilege applied and
+tested both ways. Read-only audit first; nothing changed until the tests below existed.
+
+**Intended access, per role — the reference the detector enforces:**
+
+| role | who it is | intended access | actual (live, 19:40 UTC) |
+|---|---|---|---|
+| `anon` | anyone holding the public anon key | **nothing** (a future frontend: SELECT on `backend_state` only, by an explicit, reviewed change) | nothing on the 6 tables; no view, no callable function; **no standing grant for new objects** |
+| `authenticated` | anyone signed in via Supabase Auth — possibly *anyone*, if sign-ups are on | **nothing** — never treated as trusted | as `anon` |
+| `service_role` | Supabase's secret admin key | unused by this project; bypasses RLS by design | unchanged (Supabase-managed); the key is not in the repository or `.env`, and no workflow references one |
+| `postgres` | the hourly job today (owner) | everything, until the least-privilege role replaces it | as intended |
+| `bitcoin_agent` | the prepared least-privilege role | exactly the job's reads and appends (`docs/ops/least_privilege_role.sql`, proven by integration test) | not created yet — needs a password, so it is the user's step |
+
+**Finding 1 — the root cause was still live, and is now closed.** The morning's lockdown closed the
+six tables that existed. The exposure itself came from **default privileges**: a standing rule that
+every *new* table, view, sequence and function the owner role creates in `public` is granted in
+full to `anon` and `authenticated` — **24 grants**, found by the audit. The next table created from
+the dashboard, or a view a frontend added, would have been public the moment it existed.
+`agent/database/schema.sql` now removes that rule (scoped to the owner role, the current schema, and
+the two API roles), applied live with `python -m agent.migrate` at ~19:25 UTC: **24 → 0**.
+
+- *Proved on live, in a transaction that was rolled back:* a brand-new table, view and sequence
+  gave `anon`/`authenticated` nothing, and an `anon` read of the new table was refused; nothing was
+  left behind.
+- *Proved on real Postgres (scratch schema):* the Supabase rule re-created there does grant a new
+  table (control), and after the schema files it no longer does — while the object made under the
+  old rule keeps its grant, showing the change touched the rule and nothing else.
+- *Drift:* the repository-vs-live check now compares default privileges too. Run **before** the
+  migration it failed, listing exactly the 24 live grants; after it, 18/18 integration tests pass.
+- *Function EXECUTE* also comes from a Postgres-wide default to PUBLIC that no per-schema rule can
+  remove — so functions are policed by the detector instead (below).
+
+**Finding 2 — the detector only knew about tables. It now sees every door in `public`:** views
+readable by the API roles (a view runs as its owner and ignores RLS; an intended one must be
+`security_invoker`), functions the API roles can execute (served at `/rest/v1/rpc`, with SECURITY
+DEFINER named), and the standing default grants. Each new check was broken on purpose and caught
+(`tools/guard_mutations.py`, now 31 of 31). Watchdog cost: the whole check runs in ~1.3 s.
+
+**Finding 3 — what this project's role cannot close (reported as NOTES, never as failures).**
+Supabase's own admin role owns and granted these; revoking them was *tried* inside a rolled-back
+transaction and Postgres answered "no privileges could be revoked" for every object:
+
+- `net.http_request_queue`, `net._http_response` (full rights, RLS off) and `net.http_post/get/delete`
+  (EXECUTE) — the queue holds each hourly dispatch request, **GitHub token included, for a few
+  seconds**; `http_post` would let a caller make the database send arbitrary HTTP requests;
+- `extensions.pg_stat_statements` (query statistics). *Checked, count-only, nothing printed:* of
+  2,081 stored statement texts, none holds an Anthropic key, a classic GitHub token, a Bearer value,
+  a JWT or a database URL with a password. One matched the fine-grained-token pattern — examined with
+  the match redacted inside the database, it is the **placeholder in the setup script's comment**
+  ("after replacing github_pat_… with a … token"), and it does **not** equal the token in Vault. The
+  cron job reads the real token from Vault at run time. And `anon` cannot read other roles'
+  statement texts at all (0 of the matches visible as `anon`);
+- `realtime.subscription`.
+
+All of them are reachable **only if their schema is listed under Project Settings → API → Exposed
+schemas** (Supabase's default is `public, graphql_public`). That setting is invisible from the
+database, so its state stays **UNKNOWN until the user looks** — and it is now the *single* control
+standing between the internet and the dispatch token. This is the one remaining check in
+`docs/ops/open_user_actions.md` item 5.
+
+**Also confirmed:** Realtime publishes no table; no storage bucket exists; `cron` and `vault` cannot
+even be entered by the API roles; `auth.users` is empty.
+
 ## Remaining, and who owns it
 
-- **Check the API logs for anon-key requests** — user (dashboard only).
+- ~~Check the API logs for anon-key requests~~ — **done 2026-09-23 ~18:20 UTC** (user): nothing in the
+  retained window; earlier days UNKNOWN permanently (see above).
+- **Check "Exposed schemas"** (Project Settings → API) lists only `public` and `graphql_public` —
+  user, ten seconds, now the one control over `net`.
 - **The advisor may now show "RLS enabled, no policy"** on each table. That is informational and
   is the intended state: deny-all until a policy is deliberately added.
-- **The hourly shadow step re-applies its schema file every run**, so it re-runs the lockdown DDL
-  hourly. It works (the job connects as the owner) but is unnecessary, and it blocks a
-  least-privilege role. Scheduled as the next controlled change.
+- ~~The hourly shadow step re-applies its schema file every run~~ — **fixed** (`17093f8`; schema
+  changes go only through `python -m agent.migrate`, verified in a scheduled run 2026-09-23).
+- **Least-privilege login role** — SQL ready and proven; creating a login role with a password is
+  the user's step (`docs/ops/open_user_actions.md` item 2).

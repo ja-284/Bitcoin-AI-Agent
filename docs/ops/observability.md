@@ -29,6 +29,7 @@ Reviewed 2026-09-22 by reading every failure handler in the live path (`agent/`,
 | an outcome candle does not exist | status `unavailable`; price and return stay NULL | `prediction_outcomes.status`, never a fabricated price |
 | an hourly run is skipped | the next run's self-check fails on staleness | GitHub emails the failure; watchdog every 3h; weekly report lists the missing hours |
 | a table becomes reachable through Supabase's public API (RLS switched off by hand, a privilege re-granted, or a new table made outside the schema files, which Supabase's defaults expose at once) | nothing in the hourly job changes — this is invisible from the record itself | `python -m agent.database.security` in the watchdog, every 3 hours: the job fails and GitHub emails you (added 2026-09-23) |
+| a **view or function** is added to `public`, or the standing default grant to the public API returns | nothing in the hourly job changes | the same security check, extended 2026-09-23 evening: views readable by the API (they ignore RLS), functions callable at `/rest/v1/rpc`, default grants for new objects — each fails the watchdog |
 | the database is on an older schema than the code (a restore, or a rebuild from old files) | the run stops before writing anything | `assert_schema_current`; the job fails loudly naming both versions |
 | **GitHub itself stops running anything** | **nothing happens, and nothing complains** | **NOT DETECTABLE — see below** |
 

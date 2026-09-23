@@ -144,6 +144,19 @@ a technical one. Tell me either way and I will implement it or close the item.
 
 ## 5. Check Supabase's API logs for anonymous requests — once, BEFORE 2026-09-24 ~13:45 UTC
 
+**DONE, 2026-09-23 ~18:20–18:35 UTC, by the user:** Logs → API Gateway, last 24 hours, search
+`rest/v1` → **no results**; the `graphql` search was done too, with nothing reported. What this
+proves, and what it does not:
+
+- **Proves:** no request reached either API door in the retained window, ≈ 2026-09-22 18:00 →
+  2026-09-23 13:45 UTC (the last ~19 hours of the exposure).
+- **Does not prove:** anything about 2026-09-19 → 2026-09-22 ~18:00. Those days had already left the
+  Free plan's 1-day log before anyone looked. **They stay UNKNOWN permanently** — not "not read".
+- **Weight of the evidence:** the project's hostname and anon key were never published (checked), and
+  the one window we can see is empty, which makes access in the unseen days unlikely but not
+  excluded. The data involved is non-secret research output, and nothing was written (proven from the
+  data itself).
+
 **Deadline, and why.** Supabase's Free plan keeps API and database logs for **1 day** (Pro 7, Team
 28, Enterprise 90 — supabase.com/pricing, read 2026-09-23). The exposure closed at ~13:45 UTC on
 2026-09-23, so by ~13:45 UTC on **2026-09-24** the last log line from the exposed period is gone and
@@ -163,7 +176,12 @@ The backend never uses the REST API — it connects to Postgres directly — so 
 did not come from this project. If there are none, the exposure was never used. If there are some,
 tell me which tables and when, and I will check them against the record.
 
-**And check one setting while you are there** (ten seconds): *Project Settings → API → Exposed
+**STILL OPEN — and since 2026-09-23 evening, the single control over the dispatch token.** The
+evening review showed that Supabase's own admin role grants the public API roles full rights on the
+`net` schema, and this project's role cannot revoke them (tried; Postgres refused). So whether the
+token can be read in the seconds it waits in `net.http_request_queue` depends only on this setting.
+
+**Check one setting while you are there** (ten seconds): *Project Settings → API → Exposed
 schemas*. It should list only `public` and `graphql_public`. If `net`, `vault`, `cron` or anything
 else is listed, remove it — `net` in particular holds each hourly dispatch request, GitHub token
 included, for a few seconds, and Supabase's defaults let the anon role read it if the schema is

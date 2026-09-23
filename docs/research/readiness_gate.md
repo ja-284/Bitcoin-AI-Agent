@@ -118,14 +118,40 @@ The master-plan addendum separates these on purpose, and so does this gate.
 | item | critical? | fixable now? | why it is not PASS |
 |---|---|---|---|
 | **16 Automation** — no alarm outside GitHub | not critical to integrity (a missed hour is recorded as missed, never fabricated) but it is the one silent failure left | no — needs a healthchecks.io account (user) | if GitHub stops running jobs entirely, nothing reports it |
-| **17 Security** — least-privilege DB role | not critical (defence in depth; the secret is not exposed, the record is append-only, the public API is closed) | not by me — creating a login role with a password is an account-creation step (user); its prerequisite, no DDL on the hourly path, is being deployed today | the job still connects as the owner role |
-| **17 Security** — was the exposure used to READ data? | not critical to integrity (no write occurred; the data is non-secret research output of a public project) — but it is genuinely **UNKNOWN** | not by me — only the dashboard's API logs can answer (user) | reads leave no trace in the tables |
+| **17 Security** — least-privilege DB role | not critical (defence in depth; the secret is not exposed, the record is append-only, the public API is closed) | not by me — creating a login role with a password is an account-creation step (user); its prerequisite, no DDL on the hourly path, is done (verified in a scheduled run 2026-09-23 15:09 UTC) | the job still connects as the owner role |
+| **17 Security** — was the exposure used to READ data? | not critical to integrity (no write occurred; the data is non-secret research output of a public project) | **partly answered 2026-09-23 ~18:20 UTC (user):** API Gateway logs searched for `rest/v1` over the last 24 hours, the most the Free plan keeps — **no results**; `graphql` searched too, nothing reported — so no API reads in the last ~19 hours of the exposure (≈ 2026-09-22 18:00 → 2026-09-23 13:45 UTC) | the earlier days (2026-09-19 → 2026-09-22 ~18:00) had already left the 1-day log and stay **UNKNOWN permanently** |
 | **21 Prospective monitoring** | not critical to the engineering; **critical to any claim that the move-size model works** | no — it needs elapsed time (37 of 500 shadow hours on 2026-09-23) | the calendar |
 
 **Verdict: RELEASE CANDIDATE.** Every hard gate passes; nothing critical is open. It is **not
 FINAL** because three PARTIALs remain and one fact is UNKNOWN, none of which can be closed from the
 repository. A frontend can be built against it now; "backend complete" is not claimed, and a model
 that "works" is not claimed either.
+
+### Evening security review, 2026-09-23 — root cause closed; one more fact is UNKNOWN
+
+Re-opened on the user's instruction to resolve the public-access issue properly (full record:
+`docs/ops/security_2026-09-23_public_api_exposure.md` → "Evening review").
+
+- **Closed:** the *root cause*. Supabase's default privileges granted every NEW table, view, sequence
+  and function in `public` to the public API roles (24 standing grants); the morning's fix had locked
+  only the tables that existed. Removed by the schema files, applied live (24 → 0), proven on live in
+  a rolled-back transaction and on real Postgres with a control; the drift check now compares default
+  privileges and failed before the migration, passes after.
+- **Widened:** the detector now also reports views readable by the API (views ignore RLS), functions
+  callable at `/rest/v1/rpc`, and standing default grants — each check broken on purpose and caught
+  (mutation testing 31 of 31).
+- **Not closable by this project:** Supabase's admin role grants the API roles full rights on `net`
+  (which holds each hourly dispatch request, GitHub token included, for seconds), on
+  `extensions.pg_stat_statements` and on `realtime.subscription`. Revoking was tried and refused by
+  Postgres. They are reachable only if listed under *Exposed schemas* (default: not). **That setting
+  is a second UNKNOWN fact** — a user check of ten seconds, and now the single control over `net`.
+- Checked and fine: no secret in 2,081 stored query texts (the one token-shaped match is the setup
+  script's placeholder, and differs from the Vault token); no Realtime publication; no storage bucket;
+  `cron`/`vault` not enterable by the API roles; no Auth users.
+
+**Row 17 stays PARTIAL** (least-privilege role: user step). **Hard gate "critical security": PASS,
+with a stated condition** — it rests on Supabase's default exposed-schemas list, which is unverified
+until the user looks. Everything the project's own role can close is closed and watched.
 
 ## Holdout readiness review, 2026-09-23 — NOT READY (one condition unmet), and never opened without the user
 

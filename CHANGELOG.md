@@ -5,6 +5,34 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## security — 2026-09-23 evening (the root cause of the exposure, and the doors the detector could not see)
+
+Schema version unchanged (4): nothing the code relies on moved; the migration is idempotent and was
+applied live before this code was pushed, so the stricter watchdog check passed from its first run.
+
+- **Root cause closed.** Supabase's default privileges granted every NEW table, view, sequence and
+  function in `public` to `anon`/`authenticated` (24 standing grants on the live database). The
+  morning's lockdown had closed only the tables that existed. `agent/database/schema.sql` now removes
+  that rule for the owner role; applied with `python -m agent.migrate` (24 → 0). Proven on live in a
+  rolled-back transaction (a new table, view and sequence give the API roles nothing; an `anon` read
+  is refused; nothing left behind) and on real Postgres with a control. This **reverses** a decision
+  recorded that morning ("default privileges left alone") — the reason is in the security record.
+- **Detector widened** (`agent/database/security.py`): views readable by the API (a view ignores RLS;
+  an intended one must be `security_invoker`), functions callable at `/rest/v1/rpc` (SECURITY DEFINER
+  named), standing default grants. Supabase-owned rights it cannot revoke (`net`, `extensions`,
+  `realtime`) are printed as NOTES, never failures. 7 read-only queries, ~1.3 s.
+- **Tried, and impossible from this project:** revoking the public API roles' rights on `net`
+  (Supabase's admin role granted them; Postgres refused). Their only control is the dashboard's
+  *Exposed schemas* setting — a user check, now recorded as UNKNOWN until done.
+- **Checked:** no secret in 2,081 stored query texts (count-only scan; the single token-shaped match
+  is the setup script's placeholder, proven different from the Vault token inside the database).
+- Drift check compares default privileges too (failed before the live migration, passes after);
+  18/18 integration tests; 375 unit tests; mutation testing **31 of 31**.
+- `docs/api/contract_v1.md`: three rules for a future frontend (security_invoker views, no functions
+  in `public`, never trust `authenticated`).
+- Supabase API-log check recorded with its limits: nothing in the retained window (≈ the last 19 hours
+  of the exposure); 2026-09-19 → 2026-09-22 ~18:00 UNKNOWN permanently.
+
 ## backend — 2026-09-23 (the AI cost is measured, not estimated; the backend state is published hourly)
 
 - **Each run records what its AI calls really consumed** (`run_meta.ai_usage`: model, input and
