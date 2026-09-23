@@ -96,6 +96,37 @@ a different and truer reason. Between 2026-09-21 and 2026-09-23 the real score w
 **check what a service exposes by default, not only what this code does** — a platform's defaults
 are part of the attack surface even when the code never touches them.
 
+### Release status, 2026-09-23 — RELEASE CANDIDATE, not FINAL
+
+The master-plan addendum separates these on purpose, and so does this gate.
+
+**Hard gates** (must all be PASS before "backend complete" may be said):
+
+| hard gate | status | evidence |
+|---|---|---|
+| correctness | PASS | rows 1, 4, 9; parity every week |
+| point-in-time safety / leakage | PASS | rows 2, 3; perturbation tests in every feature and label module |
+| data integrity | PASS | row 13; append-only triggers; and since 2026-09-23 no public-API writes are possible |
+| critical security | PASS | the public-API exposure is closed and proven by behaviour; detected every 3 h |
+| reproducibility | PASS | row 14; and since 2026-09-23 one command (`python -m agent.migrate`) builds the whole schema |
+| required tests | PASS | 334 unit tests with no database reachable, 11 integration tests on real Postgres, CI on GitHub's runners |
+| live/research consistency | PASS | parity 64/64 at the last weekly audit |
+| no known critical regression | PASS | every change today verified before the next was pushed |
+
+**Every PARTIAL, classified (addendum §8):**
+
+| item | critical? | fixable now? | why it is not PASS |
+|---|---|---|---|
+| **16 Automation** — no alarm outside GitHub | not critical to integrity (a missed hour is recorded as missed, never fabricated) but it is the one silent failure left | no — needs a healthchecks.io account (user) | if GitHub stops running jobs entirely, nothing reports it |
+| **17 Security** — least-privilege DB role | not critical (defence in depth; the secret is not exposed, the record is append-only, the public API is closed) | not by me — creating a login role with a password is an account-creation step (user); its prerequisite, no DDL on the hourly path, is being deployed today | the job still connects as the owner role |
+| **17 Security** — was the exposure used to READ data? | not critical to integrity (no write occurred; the data is non-secret research output of a public project) — but it is genuinely **UNKNOWN** | not by me — only the dashboard's API logs can answer (user) | reads leave no trace in the tables |
+| **21 Prospective monitoring** | not critical to the engineering; **critical to any claim that the move-size model works** | no — it needs elapsed time (37 of 500 shadow hours on 2026-09-23) | the calendar |
+
+**Verdict: RELEASE CANDIDATE.** Every hard gate passes; nothing critical is open. It is **not
+FINAL** because three PARTIALs remain and one fact is UNKNOWN, none of which can be closed from the
+repository. A frontend can be built against it now; "backend complete" is not claimed, and a model
+that "works" is not claimed either.
+
 ### What this does and does not say
 
 It says the backend is **trustworthy as an instrument**: what it records is correct, timestamped
