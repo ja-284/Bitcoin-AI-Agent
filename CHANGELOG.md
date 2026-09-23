@@ -19,6 +19,13 @@ analysis can always tell which version produced a row.
   shadow coverage line uses the due-hours rule; the news-evaluation counter counts only hours with a
   usable news score (it had included the 17 hours whose scoring failed).
 - 397 unit tests, 19 integration tests, mutation testing 34 of 34.
+- **Live checkpoints prepared before their data exists** (`agent/research/live_checkpoint.py`): the
+  500 / 2,000 / 5,000-hour readings exactly as registered, on a fixed prefix of the first N prospective
+  hours (no reading "whenever it looks good"), with E024's pass-rule code, and with the 5,000-hour
+  volatility-regime cut points frozen now from development data (`regime_terciles_v1.json`, written only
+  after reproducing the drift reference's quartiles exactly). Three clarifications added to
+  `research/LIVE_EVALUATION.md`, dated before any checkpoint was reachable. 415 unit tests; mutation
+  testing 36 of 36.
 
 ## security — 2026-09-23 evening (the root cause of the exposure, and the doors the detector could not see)
 

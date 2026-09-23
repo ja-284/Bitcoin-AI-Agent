@@ -149,6 +149,15 @@ item: a Supabase security warning.
   the real steps and unable to fail the job. Acceptance: the next hourly run is green in every step and
   `backend_state.generated_at` advances to that run's time, describing the hour it just saved. **PASS** at
   the 16:12 UTC run (59c4c76): every step green, snapshot written 16:13:14 describing the 15:00 hour, health ok.
+- [x] **Live checkpoints prepared before their data exists (2026-09-23 ~20:00 UTC, 42 of 500 hours):**
+  `python -m agent.research.live_checkpoint` computes the registered 500 / 2,000 / 5,000-hour readings
+  exactly as `research/LIVE_EVALUATION.md` says — on a fixed prefix (the first N prospective hours,
+  clarification 8), with E024's own pass-rule code (9), and with the 5,000-hour regime cut points frozen
+  now from development data (10). It refuses to run early; nothing is computed on live data yet.
+- [x] **Security review on the user's instruction (2026-09-23 evening):** root cause (default privileges)
+  closed live; detector covers views, functions, default grants; `net` rights proven unrevocable by the
+  project (Exposed-schemas setting = the user's 10-second check); least-privilege switch made checkable
+  (`agent.database.role_check`, `run_meta.db_role`). Details: `docs/ops/security_2026-09-23_public_api_exposure.md`.
 - [x] **AI cost measured, not estimated** — every run records the API's own token counts
   (`run_meta.ai_usage`); the weekly report prices them against a dated list-price table. Real reading
   before deploying (one unsaved run, 56 headlines): $0.0164 a run, ≈ $11.80 a month. Deployed
