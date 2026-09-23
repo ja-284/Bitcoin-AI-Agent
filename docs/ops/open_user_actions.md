@@ -147,6 +147,13 @@ The backend never uses the REST API — it connects to Postgres directly — so 
 did not come from this project. If there are none, the exposure was never used. If there are some,
 tell me which tables and when, and I will check them against the record.
 
+**And check one setting while you are there** (ten seconds): *Project Settings → API → Exposed
+schemas*. It should list only `public` and `graphql_public`. If `net`, `vault`, `cron` or anything
+else is listed, remove it — `net` in particular holds each hourly dispatch request, GitHub token
+included, for a few seconds, and Supabase's defaults let the anon role read it if the schema is
+exposed. I cannot see this setting from inside the database, which is why it is marked UNKNOWN
+rather than assumed safe.
+
 **Also expect** the security advisor to show *"RLS enabled, no policy"* on each table from now on.
 That is informational and is the intended state: deny everything until a policy is added on purpose.
 

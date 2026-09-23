@@ -115,6 +115,38 @@ needed the schema guard to accept a database *ahead* of the code — see `CHANGE
   nothing here, and is not what the advisor flagged.
 - **No broad "allow all" policy, no data removed, no protection weakened.**
 
+## Trying to break the fix — every other route to the data, checked
+
+Closing the tables is only half the job if the data can leave by another door. Checked on the live
+database the same day:
+
+| route | finding |
+|---|---|
+| views in `public` (a view runs as its owner by default, which bypasses RLS) | **none exist** |
+| Supabase Realtime (broadcasts changes for tables in its publication) | **none of our tables is published**; no publication covers all tables |
+| functions callable through the API | **none** — the only functions in `public` are trigger functions, which cannot be called directly |
+| Storage buckets | **none** |
+| `cron`, `vault` schemas (the dispatch job; the Vault holding the GitHub token) | the public API roles **cannot even enter** them |
+| **`net` schema (pg_net — the HTTP client the hourly dispatch uses)** | **`anon` and `authenticated` hold SELECT/INSERT/UPDATE/DELETE on `net.http_request_queue` and `net._http_response`** — Supabase's own default for that extension, not something this project set |
+
+**The `net` finding, stated exactly.** Every hour the dispatch job puts one request into
+`net.http_request_queue`, carrying `Authorization: Bearer <the GitHub dispatch token>`; pg_net's
+worker sends it within seconds and removes it. The stored responses (`net._http_response`) are
+GitHub's replies and contain **no token** (checked by pattern, nothing printed). At the moment of
+checking the queue was empty.
+
+**Whether that is reachable is UNKNOWN from inside the database.** Supabase's REST API serves only
+the schemas listed under *Project Settings → API → Exposed schemas*, which by default are `public`
+and `graphql_public`. If `net` is not on that list, none of the above is reachable from outside at
+all. If it were — which would have been a deliberate change — anyone with the anon key could read a
+request in the seconds it waits (and so the token), or insert requests and make the database send
+arbitrary HTTP calls.
+
+**Deliberately not changed by me:** the grants on `net`. It is a platform-managed extension, the
+hourly dispatch — the fix for GitHub's own unreliable scheduler — depends on it, and a Supabase
+upgrade may restore its default grants anyway. The right control is the exposed-schemas list, which
+lives only in the dashboard: a user check, `docs/ops/open_user_actions.md` item 5.
+
 ## A correction to my own earlier work
 
 The security audit of 2026-09-21 (`docs/ops/security.md`) and the readiness gate that relied on it
