@@ -50,6 +50,20 @@ def test_the_published_state_is_serialisable_and_carries_its_version():
     assert "generated_at" in s
 
 
+def test_the_hourly_job_publishes_after_the_record_and_before_the_heartbeat():
+    """
+    Order is the whole point. After the prediction, the self-check and the shadow steps, so the
+    snapshot describes the hour's finished work; before the heartbeat, which must mean "every
+    step ran". A publish placed before the self-check could describe an hour that then failed it.
+    """
+    from pathlib import Path
+
+    wf = Path(".github/workflows/hourly.yml").read_text(encoding="utf-8")
+    order = [wf.index(s) for s in ("python run.py", "python -m agent.healthcheck", "python -m agent.shadow.outcomes",
+                                   "python -m agent.api.publish", "HEARTBEAT_URL\" >")]
+    assert order == sorted(order), "the publish step is out of place in the hourly workflow"
+
+
 def test_the_schema_declares_a_single_row_and_says_why_it_may_be_overwritten():
     """
     Every other table in this project is append-only. This one is not, and the exception has to

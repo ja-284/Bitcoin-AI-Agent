@@ -71,6 +71,14 @@ jobs:
       - name: Grade shadow rows
         run: python -m agent.shadow.outcomes
 
+      # The backend contract, published as one row a frontend can read (docs/api/contract_v1.md).
+      # Last among the real steps, so the snapshot describes this hour's finished work. It cannot
+      # fail the job: any error is logged and it exits 0, leaving the previous snapshot in place --
+      # visibly older, because the snapshot carries its own generated_at. An add-on must never be
+      # able to cost an hour of the record it describes (incident 2026-09-21/22).
+      - name: Publish the backend state
+        run: python -m agent.api.publish
+
       # Only reached if every step above succeeded. If the heartbeat service doesn't
       # hear from us within its grace window, it emails you -- an alarm that lives
       # outside GitHub entirely, so it also catches GitHub itself being down.

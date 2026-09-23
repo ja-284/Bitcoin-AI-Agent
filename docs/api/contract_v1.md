@@ -103,16 +103,15 @@ function and a test pins the behaviour just before an hourly run.)
 - **Do not add a "buy now" affordance.** The backend places no orders and holds no funds; a UI
   implying otherwise would misrepresent it.
 
-## Transport — decided, and half built
+## Transport — decided and built
 
 **Option 1 below was chosen and implemented on 2026-09-22.** `agent/api/publish.py` assembles the
 contract and stores it as a single row in `backend_state`; a frontend reads that one row from
 Supabase instead of the raw tables. Verified working against the live database (contract v1,
 health `ok`, ~4.7 KB per snapshot).
 
-**Not yet wired into the hourly workflow.** The step is deliberately left unadded so it can be
-introduced and then watched on the next run rather than deployed unattended. Adding it means one
-step after `agent.shadow.outcomes`:
+**Wired into the hourly workflow on 2026-09-23**, as the last real step, after
+`agent.shadow.outcomes` and before the heartbeat (a test pins that order):
 
 ```yaml
       - name: Publish the backend state

@@ -115,14 +115,16 @@ item: a Supabase security warning.
   require "at least" the code's version (exact equality made every migration a failure window).
 - [x] **My 2026-09-21 security audit was wrong** — it never checked what the platform exposes by
   default. The readiness gate carries a dated correction: Security was really FAIL until today.
-- [~] **One migration entry point (`python -m agent.migrate`), no schema DDL on the hourly path.**
+- [x] **One migration entry point (`python -m agent.migrate`), no schema DDL on the hourly path.**
   Found while fixing the above: the shadow step re-applied its schema every hour, publishing did
   the same, and the documented fresh-database command built only one of three schema files.
   Acceptance criteria set before deploying: unit (every .sql migrated, in order, one transaction,
   a failing file commits nothing, no hourly-path module applies schema SQL) PASS; integration 11/11
   through `migrate()` PASS; `python -m agent.migrate` on the live database PASS (schema 4, nothing
   exposed); manual run of the new shadow code against the live database PASS (found the hour,
-  exited 0, no errors). **Outstanding: the first scheduled run on the new code (15:12 UTC).**
+  exited 0, no errors); **first scheduled run on the new code PASS** — GitHub's 15:09 UTC slot (72938ce,
+  which contains the change) wrote the 14:00 prediction and its shadow row, every step green, 0 shadow
+  errors; the 15:12 dispatch then took the already-saved path, also all green.
 - [x] **Test the tests (`tools/guard_mutations.py`)**: 18 critical guards broken on purpose — cutoff, news
   cutoff, two feature leaks, label horizons, outcome timing, walk-forward purge, the holdout truncation, both
   scoring 0.1.0 gap bugs, stale data, the schema guard, the staleness check, the prospective rule, the
@@ -141,8 +143,9 @@ item: a Supabase security warning.
   validation; **E014 amended while sealed** — it still named scoring 0.1.0 as object A while the live signal is 0.2.0,
   so registration and code disagreed about what the one-time run would test. The script now refuses to start on an
   unregistered scoring version, before loading a single candle. Nothing about the seal changed.
-- [ ] **Wire `agent.api.publish` into the hourly workflow** — next, after the migration change is
-  seen working in a scheduled run.
+- [~] **Wire `agent.api.publish` into the hourly workflow** — deployed 2026-09-23 ~15:20 UTC, last among
+  the real steps and unable to fail the job. Acceptance: the next hourly run is green in every step and
+  `backend_state.generated_at` advances to that run's time, describing the hour it just saved.
 
 **Quality assessment of the security step** (the addendum's 0-100 per dimension; a summary, never
 a substitute for the critical items below it): correctness 95 · robustness 90 · security 90 ·
