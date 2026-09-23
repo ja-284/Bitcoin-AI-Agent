@@ -175,6 +175,10 @@ MUTATIONS = [
              "%s, %s, %s, %s, %s || jsonb_build_object('db_role', current_user::text),",
              "%s, %s, %s, %s, %s,",
              "predictions no longer record which database role wrote them"),
+    Mutation("live", ".github/workflows/hourly.yml",
+             "        if: failure() && env.HEARTBEAT_URL != ''",
+             "        if: env.HEARTBEAT_URL != ''",
+             "the heartbeat's FAIL signal is sent after every successful hour too"),
 ]
 
 

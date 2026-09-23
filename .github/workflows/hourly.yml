@@ -82,6 +82,17 @@ jobs:
       # Only reached if every step above succeeded. If the heartbeat service doesn't
       # hear from us within its grace window, it emails you -- an alarm that lives
       # outside GitHub entirely, so it also catches GitHub itself being down.
+      # continue-on-error: a ping that cannot be delivered must not turn a good hour red. If pings
+      # stop arriving, the heartbeat service raises the alarm itself -- that is its whole job.
       - name: Heartbeat ping
         if: env.HEARTBEAT_URL != ''
+        continue-on-error: true
         run: curl -fsS -m 10 --retry 3 "$HEARTBEAT_URL" > /dev/null
+
+      # A FAILED run tells the heartbeat service at once (healthchecks.io's "/fail" signal) instead
+      # of the alarm waiting out the grace window. Harmless with another service: an unknown path
+      # just fails here, and this step can never change the job's result.
+      - name: Heartbeat failure signal
+        if: failure() && env.HEARTBEAT_URL != ''
+        continue-on-error: true
+        run: curl -fsS -m 10 --retry 3 "${HEARTBEAT_URL%/}/fail" > /dev/null
