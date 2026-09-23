@@ -5,6 +5,43 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## schema 4 — 2026-09-23 (every table was reachable through Supabase's public API; now locked)
+
+**The most serious finding in the project so far, and one my own earlier audit missed.**
+Full write-up: `docs/ops/security_2026-09-23_public_api_exposure.md`.
+
+- **What was true:** Row Level Security off on all six tables in `public`, and the `anon` and
+  `authenticated` roles — what anyone holding the project's public anon key acts as through
+  Supabase's REST and GraphQL APIs — holding full SELECT/INSERT/UPDATE/DELETE/TRUNCATE on every
+  one of them, through Supabase's default privileges. Supabase's advisor flagged one table; it
+  was all six.
+- **What it allowed:** reading everything; inserting forged rows, including a pre-inserted
+  *future* hour that would make the real run skip it silently while the append-only triggers
+  protected the forgery; rewriting `schema_meta` to stop the live job; rewriting `backend_state`.
+- **What happened:** no sign in the data of any outside write (91 predictions for 91 hours, none
+  future-dated, every commit stamp known, every unstamped row older than stamping, no orphaned or
+  early-graded outcomes). Whether anything was *read* cannot be told from the data — only from
+  Supabase's API logs, a user check.
+- **The fix, two independent layers in every schema file:** RLS on with no policies, and the API
+  roles' table and sequence privileges revoked. Applied live from the repository's own files.
+  Proven by behaviour — 48 of 48 anonymous probes refused, the backend still reads and writes —
+  and each layer proven on its own against real Postgres in a scratch schema.
+- **Detection:** `python -m agent.database.security` checks the live posture of every table in
+  `public`; the watchdog runs it every three hours. It reports policies only when they reach the
+  public API, so a future least-privilege backend role does not raise false alarms.
+- **Schema version 4**, so databases with and without the lockdown can never share a stamp, and
+  the hourly job refuses a database older than 4.
+- **The schema guard now requires "at least" the code's version, not exactly it.** Exact equality
+  made every migration a two-sided deployment with a failure window; migrations here are additive,
+  so a database ahead of the code is safe. The protected case — an older, missing or malformed
+  version — still fails closed, and is tested. The migration to 4 was then applied database-first,
+  code-second, with no moment of disagreement.
+- **Corrected, not rewritten:** the readiness gate had scored Security PARTIAL on 2026-09-21. It
+  should have been FAIL. A dated correction sits below the original row.
+- **Instructions corrected:** the least-privilege role SQL in `docs/ops/open_user_actions.md`
+  would have broken the hourly job under RLS; it now carries role-scoped policies and the
+  prerequisite that had to come first.
+
 ## backend — 2026-09-22 (contract version 1: what the backend says about itself)
 
 New, read-only, and not yet wired to anything that runs.
