@@ -1,0 +1,50 @@
+{
+  "id": "E025",
+  "date": "2026-09-24",
+  "git_commit": "(this commit)",
+  "status": "DESCRIPTIVE PLANNING -- no hypothesis tested, nothing fitted, nothing selected, nothing in the live system changed. Sizes the news evaluation (roadmap 8.6 / J) before any news-versus-outcome figure exists.",
+  "why": "Roadmap 8.6 re-opens 'does the news score carry information?' at 500 live hours with a usable news score. That number was set without a power analysis, and the news score is unusually persistent: each story stays in the 24-hour window and is re-scored ~19 times (roadmap J(a)). Before anyone looks at news against outcomes, how many hours would the planned test need to detect an effect of the size this programme has ever seen (|rho| 0.05-0.08)?",
+  "data_touched": "The live news category score of every pipeline-0.2.0 hour with a usable score (97 hours, 2026-09-19 20:00 -> 2026-09-24 15:00 UTC), read from the predictions table. NO return, outcome or price was read; tests/test_news_power.py enforces this by inspecting the module's only query. The news-versus-outcome relation therefore remains unexamined, and the eventual test stays clean.",
+  "method": "Two independent routes. (1) Analytic, Bartlett: under no relationship, Var(r) = (1/n) sum_k rho_x(k) rho_y(k); hourly returns are close to serially uncorrelated and an h-hour forward return overlaps its neighbours, rho_y(k) = max(0, 1-|k|/h), so the variance inflation is VIF(h) = 1 + 2 sum_{k<h} rho_x(k)(1-k/h); minimum detectable correlation (two-sided 5%, 80% power) = 2.802 / sqrt(n / VIF). Computed with the live pooled ACF (contiguous segments only), an AR(1) matched to the live lag-1 value, and a 24h moving-window model. (2) Simulation of the planned test: AR(1) news series (phi = 0.884), Student-t(4) hourly returns with a planted correlation, h-hour forward sums built as live outcomes are, Spearman's rho with a 48h circular block bootstrap 95% interval (the procedure every live evaluation here uses).",
+  "command": "python -m agent.research.news_power --experiment E025",
+  "run_history": [
+    "First run 17:05 UTC with 200 records x 200 resamples: 10.0-11.5% false positives at 500 hours.",
+    "Precision check (seed 77, the registered 500 resamples): 7.3% +- 2.1 at 500 h (600 records), 4.3% +- 2.3 at 2,000 h (300), 4.0% +- 3.1 at 5,000 h (150). I first read this as 'the 10% does not hold up' -- premature.",
+    "Recorded run 17:28 UTC with 400 records x 500 resamples (seed 25, so its first 200 datasets repeat the first run's): 10.8% / 10.2% / 10.5% at 500 h (1h / 6h / 24h), 7.0% at 2,000 h (24h).",
+    "Pooled over the two independent seeds (1,000 records, 1h, 500 h): 8.7% +- 1.8 -- the interval IS liberal at 500 hours, about 1.7-2x nominal, and nominal from ~2,000 hours."
+  ],
+  "metrics": {
+    "news_score": {"hours": 97, "mean": 0.224, "sd": 0.133, "min": -0.032, "max": 0.552, "hours_negative": 5, "mean_abs_hourly_change": 0.042},
+    "acf": {"lag1": 0.884, "lag2": 0.830, "lag3": 0.780, "lag6": 0.563, "lag12": 0.216, "lag18": 0.180, "lag23": -0.022},
+    "variance_inflation": {"1h": 1.0, "6h": {"live_acf": 5.04, "ar1": 4.79}, "24h": {"live_acf": 12.14, "ar1": 11.03}},
+    "min_detectable_rho_80pct_power": {"1h": {"500": 0.125, "2000": 0.063, "3000": 0.051, "5000": 0.040},
+                                       "6h": {"500": 0.274, "2000": 0.137, "5000": 0.087},
+                                       "24h": {"500": 0.416, "2000": 0.208, "5000": 0.132}},
+    "usable_hours_needed": {"1h": {"rho_0.10": 785, "rho_0.05": 3140, "rho_0.03": 8721},
+                            "6h": {"rho_0.10": 3760, "rho_0.05": 15039},
+                            "24h": {"rho_0.10": 8659, "rho_0.05": 34633}},
+    "simulated_false_positive_rate": {"500h_1h_pooled": "8.7% +- 1.8 (1,000 records)", "500h_6h": "10.2% (400)", "500h_24h": "10.5% (400)",
+                                      "2000h_1h": "4.3% +- 2.3 (300)", "2000h_24h": "7.0% +- 2.5 (400)", "5000h_1h": "4.0% +- 3.1 (150)"},
+    "simulated_power": {"1h_rho_0.05": {"500": 0.270, "2000": 0.742, "3000": 0.882}, "1h_rho_0.10": {"500": 0.710, "2000": 0.995},
+                        "24h_rho_0.05_planted_at_1h": {"2000": 0.230, "5000": 0.415}}
+  },
+  "conclusions": [
+    "At 500 usable hours the news test can only detect correlations of 0.125 (1h), 0.27 (6h) or 0.42 (24h) -- far larger than anything this programme has found. A null at 500 hours would mean nothing; a 'significant' result there would most likely be a false positive or a gross over-estimate.",
+    "The 1h test loses nothing to the news score's persistence (next-hour returns are close to independent); 6h and 24h do (inflation ~5 and ~12) and cannot be powered by any feasible live record.",
+    "Detecting |rho| = 0.05 at 1h needs ~3,140 usable hours (about 4.5 months from now).",
+    "Side finding with wider reach: the 48h block-bootstrap interval is too narrow with ~10 blocks (about 9% false positives at 500 hours) and nominal from ~2,000 hours. The move-size checkpoints are unaffected (no verdict at 500; verdicts at 2,000 and 5,000); the weekly report now labels intervals below 2,000 hours as optimistic."
+  ],
+  "adopted_design_for_8_6": {
+    "registered": "2026-09-24, before any news-versus-outcome figure exists",
+    "primary": "1h direction: Spearman of the hour's news score with the next-hour return (reference close to the close of the candle opening at as_of + 1h), 48h circular block bootstrap, 500 resamples, 95% interval",
+    "first_look": "at 500 usable news hours -- descriptive, NO verdict",
+    "verdict": "only from 3,140 usable news hours (|rho| = 0.05 detectable with 80% power)",
+    "descriptive_only": "6h and 24h -- no feasible record can power them",
+    "secondary": "any further hypothesis (e.g. news volume against move size) is registered before the verdict point, not after"
+  },
+  "caveats": [
+    "The ACF comes from 97 hours in three segments; lags beyond ~12 are noisy. The AR(1) and 24h-window models bracket it, and all three give the same conclusion.",
+    "Assumes serially uncorrelated hourly returns; Bitcoin's hourly returns show only tiny (|rho| <= 0.05) reversal structure (E008, E015), which does not change these figures materially.",
+    "Monte-Carlo precision is stated with each simulated rate; the first run's figures are superseded, not deleted."
+  ]
+}

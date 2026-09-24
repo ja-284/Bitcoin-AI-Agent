@@ -91,6 +91,14 @@ What that means for each checkpoint:
 - **Short readings.** An 18-hour stretch shows the model behind the free rule one time in four even
   when it is genuinely better. That is what happened on 2026-09-22.
 
+**The intervals themselves (E025, 2026-09-24, simulated — no rule changed).** Rule 3's 48-hour block
+bootstrap was simulated under *no* effect: at **500 hours** (about ten blocks) its 95% interval excludes
+zero about **9% of the time** instead of 5% (8.7% ± 1.8 on the 1h test, about 10% at 6h and 24h); at
+**2,000 and 5,000 hours** it is at the nominal rate (4.3% ± 2.3 and 4.0% ± 3.1). So intervals shown
+between 192 and ~2,000 hours are **optimistic** — the weekly report now says so next to them. The
+checkpoints are unaffected: the 500-hour reading gives no verdict, and the verdicts sit at 2,000 and
+5,000 hours, where the interval behaves.
+
 ## What is checked every week regardless of sample size (weekly report §3)
 
 Coverage (rows vs expected hours), honest blanks and their reasons, reference-close agreement

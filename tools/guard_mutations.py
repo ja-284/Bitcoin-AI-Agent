@@ -187,6 +187,14 @@ MUTATIONS = [
              '"rho_ge_0_10_interval_above_0": s["rho"] >= E012_RHO_BAR and "rho_ci95" in s and s["rho_ci95"][0] > 0}',
              '"rho_ge_0_10_interval_above_0": s["rho"] >= E012_RHO_BAR}',
              "E012's rho part passes without its interval excluding zero"),
+    Mutation("leakage", "agent/research/news_power.py",
+             "    FROM predictions",
+             "    FROM predictions JOIN prediction_outcomes o ON o.prediction_id = predictions.id",
+             "the news planning study quietly reads outcomes (spending the future news test)"),
+    Mutation("honesty", "agent/research/weekly_report.py",
+             "        if n < INTERVALS_NOMINAL_FROM_HOURS:",
+             "        if False:",
+             "small-sample intervals shown without the E025 'optimistic' label"),
 ]
 
 

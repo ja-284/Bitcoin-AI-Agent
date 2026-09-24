@@ -48,7 +48,11 @@ OUT_DIR = Path("research") / "monitoring"
 # the large historical experiments keep 500, both for cost and to stay comparable with E001.
 N_BOOT = 2000
 BOOTSTRAP_ENDPOINT_NOISE_PP = 0.02  # how finely an endpoint may honestly be read, in percentage points
-NEWS_HOURS_FOR_8_6 = 500  # roadmap 8.6 re-opens at this many live hours with news
+# E025 (2026-09-24, simulated): the 48h block-bootstrap interval excludes a true zero ~9% of the time at 500
+# hours (about 10 blocks) instead of 5%; at 2,000 and 5,000 hours it is at the nominal rate.
+INTERVALS_NOMINAL_FROM_HOURS = 2000
+NEWS_HOURS_FOR_8_6 = 500  # roadmap 8.6: a FIRST LOOK at this many usable news hours -- no verdict (E025)
+NEWS_HOURS_FOR_VERDICT = 3140  # E025: |rho| = 0.05 at 1h detectable with 80% power; the registered verdict point
 MONTHS_FOR_WATCHLIST = 6  # funding / dollar-yield confirmatory re-tests
 
 
@@ -255,6 +259,11 @@ def paper_record(p: np.ndarray, y: np.ndarray, abs_ret: np.ndarray) -> dict:
             pt, lo, hi = block_bootstrap(stacked, fn, block=block, n_boot=N_BOOT, seed=17)
             d[f"{name}_ci95"] = [lo, hi]
         d["interval_note"] = f"95% intervals from a {block}h block bootstrap, {N_BOOT} resamples"
+        if n < INTERVALS_NOMINAL_FROM_HOURS:
+            # Rule 3 (LIVE_EVALUATION.md) shows intervals from 192 hours, and that rule is kept. What E025
+            # measured is how they behave there: with few 48h blocks the interval is too narrow.
+            d["interval_note"] += (f" -- OPTIMISTIC below ~{INTERVALS_NOMINAL_FROM_HOURS:,} hours: with this few blocks the "
+                                   "interval is too narrow (E025: ~9% false positives at 500 hours instead of 5%)")
     else:
         d["interval_note"] = f"no intervals yet: needs >= {4 * block} hours (have {n})"
     d["reliability"] = [b.__dict__ | {"enough_rows": b.reliable} for b in buckets]
@@ -506,7 +515,8 @@ def watch_list(pred_rows: list[dict], now: datetime) -> dict:
     with_news = sum(1 for r in rows if r["news_items_n"] > 0 and not (r.get("run_meta") or {}).get("news_error"))
     months = (now - LIVE.start).days / 30.44
     return {
-        "news_hours": {"have": with_news, "need": NEWS_HOURS_FOR_8_6, "ready": with_news >= NEWS_HOURS_FOR_8_6},
+        "news_hours": {"have": with_news, "need": NEWS_HOURS_FOR_8_6, "ready": with_news >= NEWS_HOURS_FOR_8_6,
+                       "verdict_at": NEWS_HOURS_FOR_VERDICT, "verdict_ready": with_news >= NEWS_HOURS_FOR_VERDICT},
         "live_months": {"have": round(months, 2), "need": MONTHS_FOR_WATCHLIST, "ready": months >= MONTHS_FOR_WATCHLIST,
                         "tests_waiting": ["funding_last 24h contrarian (E005)", "dxy_ret_5d / tnx_chg_5d 168h negative (E006)"]},
     }
@@ -728,7 +738,9 @@ def render(rep: dict) -> str:
         L += ["", f"*{dr['note']}*"]
     wl = rep["watch_list"]
     L += ["", "## 6. Watch list", "",
-          f"- News evaluation (roadmap 8.6): {wl['news_hours']['have']} of {wl['news_hours']['need']} live hours with a usable news score — {'READY' if wl['news_hours']['ready'] else 'waiting'}",
+          f"- News evaluation (roadmap 8.6): {wl['news_hours']['have']} live hours with a usable news score — first look (no verdict) at "
+         f"{wl['news_hours']['need']}: {'READY' if wl['news_hours']['ready'] else 'waiting'}; registered verdict point {wl['news_hours'].get('verdict_at', NEWS_HOURS_FOR_VERDICT):,} "
+         f"(E025: below it the test cannot detect an effect of plausible size): {'READY' if wl['news_hours'].get('verdict_ready') else 'waiting'}",
           f"- Confirmatory re-tests on live data (funding 24h; dollar/yield 168h): {wl['live_months']['have']} of {wl['live_months']['need']} months — {'READY' if wl['live_months']['ready'] else 'waiting'}",
           "", "Reminders: healthchecks.io heartbeat not set up; GitHub token `supabase-dispatch` expires 2027-09-20; scheduled workflows on a public repo pause after 60 days without a commit."]
     return "\n".join(L)

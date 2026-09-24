@@ -129,6 +129,15 @@ def test_hours_whose_news_scoring_failed_do_not_count_towards_the_news_evaluatio
     assert watch_list(rows, T0 + 10 * H)["news_hours"]["have"] == 7
 
 
+def test_the_news_watch_line_separates_the_first_look_from_the_verdict():
+    """E025: 500 hours is a first look only; the registered verdict point is 3,140 usable hours."""
+    from agent.research.weekly_report import NEWS_HOURS_FOR_8_6, NEWS_HOURS_FOR_VERDICT
+
+    wl = watch_list([_pred(T0 + i * H, news=20) for i in range(600)], T0 + 600 * H)["news_hours"]
+    assert (NEWS_HOURS_FOR_8_6, NEWS_HOURS_FOR_VERDICT) == (500, 3140)
+    assert wl["ready"] is True and wl["verdict_ready"] is False
+
+
 def test_shadow_record_coverage_blanks_and_evaluation():
     from agent.research.weekly_report import shadow_record
 
@@ -172,6 +181,18 @@ def test_paper_record_reports_intervals_only_with_enough_hours():
     assert "brier_rel_gain_ci95" in rec and "ece_ci95" in rec and rec["brier_rel_gain_ci95"][0] <= rec["brier_rel_gain"] <= rec["brier_rel_gain_ci95"][1]
     small = paper_record(p[:100], y[:100], np.abs(rng.normal(size=100)))
     assert "brier_rel_gain_ci95" not in small and "no intervals yet" in small["interval_note"]
+
+
+def test_intervals_from_few_blocks_are_labelled_optimistic():
+    """E025: below ~2,000 hours the 48h block-bootstrap interval is too narrow; the report must say so."""
+    from agent.research.weekly_report import INTERVALS_NOMINAL_FROM_HOURS
+
+    rng = np.random.default_rng(6)
+    for n, labelled in ((300, True), (INTERVALS_NOMINAL_FROM_HOURS, False)):
+        p = rng.uniform(0.1, 0.9, size=n)
+        y = (rng.uniform(size=n) < p).astype(float)
+        note = paper_record(p, y, np.abs(rng.normal(size=n)) * p)["interval_note"]
+        assert ("OPTIMISTIC" in note) is labelled, (n, note)
 
 
 def test_shadow_record_reports_recorded_job_errors():
