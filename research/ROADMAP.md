@@ -178,6 +178,26 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## Resumed 2026-09-24 16:53 UTC — the pause verified, nothing regressed
+
+- **Live record since the pause (as_of 2026-09-23 19:00 → 2026-09-24 15:00): 21 of 21 hours**, none
+  missing, 0 timestamp-rule violations, all Binance, 0 synthetic, 0 news / explanation errors,
+  completeness 1.0 every hour; every row carries `ai_usage` and `db_role = postgres`. 21 shadow rows,
+  all prospective, 0 close mismatches, **0 shadow errors ever**; outcomes current at every horizon;
+  `backend_state` refreshed 16:13 describing 15:00, health ok; schema 4.
+- **GitHub, verified run by run, not assumed:** 38 hourly runs (20 dispatched from Supabase, 18 by
+  GitHub's backup slots), **38 successful**; in both kinds, "Heartbeat ping" and "Heartbeat failure
+  signal" show *skipped* — **the heartbeat workflow change `d71c09f` is verified**. 3 watchdog runs, all
+  green including the widened security check (GitHub fired 3 of its 7 slots, as before).
+- **Weekly audit:** integration + drift 19/19 (the live database still matches the repository);
+  report `research/monitoring/weekly_2026-09-24.md` — parity 114/114, drift flags none, AI cost
+  $0.0182/run ≈ $13.13/30 days (below the $15 flag, rising with headline volume, 57–66 per hour),
+  63 prospective shadow hours evaluated (model ahead of the free EWMA rule by 0.0088 Brier — n far too
+  small to mean anything), 97 of 500 hours with a usable news score.
+- **User-owned items, checked rather than assumed — none done yet:** heartbeat secret not set (steps
+  skipped); `bitcoin_agent` role does not exist (`role_check`: NOT READY; every row written by
+  `postgres`); *Exposed schemas* not verifiable from the database — still UNKNOWN.
+
 ## Paused 2026-09-23 ~20:15 UTC — resume point (read this first tomorrow)
 
 **State.** `main` = `origin/main`, tree clean. 415 unit tests pass with no database reachable; 19
