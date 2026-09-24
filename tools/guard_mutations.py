@@ -196,9 +196,11 @@ MUTATIONS = [
              "        if False:",
              "small-sample intervals shown without the E025 'optimistic' label"),
     Mutation("security", "agent/database/try_connection.py",
-             '    out = text.replace(url, "<connection string>")',
-             "    out = text",
-             "the connection tester can print the connection string (and password) in an error"),
+             # Not the whole-string replacement: that one is belt-and-braces (tried first, it survived,
+             # because the password step still removed the secret). This is the line that protects it.
+             '        out = out.replace(secret, "***")',
+             "        pass",
+             "the connection tester can print the password in an error message"),
 ]
 
 
