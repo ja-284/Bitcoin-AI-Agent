@@ -201,6 +201,10 @@ MUTATIONS = [
              '        out = out.replace(secret, "***")',
              "        pass",
              "the connection tester can print the password in an error message"),
+    Mutation("security", "agent/database/setup_role.py",
+             "sql.Identifier(ROLE), sql.Literal(verifier)))",
+             "sql.Identifier(ROLE), sql.Literal(password)))",
+             "the role setup sends the PLAIN password to the server (it would stay in statement statistics)"),
 ]
 
 

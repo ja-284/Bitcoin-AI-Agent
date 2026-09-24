@@ -95,24 +95,25 @@ proven file (it names any missing or extra grant or policy), and every predictio
 database role that wrote it (`run_meta.db_role`, stamped by the database itself), so the switch is
 visible in the record.
 
-**What to do** (about 10 minutes; tell me when you have done steps 1–2 and I can run the check):
+**What to do — the simple way (2026-09-24): one command, one paste.**
 
-1. Generate a password on your own computer — URL-safe, so it can go straight into a connection
-   string: `.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"`.
-   Do not paste it into a chat.
-2. Supabase → *SQL Editor*: `CREATE ROLE bitcoin_agent LOGIN PASSWORD '<the password>';` then run the
-   whole of `docs/ops/least_privilege_role.sql` in the same editor.
-3. **Check before switching:** `python -m agent.database.role_check` (it uses your normal `.env`, i.e.
-   `postgres`). It must print `OK: bitcoin_agent holds exactly what ... grants`. If it prints
-   `DIFFERENT`, fix what it names first — the job has not been touched yet.
-4. Build the connection string you already have, with the new role and password (for Supabase's
-   pooler the username is `bitcoin_agent.<project-ref>` — the part after `postgres.` in today's
-   username), and replace the `DATABASE_URL` **repository secret** in GitHub. Keep the old `postgres`
-   string in your local `.env` for `python -m agent.migrate` and the weekly report.
-5. Run the hourly workflow once by hand (Actions → *Hourly Bitcoin analysis* → *Run workflow*) and
-   check it is green. **Proof it switched:** the new prediction's `run_meta.db_role` is
-   `bitcoin_agent`, not `postgres`. If anything fails, put the old secret back: nothing is lost, the
-   next hour recomputes.
+1. In the project folder, in **your own** terminal (not through the assistant — this creates a login
+   with a password, which is the owner's step):
+   `.venv\Scripts\python.exe -m agent.database.setup_role`
+   It makes a strong password itself, creates the role and applies the proven SQL in one transaction,
+   checks the result, logs in once with the new connection to prove it works, and puts the new
+   connection string on your clipboard. Nothing secret is ever printed or saved, and `.env` is left
+   as it is. If any step fails it stops and says so, before anything reaches GitHub.
+2. GitHub → *Bitcoin-AI-Agent* → *Settings* → *Secrets and variables* → *Actions* → `DATABASE_URL` →
+   *Update* → paste (Ctrl+V) → *Update secret*.
+3. Tell Claude "switched". **Proof it switched:** the next prediction's `run_meta.db_role` is
+   `bitcoin_agent`, not `postgres`, and every job step is green. If anything fails, put the old secret
+   back: nothing is lost, the next hour recomputes.
+
+**Why not type the SQL by hand (the steps written here on 2026-09-23):** `CREATE ROLE ... PASSWORD
+'plain text'` would leave the password in Postgres' statement statistics (`pg_stat_statements` keeps the
+text of utility statements unnormalised) and possibly the statement log. `setup_role` sends only the
+SCRAM-SHA-256 verifier, computed on your computer by libpq — the form Postgres stores anyway.
 
 **One limit, stated plainly:** Supabase grants the `net` schema to PUBLIC, which every role belongs
 to, so `bitcoin_agent` could still read the dispatch queue in the seconds a request waits there.

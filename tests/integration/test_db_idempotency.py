@@ -442,6 +442,33 @@ def test_the_role_check_passes_on_the_applied_file_and_catches_an_extra_grant(le
     assert "predictions: holds DELETE, which the file does not grant" in problems, problems
 
 
+def test_the_server_accepts_a_locally_computed_scram_verifier(scratch_db):
+    """
+    agent.database.setup_role never sends the plain password: it sends the SCRAM verifier libpq computes
+    locally. Prove the live server accepts that form -- on a throwaway role that CANNOT log in, dropped
+    at once (no login is ever created by a test).
+    """
+    import psycopg
+    from psycopg import sql
+
+    probe = "bitcoin_agent_ci_scram_probe"
+    base_url = os.getenv("DATABASE_URL")
+    with psycopg.connect(base_url) as conn, conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (probe,))
+        if cur.fetchone():
+            cur.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(probe)))
+        verifier = conn.pgconn.encrypt_password(b"throwaway-never-used", probe.encode(), b"scram-sha-256").decode()
+        assert verifier.startswith("SCRAM-SHA-256$") and "throwaway" not in verifier
+        try:
+            cur.execute(sql.SQL("CREATE ROLE {} NOLOGIN PASSWORD {}").format(sql.Identifier(probe), sql.Literal(verifier)))
+            cur.execute("SELECT rolcanlogin FROM pg_roles WHERE rolname = %s", (probe,))
+            assert cur.fetchone() == (False,)
+        finally:
+            conn.rollback()  # nothing persists: the role never exists outside this transaction
+        cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (probe,))
+        assert cur.fetchone() is None
+
+
 def test_the_connection_tester_accepts_the_restricted_role_and_refuses_the_owner(least_privileged):
     """agent.database.try_connection's checks, run for real: OK as the probe role, NOT READY as the owner."""
     import psycopg

@@ -8,11 +8,15 @@
 -- same text, because an earlier hand-written version of this was wrong twice (see below).
 --
 -- Deliberately NOT in this file: CREATE ROLE. Creating a login role with a password is an
--- account-creation step and belongs to the project owner:
+-- account-creation step and belongs to the project owner, who runs (on their own computer):
 --
---     CREATE ROLE bitcoin_agent LOGIN PASSWORD '<a long random password you generate yourself>';
+--     python -m agent.database.setup_role
 --
--- then run this file, then change the DATABASE_URL secret to the new role. Keep the `postgres`
+-- It generates the password, creates the role and applies this file in one transaction, checks the
+-- result, tests the login, and puts the new connection string on the clipboard for the GitHub secret.
+-- Do NOT type `CREATE ROLE ... PASSWORD 'plain text'` into the SQL editor instead: Postgres keeps the
+-- text of executed statements (pg_stat_statements, and possibly the statement log), so the password
+-- would be stored in plain text. setup_role sends only the SCRAM verifier, computed locally. Keep the `postgres`
 -- connection string for `python -m agent.migrate`: schema changes need the tables' owner, and
 -- since 2026-09-23 the hourly job never makes schema changes.
 --
