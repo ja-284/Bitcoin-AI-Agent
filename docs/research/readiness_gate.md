@@ -152,6 +152,9 @@ Re-opened on the user's instruction to resolve the public-access issue properly 
 **Row 17 stays PARTIAL** (least-privilege role: user step). **Hard gate "critical security": PASS,
 with a stated condition** — it rests on Supabase's default exposed-schemas list, which is unverified
 until the user looks. Everything the project's own role can close is closed and watched.
+**Update 2026-09-24 ~17:50 UTC: the condition is met.** The user checked the dashboard: *Exposed
+schemas* lists only `public` and `graphql_public`. "Critical security" is now PASS without a
+condition; the only open security item is the least-privilege role (defence in depth, row 17).
 
 ### The three PARTIALs, 2026-09-23 ~20:00 UTC — what moved, what cannot move without the user
 

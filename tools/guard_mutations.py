@@ -195,6 +195,10 @@ MUTATIONS = [
              "        if n < INTERVALS_NOMINAL_FROM_HOURS:",
              "        if False:",
              "small-sample intervals shown without the E025 'optimistic' label"),
+    Mutation("security", "agent/database/try_connection.py",
+             '    out = text.replace(url, "<connection string>")',
+             "    out = text",
+             "the connection tester can print the connection string (and password) in an error"),
 ]
 
 

@@ -442,6 +442,22 @@ def test_the_role_check_passes_on_the_applied_file_and_catches_an_extra_grant(le
     assert "predictions: holds DELETE, which the file does not grant" in problems, problems
 
 
+def test_the_connection_tester_accepts_the_restricted_role_and_refuses_the_owner(least_privileged):
+    """agent.database.try_connection's checks, run for real: OK as the probe role, NOT READY as the owner."""
+    import psycopg
+
+    from agent.database import try_connection as tc
+
+    db, _, _, as_probe = least_privileged
+    db.save_prediction(_prediction(datetime(2026, 2, 3, tzinfo=timezone.utc)))  # something for the read check to see
+    with as_probe() as conn:
+        facts = tc.describe(conn)
+    assert tc.judge(facts, expected_role=PROBE_ROLE) == [], tc.judge(facts, expected_role=PROBE_ROLE)
+    with psycopg.connect(db.DATABASE_URL) as conn:  # the owner, in the scratch schema
+        owner = tc.describe(conn)
+    assert any("not the restricted role" in p for p in tc.judge(owner, expected_role=owner["role"]))
+
+
 def test_the_least_privilege_policies_are_invisible_to_the_security_check(least_privileged):
     """Policies scoped to the backend role must not be reported as a public-API exposure."""
     from agent.database.security import posture

@@ -12,7 +12,8 @@ checkable; item 4 decided; item 5 logs done, one setting still to check).
 
 **Status at a glance:** 1 heartbeat — deferred (the setup did not work for you; to retry later) ·
 2 least-privilege role — ready, ~10 min · 3 token renewal — calendar, Sept 2027 · 4 news cost —
-decided: keep, monitored · 5 API logs — done; *Exposed schemas* setting — still to check (10 s).
+decided: keep, monitored · 5 API logs — done; *Exposed schemas* — **done 2026-09-24, only `public`
+and `graphql_public`**.
 
 ---
 
@@ -211,7 +212,13 @@ The backend never uses the REST API — it connects to Postgres directly — so 
 did not come from this project. If there are none, the exposure was never used. If there are some,
 tell me which tables and when, and I will check them against the record.
 
-**STILL OPEN — and since 2026-09-23 evening, the single control over the dispatch token.** The
+**CHECKED 2026-09-24 ~17:50 UTC by the user: *Exposed schemas* lists only `public` and
+`graphql_public`** — Supabase's default. `net`, `vault`, `cron`, `extensions`, `realtime` and
+`storage` are not exposed, so the public roles' Supabase-granted rights on `net` (below) cannot be
+reached through the API. Evidence type: the user's reading of the dashboard (the setting is invisible
+from the database). If it is ever changed, this is the item to re-check.
+
+*(Kept for the record — the text as it stood before the check:)* **STILL OPEN — and since 2026-09-23 evening, the single control over the dispatch token.** The
 evening review showed that Supabase's own admin role grants the public API roles full rights on the
 `net` schema, and this project's role cannot revoke them (tried; Postgres refused). So whether the
 token can be read in the seconds it waits in `net.http_request_queue` depends only on this setting.

@@ -240,8 +240,10 @@ even be entered by the API roles; `auth.users` is empty.
 
 - ~~Check the API logs for anon-key requests~~ — **done 2026-09-23 ~18:20 UTC** (user): nothing in the
   retained window; earlier days UNKNOWN permanently (see above).
-- **Check "Exposed schemas"** (Project Settings → API) lists only `public` and `graphql_public` —
-  user, ten seconds, now the one control over `net`.
+- ~~Check "Exposed schemas"~~ — **done 2026-09-24 ~17:50 UTC** (user, dashboard): only `public` and
+  `graphql_public`. The Supabase-owned rights on `net`, `extensions` and `realtime` are therefore not
+  reachable through the API; the watchdog keeps printing them as NOTES so a future change to this
+  setting has something to be compared against.
 - **The advisor may now show "RLS enabled, no policy"** on each table. That is informational and
   is the intended state: deny-all until a policy is deliberately added.
 - ~~The hourly shadow step re-applies its schema file every run~~ — **fixed** (`17093f8`; schema
