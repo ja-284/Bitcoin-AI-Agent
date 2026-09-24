@@ -181,6 +181,27 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## Paused 2026-09-24 ~17:45 UTC — resume point (read this first tomorrow)
+
+**State.** `main` = `origin/main`, tree clean; 424 unit tests pass with no database reachable;
+19 integration tests; mutation testing 38 of 38; holdout **sealed** (`research/HOLDOUT_ACCESS.log`
+does not exist); schema 4; live system healthy (the 16:00 prediction written 17:12 with its shadow
+row, `backend_state` refreshed 17:13, 0 shadow errors). E025 done and recorded.
+
+**First thing tomorrow, with the user: the *Exposed schemas* check** (Supabase → Project Settings →
+API, `…/settings/api`). The user asked to do it first. Expected: only `public` and `graphql_public`.
+If `net`, `vault`, `cron`, `extensions`, `realtime` or `storage` is listed, that is a finding: record
+it, and remove it with the user (the project never uses the REST API, so nothing can break).
+Then record the result in `docs/ops/open_user_actions.md` item 5, the security record and the
+readiness gate (it closes the last UNKNOWN in "critical security").
+
+**Then:** verify the overnight runs (hours, GitHub runs, watchdog) as on 2026-09-24; the remaining
+user items (least-privilege role — run `python -m agent.database.role_check` once created; heartbeat
+retry); keep the cost flag in view (≈ $13.13 per 30 days, flag at $15). Time-gated: the 500-hour
+checkpoint ≈ 2026-10-12, the news first look at 500 usable hours ≈ 2026-10-11, the news verdict at
+3,140 usable hours. **Do not** tune on validation, change scoring, swap the frozen artefact, or open
+the holdout.
+
 ## Resumed 2026-09-24 16:53 UTC — the pause verified, nothing regressed
 
 - **Live record since the pause (as_of 2026-09-23 19:00 → 2026-09-24 15:00): 21 of 21 hours**, none
