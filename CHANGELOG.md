@@ -5,6 +5,25 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-09-24 (the pause verified; the news evaluation sized before it is run)
+
+Nothing that runs in the hourly job changed.
+
+- **Resume verification:** 21/21 hours since the pause, 38/38 GitHub runs green, both heartbeat steps
+  *skipped* as designed (the workflow change is verified), 3/3 watchdog runs green with the widened
+  security check; integration + drift 19/19; report `weekly_2026-09-24.md` (parity 114/114, cost ≈ $13.13
+  per 30 days, below the $15 flag).
+- **E025 — how many hours the news evaluation needs** (planning; reads the news score only, never an
+  outcome, enforced by a test and a mutation). At 500 usable hours only ρ ≥ 0.125 (1h) / 0.27 (6h) /
+  0.42 (24h) is detectable — far above anything seen; ρ = 0.05 at 1h needs ~3,140 hours. **Design
+  registered before any news–outcome figure exists:** 1h primary, 500 h = first look without verdict,
+  verdict from 3,140 h, 6h/24h descriptive.
+- **Side finding:** the 48h block-bootstrap interval gives ~9% false positives at 500 hours (pooled over
+  two seeds; a first coarse run said 10–11.5%, one precision check said 7.3% — recorded, not deleted)
+  and is nominal from ~2,000 hours. No checkpoint rule changed; the weekly report now labels intervals
+  below 2,000 hours **optimistic**, and shows the news first-look and verdict points separately.
+- 424 unit tests; mutation testing 38 of 38.
+
 ## backend — 2026-09-23 late evening (the least-privilege switch made checkable; heartbeat hardened; honest counters)
 
 - `python -m agent.database.role_check`: the live `bitcoin_agent` role against the proven SQL file —

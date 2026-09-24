@@ -183,10 +183,12 @@ def test_paper_record_reports_intervals_only_with_enough_hours():
     assert "brier_rel_gain_ci95" not in small and "no intervals yet" in small["interval_note"]
 
 
-def test_intervals_from_few_blocks_are_labelled_optimistic():
+def test_intervals_from_few_blocks_are_labelled_optimistic(monkeypatch):
     """E025: below ~2,000 hours the 48h block-bootstrap interval is too narrow; the report must say so."""
+    import agent.research.weekly_report as wr
     from agent.research.weekly_report import INTERVALS_NOMINAL_FROM_HOURS
 
+    monkeypatch.setattr(wr, "N_BOOT", 20)  # only the label is under test, not the interval
     rng = np.random.default_rng(6)
     for n, labelled in ((300, True), (INTERVALS_NOMINAL_FROM_HOURS, False)):
         p = rng.uniform(0.1, 0.9, size=n)
