@@ -549,6 +549,17 @@ def test_the_live_database_matches_what_the_repository_builds(scratch_db):
     """
     db, _ = scratch_db
     with db.get_connection() as conn, conn.cursor() as cur:
+        # Since 2026-09-25 production also carries docs/ops/least_privilege_role.sql (the job's own role and
+        # its 13 policies). That file is part of the repository too, so when the role exists the copy is built
+        # from BOTH: a policy added by hand, or one the file lost, still shows up as drift.
+        cur.execute("SELECT 1 FROM pg_roles WHERE rolname = 'bitcoin_agent'")
+        if cur.fetchone():
+            from pathlib import Path
+
+            role_sql = Path("docs/ops/least_privilege_role.sql").read_text(encoding="utf-8")
+            assert role_sql.count("SCHEMA public") == 2, "the role file changed shape -- update the substitution"
+            cur.execute(role_sql.replace("SCHEMA public", f"SCHEMA {SCHEMA}"))
+            conn.commit()
         built = _structure(cur, SCHEMA)
         live = _structure(cur, "public")
     assert built["columns"], "the comparison would be vacuous"
@@ -582,6 +593,23 @@ def test_the_drift_check_actually_detects_drift(scratch_db):
     assert any(c[1] == "added_by_hand" for c in after["columns"] - live["columns"])
     assert ("backend_state", False, False) in after["rls"] - live["rls"]
     assert ("schema_meta", "anon", "SELECT") in after["api_grants"] - live["api_grants"]
+
+
+def test_the_drift_check_sees_a_hand_made_policy_for_the_jobs_role(scratch_db):
+    """
+    With the role file included in the build, a policy nobody wrote down must still be drift: add one to
+    the built copy and it has to appear as a difference (skipped where the job's role does not exist).
+    """
+    db, _ = scratch_db
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM pg_roles WHERE rolname = 'bitcoin_agent'")
+        if not cur.fetchone():
+            pytest.skip("the job's least-privilege role does not exist in this database")
+        cur.execute("CREATE POLICY added_by_hand ON predictions FOR DELETE TO bitcoin_agent USING (true)")
+        conn.commit()
+        after = _structure(cur, SCHEMA)
+        live = _structure(cur, "public")
+    assert any(p[1] == "added_by_hand" for p in after["policies"] - live["policies"])
 
 
 def test_the_standing_rule_that_exposed_every_new_table_is_removed(scratch_db):

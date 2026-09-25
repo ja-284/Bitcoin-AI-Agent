@@ -166,7 +166,11 @@ condition; the only open security item is the least-privilege role (defence in d
   `net` queue to PUBLIC (unrevocable by the project), kept off the internet by *Exposed schemas*.
 - **Row 16:** the heartbeat secret is set and the 19:12 run's ping step ran. It moves to PASS once the
   first ping is seen on healthchecks.io itself (the step cannot prove delivery: it is
-  `continue-on-error` by design).
+  `continue-on-error` by design). **→ PASS, same evening:** the user confirmed the check is green on
+  healthchecks.io with the 19:13 UTC ping received. Every alarm no longer lives inside GitHub.
+- **Score now: 21 PASS, 1 PARTIAL, 0 FAIL, 0 UNKNOWN.** The one PARTIAL is row 21, prospective monitoring —
+  by the calendar, not a defect. "Backend complete" is still not claimed: that waits for the registered
+  checkpoints and a strict final audit, and a good checkpoint may not be used to hide any other problem.
 - Still open, by the calendar only: **row 21, prospective monitoring** (≈ 90 of 500 hours).
 
 ### The three PARTIALs, 2026-09-23 ~20:00 UTC — what moved, what cannot move without the user

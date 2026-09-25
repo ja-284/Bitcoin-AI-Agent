@@ -10,15 +10,20 @@ None of these is blocking. The system runs correctly without them. They close ga
 Last reviewed: 2026-09-23 evening (item 1 attempted and deferred by the user; item 2 ready and
 checkable; item 4 decided; item 5 logs done, one setting still to check).
 
-**Status at a glance (2026-09-25):** 1 heartbeat — **set up**, first ping to be confirmed on
-healthchecks.io · 2 least-privilege role — **DONE, verified live** · 3 token renewal — calendar,
+**Status at a glance (2026-09-25):** 1 heartbeat — **DONE, verified** (green on healthchecks.io, ping
+received 19:13 UTC) · 2 least-privilege role — **DONE, verified live** · 3 token renewal — calendar,
 Sept 2027 · 4 news cost —
 decided: keep, monitored · 5 API logs — done; *Exposed schemas* — **done 2026-09-24, only `public`
 and `graphql_public`**.
 
 ---
 
-## 1. Heartbeat alarm (healthchecks.io) — SET UP 2026-09-25 (first ping to be confirmed on healthchecks.io)
+## 1. Heartbeat alarm (healthchecks.io) — DONE and VERIFIED 2026-09-25
+
+**Verified by the user on healthchecks.io (2026-09-25 evening): the check is green and received the
+21:13 local-time ping (19:13 UTC) — the 19:12 UTC run's.** The alarm that does not depend on GitHub is
+now live: if pings stop for 1 h + 30 min, healthchecks.io emails the user; a failed run signals `/fail`
+at once.
 
 **2026-09-25 ~19:10 UTC, by the user:** check created (period 1 hour, grace 30 minutes) and the ping URL
 saved as the repository secret `heartbeat_url` (GitHub secret names are case-insensitive, so the

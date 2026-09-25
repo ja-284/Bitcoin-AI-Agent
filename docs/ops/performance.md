@@ -17,6 +17,16 @@ connections, up to five Binance lookups for outcomes. **No bottleneck.** The 15-
 timeout leaves a 13-minute margin; every external call is now individually bounded (Phase B),
 so the worst case is a few minutes, not a hang.
 
+**Re-measured 2026-09-25 (85 runs since 2026-09-23 23:12 UTC).** Dispatch runs: median **87 s**
+(p90 97 s, max 143 s) from creation to finish, of which the job itself takes **74–79 s** and the rest is
+GitHub's queue; backup-slot runs median 52 s. Per step (two newest runs): install 20–21 s, analysis
+28–29 s, grading 10–12 s, shadow + grading 6–7 s, publish 2–3 s, heartbeat ≤ 1 s. The growth since the
+54 s baseline has two known causes, neither open-ended: the news step now reads ~65 headlines instead of
+16 (a longer structured answer from the news model), and grading now covers the 72h horizon (the 168h
+horizon starts falling due on 2026-09-26) — each hour grades about five new rows, so this is flat, not
+cumulative. **Still no bottleneck: under a tenth of the 15-minute budget.** Watch point: a sustained job
+time above ~3 minutes would mean something changed (news volume, a slow provider, a growing query).
+
 ## API calls per hour
 
 Binance: 1 (analysis) + 1 (shadow) + ≤ 5 + ≤ 1 (outcome lookups) ≈ 8 requests — far below

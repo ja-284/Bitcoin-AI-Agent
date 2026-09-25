@@ -13,7 +13,13 @@ analysis can always tell which version produced a row.
   grading and publish all succeeded — every step green, 0 shadow errors. Readiness row 17 → PASS.
 - **Heartbeat on.** healthchecks.io check (1 h / 30 min) and the `heartbeat_url` secret; the 19:12 run's
   ping step ran for the first time. Delivery is confirmed on healthchecks.io, not by GitHub's green tick
-  (the step cannot fail by design).
+  (the step cannot fail by design). **Verified by the user: green, 19:13 UTC ping received.**
+- Readiness: **21 PASS, 1 PARTIAL** (prospective monitoring, by the calendar).
+- The drift check includes the role file when the job's role exists (the 13 live policies were otherwise
+  reported as drift), plus a test that a hand-made policy still shows. Integration tests 22/22.
+- Runtime re-measured (`docs/ops/performance.md`): job 74–79 s, known causes, no bottleneck.
+- **Stage change (user):** prospective validation — no new features; monitoring, audits and the
+  registered checkpoints only.
 
 ## monitoring — 2026-09-25 (status check; separation made a guard; the cost rise explained)
 
