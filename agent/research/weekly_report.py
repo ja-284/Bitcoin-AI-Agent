@@ -131,7 +131,7 @@ def ai_cost(pred_rows: list[dict], since: datetime) -> dict:
     rows = [r for r in pred_rows if r["as_of"] >= since]
     measured = [r for r in rows if (r.get("run_meta") or {}).get("ai_usage")]
     steps: dict = {}
-    run_costs, unpriced = [], Counter()
+    run_costs, unpriced, priced_days = [], Counter(), set()
     for r in measured:
         cost, priced = 0.0, True
         for step, u in r["run_meta"]["ai_usage"].items():
@@ -154,7 +154,13 @@ def ai_cost(pred_rows: list[dict], since: datetime) -> dict:
                      + u.get("cache_read_input_tokens", 0) * p_in * CACHE_READ_X) / 1e6
         if priced:
             run_costs.append(cost)
+            priced_days.add(r["as_of"].date())
+    # News volume follows the week: weekends carried 16-20 headlines, weekdays 55-72 (2026-09-19 -> 25),
+    # and the news call's cost scales with it. A projection from weekday runs alone over-states a month.
+    weekend_days = {d for d in priced_days if d.weekday() >= 5}
     return {
+        "measured_days": len(priced_days), "measured_weekend_days": len(weekend_days),
+        "full_week_measured": len(priced_days) >= 7 and bool(weekend_days),
         "rows": len(rows), "rows_with_usage": len(measured),
         "steps": {k: {"calls": v["calls"], "usage_unavailable": v["usage_unavailable"],
                       "mean_input_tokens": float(np.mean(v["input"])) if v["input"] else None,
@@ -614,9 +620,14 @@ def _render_ai_cost(c: dict | None) -> str:
                       for k, v in c["steps"].items() if v["calls"])
     flag = (f" — **ABOVE the accepted ~${c['accepted_usd_30d']:.0f}/month: look at the news volume; any change to the AI's task is "
             "the user's decision**" if c.get("above_accepted") else f" (accepted level ~${c.get('accepted_usd_30d', 12):.0f}/month)")
+    coverage = ""
+    if not c.get("full_week_measured", True):
+        coverage = (f" — **partial week:** measured on {c.get('measured_days')} days, {c.get('measured_weekend_days')} of them weekend days; "
+                    "weekends carry about a third of the weekday headlines, so this projection "
+                    + ("over-states a month" if not c.get("measured_weekend_days") else "is not yet a full-week average"))
     return (f"- AI cost (7d, measured on {c['runs_priced']} of {c['rows']} runs): ${c['mean_cost_per_run_usd']:.4f} per run "
             f"(max ${c['max_cost_per_run_usd']:.4f}), ≈ ${c['projected_30_days_usd']:.2f} per 30 days at the list prices of "
-            f"{c['prices_as_of']}{flag}; {steps}")
+            f"{c['prices_as_of']}{flag}{coverage}; {steps}")
 
 
 def render(rep: dict) -> str:

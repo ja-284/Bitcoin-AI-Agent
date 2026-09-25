@@ -205,6 +205,14 @@ MUTATIONS = [
              "sql.Identifier(ROLE), sql.Literal(verifier)))",
              "sql.Identifier(ROLE), sql.Literal(password)))",
              "the role setup sends the PLAIN password to the server (it would stay in statement statistics)"),
+    Mutation("separation", "agent/orchestrator.py",
+             "from agent.ai import usage as ai_usage",
+             "from agent.ai import usage as ai_usage; from agent.shadow import model as _shadow_model  # noqa",
+             "the live signal's path imports the shadow move-size model"),
+    Mutation("separation", "agent/shadow/db.py",
+             '"SELECT close_price FROM predictions WHERE as_of = %s"',
+             '"UPDATE predictions SET close_price = close_price WHERE as_of = %s"',
+             "the shadow step writes to the live record"),
 ]
 
 

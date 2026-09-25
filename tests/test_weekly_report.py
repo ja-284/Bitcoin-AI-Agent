@@ -356,6 +356,20 @@ def test_a_cost_clearly_above_the_accepted_level_is_flagged_and_normal_cost_is_n
     assert high["above_accepted"] and "ABOVE the accepted" in _render_ai_cost(high)
 
 
+def test_a_weekday_only_cost_projection_says_it_over_states_the_month():
+    """News volume follows the week (weekends ~a third of weekday headlines); until a full week is measured, say so."""
+    from agent.research.weekly_report import _render_ai_cost, ai_cost
+
+    wed = datetime(2026, 9, 23, 12, tzinfo=timezone.utc)                       # a Wednesday
+    weekdays_only = [_pred(wed + timedelta(days=d), meta=_usage_meta()) for d in range(3)]   # Wed-Fri
+    c = ai_cost(weekdays_only, wed)
+    assert (c["measured_days"], c["measured_weekend_days"], c["full_week_measured"]) == (3, 0, False)
+    assert "over-states a month" in _render_ai_cost(c)
+    full = [_pred(wed + timedelta(days=d), meta=_usage_meta()) for d in range(7)]            # Wed-Tue
+    c = ai_cost(full, wed)
+    assert c["full_week_measured"] and c["measured_weekend_days"] == 2 and "partial week" not in _render_ai_cost(c)
+
+
 def test_ai_cost_renders_before_and_after_measurement_begins():
     from agent.research.weekly_report import _render_ai_cost, ai_cost
 
