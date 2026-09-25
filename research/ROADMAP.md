@@ -181,6 +181,29 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## Resumed 2026-09-25 13:44 UTC — status check, nothing regressed
+
+- **Live record since the last check (as_of 2026-09-24 16:00 → 2026-09-25 12:00): 21 of 21 hours**, 0
+  timestamp-rule violations, all Binance, 0 synthetic, 0 news / explanation errors, completeness 1.0;
+  every row `db_role = postgres`. 21 shadow rows, all prospective, 0 close mismatches, **0 shadow errors
+  ever**; outcomes current; `backend_state` fresh; schema 4.
+- **GitHub:** 40/40 hourly runs green (21 dispatched, 19 backup slots), heartbeat steps *skipped* (no
+  secret); 4/4 watchdog runs green (≈ 4 of 7 slots fired); 6/6 test runs green.
+- **Shadow record:** 84 graded prospective hours of 500 — the first checkpoint ≈ 17 days away
+  (≈ 2026-10-12). Separate from the live signal: none of the signal's code imports the shadow package
+  and the shadow code only reads the live record — **now enforced by `tests/test_shadow_separation.py`**
+  (two mutations prove it); parity 135/135.
+- **Report `weekly_2026-09-25.md`:** parity 135/135, drift none; shadow skill +1.1% and ahead of the free
+  EWMA rule by 0.0069 Brier on 84 hours (far too few to mean anything; ECE 0.075 at this size is expected, E024).
+- **The cost rise explained, not a trend:** news volume follows the week — the weekend of go-live carried
+  16–20 headlines, weekdays carry 55–72 (3 sources, no duplicates, a correct 24h window). Cost has only
+  been measured on weekdays (since Wed 2026-09-23), so "$13.62–14.20 per 30 days" over-states a month;
+  with weekends at about a third of the headlines the estimate is ≈ $12. The report now says "partial
+  week" until a full week is measured; the weekend of 2026-09-26/27 settles it.
+- **User-owned items:** *Exposed schemas* **DONE** (2026-09-24: `public`, `graphql_public`); least-privilege
+  role **OPEN** (`role_check`: NOT READY — the one-command `setup_role` is ready); heartbeat **OPEN** (secret
+  not set). Holdout sealed.
+
 ## Paused 2026-09-24 ~17:45 UTC — resume point (read this first tomorrow)
 
 **State.** `main` = `origin/main`, tree clean; 424 unit tests pass with no database reachable;

@@ -5,6 +5,21 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## monitoring — 2026-09-25 (status check; separation made a guard; the cost rise explained)
+
+Nothing in the hourly job changed.
+
+- Status: 21/21 hours, 40/40 GitHub runs, 4/4 watchdog runs, 0 shadow errors, parity 135/135, drift none.
+- `tests/test_shadow_separation.py`: the live signal's code may never import the shadow package, and the
+  shadow package may never write to `predictions` / `prediction_outcomes` (it reads one close price).
+  Held by construction until now; two mutations prove the tests catch a violation.
+- The AI-cost "rise" is the weekly news cycle (weekends 16–20 headlines, weekdays 55–72), and cost has only
+  been measured on weekdays. The weekly report now marks a projection from a partial week, and says when
+  it over-states a month.
+- 2026-09-24 (late): *Exposed schemas* confirmed (`public`, `graphql_public`); least-privilege setup reduced
+  to one owner-run command (`agent.database.setup_role`, SCRAM verifier only) plus a hidden-prompt
+  connection tester (`agent.database.try_connection`).
+
 ## research — 2026-09-24 (the pause verified; the news evaluation sized before it is run)
 
 Nothing that runs in the hourly job changed.
