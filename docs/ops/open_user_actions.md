@@ -10,14 +10,24 @@ None of these is blocking. The system runs correctly without them. They close ga
 Last reviewed: 2026-09-23 evening (item 1 attempted and deferred by the user; item 2 ready and
 checkable; item 4 decided; item 5 logs done, one setting still to check).
 
-**Status at a glance:** 1 heartbeat — deferred (the setup did not work for you; to retry later) ·
-2 least-privilege role — ready, ~10 min · 3 token renewal — calendar, Sept 2027 · 4 news cost —
+**Status at a glance (2026-09-25):** 1 heartbeat — **set up**, first ping to be confirmed on
+healthchecks.io · 2 least-privilege role — **DONE, verified live** · 3 token renewal — calendar,
+Sept 2027 · 4 news cost —
 decided: keep, monitored · 5 API logs — done; *Exposed schemas* — **done 2026-09-24, only `public`
 and `graphql_public`**.
 
 ---
 
-## 1. Heartbeat alarm (healthchecks.io) — the only one I would actually hurry
+## 1. Heartbeat alarm (healthchecks.io) — SET UP 2026-09-25 (first ping to be confirmed on healthchecks.io)
+
+**2026-09-25 ~19:10 UTC, by the user:** check created (period 1 hour, grace 30 minutes) and the ping URL
+saved as the repository secret `heartbeat_url` (GitHub secret names are case-insensitive, so the
+workflow's `secrets.HEARTBEAT_URL` reads it). A first attempt stored it under another name, which the
+workflow never reads — the likely reason the earlier attempt "did not work", along with a
+`HEARTBEAT_URL` line in the local `.env`, which GitHub cannot see. The 19:12 UTC run's *Heartbeat ping*
+step ran (*success*, no longer *skipped*). **Caveat:** that step is `continue-on-error`, so GitHub shows
+it green even if the ping failed; the proof is the check itself on healthchecks.io showing a last ping
+at ~19:13 UTC.
 
 **2026-09-23 evening: attempted by the user, it did not work, deferred to later.** The `HEARTBEAT_URL`
 GitHub secret is not set (the job's heartbeat step shows *skipped*), so nothing half-configured is
@@ -58,7 +68,15 @@ GitHub running something. That is the hole.
 
 ---
 
-## 2. A least-privilege database role — ready for you
+## 2. A least-privilege database role — DONE 2026-09-25
+
+**Done by the user on 2026-09-25 with `python -m agent.database.setup_role`, verified live.** Before
+switching: `role_check` → exactly what `least_privilege_role.sql` grants (13 policies, login, member of
+nothing). After switching the `DATABASE_URL` secret, the 19:12 UTC run wrote the 18:00 prediction with
+**`run_meta.db_role = bitcoin_agent`**, saved a 1h outcome, graded a shadow row (the UPDATE the buggy
+first policy would have refused), saved its own shadow row and published `backend_state` — every step
+green, 0 shadow errors. The local `.env` keeps the owner role for `python -m agent.migrate`, the weekly
+report and the integration tests. *(The text below is kept as it was before the switch.)*
 
 **What it is.** The hourly job currently connects as the Supabase project's `postgres` role, which
 can do anything, including dropping tables and bypassing Row Level Security. It only ever needs to

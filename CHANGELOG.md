@@ -5,6 +5,16 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## operations — 2026-09-25 evening (the job runs as the least-privilege role; the heartbeat is on)
+
+- **Least-privilege role live.** The user ran `python -m agent.database.setup_role` and switched the
+  `DATABASE_URL` secret. `role_check`: exactly the proven file. The 19:12 UTC run wrote the 18:00
+  prediction as **`bitcoin_agent`** (`run_meta.db_role`), and its outcome insert, shadow insert, shadow
+  grading and publish all succeeded — every step green, 0 shadow errors. Readiness row 17 → PASS.
+- **Heartbeat on.** healthchecks.io check (1 h / 30 min) and the `heartbeat_url` secret; the 19:12 run's
+  ping step ran for the first time. Delivery is confirmed on healthchecks.io, not by GitHub's green tick
+  (the step cannot fail by design).
+
 ## monitoring — 2026-09-25 (status check; separation made a guard; the cost rise explained)
 
 Nothing in the hourly job changed.

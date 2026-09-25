@@ -203,6 +203,10 @@ role and the API-log check remain open.
 - **User-owned items:** *Exposed schemas* **DONE** (2026-09-24: `public`, `graphql_public`); least-privilege
   role **OPEN** (`role_check`: NOT READY — the one-command `setup_role` is ready); heartbeat **OPEN** (secret
   not set). Holdout sealed.
+- **Same evening, both closed by the user:** the least-privilege role is live — the 19:12 UTC run wrote as
+  `bitcoin_agent` in every write path, all green (readiness row 17 → PASS); the heartbeat secret is set and
+  the 19:12 run pinged (row 16 → PASS once the ping is seen on healthchecks.io). **To observe next:** the
+  first watchdog run as `bitcoin_agent`; healthchecks.io showing the pings.
 
 ## Paused 2026-09-24 ~17:45 UTC — resume point (read this first tomorrow)
 

@@ -248,5 +248,5 @@ even be entered by the API roles; `auth.users` is empty.
   is the intended state: deny-all until a policy is deliberately added.
 - ~~The hourly shadow step re-applies its schema file every run~~ — **fixed** (`17093f8`; schema
   changes go only through `python -m agent.migrate`, verified in a scheduled run 2026-09-23).
-- **Least-privilege login role** — SQL ready and proven; creating a login role with a password is
-  the user's step (`docs/ops/open_user_actions.md` item 2).
+- ~~Least-privilege login role~~ — **done 2026-09-25** (user, `python -m agent.database.setup_role`; only a
+  SCRAM verifier was sent). Verified live: the 19:12 UTC run wrote as `bitcoin_agent` in every write path.

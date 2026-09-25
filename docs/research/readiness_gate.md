@@ -156,6 +156,19 @@ until the user looks. Everything the project's own role can close is closed and 
 schemas* lists only `public` and `graphql_public`. "Critical security" is now PASS without a
 condition; the only open security item is the least-privilege role (defence in depth, row 17).
 
+### 2026-09-25 — row 17 Security: PARTIAL → **PASS**; row 16 Automation: heartbeat set up
+
+- **Row 17:** the hourly job and the watchdog now connect as `bitcoin_agent`, which holds exactly what
+  `docs/ops/least_privilege_role.sql` grants (`role_check` OK). Verified by behaviour on the 19:12 UTC
+  run: the prediction is stamped `db_role = bitcoin_agent`, and an outcome insert, a shadow grading, a
+  shadow insert and the snapshot publish all succeeded; every step green. A leaked `DATABASE_URL` is now
+  bounded to reading and appending the record. The one residue, stated plainly: Supabase grants the
+  `net` queue to PUBLIC (unrevocable by the project), kept off the internet by *Exposed schemas*.
+- **Row 16:** the heartbeat secret is set and the 19:12 run's ping step ran. It moves to PASS once the
+  first ping is seen on healthchecks.io itself (the step cannot prove delivery: it is
+  `continue-on-error` by design).
+- Still open, by the calendar only: **row 21, prospective monitoring** (≈ 90 of 500 hours).
+
 ### The three PARTIALs, 2026-09-23 ~20:00 UTC — what moved, what cannot move without the user
 
 | row | status | what was done this evening | what still stands between it and PASS |
