@@ -1,0 +1,376 @@
+{
+  "experiment": "E029",
+  "generated_at": "2026-09-26T14:18:31.462295+00:00",
+  "pipeline_version": "0.2.0",
+  "rows": 54472,
+  "k": 0.025,
+  "h": 17.5,
+  "control_alarms_per_1000": 0.1964311940079307,
+  "real_alarms_per_1000": 0.7159641650756352,
+  "real_by_period": {
+    "exploration": {
+      "hours": 41345,
+      "alarms": 33,
+      "alarms_per_1000": 0.7981618091667675
+    },
+    "validation": {
+      "hours": 13127,
+      "alarms": 6,
+      "alarms_per_1000": 0.45707320789213074
+    }
+  },
+  "real_alarms": [
+    {
+      "at": "2019-01-12T18:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2019-01-20T07:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2019-05-03T08:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2019-05-10T20:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2019-07-27T16:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-01-17T11:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-02-29T05:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-06-02T07:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-06-06T17:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-06-10T16:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-06-21T05:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-07-09T04:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-07-13T08:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-07-18T14:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-07-26T01:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-08-30T21:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-09-08T09:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-09-24T15:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2020-11-17T10:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2021-09-06T07:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2021-10-19T21:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2021-12-11T10:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2022-04-20T03:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2022-10-01T16:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2022-10-15T11:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2022-10-28T21:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2022-12-09T03:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2023-01-21T06:00:00+00:00",
+      "direction": "over",
+      "period": "exploration"
+    },
+    {
+      "at": "2023-04-02T21:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2023-04-24T09:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2023-06-28T15:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2023-11-01T15:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2023-12-20T19:00:00+00:00",
+      "direction": "under",
+      "period": "exploration"
+    },
+    {
+      "at": "2024-03-20T19:00:00+00:00",
+      "direction": "under",
+      "period": "validation"
+    },
+    {
+      "at": "2024-06-20T03:00:00+00:00",
+      "direction": "over",
+      "period": "validation"
+    },
+    {
+      "at": "2024-07-02T03:00:00+00:00",
+      "direction": "over",
+      "period": "validation"
+    },
+    {
+      "at": "2024-08-17T08:00:00+00:00",
+      "direction": "over",
+      "period": "validation"
+    },
+    {
+      "at": "2024-10-03T19:00:00+00:00",
+      "direction": "under",
+      "period": "validation"
+    },
+    {
+      "at": "2024-12-24T20:00:00+00:00",
+      "direction": "under",
+      "period": "validation"
+    }
+  ],
+  "overall_stated_minus_observed": {
+    "exploration": 0.0026931017699171533,
+    "validation": -0.004048003392608853
+  },
+  "delay_real": {
+    "+0.03": {
+      "windows": 103,
+      "median_delay": 773.0,
+      "detected_within": {
+        "250": 0.21359223300970873,
+        "500": 0.34951456310679613,
+        "1000": 0.5631067961165048,
+        "2000": 0.7766990291262136,
+        "2500": 0.8737864077669902
+      },
+      "pre_change_alarm_windows": 0.18446601941747573
+    },
+    "+0.05": {
+      "windows": 103,
+      "median_delay": 349.0,
+      "detected_within": {
+        "250": 0.33980582524271846,
+        "500": 0.6019417475728155,
+        "1000": 0.8058252427184466,
+        "2000": 0.970873786407767,
+        "2500": 0.9902912621359223
+      },
+      "pre_change_alarm_windows": 0.18446601941747573
+    },
+    "+0.10": {
+      "windows": 103,
+      "median_delay": 168.0,
+      "detected_within": {
+        "250": 0.7378640776699029,
+        "500": 0.9514563106796117,
+        "1000": 1.0,
+        "2000": 1.0,
+        "2500": 1.0
+      },
+      "pre_change_alarm_windows": 0.18446601941747573
+    },
+    "-0.03": {
+      "windows": 103,
+      "median_delay": 722.0,
+      "detected_within": {
+        "250": 0.23300970873786409,
+        "500": 0.39805825242718446,
+        "1000": 0.6019417475728155,
+        "2000": 0.8058252427184466,
+        "2500": 0.8737864077669902
+      },
+      "pre_change_alarm_windows": 0.18446601941747573
+    },
+    "-0.05": {
+      "windows": 103,
+      "median_delay": 420.0,
+      "detected_within": {
+        "250": 0.33980582524271846,
+        "500": 0.6019417475728155,
+        "1000": 0.8058252427184466,
+        "2000": 0.970873786407767,
+        "2500": 0.9902912621359223
+      },
+      "pre_change_alarm_windows": 0.18446601941747573
+    },
+    "-0.10": {
+      "windows": 103,
+      "median_delay": 173.0,
+      "detected_within": {
+        "250": 0.7184466019417476,
+        "500": 0.9320388349514563,
+        "1000": 0.9902912621359223,
+        "2000": 1.0,
+        "2500": 1.0
+      },
+      "pre_change_alarm_windows": 0.18446601941747573
+    }
+  },
+  "delay_control": {
+    "+0.03": {
+      "windows": 515,
+      "median_delay": 836.0,
+      "detected_within": {
+        "250": 0.08932038834951456,
+        "500": 0.2737864077669903,
+        "1000": 0.5766990291262136,
+        "2000": 0.8485436893203884,
+        "2500": 0.9067961165048544
+      },
+      "pre_change_alarm_windows": 0.05436893203883495
+    },
+    "+0.05": {
+      "windows": 515,
+      "median_delay": 420.0,
+      "detected_within": {
+        "250": 0.23106796116504855,
+        "500": 0.6097087378640776,
+        "1000": 0.916504854368932,
+        "2000": 0.9980582524271845,
+        "2500": 1.0
+      },
+      "pre_change_alarm_windows": 0.05436893203883495
+    },
+    "+0.10": {
+      "windows": 515,
+      "median_delay": 177.0,
+      "detected_within": {
+        "250": 0.7786407766990291,
+        "500": 0.9883495145631068,
+        "1000": 1.0,
+        "2000": 1.0,
+        "2500": 1.0
+      },
+      "pre_change_alarm_windows": 0.05436893203883495
+    },
+    "-0.03": {
+      "windows": 515,
+      "median_delay": 789.0,
+      "detected_within": {
+        "250": 0.1262135922330097,
+        "500": 0.3087378640776699,
+        "1000": 0.6194174757281553,
+        "2000": 0.8951456310679612,
+        "2500": 0.9514563106796117
+      },
+      "pre_change_alarm_windows": 0.05436893203883495
+    },
+    "-0.05": {
+      "windows": 515,
+      "median_delay": 394.0,
+      "detected_within": {
+        "250": 0.26407766990291265,
+        "500": 0.6213592233009708,
+        "1000": 0.920388349514563,
+        "2000": 1.0,
+        "2500": 1.0
+      },
+      "pre_change_alarm_windows": 0.05436893203883495
+    },
+    "-0.10": {
+      "windows": 515,
+      "median_delay": 174.0,
+      "detected_within": {
+        "250": 0.7786407766990291,
+        "500": 0.9941747572815534,
+        "1000": 1.0,
+        "2000": 1.0,
+        "2500": 1.0
+      },
+      "pre_change_alarm_windows": 0.05436893203883495
+    }
+  },
+  "verdict": {
+    "H_a_false_alarms": false,
+    "H_b_detection": true,
+    "H_c_real_like_control": true
+  }
+}

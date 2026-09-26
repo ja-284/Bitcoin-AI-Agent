@@ -1,6 +1,6 @@
 # Operational status — read this first
 
-**As of 2026-09-26 ~09:00 UTC.** Machine-readable copy: [`status.json`](status.json). Updated at every
+**As of 2026-09-26 ~14:30 UTC.** Machine-readable copy: [`status.json`](status.json). Updated at every
 working session; if the date above is old, the live record (`python -m agent.research.weekly_report`) is
 the truth.
 
@@ -18,7 +18,7 @@ the truth.
 
 ## Prospective evidence so far
 
-- **103 graded prospective shadow hours of 500** (2026-09-26 08:53 UTC). Accrues about one per hour.
+- **109 graded prospective shadow hours of 500** (2026-09-26 14:14 UTC). Accrues about one per hour.
   **First checkpoint ≈ 2026-10-12, evening UTC**, if no hours are lost.
 - News evaluation: first look at 500 usable news hours ≈ 2026-10-11; verdict only from 3,140 hours (E025).
 
@@ -51,7 +51,9 @@ the truth.
   is calmer than in development (large moves in ~34% of hours vs ~47% on validation). The pipeline is ruled
   out. Watch item: the model may be over-predicting slightly in this calm market; E026 shows it was calibrated
   in calm markets historically, so if this persists it is a genuine deviation — judged at the registered
-  checkpoints only, never tuned.
+  checkpoints only, never tuned. Two context results (development data): the family over-states at night
+  and under-states in the US session (E027), and its calibration wanders in multi-week runs about three to
+  four times a year (E029) — so a few weeks of over-statement is not by itself a deviation.
 
 ## Emergency-only — when the user should act
 

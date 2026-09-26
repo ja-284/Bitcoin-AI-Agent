@@ -35,5 +35,29 @@
     "H_c_fails": "Real outcomes (dependence, regime runs) behave unlike independent draws; any use would need its thresholds set on real data, which needs a new registration.",
     "in_every_case": "The live system, the frozen artefact move_size_1h_v1, the shadow record, the checkpoints and their rules are untouched. The detector is not run on live data in this experiment."
   },
-  "command": "python -m agent.research.drift_detector --experiment E029"
+  "command": "python -m agent.research.drift_detector --experiment E029",
+  "result_added": "2026-09-26 ~14:25 UTC, after the pre-registration commit fda9616",
+  "result": {
+    "rows": 54472,
+    "h": 17.5,
+    "control_alarms_per_1000": 0.196,
+    "real_alarms_per_1000": {"whole_record": 0.716, "exploration": 0.798, "validation": 0.457},
+    "real_alarms": 39,
+    "control_expected_alarms": 10.7,
+    "overall_stated_minus_observed": {"exploration": 0.0027, "validation": -0.0040},
+    "delay_hours_median_real_vs_control": {"+0.03": [773, 836], "+0.05": [349, 420], "+0.10": [168, 177],
+                                           "-0.03": [722, 789], "-0.05": [420, 394], "-0.10": [173, 174]},
+    "detected_within_500_real": {"+0.03": 0.35, "+0.05": 0.60, "+0.10": 0.95},
+    "detected_within_2000_real": {"+0.03": 0.78, "+0.05": 0.97, "+0.10": 1.00},
+    "verdict": {"H_a_false_alarms": "FAILS", "H_b_detection": "HOLDS", "H_c_real_like_control": "HOLDS"},
+    "descriptive_post_hoc": "Grouping alarms of the same direction within 30 days of each other (a grouping chosen after seeing the list, descriptive only): 24 episodes, 11 over-statement and 13 under-statement, spread over 2019-2024; the longest is 2020-06-02 -> 2020-07-26 (over-statement, 8 alarms). Windows with an alarm before the injected change: 18% real vs 5% control.",
+    "expectation_check": "The written expectation (~700 h for 0.05, ~300 h for 0.10) was loose: it assumed h ~ 20. The same Gaussian approximation at the chosen h = 17.5 gives ~520 h and ~210 h mean delay; the control's measured MEAN delays are 496 h and 192 h (medians 420 and 177). Theory and simulation agree; the first figures were my arithmetic, not a data surprise."
+  },
+  "reading_by_the_pre_registered_consequences": [
+    "H_a FAILS: on the family's own development record the detector alarms 0.716 times per 1,000 hours, 3.7x the perfectly calibrated control (0.196), and above the 0.4 bar in both periods. Consequence (decided in advance): it would cry wolf on this model family's normal behaviour -- recorded, NOT used.",
+    "Why it fails is the useful part: the family's calibration is fine on average (overall offset +0.003 / -0.004) but WANDERS in multi-week runs beyond +/-0.025, in both directions, about three to four times a year (24 episodes, 11 over / 13 under). This matches E024's finding that its calibration moves with the regime.",
+    "H_b and H_c hold: a persistent offset of 0.10 would be caught in about a week (median 168 h, 95% within 500 h); 0.05 in about two weeks (median 349 h; 60% within 500 h, 97% within 2,000 h); 0.03 needs about a month and is missed within 2,000 h in 22% of windows. Real outcomes behave like independent draws for this purpose (0.05: 349 vs 420 h).",
+    "Context for the E026 watch item (no rule changes): a few weeks of live over-statement is something this family did 11 times in six years of development history, so on its own it is not a deviation from historical behaviour. Only persistence beyond what history shows counts -- which is exactly what the registered 2,000 / 5,000-hour checkpoints (read with E024's error rates) judge.",
+    "Nothing changes: move_size_1h_v1, the shadow record, the checkpoints and their rules are untouched; the detector was not run on live data."
+  ]
 }

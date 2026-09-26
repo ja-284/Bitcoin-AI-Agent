@@ -21,7 +21,12 @@ Nothing in the predictive path changed.
 - **E028** (pre-registered, research-only): a second calendar harmonic does **not** remove it — the worst
   block offset gets worse on validation (0.057 → 0.064). Negative result recorded; the single-harmonic
   encoding is not the mechanism. Nothing adopted.
-- 468 unit tests.
+- **E029** (pre-registered, research-only algorithm, plan task H1): a two-sided CUSUM calibration-drift
+  detector, development data only, never wired. It catches a persistent 0.10 offset in ~a week and 0.05 in
+  ~two weeks, but **cries wolf** on the model family's normal behaviour (0.716 alarms per 1,000 h vs 0.196 for
+  a calibrated control) — the family's calibration wanders in multi-week runs ~3–4 times a year. Not used;
+  context for reading the E026 watch item.
+- 473 unit tests.
 
 ## research integrity — 2026-09-26 (the whole chain the checkpoints judge, verified; the first drift flag)
 

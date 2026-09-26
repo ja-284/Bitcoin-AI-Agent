@@ -208,7 +208,12 @@ role and the API-log check remain open.
   proven end to end in a test. **E027:** offsetting intraday miscalibration in the model family (night
   over-stated, US session under-stated) — the 2,000 h slices are read against it. **E028:** a second
   calendar harmonic does not remove it (H_a fails; validation worse) — negative, nothing adopted. Section G
-  complete for the pre-500 h window; next is **H1**, a research-only sequential calibration-drift detector.
+  complete for the pre-500 h window. **E029 (H1, research-only):** a CUSUM drift detector catches a
+  persistent 0.10 offset in ~a week and 0.05 in ~two weeks, but cries wolf on the family's own record (3.7×
+  the calibrated control) because its calibration wanders in multi-week runs ~3–4 times a year — not used.
+  **Consequence for the watch item (no rule changed):** a few weeks of live over-statement is ordinary for
+  this family; only persistence beyond that, judged at the registered 2,000 / 5,000 h checkpoints, counts.
+  Every audit section is now COMPLETE or CONTINUOUS; the work until 500 h is the session loop.
 
 ## Resumed 2026-09-25 13:44 UTC — status check, nothing regressed
 
