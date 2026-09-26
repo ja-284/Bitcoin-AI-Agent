@@ -15,5 +15,20 @@
     "H_fails_otherwise": "Recorded as found; interpretation stated plainly without adjusting the question.",
     "in_every_case": "Nothing about the frozen model, its calibration, the live signal or any checkpoint rule changes. No recalibration is proposed on the basis of this diagnostic."
   },
-  "command": "python -m agent.research.regime_calibration --experiment E026"
+  "command": "python -m agent.research.regime_calibration --experiment E026",
+  "result_added": "2026-09-26 ~11:00 UTC, after the pre-registration commit 636df01",
+  "result": {
+    "rows": 54472,
+    "exploration": {"low": {"rows": 13930, "stated": 0.317, "observed": 0.320, "diff": -0.003, "ci95": [-0.012, 0.006], "H": true},
+                    "mid": {"rows": 14316, "stated": 0.520, "observed": 0.514, "diff": 0.006, "ci95": [-0.003, 0.014], "H": true},
+                    "high": {"rows": 13099, "stated": 0.679, "observed": 0.674, "diff": 0.005, "ci95": [-0.003, 0.014], "H": true}},
+    "validation": {"low": {"rows": 6102, "stated": 0.393, "observed": 0.404, "diff": -0.011, "ci95": [-0.024, 0.002], "H": true},
+                   "mid": {"rows": 4967, "stated": 0.506, "observed": 0.513, "diff": -0.006, "ci95": [-0.019, 0.004], "H": true},
+                   "high": {"rows": 2058, "stated": 0.617, "observed": 0.596, "diff": 0.021, "ci95": [0.002, 0.042], "H": false}}
+  },
+  "reading_by_the_pre_registered_consequences": [
+    "H HOLDS in the low (calm) regime in both periods: the model family was calibrated in calm markets historically (differences -0.003 and -0.011, intervals containing 0). Therefore a PERSISTENT live over-prediction in a calm market would be a genuine live deviation, not a known property -- recorded as a watch item, judged only at the registered 2,000- and 5,000-hour checkpoints. At 105 live hours it is not established.",
+    "H FAILS narrowly in one cell: the high (volatile) regime on validation over-predicts by +0.021 [+0.002, +0.042] (bar 0.02), 16% of validation hours. Recorded as found: a small over-statement in volatile markets on recent data. Not acted on.",
+    "Nothing about the frozen model, its calibration, the live signal or any checkpoint rule changes."
+  ]
 }

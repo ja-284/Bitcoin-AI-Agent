@@ -189,6 +189,18 @@ role and the API-log check remain open.
 - Absence readiness: `docs/ops/STATUS.md` / `status.json`; storage and alarm paths checked.
 - **Open:** the first watchdog run with the new step (it fails loudly if the secret is not
   `bitcoin_agent`, so a green run proves the watchdog runs under the restricted role).
+- **Later the same session:** full mutation run 43/43 (both controls held); the report and the checkpoint
+  agree on every point value (test); every stored shadow probability reproduces from its stored inputs
+  (106/106, 5e-16) — now an integrity line in every checkpoint; the weekly report checks the candles →
+  inputs link too (106 × 9 inputs, 2.9e-15).
+- **Drift flag, 2026-09-26 — investigated, documented, nothing changed.** First OUTCOMES flag: large moves
+  in 34.3% of live hours [25.2%, 43.4%] vs 47.5% on validation — a **calmer market** (every volatility input
+  below its development median, none outside the development range); the pipeline is not the cause (parity
+  156/156, shadow inputs identical, tracker = research candles). The model's stated median fell less (0.432 vs
+  0.468): a possible over-prediction in a calm market, **not established at 105 hours**. **E026** (pre-registered,
+  development data) shows the model family *was* calibrated in calm markets historically — so **WATCH ITEM:**
+  if the live over-prediction in calm conditions persists, it is a genuine live deviation, to be read at the
+  registered 500-hour first look and judged only at 2,000 / 5,000 hours. Never retuned.
 
 ## Resumed 2026-09-25 13:44 UTC — status check, nothing regressed
 

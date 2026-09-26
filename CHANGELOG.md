@@ -5,6 +5,24 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research integrity — 2026-09-26 (the whole chain the checkpoints judge, verified; the first drift flag)
+
+Nothing in the predictive path changed.
+
+- Full mutation run: **43 of 43** caught in one pass, both controls held.
+- The weekly report and the checkpoint agree on every point value (two code paths; test).
+- **Candles → inputs → probability, verified for every stored hour:** the weekly report now compares each
+  shadow row's stored inputs with the research feature code (106 × 9 inputs, max relative difference
+  2.9e-15), and every checkpoint states whether each judged probability reproduces from its stored inputs
+  (106/106, 5e-16) — an INTEGRITY WARNING otherwise.
+- **First drift flag (outcomes):** a calmer live market (34% large-move hours vs 47.5% on validation).
+  Pipeline ruled out; a possible over-prediction in calm conditions is not established at 105 hours.
+- **E026** (pre-registered, descriptive, development data): the model family was calibrated within calm,
+  normal and volatile regimes historically, except a narrow +0.021 over-prediction in volatile markets on
+  validation. By the pre-registered reading, a persistent live calm-market over-prediction would be a
+  genuine deviation — a watch item for the registered checkpoints; nothing changes.
+- 455 unit tests; mutation guards 44.
+
 ## operations — 2026-09-26 (the interim plan; unattended-running readiness)
 
 Nothing in the predictive path changed.
