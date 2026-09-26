@@ -22,6 +22,8 @@ Nothing in the predictive path changed.
   validation. By the pre-registered reading, a persistent live calm-market over-prediction would be a
   genuine deviation — a watch item for the registered checkpoints; nothing changes.
 - 455 unit tests; mutation guards 44.
+- **Watchdog verified under the restricted role:** the 11:42 UTC run (09:33 slot) passed every step,
+  including the new role check that fails unless the connection is `bitcoin_agent` with exactly its rights.
 
 ## operations — 2026-09-26 (the interim plan; unattended-running readiness)
 

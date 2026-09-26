@@ -11,7 +11,8 @@ the truth.
   BUY/HOLD/SELL signal — *no demonstrated predictive value*, E001/E017), shadow model **`move_size_1h_v1`**
   (the calibrated 1h move-size probability under prospective test), schema **4**, contract **v1**.
 - The jobs connect to the database as **`bitcoin_agent`** (least privilege: read and append only), since
-  2026-09-25 19:12 UTC. The local `.env` keeps the owner role for maintenance.
+  2026-09-25 19:12 UTC — the hourly job (every row stamped `db_role = bitcoin_agent`) and the watchdog
+  (verified 2026-09-26 11:42 UTC by its own role check). The local `.env` keeps the owner role for maintenance.
 - Sealed holdout: **sealed** (`research/HOLDOUT_ACCESS.log` does not exist).
 - Readiness gate: **21 PASS, 1 PARTIAL** — the PARTIAL is prospective monitoring, which only time closes.
 

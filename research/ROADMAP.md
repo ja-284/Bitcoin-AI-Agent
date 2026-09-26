@@ -187,8 +187,10 @@ role and the API-log check remain open.
   every run, 2/2 watchdog runs green after the switch, 0 shadow errors, 103 of 500 prospective hours.
 - Watchdog now verifies the jobs' database role and its exact rights (`role_check --connected`).
 - Absence readiness: `docs/ops/STATUS.md` / `status.json`; storage and alarm paths checked.
-- **Open:** the first watchdog run with the new step (it fails loudly if the secret is not
-  `bitcoin_agent`, so a green run proves the watchdog runs under the restricted role).
+- ~~Open: the first watchdog run with the new step~~ — **VERIFIED 2026-09-26 11:42 UTC** (the 09:33 slot,
+  2 h late, on `86db217`): every step green, including "Jobs connect as the least-privilege role, with
+  exactly its proven rights" — which fails unless `current_user` is `bitcoin_agent` and its rights equal the
+  proven file. Direct proof, not inference, that the watchdog runs under the restricted role.
 - **Later the same session:** full mutation run 43/43 (both controls held); the report and the checkpoint
   agree on every point value (test); every stored shadow probability reproduces from its stored inputs
   (106/106, 5e-16) — now an integrity line in every checkpoint; the weekly report checks the candles →
