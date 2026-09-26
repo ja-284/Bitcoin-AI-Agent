@@ -5,6 +5,24 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## interim plan B1, B2, K1, G1, G2 — 2026-09-26 afternoon (security supply chain, the checkpoint command end to end, two calibration studies)
+
+Nothing in the predictive path changed.
+
+- **B1:** every GitHub Action pinned to a full commit SHA (checkout v4, setup-python v5) in all three
+  workflows; a test fails on any unpinned `uses:` and a mutation proves it; verified on GitHub.
+- **B2:** `tools/dependency_audit.py` checks every installed package against OSV.dev (43 packages, 0 known
+  vulnerabilities); part of the weekly audit.
+- **K1:** `python -m agent.research.live_checkpoint` runs end to end in a test — reads exactly the first 500
+  graded hours, prints the integrity line, writes both files, never rewrites them, writes nothing before 500.
+- **E027** (pre-registered, descriptive): good overall calibration hides offsetting intraday miscalibration —
+  nights over-stated (+0.047 / +0.022), the US session under-stated (−0.022 / −0.057). The 2,000-hour slices
+  will be read against these offsets, not against zero.
+- **E028** (pre-registered, research-only): a second calendar harmonic does **not** remove it — the worst
+  block offset gets worse on validation (0.057 → 0.064). Negative result recorded; the single-harmonic
+  encoding is not the mechanism. Nothing adopted.
+- 468 unit tests.
+
 ## research integrity — 2026-09-26 (the whole chain the checkpoints judge, verified; the first drift flag)
 
 Nothing in the predictive path changed.

@@ -203,6 +203,12 @@ role and the API-log check remain open.
   development data) shows the model family *was* calibrated in calm markets historically — so **WATCH ITEM:**
   if the live over-prediction in calm conditions persists, it is a genuine live deviation, to be read at the
   registered 500-hour first look and judged only at 2,000 / 5,000 hours. Never retuned.
+- **Afternoon — the interim plan's audit (`research/INTERIM_PLAN_AUDIT.md`) worked through in order:**
+  B1 actions pinned to SHAs; B2 dependency audit (0 known vulnerabilities); K1 the checkpoint command
+  proven end to end in a test. **E027:** offsetting intraday miscalibration in the model family (night
+  over-stated, US session under-stated) — the 2,000 h slices are read against it. **E028:** a second
+  calendar harmonic does not remove it (H_a fails; validation worse) — negative, nothing adopted. Section G
+  complete for the pre-500 h window; next is **H1**, a research-only sequential calibration-drift detector.
 
 ## Resumed 2026-09-25 13:44 UTC — status check, nothing regressed
 

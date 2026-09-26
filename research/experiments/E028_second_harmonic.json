@@ -18,5 +18,29 @@
     "H_a_holds_but_H_b_or_H_c_fails": "Better intraday calibration at a cost elsewhere; recorded, not pursued without a new hypothesis.",
     "in_every_case": "The live system, the frozen artefact, the checkpoints and their rules are untouched."
   },
-  "command": "python -m agent.research.second_harmonic --experiment E028"
+  "command": "python -m agent.research.second_harmonic --experiment E028",
+  "result_added": "2026-09-26 ~14:15 UTC, after the pre-registration commit 4046b56",
+  "result": {
+    "rows": 54472,
+    "cross_check": "The incumbent reproduces E027's block offsets and E019's validation skill (+0.0983) to the digit from this independently written path.",
+    "exploration": {"skill": {"incumbent": 0.1457, "variant": 0.1473}, "ece": {"incumbent": 0.004, "variant": 0.004},
+                    "incumbent_minus_variant_brier": [0.00040, 0.00020, 0.00061],
+                    "blocks_incumbent": {"00-06": 0.047, "06-12": 0.003, "12-18": -0.022, "18-24": -0.017},
+                    "blocks_variant": {"00-06": 0.037, "06-12": 0.014, "12-18": -0.032, "18-24": -0.007},
+                    "worst_block_offset": {"incumbent": 0.047, "variant": 0.037}},
+    "validation": {"skill": {"incumbent": 0.0983, "variant": 0.0986}, "ece": {"incumbent": 0.014, "variant": 0.017},
+                   "incumbent_minus_variant_brier": [0.00007, -0.00028, 0.00042],
+                   "blocks_incumbent": {"00-06": 0.022, "06-12": 0.007, "12-18": -0.057, "18-24": 0.013},
+                   "blocks_variant": {"00-06": 0.015, "06-12": 0.013, "12-18": -0.064, "18-24": 0.019},
+                   "worst_block_offset": {"incumbent": 0.057, "variant": 0.064}},
+    "format": "stated minus observed; paired Brier as [point, 2.5%, 97.5%], positive = variant better",
+    "verdict": {"H_a_mechanism": "FAILS", "H_b_no_loss": "HOLDS", "H_c_calibration": "HOLDS"}
+  },
+  "reading_by_the_pre_registered_consequences": [
+    "H_a FAILS: the worst block offset falls only 0.047 -> 0.037 in exploration (needed <= 0.024) and RISES 0.057 -> 0.064 in validation. The second harmonic moves the offsets between blocks instead of removing them; the US-session under-statement gets worse in both periods (-0.022 -> -0.032, -0.057 -> -0.064).",
+    "Consequence (decided in advance): the single calendar harmonic is not the mechanism, or not the main one. Recorded as a negative result. E027's offsets remain a known property to read the 2,000-hour slices against.",
+    "H_b and H_c hold, but they only matter if H_a holds; on their own they say the extra inputs cost nothing and gain nothing practical (validation skill +0.0983 -> +0.0986, interval includes zero).",
+    "What the failure suggests (a hypothesis, NOT tested and not pursued without a new registration): the miscalibration is conditional rather than calendar-shaped -- e.g. the same volatility or trade-intensity reading means something different at night than in the US session. That would be an interaction, and E020 already found that adding interaction terms fails calibration.",
+    "Nothing changes: move_size_1h_v1, the live system, the checkpoints and their rules are untouched."
+  ]
 }
