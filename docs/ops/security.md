@@ -36,6 +36,16 @@ credentials; the Python code never logs `DATABASE_URL` or the API key (the only 
 - Third-party actions are pinned to major versions (`actions/checkout@v4`,
   `actions/setup-python@v5`) — the standard trade-off between security and maintenance for a
   public repo; pinning to full SHAs is an option if the repo ever becomes sensitive.
+  **Superseded 2026-09-26: every action is now pinned to a full commit SHA** (`checkout` v4 =
+  `11d5960a…`, `setup-python` v5 = `a26af69b…`, each resolved two ways). The earlier reasoning
+  underrated one fact: these actions run with the jobs' secrets (Anthropic key, database URL,
+  heartbeat URL), so a repointed tag could exfiltrate them. `tests/test_workflow_pinning.py` fails on
+  any movable reference; an upgrade is a deliberate edit of the SHA and its `# vN` comment. Verified on
+  GitHub: the Tests run on `677e1c0` executed exactly the pinned commits.
+- **Dependency vulnerabilities** (2026-09-26): `python tools/dependency_audit.py` queries OSV.dev for
+  every installed package, direct and transitive (names and versions only). First run: **43 packages,
+  0 known vulnerabilities.** Part of the weekly audit. Transitive packages are resolved fresh on each
+  GitHub runner, so the local environment is audited as the closest available copy.
 - The repo is public by decision (free unlimited Actions minutes; nothing proprietary).
   Consequence: anyone can read the code and the reports — none of which contains secrets or
   personal data.
