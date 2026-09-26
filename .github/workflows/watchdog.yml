@@ -43,3 +43,9 @@ jobs:
       # fails this job so it is investigated, not silently "corrected".
       - name: No table may be exposed to the public API
         run: python -m agent.database.security
+
+      # Least privilege (2026-09-26): the jobs must connect as `bitcoin_agent`, and that role must hold
+      # exactly what docs/ops/least_privilege_role.sql grants -- no more (privilege creep), no less. Fails
+      # if the DATABASE_URL secret is switched back to the owner, which would otherwise go unnoticed.
+      - name: Jobs connect as the least-privilege role, with exactly its proven rights
+        run: python -m agent.database.role_check --connected

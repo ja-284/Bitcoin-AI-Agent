@@ -213,6 +213,10 @@ MUTATIONS = [
              '"SELECT close_price FROM predictions WHERE as_of = %s"',
              '"UPDATE predictions SET close_price = close_price WHERE as_of = %s"',
              "the shadow step writes to the live record"),
+    Mutation("security", "agent/database/role_check.py",
+             "    if current == ROLE:",
+             "    if True:",
+             "the watchdog accepts a job connection that is not the least-privilege role"),
 ]
 
 

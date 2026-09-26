@@ -87,6 +87,29 @@ def test_membership_ownership_and_policy_scope_are_reported():
     assert any("together with other roles" in p for p in rc.judge(_facts(shared_policies=["predictions.x"]), EXPECTED))
 
 
+def test_the_watchdog_requires_the_connection_itself_to_be_the_restricted_role():
+    assert rc.judge_connected("bitcoin_agent") == []
+    (p,) = rc.judge_connected("postgres")
+    assert "`postgres`, not `bitcoin_agent`" in p and "DATABASE_URL" in p
+
+
+def test_connected_mode_fails_on_the_owner_even_when_the_role_itself_is_perfect(monkeypatch, capsys):
+    monkeypatch.setattr(rc, "facts", lambda *a, **k: _facts())
+    monkeypatch.setattr(rc, "connected_role", lambda: "postgres")
+    assert rc.main(["--connected"]) == 1 and "not `bitcoin_agent`" in capsys.readouterr().out
+    monkeypatch.setattr(rc, "connected_role", lambda: "bitcoin_agent")
+    assert rc.main(["--connected"]) == 0
+    monkeypatch.setattr(rc, "connected_role", lambda: "postgres")
+    assert rc.main([]) == 0, "without --connected the owner may run the check (the local audit)"
+
+
+def test_the_watchdog_runs_the_connected_role_check():
+    from pathlib import Path
+
+    wf = Path(".github/workflows/watchdog.yml").read_text(encoding="utf-8")
+    assert "python -m agent.database.role_check --connected" in wf
+
+
 def test_the_database_stamps_which_role_wrote_each_prediction():
     """Static: the INSERT itself adds db_role = current_user, so no code path can claim another role."""
     import inspect

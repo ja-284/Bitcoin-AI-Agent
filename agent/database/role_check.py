@@ -137,11 +137,41 @@ def facts(role: str = ROLE, schema: str = "public") -> dict:
             "shared_policies": shared, "notes": notes}
 
 
-def main() -> int:
+def connected_role() -> str:
+    from agent.database.db import get_connection
+
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT current_user")
+        return cur.fetchone()[0]
+
+
+def judge_connected(current: str) -> list[str]:
+    """
+    --connected (the watchdog, 2026-09-26): the job's own connection must BE the restricted role. Catches the
+    secret being switched back to the owner -- a deliberate rollback or an accident -- which the record would
+    otherwise only show as `run_meta.db_role` once someone looked.
+    """
+    if current == ROLE:
+        return []
+    return [f"this connection runs as `{current}`, not `{ROLE}` -- the DATABASE_URL secret no longer uses the "
+            "least-privilege role (docs/ops/open_user_actions.md item 2)"]
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--connected", action="store_true",
+                        help="also require that THIS connection is the restricted role (used by the watchdog)")
+    args = parser.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     expected = expected_from_sql(SQL_FILE.read_text(encoding="utf-8"))
     f = facts()
     problems = judge(f, expected)
+    if args.connected:
+        current = connected_role()
+        print(f"  this connection runs as `{current}`")
+        problems = judge_connected(current) + problems
     if f["exists"]:
         for table, privs in sorted(f["table_privileges"].items()):
             extra = f["column_update"].get(table)

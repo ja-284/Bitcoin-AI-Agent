@@ -429,8 +429,9 @@ def test_the_role_check_passes_on_the_applied_file_and_catches_an_extra_grant(le
 
     db, _, _, _ = least_privileged
     expected = rc.expected_from_sql(rc.SQL_FILE.read_text(encoding="utf-8"))
-    facts = rc.facts(PROBE_ROLE, SCHEMA)
+    facts = rc.facts(PROBE_ROLE, SCHEMA)  # every query here runs AS the restricted probe (the watchdog's case)
     assert rc.judge(facts, expected, require_login=False) == [], rc.judge(facts, expected, require_login=False)
+    assert rc.connected_role() == PROBE_ROLE, "the --connected check must see the restricted role itself"
     assert facts["notes"], "the Supabase PUBLIC grant on net should be noted for any role"
     import psycopg
 
