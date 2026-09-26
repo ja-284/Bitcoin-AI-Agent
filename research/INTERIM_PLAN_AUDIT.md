@@ -1,6 +1,9 @@
 # Pre-500h plan — section-by-section audit
 
-Audit of `research/INTERIM_PLAN_PRE_500H.md`, **2026-09-26 ~14:30 UTC** (109 of 500 prospective hours).
+Audit of `research/INTERIM_PLAN_PRE_500H.md`, **final for the pre-500 h window, 2026-09-26 evening**.
+**Every section is COMPLETE or CONTINUOUS; nothing is PARTIALLY COMPLETE, NOT STARTED or BLOCKED.** The
+project is in PRE-500H MONITORING-ONLY MODE (`docs/ops/STATUS.md`). The live prospective count is not
+kept here: its source is `python -m agent.research.live_checkpoint`, snapshotted in `docs/ops/STATUS.md`.
 Updated whenever a task below moves. Classification: COMPLETE · PARTIALLY COMPLETE · NOT STARTED ·
 BLOCKED · CONTINUOUS MONITORING. "Complete" means tested, verified live where relevant, documented,
 committed and pushed — not "written".
@@ -12,13 +15,13 @@ committed and pushed — not "written".
 | C | Reliability and failure recovery | **COMPLETE** (by tests) | failure modes, fallback, malformed data, gaps, stale data, rate limits (429 not retried), AI and SDK failures, empty/partial news, DB down at save, duplicates (real Postgres), late runs, publish failure, heartbeat hiccup, schema mismatch, permission drift (watchdog role check) | re-check when anything in the live path changes |
 | D | Observability | **COMPLETE** + monitoring | weekly report: health, cost with week coverage, shadow record vs free rule, paper record, parity, shadow input parity, drift, watch list; watchdog; heartbeat | runtime is measured ad hoc (GitHub API), not in the report — no evidence it needs more |
 | E | Performance | **COMPLETE** + monitoring | 2026-09-25: job 74–79 s, causes known, under a tenth of budget | re-measure weekly; act only on evidence |
-| F | Research integrity | **COMPLETE** + guards | point-in-time tests, 44 mutation guards (43/43 in one pass), holdout guards, report = checkpoint (test), parity, E024/E025 operating characteristics | guards run on every push |
+| F | Research integrity | **COMPLETE** + guards | point-in-time tests, 45 mutation guards (**45/45 in one pass, both controls held, 2026-09-26 evening**), holdout guards, report = checkpoint (test), parity, E024/E025 operating characteristics | guards run on every push |
 | G | Safe historical research | **COMPLETE** (for the pre-500 h window) | E025 (news power), E026 (calibration by volatility regime), **E027 done 2026-09-26** (calibration by weekday/weekend and hour block: offsetting intraday miscalibration — night over-stated, US session under-stated; the 2,000 h slices will be read against these offsets), **G2 = E028 done 2026-09-26** (a second calendar harmonic does NOT remove it: H_a fails, worse on validation — negative result recorded) | new questions only when a registered checkpoint or live evidence raises one |
 | H | Research-only algorithms | **COMPLETE** (for the pre-500 h window) | **H1 = E029 done 2026-09-26:** two-sided CUSUM calibration-drift detector, development data only, never wired. It detects a persistent 0.10 offset in ~a week and 0.05 in ~two weeks, but **cries wolf on the family's normal behaviour** (0.716 alarms per 1,000 h vs 0.196 for a calibrated control) because the family's calibration wanders in multi-week runs ~3–4 times a year — recorded, not used; context for reading the E026 watch item | none planned; a detector with a tolerance learned from that wandering would need a new registration, and only if a checkpoint asks for it |
 | I | Reproducibility / versioning | **COMPLETE** + guards | versions pinned, artefact hash, feature fingerprint, schema version, `code_commit` and `db_role` on every row, candles → inputs → probability verified for every stored hour | — |
-| J | Unattended operation | **COMPLETE** | `docs/ops/STATUS.md` + `status.json`; heartbeat verified; watchdog verified under `bitcoin_agent`; storage 17 of 500 MB; staleness alarm proven | keep STATUS current each session |
+| J | Unattended operation | **COMPLETE** | `docs/ops/STATUS.md` + `status.json` (one dated snapshot, each figure naming its source command; `tests/test_status_docs.py` keeps the two and the code's versions in agreement); heartbeat verified; watchdog verified under `bitcoin_agent`; storage 17 of 500 MB; staleness alarm proven; nothing routine needs the user | refresh the snapshot from its source commands at each session |
 | K | Checkpoint integrity | **COMPLETE** | fixed prefix, shared pass rules, frozen terciles, reproducibility precondition, report = checkpoint, refuses early — all tested; **K1 done 2026-09-26:** the command runs end to end in a test (fetch → free-rule comparison → evaluation → integrity line → both files; exactly the first 500 hours; never rewrites; writes nothing before 500) | run it at the first session after 500 graded hours |
-| L | Documentation | **CONTINUOUS** | CLAUDE.md, ROADMAP, CHANGELOG, STATUS, LIVE_EVALUATION, EXPERIMENTS current | — |
+| L | Documentation | **CONTINUOUS** | final consistency pass 2026-09-26 evening: CLAUDE.md, README, ROADMAP, CHANGELOG, STATUS, LIVE_EVALUATION (the 500-hour procedure gathered in one place, E026–E029 context), EXPERIMENTS, readiness gate, security, observability, open user actions | — |
 
 **Order of work (plan priority): B1 → B2 → K1 → G1 → H1 — all done 2026-09-26** (G2 = E028 added and done), then monitoring. Nothing touches the frozen
 predictive path; nothing reads prospective outcomes for anything but descriptive monitoring.

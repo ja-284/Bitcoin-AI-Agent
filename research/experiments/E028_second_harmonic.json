@@ -1,8 +1,8 @@
 {
   "id": "E028",
   "date": "2026-09-26",
-  "git_commit": "(pre-registration commit; the result is added in a later commit)",
-  "status": "PRE-REGISTERED, RESEARCH-ONLY, hypothesis-generating. One variant, fixed in advance -- not a search. Nothing is adopted: move_size_1h_v1 stays frozen and keeps its prospective record; any future version would need its own registration and its own prospective record.",
+  "git_commit": "pre-registration 4046b56; result 27dd348",
+  "status": "DONE -- NEGATIVE (H_a fails; recorded below; nothing adopted). PRE-REGISTERED, RESEARCH-ONLY, hypothesis-generating. One variant, fixed in advance -- not a search. Nothing is adopted: move_size_1h_v1 stays frozen and keeps its prospective record; any future version would need its own registration and its own prospective record.",
   "why": "E027 found offsetting intraday miscalibration in the model family (night over-stated +0.047/+0.022, US session under-stated -0.022/-0.057, exploration/validation) and proposed a mechanism: the calendar enters as ONE harmonic (hour_sin, hour_cos), which cannot follow the sharp intraday shape of activity. This tests that mechanism directly.",
   "variant": "The nine incumbent inputs plus a SECOND calendar harmonic, sin(4*pi*h/24) and cos(4*pi*h/24) of the reference hour h (UTC) -- 11 inputs. Nothing else changes: same frame, same identical rows, same 27 folds, same logistic (same C), same Platt calibration on the purged 90-day slice (agent/research/feature_count.prepare/evaluate).",
   "data": "Development period only (exploration and validation), walk-forward out-of-sample. No prospective outcome; no holdout candle.",

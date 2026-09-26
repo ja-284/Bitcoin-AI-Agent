@@ -6,6 +6,12 @@
 > readable and writable by anyone holding the project's public anon key. That is now closed, with
 > evidence, in [`security_2026-09-23_public_api_exposure.md`](security_2026-09-23_public_api_exposure.md).
 > The text below is left as it was written, so the sequence stays honest.
+>
+> **Also superseded since (current state, 2026-09-26):** the jobs no longer connect as `postgres`. Since
+> 2026-09-25 they use the least-privilege role `bitcoin_agent` (read and append only, proven by
+> `docs/ops/least_privilege_role.sql` and checked by the watchdog), and the healthchecks.io heartbeat is
+> live and verified. Every action is pinned to a commit SHA and dependencies are audited (below). The only
+> open item is the dispatch-token renewal before 2027-09-20.
 
 Scope: a research-only backend that runs on GitHub Actions, writes to Supabase Postgres, and
 calls Binance (public), RSS feeds (public), CoinGecko (free key), and the Anthropic API.
@@ -75,11 +81,15 @@ probabilities, timestamps, headlines and URLs — no credentials, no personal da
 ## Boundary
 
 No order execution, wallet, exchange-account or payment code exists anywhere in the
-repository, and none is planned. The only "actions" the system takes are: read public data,
-call an LLM for a score and a text, write rows to its own database.
+repository. The only "actions" the system takes are: read public data,
+call an LLM for a score and a text, write rows to its own database. *(2026-09-26: the user recorded
+automated execution as a long-term goal, **NOT ACTIVE**, in `docs/FUTURE_EXECUTION_ARCHITECTURE.md`. It
+would be a separate layer designed and tested later; nothing of it may be built during the current
+evaluation, and this boundary is unchanged.)*
 
 ## Open items
 
-1. Dedicated least-privilege database role (user action in Supabase; low urgency).
-2. Healthchecks.io heartbeat (external alarm; `HEARTBEAT_URL` secret) — still not set up.
-3. Regenerate the dispatch PAT before 2027-09-20.
+1. ~~Dedicated least-privilege database role~~: **DONE 2026-09-25** (`bitcoin_agent`, verified live and
+   by the watchdog).
+2. ~~Healthchecks.io heartbeat~~: **DONE 2026-09-25**, verified on healthchecks.io by the user.
+3. Regenerate the dispatch PAT before 2027-09-20 (the only open item).

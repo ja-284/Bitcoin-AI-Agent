@@ -1,5 +1,13 @@
 # Backend readiness gate
 
+> **Current score (unchanged since 2026-09-25, confirmed 2026-09-26): 21 PASS, 1 PARTIAL, 0 FAIL,
+> 0 UNKNOWN.** The one PARTIAL is row 21, prospective monitoring, closed only by the calendar (the
+> 500 / 2,000 / 5,000-hour checkpoints). Rows 16 (heartbeat) and 17 (least-privilege role) became PASS on
+> 2026-09-25; see that section below. This file is a dated log. The revision-2 table and the older
+> checklist further down show those two rows as open *as they were then*. **"Backend finished" is not
+> claimed.** That waits for the registered checkpoints and the strict final readiness audit after the
+> 500-hour reading.
+
 *Assessed 2026-09-21; reopened and revised 2026-09-22 after an incident; **revision 2 the same evening**, scoring the master plan's 22 categories (jump to it below).*
 
 > **Reopened after an incident.** Hours after this assessment was written, the hourly workflow

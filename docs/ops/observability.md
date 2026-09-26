@@ -39,7 +39,10 @@ Every alarm above lives inside GitHub. If GitHub stops running the workflow — 
 did in the first days, firing 2 of 8 scheduled slots — then no job runs, so no job fails, so
 nothing is reported. **Silence is indistinguishable from success.**
 
-The fix is written and inert: the hourly workflow's last step pings `$HEARTBEAT_URL` if that
+**CLOSED 2026-09-25.** The heartbeat is live and verified: the user's healthchecks.io check (1 h period,
+30 min grace) received the 19:13 UTC ping, and a failed run sends `/fail` at once. An alarm that does not
+depend on GitHub now exists. *(As written before that:)* The fix is written and inert: the hourly
+workflow's last step pings `$HEARTBEAT_URL` if that
 secret exists, placed after every other step so a ping means the whole hour genuinely succeeded.
 It needs a free healthchecks.io account and one repository secret — a user action, five minutes,
 written up in [`open_user_actions.md`](open_user_actions.md).

@@ -6,13 +6,20 @@ confidence figure and a plain-English explanation — and, separately, a **calib
 probability that the next hour's move will be large**.
 
 > ⚠️ **Analysis only. Not a trading bot, not financial advice.** It never places orders, holds
-> funds, or touches an exchange account, and it is not going to. No AI can reliably predict
-> price movements; this project measures honestly how little it can.
+> funds, or touches an exchange account. Automated execution is recorded only as a long-term,
+> **not active** goal (`docs/FUTURE_EXECUTION_ARCHITECTURE.md`): none of it exists, and none may be
+> built during the current evaluation. No AI can reliably predict price movements; this project
+> measures honestly how little it can.
+
+**Current state:** live since 2026-09-19 and in **pre-500h monitoring-only mode**. The system runs and
+collects prospective evidence, and nothing predictive is changed until the registered 500-hour
+checkpoint. Operational status, alarms and the checkpoint procedure: `docs/ops/STATUS.md`.
 
 ## What the research found so far (read this before trusting any signal)
 
-- **Direction is not predictable from free data.** The hand-built scoring (v0.1.0, still the
-  live signal) has no measurable edge over 2017–2025 (E001). 47 candidate features across
+- **Direction is not predictable from free data.** The hand-built scoring has no measurable edge
+  over 2017–2025: v0.1.0 in E001, and v0.2.0 in E017 (the same formulas with a data-gap fix, the live
+  signal since 2026-09-22). 47 candidate features across
   volatility, regime, derivatives, macro, on-chain and microstructure add none (E002–E008). A
   fitted model combining the weak effects gains ~2 points of 1-hour accuracy and **zero**
   return edge (E011). The signal you see is therefore a *measuring instrument under test*,
@@ -93,10 +100,11 @@ agent/
                          weekly report, holdout evaluation (sealed)
 research/                roadmap, experiment log + JSONs, results, live-evaluation protocol
 docs/research/           parity rules, data sources, failure modes, reproducibility, versions
-docs/ops/                external trigger, security audit, performance review,
+docs/ops/                STATUS.md (read first: mode, alarms, emergencies, the next
+                         checkpoint), external trigger, security audit, performance review,
                          observability review, open user actions, incident write-up
 docs/api/                the frontend contract (read this before building any screen)
-tests/                   292 tests, no network or database (CI enforces that with an
+tests/                   the unit suite, no network or database (CI enforces that with an
                          unreachable DATABASE_URL); tests/integration (opt-in, real DB)
 ```
 

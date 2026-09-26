@@ -1,8 +1,8 @@
 {
   "id": "E026",
   "date": "2026-09-26",
-  "git_commit": "(pre-registration commit; the result is added in a later commit)",
-  "status": "PRE-REGISTERED, descriptive diagnostic -- nothing is fitted for use, selected, tuned or recalibrated. Under the pre-500h interim plan (research/INTERIM_PLAN_PRE_500H.md, section 4: calibration diagnostics and regime research on historical development data only).",
+  "git_commit": "pre-registration 636df01; result 6c29f7e",
+  "status": "DONE (result recorded below; nothing changed in the live system). PRE-REGISTERED, descriptive diagnostic -- nothing is fitted for use, selected, tuned or recalibrated. Under the pre-500h interim plan (research/INTERIM_PLAN_PRE_500H.md, section 4: calibration diagnostics and regime research on historical development data only).",
   "trigger": "The weekly report of 2026-09-26 raised the drift monitor's first OUTCOMES flag: over 106 prospective hours large moves (>0.25%) occurred in 34.3% of hours [25.2%, 43.4%] against 47.5% on validation and 51.8% in development, while the model's stated median fell only from 0.468 to 0.432. The market is calmer (every volatility input below its development median, none outside the development 1-99% band). A calibration-in-the-large offset in a calm market is possible but not established at 105 hours.",
   "question": "On development data, is the model family calibrated within each volatility regime -- or did it already over-predict large moves when the market was calm?",
   "data": "The E013/E018 walk-forward out-of-sample predictions (27 folds, expanding window, Platt on a purged 90-day slice; agent/research/feature_count.prepare + evaluate) on the development period, exploration and validation separately. Out-of-sample walk-forward, not the frozen artefact's own in-sample fit, because in-sample predictions would look calibrated by construction. Regimes: the FROZEN terciles of raw rv_168 (research/monitoring/regime_terciles_v1.json: 0.004759, 0.006966) -- the same cut points the 5,000-hour checkpoint will use. No prospective outcome is read; no holdout candle is loaded (load_bars' default truncation).",

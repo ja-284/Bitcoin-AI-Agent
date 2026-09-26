@@ -5,7 +5,50 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
-## interim plan B1, B2, K1, G1, G2 — 2026-09-26 afternoon (security supply chain, the checkpoint command end to end, two calibration studies)
+## documentation — 2026-09-26 evening (final pre-500h consistency pass; monitoring-only mode)
+
+Nothing in the predictive path, the checkpoint rules or the live system changed. No research was run.
+
+- **PRE-500H MONITORING-ONLY MODE** defined in `docs/ops/STATUS.md` (and at the top of `CLAUDE.md`,
+  `research/ROADMAP.md`, `research/INTERIM_PLAN_PRE_500H.md`, `research/INTERIM_PLAN_AUDIT.md`): what keeps
+  running, what is still fixed, what is not done, and the five reasons work may resume before 500 hours.
+- **STATUS.md source of truth made explicit:** every time-dependent figure now sits in one dated snapshot
+  whose rows name the command that is authoritative for them (the prospective count comes from
+  `python -m agent.research.live_checkpoint`, the checkpoint's own selection rule). `status.json` carries
+  the same snapshot, and `tests/test_status_docs.py` fails if the two disagree with each other or with the
+  versions in the code, if the holdout is described as sealed while an access log exists, or if the
+  checkpoint command drifts from `LIVE_EVALUATION.md`.
+- `research/LIVE_EVALUATION.md`: the 500-hour procedure gathered in one place (a restatement of rules 1–11,
+  no new rule) and E026–E029 recorded as reading context, explicitly changing no rule.
+- Stale statements corrected or marked as history:
+  - The README said the live signal is scoring 0.1.0 and quoted 292 tests.
+  - The security audit and the observability review still listed the heartbeat and the least-privilege
+    role as open.
+  - `open_user_actions.md` was last reviewed 2026-09-23.
+  - The readiness gate's header did not show the current 21 PASS / 1 PARTIAL.
+  - `CLAUDE.md` still named Phase 1 / Phase 13 as current, the :17 schedule and the heartbeat as "not set
+    up", and it lacked the checkpoint command in "How to run things".
+  - The E026–E029 records still said "pre-registered" with placeholder commit IDs.
+- `docs/FUTURE_EXECUTION_ARCHITECTURE.md`: the user's long-term execution goal, recorded verbatim as
+  **NOT ACTIVE**, with the facts that must stay next to it (the signal has no demonstrated predictive value;
+  the one validated output is not directional). Principle 10 remains binding; nothing implemented.
+- **Found while checking my own sentence "nothing from the sealed holdout is read":** it was not literally
+  true.
+  - The free 24h-EWMA reference (weekly report and checkpoint) downloads raw candles as warm-up. At the
+    500-hour checkpoint these reach into roughly the last three to four weeks of the holdout period; the
+    weekly reports, into its last few days.
+  - No holdout performance is computed, shown or used, and those candles' weight in any value used is
+    below 2e-10.
+  - Documented precisely in `LIVE_EVALUATION.md`. The code is not changed, because it is registered
+    checkpoint code. Clipping the warm-up would be a separate decision.
+- Sanity checks for the pass:
+  - Full mutation run **45 of 45** caught, both controls held, every file restored byte for byte. This
+    includes the separation guards: no research result reaches production.
+  - The new status test proven to catch six contradictions (count, a second header, snapshot time,
+    schema version, holdout state, checkpoint command).
+  - **480 unit tests.**
+
+## interim plan B1, B2, K1, G1, G2, H1 — 2026-09-26 afternoon (security supply chain, the checkpoint command end to end, three research studies)
 
 Nothing in the predictive path changed.
 

@@ -6,6 +6,13 @@ research methodology, the registered checkpoints (`research/LIVE_EVALUATION.md`)
 the prospective-validation rules remain authoritative. The user's text is kept below, condensed (every
 section and rule preserved); this header is the working summary every session reads first.
 
+> **Status 2026-09-26 (evening): the plan's work is complete.** Every section of its audit
+> (`research/INTERIM_PLAN_AUDIT.md`) is COMPLETE or CONTINUOUS, and the project is in **PRE-500H
+> MONITORING-ONLY MODE**, defined in `docs/ops/STATUS.md`. This plan remains the rulebook until the
+> 500-hour checkpoint. Its rules still bind, but there is no open task left in it. Work before 500 hours
+> happens only for a real production problem, a security / data-integrity / reliability problem, a
+> scheduled audit, genuinely new live evidence, or the checkpoint itself.
+
 ## Working summary
 
 **Core rule:** do not change the system's predictive behaviour because we want a better result. Use the

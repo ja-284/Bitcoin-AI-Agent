@@ -105,6 +105,51 @@ between 192 and ~2,000 hours are **optimistic** — the weekly report now says s
 checkpoints are unaffected: the 500-hour reading gives no verdict, and the verdicts sit at 2,000 and
 5,000 hours, where the interval behaves.
 
+## Context results from development data (recorded 2026-09-26, before any checkpoint): no rule changed
+
+These are background for *reading* the checkpoints. None of them changes rules 1–11, a pass bar, the
+selection rule or the order of the checkpoints. None used a prospective outcome.
+
+- **E026:** the model family was calibrated within calm, normal and volatile regimes historically, except
+  a narrow +0.021 over-statement in volatile markets on validation. A *persistent* live over-statement in a
+  calm market would therefore be a genuine deviation, to be seen at the registered checkpoints, never tuned.
+- **E027:** good overall calibration hides offsetting intraday miscalibration. Nights (00–06 UTC) are
+  over-stated (+0.047 / +0.022) and the US session (12–18 UTC) is under-stated (−0.022 / −0.057). Its
+  pre-registered consequence: the 2,000-hour hour-of-day and weekday/weekend slices (rule 5, descriptive,
+  rule 7) are read against these development offsets, not against zero.
+- **E028 (negative):** a second calendar harmonic does not remove that pattern. It is not the mechanism.
+  Nothing adopted.
+- **E029 (research-only; the detector is not used):** the family's calibration wanders in multi-week runs
+  beyond ±0.025 about three to four times a year, in both directions. So a few weeks of live over- or
+  under-statement is ordinary for this family. Only the registered 2,000 / 5,000-hour verdicts judge
+  persistence.
+
+## The 500-hour procedure in one place (a restatement of the rules above, not a new rule)
+
+1. **When:** at the first working session after the prospective record holds 500 graded hours.
+   `python -m agent.research.live_checkpoint` prints the count before then and writes nothing.
+2. **Command:** `python -m agent.research.live_checkpoint`.
+3. **Data:** exactly the first 500 prospective graded hours in time order (rules 1 and 8). Hours after the
+   500th are never used for this reading, and the script cannot be pointed at another window. No holdout
+   performance is computed, shown or used, and no research loader touches the holdout.
+   *Stated precisely (found 2026-09-26 while checking this sentence):* the free 24h-EWMA reference downloads
+   raw candles as warm-up (`ewma_reference_series`: 800 hours before the live start, plus the length of
+   the record). At the 500-hour checkpoint that reaches back into roughly the last three to four weeks of
+   the holdout period (to about 2026-07-26). The weekly reports have done the same since 2026-09-22, reaching into its last few
+   days. Only the rule's values at the checkpoint's own live hours are used. There, those old candles
+   carry a weight below 2e-10: a 24-hour half-life over the ≥ 780 hours between the holdout's end and the
+   first shadow hour, with a quantity bounded by 0 and 1. It is left unchanged because it is registered
+   checkpoint code and the effect is below any printed digit. Clipping the warm-up at the buffer's start
+   would be a separate, dated decision.
+4. **Rules:** unchanged. The E012/E013 bars come from `checkpoint_power.py` (rule 9), with intervals as
+   rule 3 says. The integrity line comes first (clarification 11).
+5. **Meaning:** a first look, **no verdict** (rule 5). It is read against E024's and E025's operating
+   characteristics above. A computed checkpoint is never recomputed or rewritten.
+6. **Afterwards:** the strict final readiness audit and a plain report of what is proven and what is
+   uncertain (the user's instruction of 2026-09-25, `docs/ops/STATUS.md`). A good reading never hides
+   another problem; a weak one is investigated, never tuned against. The weekly reports show the running
+   record descriptively in between. They are not checkpoints, and nothing is decided on them (rule 2).
+
 ## What is checked every week regardless of sample size (weekly report §3)
 
 Coverage (rows vs expected hours), honest blanks and their reasons, reference-close agreement

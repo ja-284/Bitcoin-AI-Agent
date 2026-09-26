@@ -7,14 +7,14 @@ name.
 
 None of these is blocking. The system runs correctly without them. They close gaps.
 
-Last reviewed: 2026-09-23 evening (item 1 attempted and deferred by the user; item 2 ready and
-checkable; item 4 decided; item 5 logs done, one setting still to check).
+Last reviewed: 2026-09-26 evening. **Nothing is open for the user except the token renewal in
+September 2027.** The sections below keep their original instructions for the record. Each is marked
+with what actually happened.
 
-**Status at a glance (2026-09-25):** 1 heartbeat — **DONE, verified** (green on healthchecks.io, ping
-received 19:13 UTC) · 2 least-privilege role — **DONE, verified live** · 3 token renewal — calendar,
-Sept 2027 · 4 news cost —
-decided: keep, monitored · 5 API logs — done; *Exposed schemas* — **done 2026-09-24, only `public`
-and `graphql_public`**.
+**Status at a glance (2026-09-26):** 1 heartbeat: **DONE, verified** (green on healthchecks.io, ping
+received 19:13 UTC 2026-09-25) · 2 least-privilege role: **DONE, verified live and by the watchdog** ·
+3 token renewal: calendar, **before 2027-09-20** · 4 news cost: decided, keep, monitored · 5 API logs:
+done; *Exposed schemas*: **done 2026-09-24, only `public` and `graphql_public`**.
 
 ---
 
@@ -202,7 +202,7 @@ a technical one. Tell me either way and I will implement it or close the item.
 
 ---
 
-## 5. Check Supabase's API logs for anonymous requests — once, BEFORE 2026-09-24 ~13:45 UTC
+## 5. Check Supabase's API logs for anonymous requests — DONE 2026-09-23 (and *Exposed schemas*, DONE 2026-09-24)
 
 **DONE, 2026-09-23 ~18:20–18:35 UTC, by the user:** Logs → API Gateway, last 24 hours, search
 `rest/v1` → **no results**; the `graphql` search was done too, with nothing reported. What this
@@ -259,7 +259,8 @@ That is informational and is the intended state: deny everything until a policy 
 
 ## Not on this list, deliberately
 
-- **Anything involving real money, orders, wallets or exchanges.** The project is analysis-only and
-  stays that way.
+- **Anything involving real money, orders, wallets or exchanges.** The project is analysis-only. The
+  long-term execution goal is recorded as NOT ACTIVE in `docs/FUTURE_EXECUTION_ARCHITECTURE.md`, and
+  nothing of it is built or asked of you during the current evaluation.
 - **Opening the sealed holdout.** That is a one-way door and needs your explicit go-ahead, which is
   tracked with the research work, not here.

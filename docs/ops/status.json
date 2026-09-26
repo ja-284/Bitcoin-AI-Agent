@@ -1,9 +1,27 @@
 {
-  "as_of": "2026-09-26T14:30:00Z",
+  "as_of": "2026-09-26T15:45:00Z",
   "human_readable": "docs/ops/STATUS.md",
+  "consistency_test": "tests/test_status_docs.py",
+  "mode": "PRE-500H MONITORING-ONLY",
+  "mode_since": "2026-09-26",
+  "mode_meaning": "live system, data collection, heartbeat and watchdog continue; real production/security/data-integrity/reliability problems are fixed; scheduled audits run; no predictive tuning, no frontend, no ML, no new research experiment unless new live/system evidence justifies one; the 500-hour checkpoint stays as registered. A freeze for the current prospective evaluation, not a permanent one.",
+  "work_resumes_before_500h_only_for": [
+    "a real production problem",
+    "a security, data-integrity or reliability problem",
+    "a scheduled audit that is due",
+    "genuinely new evidence from the live system",
+    "the registered 500-hour checkpoint"
+  ],
+  "sources_of_truth": {
+    "graded_shadow_hours": "python -m agent.research.live_checkpoint",
+    "newest_prediction_fresh": "python -m agent.healthcheck --max-age-hours 2",
+    "published_state": "backend_state table (rewritten every hourly run)",
+    "everything_else": "python -m agent.research.weekly_report"
+  },
   "production": {
     "live_since": "2026-09-19",
     "trading_capability": false,
+    "future_execution": "NOT ACTIVE -- docs/FUTURE_EXECUTION_ARCHITECTURE.md",
     "pipeline_version": "0.2.0",
     "scoring_version": "0.2.0",
     "signal_predictive_value": "none demonstrated (E001, E017)",
@@ -14,15 +32,17 @@
     "job_database_role_since": "2026-09-25T19:12:00Z",
     "holdout": "sealed",
     "readiness_gate": {"pass": 21, "partial": 1, "fail": 0, "unknown": 0, "partial_items": ["prospective monitoring (calendar)"]},
-    "predictive_path": "frozen until the 500-hour checkpoint (research/INTERIM_PLAN_PRE_500H.md)"
+    "predictive_path": "frozen for the current prospective evaluation (research/INTERIM_PLAN_PRE_500H.md)"
   },
   "prospective": {
-    "graded_shadow_hours": 109,
-    "counted_at": "2026-09-26T14:14:00Z",
+    "graded_shadow_hours": 110,
+    "counted_at": "2026-09-26T15:45:00Z",
     "next_checkpoint_hours": 500,
-    "next_checkpoint_expected": "2026-10-12 (evening UTC, if no hours are lost)",
+    "next_checkpoint_expected": "2026-10-12 (late evening UTC, if no hours are lost)",
     "next_checkpoint_command": "python -m agent.research.live_checkpoint",
+    "next_checkpoint_selection": "exactly the first 500 prospective graded hours in time order (research/LIVE_EVALUATION.md rule 8)",
     "next_checkpoint_gives_verdict": false,
+    "after_checkpoint": "strict final readiness audit, then a plain report; never an automatic 'finished'",
     "news_first_look_expected": "2026-10-11",
     "news_verdict_usable_hours": 3140
   },
@@ -34,14 +54,25 @@
     "watchdog_real_cadence": "every 5-7 hours (GitHub fires ~4 of 7 slots a day)",
     "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"}
   },
+  "scheduled_checks": {
+    "every_session": "hourly-health loop and the snapshot in STATUS.md",
+    "next_weekly_audit": "2026-10-02 (or the first session after it): weekly report, integration drift check, dependency audit",
+    "next_checkpoint": "first session after 500 graded prospective hours"
+  },
+  "watch_items": [
+    "calm live market (drift flag 'outcomes'): possible over-statement, judged only at the registered checkpoints, never tuned -- context E026, E027, E029"
+  ],
   "known_non_critical": [
     "watchdog fires irregularly on GitHub; the heartbeat covers the gap",
     "AI cost ~$11-14/month depending on news volume (accepted ~$12; flag above $15)",
     "Supabase grants the net schema to PUBLIC (unrevocable); not an exposed API schema",
     "permanent documented gaps: 9 missing hours (2026-09-19/20), 8 missing shadow hours (2026-09-21/22), 17 news-unavailable hours (2026-09-21/22)",
-    "drift flag 'outcomes': a calmer live market; watch item (possible over-statement) judged only at the registered checkpoints -- context E026, E027, E029"
+    "the free EWMA reference's warm-up downloads raw candles reaching into the holdout period's last weeks; no holdout performance computed or used; weight < 2e-10; documented in research/LIVE_EVALUATION.md; unchanged (registered checkpoint code)"
   ],
   "user_actions_required": [],
-  "calendar": [{"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}],
+  "calendar": [
+    {"date": "2026-11-25", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-09-26); any commit resets it"},
+    {"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}
+  ],
   "emergency_rollback_database_role": "copy the DATABASE_URL line from the local .env into the GitHub secret DATABASE_URL"
 }
