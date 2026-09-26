@@ -1,0 +1,39 @@
+{
+  "id": "E029",
+  "date": "2026-09-26",
+  "git_commit": "(pre-registration commit; the result is added in a later commit)",
+  "status": "PRE-REGISTERED, RESEARCH-ONLY algorithm study (interim plan task H1). Development data only. The detector is NOT run on the live or shadow record in this experiment, is not wired to anything, and can never change a registered checkpoint rule or the frozen model. Whether it should ever become a descriptive monitoring line is a later user decision.",
+  "why": "The E026 watch item asks whether a live over-statement in a calm market is a persistent deviation or noise. The registered checkpoints judge that at 2,000 / 5,000 hours. This study measures, before any such reading, how fast a simple sequential detector could tell a persistent calibration offset from noise on this model family's own development record, and how often it would cry wolf on the family's normal behaviour.",
+  "detector": {
+    "name": "two-sided CUSUM on calibration residuals",
+    "residual": "r_t = stated probability - outcome (1 if a large move happened, else 0), in graded-hour order",
+    "statistics": "S_up = max(0, S_up + r_t - k) (over-statement); S_down = max(0, S_down - r_t - k) (under-statement)",
+    "alarm": "when either statistic exceeds h; both are reset to 0 after an alarm and monitoring continues",
+    "k": 0.025,
+    "h_rule": "h is the smallest value on a 0.5 grid (starting at 1.0) for which a perfectly calibrated CONTROL -- outcomes simulated as Bernoulli(stated p) on the development p's, 20 simulations, seed 29 -- alarms at most 0.2 times per 1,000 hours on average (average run length >= 5,000 hours). h is chosen from simulated outcomes only; no real outcome is used to choose any setting.",
+    "what_it_cannot_see": "An offset that cancels within the day (E027's night over-statement vs US-session under-statement) sums to roughly zero and is invisible by design; the detector watches the OVERALL level only."
+  },
+  "data": "The walk-forward out-of-sample predictions of the move-size model family on the development period (agent/research/feature_count.prepare/evaluate, nine inputs, 54,472 hours), in time order. No prospective outcome; no holdout candle.",
+  "injection": {
+    "windows": "3,000 graded hours each, starting every 500 hours through the development record",
+    "change_point": "window hour 500; from there on the stated probability is replaced by clip(p + delta, 0.001, 0.999) while the REAL outcomes are kept, so the model states delta more (or less) than it would have",
+    "deltas": [0.03, 0.05, 0.10, -0.03, -0.05, -0.10],
+    "delay": "hours from the change point to the first alarm in the matching direction at or after it; alarms before the change reset the statistics and are counted as pre-change false alarms; no alarm within the 2,500 hours after the change = not detected",
+    "control": "the same windows with outcomes simulated as Bernoulli(original p) and the same injected statement, 5 simulations, seed 29"
+  },
+  "expectation_stated_in_advance": "A Gaussian (Siegmund) approximation with residual sd ~0.48 gives h ~ 20, a delay of ~700 hours for delta = 0.05 and ~300 hours for delta = 0.10. Written down so the result can be read as 'the real record behaves like the theory, or not'.",
+  "validation_wear": "About 26 experiments have examined the validation period; whatever is found is hypothesis-generating.",
+  "hypotheses": {
+    "H_a_false_alarms": "On the REAL development outcomes with no injection, the detector alarms at most 0.4 times per 1,000 hours (no more than twice the control's rate), over the whole development record.",
+    "H_b_detection": "For an injected over-statement delta = +0.10 the median delay is <= 500 hours, AND for delta = +0.05 at least 90% of windows detect within 2,000 hours.",
+    "H_c_real_like_control": "For delta = +0.05 the median delay on real outcomes is within +/-30% of the control's median delay."
+  },
+  "what_each_answer_means_decided_in_advance": {
+    "all_three_hold": "The detector is a CANDIDATE for a descriptive 'persistent offset?' line on the shadow record, subject to the user's decision -- never a checkpoint rule, never a trigger for any model or calibration change. The registered checkpoints remain the only judgement.",
+    "H_a_fails": "It would cry wolf on this model family's normal behaviour: recorded, not used. The alarm list on the real record is itself informative (where in history the family drifted).",
+    "H_b_fails": "A persistent offset of that size cannot be told from noise within ~500 / 2,000 hours by this detector: recorded. It would confirm that the 500-hour first look cannot settle the E026 watch item, which is already the registered stance.",
+    "H_c_fails": "Real outcomes (dependence, regime runs) behave unlike independent draws; any use would need its thresholds set on real data, which needs a new registration.",
+    "in_every_case": "The live system, the frozen artefact move_size_1h_v1, the shadow record, the checkpoints and their rules are untouched. The detector is not run on live data in this experiment."
+  },
+  "command": "python -m agent.research.drift_detector --experiment E029"
+}
