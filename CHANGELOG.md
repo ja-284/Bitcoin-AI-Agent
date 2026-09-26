@@ -5,6 +5,22 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## operations — 2026-09-26 (the interim plan; unattended-running readiness)
+
+Nothing in the predictive path changed.
+
+- The user's pre-500h plan stored as `research/INTERIM_PLAN_PRE_500H.md` — the single active work plan.
+- Watchdog: new step `python -m agent.database.role_check --connected` — fails unless the jobs connect as
+  `bitcoin_agent` and that role holds exactly `least_privilege_role.sql` (detects privilege creep and a
+  switch back to the owner). Proven to fail as the owner locally; integration test runs it as a restricted
+  probe; mutation-guarded.
+- `docs/ops/STATUS.md` + `status.json`: production state, prospective hours, automatic behaviour, alarms,
+  known non-critical issues, emergency-only actions (including the database-role rollback), the next
+  checkpoint and what follows it.
+- Checked for the absence: storage 16.6 MB of the Free plan's 500 MB (~15 MB per 30 days); the staleness
+  alarm fires when data is stale (verified locally, nothing changed); 14/14 overnight hours written by
+  `bitcoin_agent`; heartbeat ping on every run.
+
 ## operations — 2026-09-25 evening (the job runs as the least-privilege role; the heartbeat is on)
 
 - **Least-privilege role live.** The user ran `python -m agent.database.setup_role` and switched the

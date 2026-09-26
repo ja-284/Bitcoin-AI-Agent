@@ -181,6 +181,15 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## 2026-09-26 — under the pre-500h interim plan (`research/INTERIM_PLAN_PRE_500H.md`)
+
+- Session loop run: 14/14 overnight hours (all `db_role = bitcoin_agent`), 25/25 runs, heartbeat ping on
+  every run, 2/2 watchdog runs green after the switch, 0 shadow errors, 103 of 500 prospective hours.
+- Watchdog now verifies the jobs' database role and its exact rights (`role_check --connected`).
+- Absence readiness: `docs/ops/STATUS.md` / `status.json`; storage and alarm paths checked.
+- **Open:** the first watchdog run with the new step (it fails loudly if the secret is not
+  `bitcoin_agent`, so a green run proves the watchdog runs under the restricted role).
+
 ## Resumed 2026-09-25 13:44 UTC — status check, nothing regressed
 
 - **Live record since the last check (as_of 2026-09-24 16:00 → 2026-09-25 12:00): 21 of 21 hours**, 0
