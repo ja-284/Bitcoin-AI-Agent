@@ -1,0 +1,19 @@
+{
+  "id": "E026",
+  "date": "2026-09-26",
+  "git_commit": "(pre-registration commit; the result is added in a later commit)",
+  "status": "PRE-REGISTERED, descriptive diagnostic -- nothing is fitted for use, selected, tuned or recalibrated. Under the pre-500h interim plan (research/INTERIM_PLAN_PRE_500H.md, section 4: calibration diagnostics and regime research on historical development data only).",
+  "trigger": "The weekly report of 2026-09-26 raised the drift monitor's first OUTCOMES flag: over 106 prospective hours large moves (>0.25%) occurred in 34.3% of hours [25.2%, 43.4%] against 47.5% on validation and 51.8% in development, while the model's stated median fell only from 0.468 to 0.432. The market is calmer (every volatility input below its development median, none outside the development 1-99% band). A calibration-in-the-large offset in a calm market is possible but not established at 105 hours.",
+  "question": "On development data, is the model family calibrated within each volatility regime -- or did it already over-predict large moves when the market was calm?",
+  "data": "The E013/E018 walk-forward out-of-sample predictions (27 folds, expanding window, Platt on a purged 90-day slice; agent/research/feature_count.prepare + evaluate) on the development period, exploration and validation separately. Out-of-sample walk-forward, not the frozen artefact's own in-sample fit, because in-sample predictions would look calibrated by construction. Regimes: the FROZEN terciles of raw rv_168 (research/monitoring/regime_terciles_v1.json: 0.004759, 0.006966) -- the same cut points the 5,000-hour checkpoint will use. No prospective outcome is read; no holdout candle is loaded (load_bars' default truncation).",
+  "validation_wear": "The validation period has been examined by roughly 23 earlier experiments. This is a descriptive reference for interpreting future live readings, not a test of anything that could be adopted.",
+  "metrics": "Per regime (low / mid / high) and per period: rows, mean stated probability, observed large-move share, calibration-in-the-large = mean stated minus observed with a 95% circular block-bootstrap interval (48h blocks, 500 resamples, seed 26), ECE.",
+  "hypothesis_H": "In each of the three regimes, |mean stated probability - observed share| <= 0.02, and the interval of the difference contains 0 (the model family is calibrated in calm, normal and volatile markets alike).",
+  "what_each_answer_means_decided_in_advance": {
+    "H_holds_in_the_low_regime": "The model family was calibrated in calm markets historically. A PERSISTENT live over-prediction in a calm market would then be a genuine live deviation -- recorded as a watch item and judged only at the registered 2,000- and 5,000-hour checkpoints.",
+    "H_fails_with_over_prediction_in_the_low_regime": "Over-prediction in calm markets is a known property of the model family, visible in development. The live offset would then be expected rather than drift, and the checkpoint readings are to be interpreted with that reference.",
+    "H_fails_otherwise": "Recorded as found; interpretation stated plainly without adjusting the question.",
+    "in_every_case": "Nothing about the frozen model, its calibration, the live signal or any checkpoint rule changes. No recalibration is proposed on the basis of this diagnostic."
+  },
+  "command": "python -m agent.research.regime_calibration --experiment E026"
+}
