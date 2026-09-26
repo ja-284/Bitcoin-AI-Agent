@@ -221,6 +221,10 @@ MUTATIONS = [
              "        bad += int(d > 1e-9)",
              "        bad += 0",
              "the checkpoint's integrity precondition passes a probability that does not reproduce"),
+    Mutation("security", ".github/workflows/hourly.yml",
+             "uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26",
+             "uses: actions/checkout@v4",
+             "a workflow action goes back to a movable tag (the job's secrets would follow whatever the tag points at)"),
 ]
 
 
