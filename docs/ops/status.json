@@ -1,0 +1,46 @@
+{
+  "as_of": "2026-09-26T09:00:00Z",
+  "human_readable": "docs/ops/STATUS.md",
+  "production": {
+    "live_since": "2026-09-19",
+    "trading_capability": false,
+    "pipeline_version": "0.2.0",
+    "scoring_version": "0.2.0",
+    "signal_predictive_value": "none demonstrated (E001, E017)",
+    "shadow_model": "move_size_1h_v1",
+    "schema_version": "4",
+    "contract_version": "1",
+    "job_database_role": "bitcoin_agent",
+    "job_database_role_since": "2026-09-25T19:12:00Z",
+    "holdout": "sealed",
+    "readiness_gate": {"pass": 21, "partial": 1, "fail": 0, "unknown": 0, "partial_items": ["prospective monitoring (calendar)"]},
+    "predictive_path": "frozen until the 500-hour checkpoint (research/INTERIM_PLAN_PRE_500H.md)"
+  },
+  "prospective": {
+    "graded_shadow_hours": 103,
+    "counted_at": "2026-09-26T08:53:00Z",
+    "next_checkpoint_hours": 500,
+    "next_checkpoint_expected": "2026-10-12 (evening UTC, if no hours are lost)",
+    "next_checkpoint_command": "python -m agent.research.live_checkpoint",
+    "next_checkpoint_gives_verdict": false,
+    "news_first_look_expected": "2026-10-11",
+    "news_verdict_usable_hours": 3140
+  },
+  "automation": {
+    "primary_trigger": "Supabase pg_cron -> GitHub workflow_dispatch at :12 UTC",
+    "backup_trigger": "GitHub schedule at :07, :22, :37, :52 (early exit once the hour is saved)",
+    "self_check": "every run: the hour's prediction must be saved",
+    "watchdog": ["staleness < 3h", "shadow errors <= 2 in 6h", "no public-API exposure", "jobs connect as bitcoin_agent with exactly its proven rights"],
+    "watchdog_real_cadence": "every 5-7 hours (GitHub fires ~4 of 7 slots a day)",
+    "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"}
+  },
+  "known_non_critical": [
+    "watchdog fires irregularly on GitHub; the heartbeat covers the gap",
+    "AI cost ~$11-14/month depending on news volume (accepted ~$12; flag above $15)",
+    "Supabase grants the net schema to PUBLIC (unrevocable); not an exposed API schema",
+    "permanent documented gaps: 9 missing hours (2026-09-19/20), 8 missing shadow hours (2026-09-21/22), 17 news-unavailable hours (2026-09-21/22)"
+  ],
+  "user_actions_required": [],
+  "calendar": [{"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}],
+  "emergency_rollback_database_role": "copy the DATABASE_URL line from the local .env into the GitHub secret DATABASE_URL"
+}
