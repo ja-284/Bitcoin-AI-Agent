@@ -331,11 +331,40 @@ def live_features(now: datetime, lookback_hours: int = 400) -> pd.DataFrame:
     return feats
 
 
-def paper_section(now: datetime, outcome_rows: list[dict], ewma: "pd.Series | None" = None) -> dict:
+def shadow_input_parity(shadow_rows: list[dict], feats: pd.DataFrame, features: tuple[str, ...], rtol: float) -> dict:
+    """
+    The first link of the chain the checkpoints judge (candles -> inputs -> probability): every raw input the
+    LIVE shadow job stored must equal what the RESEARCH feature code computes from the same candles. The
+    last link (stored inputs -> probability) is checked by live_checkpoint.reproducibility. Pure; no outcome
+    is read. First run, 2026-09-26: 106 rows x 9 inputs, max relative difference 2.9e-15.
+    """
+    worst = {f: 0.0 for f in features}
+    compared, absent, outside = 0, 0, []
+    for r in shadow_rows:
+        if r.get("status") != "ok" or not r.get("features"):
+            continue
+        t = pd.Timestamp(r["as_of"])
+        if t not in feats.index:
+            absent += 1
+            continue
+        compared += 1
+        for f in features:
+            live_v, research_v = float(r["features"][f]), float(feats.loc[t, f])
+            if np.isnan(research_v) or not np.isclose(live_v, research_v, rtol=rtol, atol=0):
+                outside.append({"as_of": str(r["as_of"]), "input": f, "live": live_v, "research": research_v})
+            else:
+                worst[f] = max(worst[f], abs(live_v - research_v) / max(abs(research_v), 1e-300))
+    return {"rows_compared": compared, "rows_absent_from_research_frame": absent, "inputs": len(features),
+            "max_relative_difference": max(worst.values()) if compared else None, "rtol": rtol,
+            "outside_tolerance": outside, "ok": compared > 0 and not outside}
+
+
+def paper_section(now: datetime, outcome_rows: list[dict], ewma: "pd.Series | None" = None,
+                  feats: "pd.DataFrame | None" = None) -> dict:
     model, cal, cols, fit_info = fit_move_size_model()
     from agent.research.holdout_eval import E012_LOG, E012_THRESHOLD_1H
 
-    feats = live_features(now)
+    feats = live_features(now) if feats is None else feats
     live = feats[feats.index >= pd.Timestamp(LIVE.start)].copy()
     for c in E012_LOG:
         live[c] = np.log(live[c].where(live[c] > 0))
@@ -586,7 +615,12 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         rep["parity"] = {"verdict": "ERROR", "error": str(exc)}
     if with_paper:
         try:
-            rep["paper_move_size_1h"] = paper_section(now, outs, ewma=ewma)
+            feats = live_features(now)  # fetched once: the paper record and the shadow input parity share it
+            rep["paper_move_size_1h"] = paper_section(now, outs, ewma=ewma, feats=feats)
+            from agent.shadow.model import FEATURE_CHECK_RTOL, load_model
+
+            rep["shadow_input_parity"] = shadow_input_parity(fetch_shadow_rows(), feats,
+                                                             load_model(verify_features=False).features, FEATURE_CHECK_RTOL)
         except Exception as exc:  # the report must still come out if the exchange is unreachable
             logger.exception("paper section failed")
             rep["paper_move_size_1h"] = {"error": str(exc)}
@@ -728,6 +762,13 @@ def render(rep: dict) -> str:
         L.append(f"**{pa.get('verdict')}** — {pa.get('compared', 0)} live hours re-analysed by the research replay on today's exchange candles; parity breaks: **{pa.get('parity_breaks', 0)}**; skipped: {len(pa.get('skipped', []))} ({dict(Counter(r for _, r in pa.get('skipped', [])))})")
         for b in pa.get("breaks", [])[:5]:
             L.append(f"- {b['as_of']}: " + "; ".join(f"{m[0]} live={m[1]} replay={m[2]}" for m in b["mismatches"][:4]))
+    sp = rep.get("shadow_input_parity")
+    if sp:
+        L.append(f"- **Shadow inputs** (the move-size model's candles → inputs link): {sp['rows_compared']} stored hours × "
+                 f"{sp['inputs']} inputs vs the research feature code — "
+                 + (f"all within rtol {sp['rtol']:g} (max relative difference {sp['max_relative_difference']:.1e})"
+                    if sp["ok"] else f"**{len(sp['outside_tolerance'])} outside rtol {sp['rtol']:g}** — investigate before any checkpoint")
+                 + (f"; {sp['rows_absent_from_research_frame']} hours not in the research frame" if sp["rows_absent_from_research_frame"] else ""))
     dr = rep.get("drift", {})
     L += ["", "## 5. Drift vs the development data (Backend Phase I)", ""]
     if "error" in dr:

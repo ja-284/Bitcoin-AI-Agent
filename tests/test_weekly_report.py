@@ -370,6 +370,26 @@ def test_a_weekday_only_cost_projection_says_it_over_states_the_month():
     assert c["full_week_measured"] and c["measured_weekend_days"] == 2 and "partial week" not in _render_ai_cost(c)
 
 
+def test_shadow_input_parity_matches_equal_inputs_and_names_a_differing_one():
+    import pandas as pd
+
+    from agent.research.weekly_report import shadow_input_parity
+
+    feats_names = ("rv_24", "hour_sin")
+    idx = pd.DatetimeIndex([T0 + i * H for i in range(3)])
+    frame = pd.DataFrame({"rv_24": [0.004, 0.005, 0.006], "hour_sin": [0.1, 0.2, 0.3]}, index=idx)
+    rows = [{"as_of": t.to_pydatetime(), "status": "ok",
+             "features": {"rv_24": frame.loc[t, "rv_24"] * (1 + 1e-12), "hour_sin": frame.loc[t, "hour_sin"]}} for t in idx]
+    ok = shadow_input_parity(rows, frame, feats_names, 1e-6)
+    assert ok["ok"] and ok["rows_compared"] == 3 and ok["max_relative_difference"] < 1e-11
+    rows[1]["features"]["rv_24"] = 0.0051                      # a live input the research code would not produce
+    bad = shadow_input_parity(rows, frame, feats_names, 1e-6)
+    assert not bad["ok"] and bad["outside_tolerance"][0]["input"] == "rv_24"
+    rows.append({"as_of": T0 + 9 * H, "status": "ok", "features": {"rv_24": 1.0, "hour_sin": 0.0}})
+    assert shadow_input_parity(rows, frame, feats_names, 1e-6)["rows_absent_from_research_frame"] == 1
+    assert not shadow_input_parity([], frame, feats_names, 1e-6)["ok"], "nothing compared is not a pass"
+
+
 def test_ai_cost_renders_before_and_after_measurement_begins():
     from agent.research.weekly_report import _render_ai_cost, ai_cost
 
