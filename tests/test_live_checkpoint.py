@@ -143,6 +143,76 @@ def test_the_integrity_check_confirms_reproducible_probabilities_and_catches_one
     assert "INTEGRITY WARNING: 1 of 20" in lc.render(e | {"reproducibility": bad})
 
 
+def _artefact_rows(n, seed=11):
+    """Prospective rows whose probabilities are exactly the frozen artefact's, as the live shadow writes them."""
+    import math
+
+    from agent.shadow.model import load_model
+
+    m = load_model(verify_features=False)
+    rng = np.random.default_rng(seed)
+    rows = []
+    for i in range(n):
+        t = T0 + i * H
+        feats = {"tr_mean_14_rel": float(rng.uniform(0.004, 0.012)), "rv_24": float(rng.uniform(0.002, 0.009)),
+                 "rv_168": float(rng.uniform(0.003, 0.009)), "vol_ratio_24_168": float(rng.uniform(0.6, 1.4)),
+                 "trades_rel_24h": float(rng.uniform(0.6, 1.4)), "trades_rel_168h": float(rng.uniform(0.6, 1.4)),
+                 "hour_sin": math.sin(2 * math.pi * t.hour / 24), "hour_cos": math.cos(2 * math.pi * t.hour / 24),
+                 "is_weekend": float(t.weekday() >= 5)}
+        p = m.predict(feats)[1]
+        large = bool(rng.uniform() < p)
+        ret = (0.003 + 0.004 * rng.uniform()) if large else 0.002 * rng.uniform()
+        rows.append({"as_of": t, "fetched_at": t + H + timedelta(minutes=12), "horizon_hours": 1, "status": "ok",
+                     "outcome_status": "ok", "p_calibrated": p, "outcome_large": large, "outcome_return": ret,
+                     "features": feats, "model_version": m.version, "threshold": 0.0025})
+    return rows
+
+
+def test_the_checkpoint_command_runs_end_to_end_and_writes_its_reading(tmp_path, monkeypatch):
+    """
+    K1 (interim plan): the parts are tested elsewhere; here the COMMAND runs -- fetch, the free-rule comparison,
+    the evaluation, the integrity precondition and both files -- so that it cannot fail for the first time on
+    the day 500 hours are reached. Synthetic rows only; output to a temporary folder.
+    """
+    import json
+    import sys
+
+    import pandas as pd
+
+    import agent.research.weekly_report as wr
+
+    rows = _artefact_rows(530)
+    ewma = pd.Series([0.4] * len(rows), index=pd.DatetimeIndex([r["as_of"] for r in rows]))
+    monkeypatch.setattr(wr, "fetch_shadow_rows", lambda: rows)
+    monkeypatch.setattr(wr, "ewma_reference_series", lambda now, lookback_hours=800: ewma)
+    monkeypatch.setattr(lc, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["live_checkpoint"])
+
+    assert lc.main() == 0
+    md = (tmp_path / "checkpoint_500h.md").read_text(encoding="utf-8")
+    doc = json.loads((tmp_path / "checkpoint_500h.json").read_text(encoding="utf-8"))
+    assert "Live checkpoint — 500 prospective hours" in md and "No verdict at this checkpoint" in md
+    assert "Integrity: every judged probability reproduces" in md
+    assert doc["reproducibility"]["ok"] and doc["reproducibility"]["rows"] == 500
+    assert doc["vs_free_ewma_rule"]["hours_compared"] == 500
+    assert doc["last_hour"] == rows[499]["as_of"].isoformat(), "exactly the first 500 prospective hours"
+
+    before = (tmp_path / "checkpoint_500h.md").read_bytes()
+    assert lc.main() == 0 and (tmp_path / "checkpoint_500h.md").read_bytes() == before, "a second run must not rewrite it"
+
+
+def test_the_checkpoint_command_is_quiet_before_500_hours(tmp_path, monkeypatch, capsys):
+    import sys
+
+    import agent.research.weekly_report as wr
+
+    monkeypatch.setattr(wr, "fetch_shadow_rows", lambda: _artefact_rows(120))
+    monkeypatch.setattr(lc, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["live_checkpoint"])
+    assert lc.main() == 0 and "No checkpoint reached: 120 of 500" in capsys.readouterr().out
+    assert not list(tmp_path.iterdir()), "nothing is written before the checkpoint"
+
+
 def test_the_terciles_are_never_recomputed(tmp_path):
     frozen = tmp_path / "regime_terciles_v1.json"
     frozen.write_text("{}", encoding="utf-8")
