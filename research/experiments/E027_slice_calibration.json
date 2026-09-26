@@ -13,5 +13,21 @@
     "H_fails_in_a_slice": "An offset in that slice is a known property of the model family; the live slice at 2,000 hours is read against this development offset, not against zero.",
     "in_every_case": "Nothing about the frozen model, its calibration, the live signal or any checkpoint rule changes."
   },
-  "command": "python -m agent.research.slice_calibration --experiment E027"
+  "command": "python -m agent.research.slice_calibration --experiment E027",
+  "result_added": "2026-09-26 ~14:05 UTC, after the pre-registration commit fdd4dc0",
+  "result": {
+    "exploration": {"weekday": [-0.007, -0.012, -0.001], "weekend": [0.026, 0.016, 0.035],
+                    "00-06": [0.047, 0.037, 0.057], "06-12": [0.003, -0.006, 0.013], "12-18": [-0.022, -0.033, -0.012], "18-24": [-0.017, -0.027, -0.009]},
+    "validation": {"weekday": [-0.010, -0.018, -0.001], "weekend": [0.012, -0.004, 0.029],
+                   "00-06": [0.022, 0.007, 0.038], "06-12": [0.007, -0.011, 0.022], "12-18": [-0.057, -0.072, -0.040], "18-24": [0.013, -0.005, 0.030]},
+    "format": "stated minus observed, [point, 2.5%, 97.5%]",
+    "H_holds": {"exploration": ["06-12"], "validation": ["weekend", "06-12", "18-24"]}
+  },
+  "reading_by_the_pre_registered_consequences": [
+    "H FAILS in most slices: the model family's good overall calibration (ECE 0.014) hides OFFSETTING intraday miscalibration. It over-states large moves at night (00-06 UTC: +0.047 exploration, +0.022 validation) and under-states them in the US session (12-18 UTC: -0.022, -0.057). Weekends over-state in exploration (+0.026), within the bar on validation.",
+    "Consequence (decided in advance): at the 2,000-hour checkpoint the live weekday/weekend and hour-block slices are read AGAINST these development offsets, not against zero. A night-time over-statement or a US-session under-statement live is a known property, not new behaviour.",
+    "Likely mechanism (a hypothesis, not tested here): the calendar enters the model as one harmonic (hour_sin, hour_cos), which cannot follow the sharp intraday shape of activity (the US open at 13:30 UTC).",
+    "A mechanism, not evidence, for the E026 watch item: nights and weekends are calmer hours, and they are exactly where the model family over-states. Part of a live calm-market over-statement may be this known intraday pattern.",
+    "Nothing about the frozen model, its calibration, the live signal or any checkpoint rule changes. A richer time-of-day encoding would be a NEW model version with a new prospective record -- never a change to move_size_1h_v1."
+  ]
 }

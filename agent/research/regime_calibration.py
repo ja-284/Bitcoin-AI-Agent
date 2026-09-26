@@ -35,12 +35,19 @@ def assign(rv168_raw: np.ndarray, cuts: tuple[float, float]) -> np.ndarray:
 
 
 def regime_table(p: np.ndarray, y: np.ndarray, regime: np.ndarray) -> dict:
-    """Per regime: rows, mean stated p, observed share, their difference with a block-bootstrap interval, ECE.
-    Rows must be in time order: the bootstrap resamples blocks of the whole series and recomputes each regime
-    inside every resample, so the hour-to-hour dependence is respected."""
+    """Per volatility regime (E026)."""
+    return group_table(p, y, regime, REGIMES)
+
+
+def group_table(p: np.ndarray, y: np.ndarray, group: np.ndarray, names: tuple[str, ...]) -> dict:
+    """Per group (codes 0..len(names)-1): rows, mean stated p, observed share, their difference with a
+    block-bootstrap interval, ECE. Rows must be in time order: the bootstrap resamples blocks of the whole
+    series and recomputes each group inside every resample, so the hour-to-hour dependence is respected.
+    Shared by E026 (volatility regimes) and E027 (weekday/weekend, hour blocks)."""
+    regime = group
     stacked = np.column_stack([p, y, regime.astype(float)])
     out = {}
-    for k, name in enumerate(REGIMES):
+    for k, name in enumerate(names):
         mask = regime == k
         n = int(mask.sum())
         if n == 0:
