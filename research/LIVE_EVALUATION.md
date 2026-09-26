@@ -60,6 +60,12 @@ can yet be computed, so none of them can be chosen after seeing an answer. Imple
     reference's `rv_168` quartiles exactly (n = 64,206, identical). Never recomputed, never fitted to
     live data.
 
+11. **An integrity precondition is reported with every checkpoint** (added 2026-09-26, 103 of 500 hours,
+    before any checkpoint data): each judged probability is recomputed from that hour's stored raw inputs
+    with the frozen artefact, and the reading states whether all of them reproduce (difference ≤ 1e-9)
+    and all belong to that artefact. It changes no number and no rule; a failure is printed as an
+    INTEGRITY WARNING at the top of the reading. First run over all 106 stored rows: max difference 5e-16.
+
 ## Operating characteristics of these rules (measured 2026-09-23, E024) — read every checkpoint against them
 
 **No rule above is changed.** These are the rules' own error rates, measured before any checkpoint

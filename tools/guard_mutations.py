@@ -217,6 +217,10 @@ MUTATIONS = [
              "    if current == ROLE:",
              "    if True:",
              "the watchdog accepts a job connection that is not the least-privilege role"),
+    Mutation("integrity", "agent/research/live_checkpoint.py",
+             "        bad += int(d > 1e-9)",
+             "        bad += 0",
+             "the checkpoint's integrity precondition passes a probability that does not reproduce"),
 ]
 
 

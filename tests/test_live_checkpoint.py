@@ -118,6 +118,31 @@ def test_regime_assignment():
     assert lc.regime_of({"features": {}}, cuts) == "unknown"
 
 
+def test_the_integrity_check_confirms_reproducible_probabilities_and_catches_one_that_is_not():
+    """Rows whose probability is exactly the frozen artefact's output pass; one altered probability is caught."""
+    from agent.shadow.model import load_model
+
+    m = load_model(verify_features=False)
+    rng = np.random.default_rng(9)
+    rows = []
+    for _ in range(20):
+        feats = {"tr_mean_14_rel": float(rng.uniform(0.004, 0.012)), "rv_24": float(rng.uniform(0.002, 0.009)),
+                 "rv_168": float(rng.uniform(0.003, 0.009)), "vol_ratio_24_168": float(rng.uniform(0.6, 1.4)),
+                 "trades_rel_24h": float(rng.uniform(0.6, 1.4)), "trades_rel_168h": float(rng.uniform(0.6, 1.4)),
+                 "hour_sin": 0.5, "hour_cos": 0.5, "is_weekend": 0.0}
+        rows.append({"features": feats, "p_calibrated": m.predict(feats)[1], "model_version": m.version})
+    ok = lc.reproducibility(rows)
+    assert ok["ok"] and ok["not_reproducible"] == 0 and ok["max_abs_diff"] < 1e-12
+    rows[5] = dict(rows[5], p_calibrated=rows[5]["p_calibrated"] + 0.01)
+    bad = lc.reproducibility(rows)
+    assert not bad["ok"] and bad["not_reproducible"] == 1
+    other = [dict(r, model_version="move_size_1h_v2") for r in rows[:3]]
+    assert not lc.reproducibility(other)["ok"], "rows from another model version must not pass as this artefact's"
+    e = lc.evaluate(_rows(500), 500)
+    assert "Integrity: every judged probability reproduces" in lc.render(e | {"reproducibility": ok})
+    assert "INTEGRITY WARNING: 1 of 20" in lc.render(e | {"reproducibility": bad})
+
+
 def test_the_terciles_are_never_recomputed(tmp_path):
     frozen = tmp_path / "regime_terciles_v1.json"
     frozen.write_text("{}", encoding="utf-8")

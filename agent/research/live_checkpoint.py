@@ -172,6 +172,31 @@ def evaluate(rows: list[dict], checkpoint: int, terciles: tuple[float, float] | 
     return out
 
 
+def reproducibility(rows: list[dict]) -> dict:
+    """
+    Integrity precondition, reported with every checkpoint (added 2026-09-26, before any checkpoint data):
+    each judged probability must be exactly what the frozen artefact gives for that hour's STORED inputs.
+    It changes no number and no rule; it shows the checkpoint judges the registered model and nothing else.
+    (First run over all 106 stored rows: max difference 5e-16.)
+    """
+    from agent.shadow.model import load_model
+
+    m = load_model(verify_features=False)  # the definition guard needs candles; here the stored inputs are the point
+    worst, bad, versions = 0.0, 0, set()
+    for r in rows:
+        versions.add(r.get("model_version"))
+        got = m.predict(r.get("features") or {})
+        if got is None:
+            bad += 1
+            continue
+        d = abs(got[1] - float(r["p_calibrated"]))
+        worst = max(worst, d)
+        bad += int(d > 1e-9)
+    return {"rows": len(rows), "artefact": m.version, "row_model_versions": sorted(v for v in versions if v),
+            "max_abs_diff": worst, "not_reproducible": bad,
+            "ok": bad == 0 and versions <= {m.version}}
+
+
 def freeze_regime_terciles(path: Path = TERCILES_PATH) -> dict:
     """
     Rule 5 wants the 5,000-hour regime split "defined on the development period, not on live data".
@@ -214,6 +239,13 @@ def render(e: dict) -> str:
          f"prospective graded hours ({e['prospective_graded_available']} available). Intervals: {e['intervals']}.", "",
          f"**What this checkpoint may conclude (registered 2026-09-21):** {reg['what']}.", "",
          f"**How often these rules fail by chance at this size (E024):** {reg['chance']}.", "",
+         *([("**Integrity: every judged probability reproduces from its stored inputs with the frozen artefact** "
+             f"({e['reproducibility']['rows']} rows, max difference {e['reproducibility']['max_abs_diff']:.1e}).")
+            if e["reproducibility"]["ok"] else
+            (f"**INTEGRITY WARNING: {e['reproducibility']['not_reproducible']} of {e['reproducibility']['rows']} judged "
+             f"probabilities do not reproduce from their stored inputs (row model versions "
+             f"{e['reproducibility']['row_model_versions']}, artefact {e['reproducibility']['artefact']}). "
+             "Investigate before reading anything below.**"), ""] if "reproducibility" in e else []),
          "| measure | value | registered bar |", "|---|---|---|",
          f"| Brier gain vs the base rate of these hours | {s['brier_rel_gain']:+.3f}{ci('brier_rel_gain')} | ≥ +0.050 (E012) |",
          f"| accuracy (large vs small) | {s['accuracy']:.3f} [{s['accuracy_ci95'][0]:.3f}, {s['accuracy_ci95'][1]:.3f}] | ≥ naive {s['naive_rate']:.3f} + 0.05 (E012) |",
@@ -269,6 +301,7 @@ def main() -> int:
     lookback = int((now - first[0]["as_of"]).total_seconds() // 3600) + 800  # back to the first hour, plus warm-up
     vs = _against_ewma(first, p, y, size, ewma_reference_series(now, lookback_hours=lookback))
     e = evaluate(rows, cp, terciles, vs)
+    e["reproducibility"] = reproducibility(first)
     stem.with_suffix(".json").write_text(json.dumps(e, indent=2, default=str), encoding="utf-8")
     stem.with_suffix(".md").write_text(render(e), encoding="utf-8")
     print(stem.with_suffix(".md"))
