@@ -46,6 +46,11 @@ the truth.
 - Permanent, documented gaps — never backfilled: 9 missing hours on go-live weekend (2026-09-19/20), 8
   missing shadow hours (incident 2026-09-21/22), 17 hours with news unavailable (2026-09-21/22, marked).
 - Runtime ≈ 75–80 s per real run, under a tenth of the 15-minute budget.
+- **Drift flag "outcomes" in the weekly report (since 2026-09-26) — expected, understood:** the live market
+  is calmer than in development (large moves in ~34% of hours vs ~47% on validation). The pipeline is ruled
+  out. Watch item: the model may be over-predicting slightly in this calm market; E026 shows it was calibrated
+  in calm markets historically, so if this persists it is a genuine deviation — judged at the registered
+  checkpoints only, never tuned.
 
 ## Emergency-only — when the user should act
 
