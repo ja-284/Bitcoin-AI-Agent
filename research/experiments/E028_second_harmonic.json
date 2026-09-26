@@ -1,0 +1,22 @@
+{
+  "id": "E028",
+  "date": "2026-09-26",
+  "git_commit": "(pre-registration commit; the result is added in a later commit)",
+  "status": "PRE-REGISTERED, RESEARCH-ONLY, hypothesis-generating. One variant, fixed in advance -- not a search. Nothing is adopted: move_size_1h_v1 stays frozen and keeps its prospective record; any future version would need its own registration and its own prospective record.",
+  "why": "E027 found offsetting intraday miscalibration in the model family (night over-stated +0.047/+0.022, US session under-stated -0.022/-0.057, exploration/validation) and proposed a mechanism: the calendar enters as ONE harmonic (hour_sin, hour_cos), which cannot follow the sharp intraday shape of activity. This tests that mechanism directly.",
+  "variant": "The nine incumbent inputs plus a SECOND calendar harmonic, sin(4*pi*h/24) and cos(4*pi*h/24) of the reference hour h (UTC) -- 11 inputs. Nothing else changes: same frame, same identical rows, same 27 folds, same logistic (same C), same Platt calibration on the purged 90-day slice (agent/research/feature_count.prepare/evaluate).",
+  "data": "Development period only (exploration and validation), walk-forward out-of-sample. No prospective outcome; no holdout candle.",
+  "validation_wear": "About 25 experiments have examined the validation period; a positive result here is a hypothesis for a future registered test, never a confirmation.",
+  "hypotheses": {
+    "H_a_mechanism": "The intraday offsets shrink: the largest |stated - observed| across the four six-hour blocks falls by at least half against the incumbent, in BOTH periods.",
+    "H_b_no_loss": "Overall skill does not fall: the paired Brier difference (incumbent minus variant) on validation has an interval that does not lie wholly below zero.",
+    "H_c_calibration": "Overall ECE of the variant is <= 0.03 in both periods."
+  },
+  "what_each_answer_means_decided_in_advance": {
+    "all_three_hold": "The single-harmonic mechanism is supported. The second harmonic becomes a CANDIDATE for a future model version, to be pre-registered separately and judged on a new prospective record -- never swapped into move_size_1h_v1, whose record must stay interpretable.",
+    "H_a_fails": "The mechanism is not the calendar encoding (or not only); recorded as a negative result, and E027's offsets remain a known property to read the 2,000-hour slices against.",
+    "H_a_holds_but_H_b_or_H_c_fails": "Better intraday calibration at a cost elsewhere; recorded, not pursued without a new hypothesis.",
+    "in_every_case": "The live system, the frozen artefact, the checkpoints and their rules are untouched."
+  },
+  "command": "python -m agent.research.second_harmonic --experiment E028"
+}
