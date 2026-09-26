@@ -1,0 +1,17 @@
+{
+  "id": "E027",
+  "date": "2026-09-26",
+  "git_commit": "(pre-registration commit; the result is added in a later commit)",
+  "status": "PRE-REGISTERED, descriptive diagnostic -- nothing fitted for use, selected, tuned or recalibrated. Interim plan section 4 (calibration diagnostics on historical development data) and task G1 of research/INTERIM_PLAN_AUDIT.md.",
+  "why": "The registered 2,000-hour checkpoint reports calibration by weekday/weekend and by six-hour block of the day (research/LIVE_EVALUATION.md rule 5; agent/research/live_checkpoint.py slices). E026 gave a development reference for the regime slice only. Without one for these slices, a live wobble in a slice could not be told apart from how the model family always behaved there.",
+  "data": "The same walk-forward out-of-sample predictions as E026 (E013/E018 setup: 27 folds, expanding window, Platt on a purged 90-day slice; agent/research/feature_count.prepare + evaluate), development period only, exploration and validation separately. Slices defined exactly as the checkpoint defines them: weekend = Saturday or Sunday UTC; hour blocks 00-06, 06-12, 12-18, 18-24 UTC of the reference hour. No prospective outcome is read; no holdout candle is loaded.",
+  "validation_wear": "About 24 earlier experiments have examined the validation period; this is a descriptive reference, not a test of anything that could be adopted.",
+  "metrics": "Per slice and period: rows, mean stated probability, observed large-move share, stated minus observed with a 95% circular block-bootstrap interval (48h blocks, 500 resamples), ECE.",
+  "hypothesis_H": "In every slice (weekday, weekend, 00-06, 06-12, 12-18, 18-24), in both periods, |mean stated - observed| <= 0.02 and the interval of the difference contains 0.",
+  "what_each_answer_means_decided_in_advance": {
+    "H_holds_in_a_slice": "The model family was calibrated in that slice historically; a live offset there at 2,000 hours would be new behaviour, reported as such (descriptive, never a basis for switching models).",
+    "H_fails_in_a_slice": "An offset in that slice is a known property of the model family; the live slice at 2,000 hours is read against this development offset, not against zero.",
+    "in_every_case": "Nothing about the frozen model, its calibration, the live signal or any checkpoint rule changes."
+  },
+  "command": "python -m agent.research.slice_calibration --experiment E027"
+}
