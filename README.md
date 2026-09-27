@@ -95,6 +95,9 @@ agent/
   shadow/                frozen move-size model (JSON artefact), features, run, grading
   api/state.py           the backend contract: what the backend says about itself, with every
                          number carrying whether it is a probability (docs/api/contract_v1.md)
+  reporting/             read-only statistics over the record: run history, outcomes by
+                         horizon, calibration, health (docs/api/reporting_v1.md); downstream
+                         only -- nothing in production imports it, the database refuses its writes
   research/              everything experimental: periods & holdout guard, labels, features,
                          replay, walk-forward, calibration, model bench, parity, drift,
                          weekly report, holdout evaluation (sealed)
@@ -103,7 +106,8 @@ docs/research/           parity rules, data sources, failure modes, reproducibil
 docs/ops/                STATUS.md (read first: mode, alarms, emergencies, the next
                          checkpoint), external trigger, security audit, performance review,
                          observability review, open user actions, incident write-up
-docs/api/                the frontend contract (read this before building any screen)
+docs/api/                the frontend contracts: contract_v1 (the published "now" snapshot) and
+                         reporting_v1 (history and statistics); read both before building any screen
 tests/                   the unit suite, no network or database (CI enforces that with an
                          unreachable DATABASE_URL); tests/integration (opt-in, real DB)
 ```

@@ -1,7 +1,7 @@
 # Incident: "All jobs have failed" on the hourly workflow, 2026-09-21 19:31 → 2026-09-22 13:0x UTC
 
 **Severity for the research record: none. Severity for operations: real** — roughly half of
-all hourly jobs ended red for ~17 hours, and 8 hours of the new shadow record are missing.
+all hourly jobs ended red for ~17 hours, and 7 hours of the new shadow record are missing (first written as 8; corrected 2026-09-27, see below).
 
 ## What the owner saw
 
@@ -66,8 +66,8 @@ errors, so any future failure states its reason in the database instead.
 ## What was affected
 
 - **Live record: nothing.** Every hourly prediction, every outcome, every invariant intact.
-- **Shadow record: 8 missing hours** (2026-09-21 19:00; 2026-09-22 01, 02, 04, 05, 07, 09, 11
-  UTC). Hours where a later scheduled run happened to succeed were filled by that run.
+- **Shadow record: 7 missing hours** (2026-09-21 19:00; 2026-09-22 01, 02, 04, 05, 07, 09
+  UTC). *(Corrected 2026-09-27: **7**, not 8. The 11:00 row was written at 12:58:44 UTC by the run that deployed the fix, 76 s before its outcome candle closed, so it is prospective and counts; found by the reporting layer's own count, confirmed from the row's timestamps.)* Hours where a later scheduled run happened to succeed were filled by that run.
 - **No corrupted data anywhere**: the failure happened before anything was computed or written.
 
 ## Recovery decision: no backfill

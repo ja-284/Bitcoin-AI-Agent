@@ -189,6 +189,25 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## 2026-09-27 — read-only reporting layer (observability only, at the user's request)
+
+- **`agent/reporting` + `docs/api/reporting_v1.md`:** the data contract a future statistics page will
+  consume. It covers the latest run, run-by-run history, outcomes per registered horizon (graded,
+  pending, overdue, unavailable), direction-signal statistics next to "all hours", the shadow model's
+  running calibration and breakdowns, and system health. It is derived on demand from the existing records.
+- **No UI, no scheduler, no workflow step, no table, no write.**
+- **One-way:** SELECT-only on a server-enforced read-only connection (Postgres refuses writes through it
+  even as the owner role), imported by nothing in production, and computed "as known at" a moment so no
+  later outcome can reach an earlier view.
+- The move-size figures reuse the registered checkpoint's own code but are never a checkpoint: no pass
+  flags, and a sample label on every figure.
+- 11 mutation guards; 502 unit tests; 2 integration tests on a scratch schema.
+- **Found while building it:** the incident's missing shadow hours are **7**, not 8 (the 11:00 row is
+  prospective). Corrected with dated notes; nothing the checkpoint counts changes.
+- **Not done, on purpose:** any access path from a phone. The public API stays closed. The recommended
+  design (a derived-cache table plus one narrow authenticated read policy) is written down for when a UI
+  exists.
+
 ## 2026-09-26 — under the pre-500h interim plan (`research/INTERIM_PLAN_PRE_500H.md`)
 
 - Session loop run: 14/14 overnight hours (all `db_role = bitcoin_agent`), 25/25 runs, heartbeat ping on
@@ -521,7 +540,7 @@ Full post-mortem: `docs/ops/incident_2026-09-21_shadow_step.md`. Summary for thi
   time; failing steps took 0 s, i.e. before any network call).
 - **What was affected:** the live record, not at all (18/18 hourly predictions in the window,
   no fallback data, no timestamp violations, outcomes complete, parity 62/62). The shadow
-  record lost **8 hours** (2026-09-21 19:00; 09-22 01, 02, 04, 05, 07, 09, 11 UTC).
+  record lost **8 hours** (2026-09-21 19:00; 09-22 01, 02, 04, 05, 07, 09, 11 UTC). *(Corrected 2026-09-27: **7**, not 8. The 11:00 row was written at 12:58:44 UTC by the run that deployed the fix, 76 s before its outcome candle closed, so it is prospective and counts; found by the reporting layer's own count, confirmed from the row's timestamps.)*
 - **No backfill.** Recomputing those hours now would create numbers that look prospective but
   are not (`LIVE_EVALUATION.md` rule 1). The gap stays, visible in the weekly report.
 - **Fixed** (`d222bd7`): tolerance-based guard (`rtol = 1e-6`) with regression tests in both

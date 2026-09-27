@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-26T15:45:00Z",
+  "as_of": "2026-09-27T08:10:00Z",
   "human_readable": "docs/ops/STATUS.md",
   "consistency_test": "tests/test_status_docs.py",
   "mode": "PRE-500H MONITORING-ONLY",
@@ -16,6 +16,7 @@
     "graded_shadow_hours": "python -m agent.research.live_checkpoint",
     "newest_prediction_fresh": "python -m agent.healthcheck --max-age-hours 2",
     "published_state": "backend_state table (rewritten every hourly run)",
+    "run_history_and_statistics": "python -m agent.reporting all (read-only; docs/api/reporting_v1.md)",
     "everything_else": "python -m agent.research.weekly_report"
   },
   "production": {
@@ -35,8 +36,8 @@
     "predictive_path": "frozen for the current prospective evaluation (research/INTERIM_PLAN_PRE_500H.md)"
   },
   "prospective": {
-    "graded_shadow_hours": 110,
-    "counted_at": "2026-09-26T15:45:00Z",
+    "graded_shadow_hours": 127,
+    "counted_at": "2026-09-27T08:10:00Z",
     "next_checkpoint_hours": 500,
     "next_checkpoint_expected": "2026-10-12 (late evening UTC, if no hours are lost)",
     "next_checkpoint_command": "python -m agent.research.live_checkpoint",
@@ -66,7 +67,7 @@
     "watchdog fires irregularly on GitHub; the heartbeat covers the gap",
     "AI cost ~$11-14/month depending on news volume (accepted ~$12; flag above $15)",
     "Supabase grants the net schema to PUBLIC (unrevocable); not an exposed API schema",
-    "permanent documented gaps: 9 missing hours (2026-09-19/20), 8 missing shadow hours (2026-09-21/22), 17 news-unavailable hours (2026-09-21/22)",
+    "permanent documented gaps: 9 missing hours (2026-09-19/20), 7 missing shadow hours (2026-09-21/22; first written as 8, corrected 2026-09-27), 17 news-unavailable hours (2026-09-21/22)",
     "the free EWMA reference's warm-up downloads raw candles reaching into the holdout period's last weeks; no holdout performance computed or used; weight < 2e-10; documented in research/LIVE_EVALUATION.md; unchanged (registered checkpoint code)"
   ],
   "user_actions_required": [],

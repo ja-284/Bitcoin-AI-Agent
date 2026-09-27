@@ -5,6 +5,39 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## observability — 2026-09-27 (read-only reporting layer, reporting contract v1; no UI)
+
+Nothing in the predictive path, the checkpoint rules, the workflows or the database schema changed.
+
+- **`agent/reporting`** (`python -m agent.reporting latest|runs|run|statistics|health|all [--at] [--pretty]`)
+  derives, from the records that already exist:
+  - the latest run and the run-by-run history (paged, and one hour in detail);
+  - each run's outcomes for the registered horizons (graded / pending / overdue / unavailable);
+  - descriptive direction-signal statistics next to "all hours";
+  - the shadow model's running calibration figures and breakdowns;
+  - system health.
+- **One-way by construction:**
+  - SELECT-only SQL on a connection the server holds READ ONLY (fails closed). Postgres refuses INSERT,
+    UPDATE and CREATE through it, even as the owner role (integration test).
+  - Nothing in production, research, tools or workflows imports or runs it, and it imports only
+    reviewed names (tests).
+- **No leakage:** every view is computed "as known at" a moment (`created_at`, `checked_at`,
+  `outcome_checked_at`). A test rewrites everything recorded later and requires the earlier view to be
+  identical.
+- **No drift from the checkpoint, and no verdicts:**
+  - the move-size figures use the registered checkpoint's own selection and statistics code;
+  - its pass flags are withheld;
+  - every figure carries its sample size and an evidence label (< 192 h: too few; < 2,000 h: intervals
+    optimistic).
+- Error message texts and news headlines are not published.
+- Heartbeat, watchdog and job wall time are marked not observable from the database.
+- **Found while building it:** the shadow record lost **7** hours in the 2026-09-21/22 incident, not 8.
+  The 11:00 row was written 76 s before its outcome candle closed, so it is prospective and counts.
+  Corrected with dated notes; no rule or count used by the checkpoint changes, since it counts actual rows.
+- Documentation: `docs/api/reporting_v1.md`, which covers the sources, the contract, the states, the
+  evidence labels, the isolation proofs, the future access design (not built), and what must never be done.
+- 11 mutation guards added (56 in total). 502 unit tests.
+
 ## documentation — 2026-09-26 evening (final pre-500h consistency pass; monitoring-only mode)
 
 Nothing in the predictive path, the checkpoint rules or the live system changed. No research was run.

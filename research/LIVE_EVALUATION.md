@@ -173,3 +173,7 @@ and the latest probabilities.
 **not** backfilled: a probability computed after its outcome exists is not prospective
 evidence, whatever it looks like in the table. The hours simply do not count, and the
 checkpoint thresholds (500 / 2,000 / 5,000 hours) count only rows that do.
+*Factual correction, 2026-09-27 (no rule changed):* the gap is **7** hours, not 8. The 11:00 row
+exists. It was written at 12:58:44 UTC by the run that deployed the fix, 76 s before its outcome candle
+closed (13:00), so by rule 1 it is prospective and counts. The error was in this sentence's count, not
+in any selection. The checkpoint code never used this number: it counts the rows themselves.

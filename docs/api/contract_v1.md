@@ -11,6 +11,11 @@ python -m agent.api.state --pretty
 
 Read-only. It never writes, so no frontend request can affect the live record.
 
+**Its companion for history and statistics** (added 2026-09-27) is
+[`reporting_v1.md`](reporting_v1.md). This contract describes *now* in one published row; reporting v1
+describes every run, its outcomes by horizon, calibration and system health, computed read-only from the
+same records and following the same honesty rules.
+
 ## The one rule this exists to enforce
 
 > **A number that is not a validated probability must not be able to look like one.**
