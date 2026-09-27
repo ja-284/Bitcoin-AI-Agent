@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-27T08:10:00Z",
+  "as_of": "2026-09-27T10:14:00Z",
   "human_readable": "docs/ops/STATUS.md",
   "consistency_test": "tests/test_status_docs.py",
   "mode": "PRE-500H MONITORING-ONLY",
@@ -36,8 +36,8 @@
     "predictive_path": "frozen for the current prospective evaluation (research/INTERIM_PLAN_PRE_500H.md)"
   },
   "prospective": {
-    "graded_shadow_hours": 127,
-    "counted_at": "2026-09-27T08:10:00Z",
+    "graded_shadow_hours": 129,
+    "counted_at": "2026-09-27T10:14:00Z",
     "next_checkpoint_hours": 500,
     "next_checkpoint_expected": "2026-10-12 (late evening UTC, if no hours are lost)",
     "next_checkpoint_command": "python -m agent.research.live_checkpoint",

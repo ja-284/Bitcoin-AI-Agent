@@ -162,6 +162,20 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
   record-read attempts by the viewer are refused; five widenings are all reported by the check.
 - **Not done, on purpose:** the website, the viewer account (owner's steps, `open_user_actions.md`
   item 6), any other exposed object.
+- **Verified live:**
+  - The 10:12 UTC hourly run (unchanged) completed, and the *Reporting snapshot* workflow started from it
+    at 10:13:11 and published at 10:13:39: the `all` document (health ok) and 184 run rows. Nobody else
+    has ever written these tables.
+  - The role check shows `bitcoin_agent` holding exactly the proven file, and the security check is OK
+    with the one surface.
+  - The integration suite passes 35/35, including the live-drift check.
+- **Two things caught on the way (both fixed):**
+  - A failed grant script was hidden by `| tail` in a chained command, so the push went first. The
+    role file and the live role disagreed for 11 s, and nothing ran in that window.
+  - Integration tests leaked a probe connection when the reporting modules were first imported inside a
+    patched fixture. They are now imported at collection.
+- 528 unit tests; mutation guards 66, with all 21 on this boundary caught, including 10 new ones;
+  129 of 500 prospective hours (10:14 UTC).
 - THIS IS A PRIVATE READ-ONLY STATISTICS INTERFACE, NOT THE TRADING APPLICATION.
 
 ## Research phase — rules and decisions (2026-09-19)

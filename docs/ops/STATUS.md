@@ -21,17 +21,18 @@ checkpoint itself.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-09-27 08:10 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-09-27 10:14 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**
 
 | figure | value at the snapshot | source of truth (run it for the current value) |
 |---|---|---|
-| graded prospective shadow hours | **127 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
-| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (373 more hours at one per hour, if none are lost) | derived from the count above |
-| newest prediction | the 07:00 UTC hour, 0.2 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
-| published backend state | refreshed 08:01 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
+| graded prospective shadow hours | **129 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
+| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (371 more hours at one per hour, if none are lost) | derived from the count above |
+| newest prediction | the 09:00 UTC hour, 0.2 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
+| published backend state | refreshed 10:13 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
+| private stats read model | refreshed 10:13 UTC by the *Reporting snapshot* workflow (its first automatic run) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
 | sealed holdout | **sealed** (`research/HOLDOUT_ACCESS.log` does not exist) | the file's absence |
 | run history, outcomes, running statistics, health (read-only, on demand) | see the reporting layer | `python -m agent.reporting all --pretty` ([`docs/api/reporting_v1.md`](../api/reporting_v1.md)) |
 | everything else that moves (parity, cost, drift flags, the free-rule comparison) | see the latest weekly report | `python -m agent.research.weekly_report` → `research/monitoring/weekly_<date>.md` |
