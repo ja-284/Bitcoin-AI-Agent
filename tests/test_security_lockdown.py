@@ -18,6 +18,7 @@ SCHEMA_FILES = [
     Path("agent/database/schema.sql"),
     Path("agent/shadow/schema.sql"),
     Path("agent/api/schema.sql"),
+    Path("agent/reporting/schema.sql"),
 ]
 
 
@@ -65,12 +66,33 @@ def test_the_checker_catches_a_file_with_no_lockdown_at_all():
     assert security.unprotected_tables_in_schema(sql) == {"new_table"}
 
 
-def test_nothing_is_intended_to_be_publicly_readable_yet():
+def test_the_only_read_surface_is_two_cache_tables_for_signed_in_viewers():
     """
-    No frontend exists, so no table may be readable through the public API. When one is built,
-    changing this is the deliberate, reviewable act of opening one table -- read-only.
+    The one deliberate opening (2026-09-27): the private stats read model, SELECT only, for `authenticated`
+    only -- never `anon`. Changing any of this is a reviewable security decision, not a convenience.
     """
-    assert security.INTENDED_PUBLIC_READ == {}
+    assert security.VIEWER_READ_TABLES == ("reporting_snapshot", "reporting_runs")
+    assert (security.VIEWER_ROLE, security.VIEWER_PRIVILEGE) == ("authenticated", "SELECT")
+    assert security.VIEWER_CONDITION == "auth.jwt->'app_metadata'->>'reporting_viewer'='true'"
+    assert not set(security.VIEWER_READ_TABLES) & {"predictions", "prediction_outcomes", "shadow_move_size",
+                                                     "shadow_run_errors", "backend_state", "schema_meta"}
+
+
+def test_the_reporting_schema_file_opens_exactly_the_designed_surface():
+    """Static: the policy the file creates is the viewer claim, for `authenticated`, SELECT, and nothing else."""
+    import re
+
+    sql = Path("agent/reporting/schema.sql").read_text(encoding="utf-8")
+    policies = re.findall(r"CREATE POLICY (\w+) ON %I FOR (\w+) TO (\w+)\s+USING \((.*?)\)\$p\$", sql, flags=re.S)
+    assert len(policies) == 1, policies
+    name, command, role, condition = policies[0]
+    assert (command, role) == ("SELECT", "authenticated")
+    assert security._normalised(condition) == security.VIEWER_CONDITION
+    grants = re.findall(r"GRANT (.+?) ON TABLE %I TO ([\w, ]+)'", sql)  # the WHOLE grantee list, not its first name
+    assert grants == [("SELECT", "authenticated")], grants
+    code = re.sub(r"--[^\n]*", "", sql)  # the comments explain user_metadata; the SQL must never use it
+    assert "TO anon" not in code and "user_metadata" not in code and "app_metadata" in code
+    assert re.findall(r"ARRAY\['(\w+)', '(\w+)'\]", sql)[0] == security.VIEWER_READ_TABLES
 
 
 def test_the_watchdog_runs_the_live_posture_check():
@@ -129,15 +151,54 @@ def test_a_policy_scoped_to_a_private_backend_role_is_not_an_exposure():
     assert security.judge({"predictions": _t(policies=[_pol("backend_writes", ["bitcoin_agent"], "ALL")])}) == []
 
 
-def test_an_intended_public_table_may_hold_select_and_nothing_more(monkeypatch):
-    monkeypatch.setattr(security, "INTENDED_PUBLIC_READ", {"backend_state": "SELECT"})
-    ok = security.judge({"backend_state": _t(grants={"anon": ["SELECT"]},
-                                             policies=[_pol("public_read", ["anon"], "SELECT")])})
-    assert ok == []
-    too_much = security.judge({"backend_state": _t(grants={"anon": ["SELECT", "UPDATE"]},
-                                                   policies=[_pol("public_write", ["anon"], "UPDATE")])})
-    assert "backend_state: `anon` holds UPDATE" in too_much
-    assert "backend_state: policy `public_write` allows UPDATE, only SELECT is intended" in too_much
+QUAL = "(((auth.jwt() -> 'app_metadata'::text) ->> 'reporting_viewer'::text) = 'true'::text)"
+
+
+def _viewer(**kw):
+    pol = {"name": "stats_viewer_read", "roles": ["authenticated"], "command": "SELECT",
+           "permissive": "PERMISSIVE", "qual": QUAL, "with_check": None}
+    pol.update(kw)
+    return pol
+
+
+def test_the_viewer_tables_pass_exactly_as_designed():
+    tables = {t: _t(grants={"anon": [], "authenticated": ["SELECT"]}, policies=[_viewer()])
+              for t in security.VIEWER_READ_TABLES}
+    tables["predictions"] = _t()
+    assert security.judge(tables) == []
+
+
+def test_anon_may_never_read_the_viewer_tables():
+    problems = security.judge({"reporting_runs": _t(grants={"anon": ["SELECT"]}, policies=[_viewer()])})
+    assert problems == ["reporting_runs: `anon` holds SELECT"]
+
+
+def test_a_viewer_may_never_write_and_no_other_table_opens():
+    problems = security.judge({"reporting_snapshot": _t(grants={"authenticated": ["SELECT", "INSERT", "UPDATE"]}),
+                               "backend_state": _t(grants={"authenticated": ["SELECT"]})})
+    assert "reporting_snapshot: `authenticated` holds INSERT, UPDATE" in problems
+    assert "backend_state: `authenticated` holds SELECT" in problems
+
+
+@pytest.mark.parametrize("change, fragment", [
+    ({"qual": "true"}, "lets through more than the viewer claim"),
+    ({"qual": "(COALESCE(((auth.jwt() -> 'app_metadata'::text) ->> 'reporting_viewer'::text), 'true'::text) = 'true'::text)"},
+     "lets through more than the viewer claim"),
+    ({"qual": "(((auth.jwt() -> 'user_metadata'::text) ->> 'reporting_viewer'::text) = 'true'::text)"},
+     "lets through more than the viewer claim"),
+    ({"qual": QUAL[:-1] + " OR true)"}, "lets through more than the viewer claim"),
+    ({"qual": None}, "lets through more than the viewer claim"),
+    ({"roles": ["anon"]}, "only `authenticated` viewers"),
+    ({"roles": ["authenticated", "anon"]}, "only `authenticated` viewers"),
+    ({"roles": ["public"]}, "only `authenticated` viewers"),
+    ({"command": "ALL"}, "allows ALL, only SELECT"),
+    ({"command": "UPDATE", "with_check": "true"}, "allows UPDATE, only SELECT"),
+    ({"permissive": "RESTRICTIVE"}, "is not a plain read policy"),
+    ({"with_check": "true"}, "is not a plain read policy"),
+])
+def test_any_widened_viewer_policy_is_reported(change, fragment):
+    (problem,) = security.judge({"reporting_snapshot": _t(grants={"authenticated": ["SELECT"]}, policies=[_viewer(**change)])})
+    assert problem.startswith("reporting_snapshot: policy `stats_viewer_read` ") and fragment in problem, problem
 
 
 def test_posture_reads_in_a_constant_number_of_queries(monkeypatch):
@@ -199,14 +260,12 @@ def test_a_view_granted_nothing_is_fine():
                                               "security_invoker": False}}, [], []) == []
 
 
-def test_an_intended_public_view_must_also_be_security_invoker(monkeypatch):
-    monkeypatch.setattr(security, "INTENDED_PUBLIC_READ", {"latest": "SELECT"})
-    ok = {"latest": {"api_privileges": {"anon": ["SELECT"]}, "security_invoker": True}}
-    assert security.judge_objects(ok, [], []) == []
-    bypass = {"latest": {"api_privileges": {"anon": ["SELECT"]}, "security_invoker": False}}
-    assert "not security_invoker" in security.judge_objects(bypass, [], [])[0]
-    too_much = {"latest": {"api_privileges": {"anon": ["SELECT", "INSERT"]}, "security_invoker": True}}
-    assert "holds SELECT, INSERT" in security.judge_objects(too_much, [], [])[0]
+def test_no_view_is_ever_part_of_the_read_surface():
+    """Even a security_invoker view named like a viewer table is reported: the surface is two tables, under RLS."""
+    for name in ("latest", "reporting_runs"):
+        v = {name: {"api_privileges": {"authenticated": ["SELECT"]}, "security_invoker": True}}
+        (problem,) = security.judge_objects(v, [], [])
+        assert f"view {name}: `authenticated` holds SELECT" in problem
 
 
 def test_a_callable_function_is_reported_and_security_definer_is_named():

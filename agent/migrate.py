@@ -18,7 +18,7 @@ the shadow tables and `backend_state` until the job happened to create them. Thr
 Now schema changes happen here, deliberately, and runtime code only reads and writes rows.
 
 Order matters only in that the database file writes `schema_meta`; the files are otherwise
-independent. All three run in ONE transaction: a migration either applies completely or not at
+independent. All of them run in ONE transaction: a migration either applies completely or not at
 all, so a database can never be left half-migrated.
 
 After a migration that raises SCHEMA_VERSION, deploy the code second: the running code accepts a
@@ -38,6 +38,7 @@ SCHEMA_FILES = [
     ROOT / "database" / "schema.sql",   # the record, its invariants, schema_meta
     ROOT / "shadow" / "schema.sql",     # the research shadow record and its error log
     ROOT / "api" / "schema.sql",        # the published backend-state cache
+    ROOT / "reporting" / "schema.sql",  # the private stats read model (derived caches; read by nothing in the system)
 ]
 
 

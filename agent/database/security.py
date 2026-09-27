@@ -49,11 +49,19 @@ PUBLIC_REACHING = {"anon", "authenticated", "public"}  # roles a policy can name
 PRIVILEGES = ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER")
 LOCKDOWN_MARKER = "Access lockdown"
 
-# Tables a frontend is DELIBERATELY allowed to read, each with the one privilege it may hold.
-# Empty today: no frontend exists, so nothing is readable. When one is built, adding a table here
-# is the reviewable, one-line record that its exposure is intended -- and anything beyond SELECT
-# will still be reported.
-INTENDED_PUBLIC_READ: dict[str, str] = {}
+# The ONE deliberate read surface (2026-09-27): the private stats read model (docs/api/stats_access.md).
+# Exactly these two derived-cache tables, readable ONLY by a signed-in Supabase Auth user (`authenticated`,
+# never `anon`) whose token carries app_metadata.reporting_viewer = true -- a claim only the project owner
+# can set -- and only with SELECT. Everything about that surface is checked, not just its existence: a
+# second role, a second privilege, a second policy, or a policy whose condition is anything but the
+# viewer claim is reported, so the opening cannot widen quietly. Every other table stays fully closed.
+VIEWER_READ_TABLES = ("reporting_snapshot", "reporting_runs")
+VIEWER_ROLE = "authenticated"
+VIEWER_PRIVILEGE = "SELECT"
+# The policy condition, normalised by _normalised(): `(auth.jwt() -> 'app_metadata' ->> 'reporting_viewer') = 'true'`.
+# An exact comparison on purpose: a condition that differs in any way (an OR, a COALESCE default, the
+# user-editable user_metadata instead of app_metadata) fails CLOSED -- reported, never assumed equivalent.
+VIEWER_CONDITION = "auth.jwt->'app_metadata'->>'reporting_viewer'='true'"
 
 
 def _created_tables(sql: str) -> set[str]:
@@ -84,11 +92,12 @@ def judge(tables: dict[str, dict]) -> list[str]:
     """
     problems: list[str] = []
     for name, t in tables.items():
-        allowed = INTENDED_PUBLIC_READ.get(name)
+        viewer_table = name in VIEWER_READ_TABLES
         if not t["rls"]:
             problems.append(f"{name}: Row Level Security is OFF")
         for role, granted in t["api_privileges"].items():
-            extra = [p for p in granted if p != allowed]
+            allowed = {VIEWER_PRIVILEGE} if viewer_table and role == VIEWER_ROLE else set()
+            extra = [p for p in granted if p not in allowed]
             if extra:
                 problems.append(f"{name}: `{role}` holds {', '.join(extra)}")
         for pol in t["policies"]:
@@ -98,11 +107,32 @@ def judge(tables: dict[str, dict]) -> list[str]:
             # check. No TO clause means PUBLIC, which includes the API roles.
             if not set(pol["roles"]) & PUBLIC_REACHING:
                 continue
-            if allowed is None:
+            if not viewer_table:
                 problems.append(f"{name}: policy `{pol['name']}` opens a table no frontend is meant to read")
-            elif pol["command"] not in ("SELECT",):
-                problems.append(f"{name}: policy `{pol['name']}` allows {pol['command']}, only SELECT is intended")
+                continue
+            problem = viewer_policy_problem(pol)
+            if problem:
+                problems.append(f"{name}: policy `{pol['name']}` {problem}")
     return problems
+
+
+def _normalised(expr: str | None) -> str:
+    """A policy condition as Postgres prints it, without whitespace, parentheses or ::text casts."""
+    return re.sub(r"\s+|::text|[()]", "", expr or "").lower()
+
+
+def viewer_policy_problem(pol: dict) -> str | None:
+    """None when a public-reaching policy on a viewer table is exactly the designed one; else what is wrong."""
+    if set(pol["roles"]) != {VIEWER_ROLE}:
+        return f"reaches {', '.join(sorted(pol['roles']))}; only `{VIEWER_ROLE}` viewers may read this table"
+    if pol["command"] != VIEWER_PRIVILEGE:
+        return f"allows {pol['command']}, only SELECT is intended"
+    if pol.get("permissive", "PERMISSIVE") != "PERMISSIVE" or pol.get("with_check") is not None:
+        return "is not a plain read policy"
+    if _normalised(pol.get("qual")) != VIEWER_CONDITION:
+        return (f"lets through more than the viewer claim (condition: {pol.get('qual')!r}); "
+                "only app_metadata.reporting_viewer = true may read")
+    return None
 
 
 _DEFAULT_KINDS = {"r": "table or view", "S": "sequence", "f": "function", "T": "type", "n": "schema"}
@@ -116,15 +146,11 @@ def judge_objects(views: dict[str, dict], functions: list[dict], default_grants:
     """
     problems: list[str] = []
     for name, v in views.items():
-        allowed = INTENDED_PUBLIC_READ.get(name)
+        # No view is ever part of the read surface: the stats viewer reads two tables, under RLS.
         for role, granted in v["api_privileges"].items():
-            if not granted:
-                continue
-            if allowed is None or [p for p in granted if p != allowed]:
+            if granted:
                 problems.append(f"view {name}: `{role}` holds {', '.join(granted)} -- a view runs with its owner's "
                                 "rights, so RLS on the tables beneath it does not apply")
-            elif not v["security_invoker"]:
-                problems.append(f"view {name}: intended for public read but not security_invoker, so it bypasses RLS")
     for f in functions:
         for role in f["callable_by"]:
             problems.append(f"function {f['name']}({f['args']}) is callable by `{role}` at /rest/v1/rpc"
@@ -159,7 +185,7 @@ def posture(schema: str = "public") -> dict:
             ORDER BY c.relname, r.rolname
         """, (list(API_ROLES), list(PRIVILEGES), schema))
         rows = cur.fetchall()
-        cur.execute("SELECT tablename, policyname, roles, cmd FROM pg_policies WHERE schemaname = %s", (schema,))
+        cur.execute("SELECT tablename, policyname, roles, cmd, permissive, qual, with_check FROM pg_policies WHERE schemaname = %s", (schema,))
         policies = cur.fetchall()
         # Tables are listed even when no API role exists (a plain Postgres), so the RLS state is
         # still visible; the role/privilege rows are simply absent then.
@@ -231,9 +257,10 @@ def posture(schema: str = "public") -> dict:
             present.append(role)
         if granted:
             held.append(priv)
-    for table, pname, roles, cmd in policies:
+    for table, pname, roles, cmd, permissive, qual, with_check in policies:
         if table in tables:
-            tables[table]["policies"].append({"name": pname, "roles": list(roles), "command": cmd})
+            tables[table]["policies"].append({"name": pname, "roles": list(roles), "command": cmd,
+                                              "permissive": permissive, "qual": qual, "with_check": with_check})
     problems = judge(tables) + judge_objects(views, functions, default_grants)
     return {"ok": not problems, "problems": problems, "tables": tables, "views": views, "functions": functions,
             "default_grants": default_grants, "notes": notes, "api_roles_present": present}
@@ -253,8 +280,9 @@ def main() -> int:
     for note in result["notes"]:
         print("  NOTE (outside this project's control, not a failure): " + note)
     if result["ok"]:
-        print(f"OK: all {len(result['tables'])} tables have RLS on and grant the public API roles nothing; "
-              "no view, callable function or default grant exposes anything")
+        viewer = ", ".join(t for t in VIEWER_READ_TABLES if t in result["tables"]) or "no table yet"
+        print(f"OK: all {len(result['tables'])} tables have RLS on; the public API roles hold nothing except SELECT "
+              f"for signed-in stats viewers on {viewer}; no view, callable function or default grant exposes anything")
         return 0
     print("EXPOSED:")
     for p in result["problems"]:
