@@ -23,6 +23,12 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+# Imported HERE, at collection, on purpose: these modules bind `get_connection` when first imported. Imported
+# for the first time inside a test while a fixture has patched db.get_connection (the least-privilege probe),
+# they would keep the probe's connection for the rest of the run -- after the probe role is dropped.
+import agent.reporting.publish  # noqa: E402,F401
+import agent.reporting.source  # noqa: E402,F401
+
 pytestmark = pytest.mark.skipif(os.getenv("BITCOIN_AGENT_DB_TESTS") != "1", reason="needs a database; set BITCOIN_AGENT_DB_TESTS=1")
 
 SCHEMA = "idempotency_test"
