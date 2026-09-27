@@ -53,7 +53,8 @@
     "self_check": "every run: the hour's prediction must be saved",
     "watchdog": ["staleness < 3h", "shadow errors <= 2 in 6h", "no public-API exposure", "jobs connect as bitcoin_agent with exactly its proven rights"],
     "watchdog_real_cadence": "every 5-7 hours (GitHub fires ~4 of 7 slots a day)",
-    "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"}
+    "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"},
+    "stats_read_model": {"workflow": "Reporting snapshot (.github/workflows/reporting.yml), after each successful hourly run; no schedule of its own", "writes": ["reporting_snapshot", "reporting_runs"], "readable_by": "one signed-in Supabase Auth user with app_metadata.reporting_viewer = true (none set up yet)", "fails_loudly_after_hours": 3, "doc": "docs/api/stats_access.md", "is_trading_application": false}
   },
   "scheduled_checks": {
     "every_session": "hourly-health loop and the snapshot in STATUS.md",

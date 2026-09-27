@@ -63,5 +63,15 @@ CREATE POLICY backend_read    ON backend_state FOR SELECT TO bitcoin_agent USING
 CREATE POLICY backend_insert  ON backend_state FOR INSERT TO bitcoin_agent WITH CHECK (true);
 CREATE POLICY backend_replace ON backend_state FOR UPDATE TO bitcoin_agent USING (true) WITH CHECK (true);
 
+-- the private stats read model (2026-09-27, docs/api/stats_access.md): two derived caches the reporting
+-- workflow replaces after each hourly run (agent/reporting/publish.py). Nothing in the system reads them back.
+GRANT SELECT, INSERT, UPDATE ON reporting_snapshot, reporting_runs TO bitcoin_agent;
+CREATE POLICY backend_read    ON reporting_snapshot FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert  ON reporting_snapshot FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_replace ON reporting_snapshot FOR UPDATE TO bitcoin_agent USING (true) WITH CHECK (true);
+CREATE POLICY backend_read    ON reporting_runs     FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert  ON reporting_runs     FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_replace ON reporting_runs     FOR UPDATE TO bitcoin_agent USING (true) WITH CHECK (true);
+
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;

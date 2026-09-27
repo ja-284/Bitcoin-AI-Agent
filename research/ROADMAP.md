@@ -189,6 +189,15 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## 2026-09-27 (later) — private stats access prepared (at the user's request; no website built)
+
+- `docs/api/stats_access.md`: two derived caches filled by a separate workflow after each successful
+  hourly run, readable only with SELECT by one signed-in Supabase Auth user carrying an owner-set claim.
+  `anon` reads nothing, and the security check fails on any widening.
+- The hourly workflow, prediction, scoring, checkpoint code and holdout are unchanged.
+- The owner's account steps wait until the website is actually built.
+- **A private read-only statistics interface, not the trading application.**
+
 ## 2026-09-27 — read-only reporting layer (observability only, at the user's request)
 
 - **`agent/reporting` + `docs/api/reporting_v1.md`:** the data contract a future statistics page will

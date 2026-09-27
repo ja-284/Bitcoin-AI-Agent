@@ -11,6 +11,10 @@ The reporting layer (agent/reporting) is downstream of production and must stay 
      a new import fails here until someone looks at it).
   3. Its SQL is SELECT-only, it never commits or bulk-writes, and the one function that opens a
      connection makes the server hold it READ ONLY -- and fails closed if that does not stick.
+  4. (2026-09-27) The one exception is the private stats publisher (agent/reporting/publish.py): it may
+     write, but only the two derived-cache tables the stats website reads, and only one workflow may run
+     it -- the "Reporting snapshot" workflow, which starts after the hourly one completes and runs nothing
+     else. The hourly workflow does not know it exists.
 Mutation guards in tools/guard_mutations.py break each of these on purpose and require a test to fail.
 """
 
@@ -23,6 +27,9 @@ import pytest
 from agent.reporting import source
 
 REPORTING = sorted(Path("agent/reporting").glob("*.py"))
+PUBLISHER = Path("agent/reporting/publish.py")
+READ_ONLY = [p for p in REPORTING if p != PUBLISHER]  # everything but the publisher: SELECT only, no writes of any kind
+REPORTING_WORKFLOW = Path(".github/workflows/reporting.yml")
 PRODUCTION_AND_RESEARCH = sorted(p for p in Path("agent").rglob("*.py") if "reporting" not in p.parts) + \
     [Path("run.py"), *sorted(Path("tools").glob("*.py"))]
 WORKFLOWS = sorted(Path(".github/workflows").glob("*.yml"))
@@ -38,6 +45,7 @@ ALLOWED = {
     "agent.research.live_checkpoint": {"BLOCK_HOURS", "CHECKPOINTS", "HOUR_BLOCKS", "OUT_DIR", "TERCILES_PATH", "_slice", "core",
                                        "prospective", "prospective_graded", "regime_of"},
     "agent.research.metrics": {"brier_score", "wilson_interval"},
+    "agent.research.periods": {"HOLDOUT"},
     "agent.research.weekly_report": {"INTERVALS_NOMINAL_FROM_HOURS", "expected_hours"},
     "agent.version": {"PIPELINE_VERSION"},
 }
@@ -98,10 +106,22 @@ def test_nothing_in_production_or_research_imports_the_reporting_layer():
     assert offenders == [], offenders
 
 
-def test_no_workflow_runs_the_reporting_layer():
-    assert WORKFLOWS, "no workflows found"
+def test_only_the_reporting_workflow_runs_it_and_it_runs_only_the_publisher():
+    assert REPORTING_WORKFLOW in WORKFLOWS and len(WORKFLOWS) >= 4
     for wf in WORKFLOWS:
-        assert "agent.reporting" not in wf.read_text(encoding="utf-8"), wf
+        text = wf.read_text(encoding="utf-8")
+        if wf != REPORTING_WORKFLOW:
+            for word in ("agent.reporting", "reporting_snapshot", "reporting_runs"):
+                assert word not in text, f"{wf} mentions {word}"
+    text = REPORTING_WORKFLOW.read_text(encoding="utf-8")
+    code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+    runs = [line.split("run:", 1)[1].strip() for line in code.splitlines() if line.strip().startswith(("run:", "- run:"))]
+    assert runs == ["pip install -r requirements.txt", "python -m agent.reporting.publish"], runs
+    assert "schedule" not in code and "cron" not in code, "it must have no schedule of its own"
+    assert re.search(r'on:\s*\n\s*workflow_run:\s*\n\s*workflows: \["Hourly Bitcoin analysis"\]\s*\n\s*types: \[completed\]', code)
+    assert re.search(r"^name: Hourly Bitcoin analysis$", Path(".github/workflows/hourly.yml").read_text(encoding="utf-8"), re.M)
+    assert set(re.findall(r"secrets\.(\w+)", code)) == {"DATABASE_URL"}, "no AI key, no heartbeat URL, nothing else"
+    assert re.search(r"^permissions:\s*\n\s*contents: read\s*$", code, re.M)
 
 
 # ------------------------------------------------------------------ 2. it depends only on reviewed names
@@ -117,7 +137,7 @@ def test_the_reporting_layer_imports_only_reviewed_read_only_names():
 # ------------------------------------------------------------------ 3. it cannot write
 def test_the_reporting_sql_is_select_only_and_nothing_commits_or_writes_files():
     found_sql = 0
-    for path in REPORTING:
+    for path in READ_ONLY:
         text = path.read_text(encoding="utf-8")
         assert sql_violations(text) == [], path
         assert forbidden_calls(text) == [], path
@@ -131,7 +151,7 @@ def test_only_the_read_only_helper_opens_a_connection():
         for fn in (n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)):
             calls = {c.func.id for c in ast.walk(fn) if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
             if "get_connection" in calls:
-                assert (path.name, fn.name) == ("source.py", "read_only_connection"), f"{path}:{fn.name} opens its own connection"
+                assert (path.name, fn.name) in {("source.py", "read_only_connection"), ("publish.py", "_cache_connection")},                     f"{path}:{fn.name} opens its own connection"
 
 
 class _Conn:
@@ -162,6 +182,33 @@ def test_the_connection_is_held_read_only_and_fails_closed(monkeypatch):
     assert stubborn.closed
 
 
+def write_targets(source_text: str) -> list[str]:
+    """Every table a SQL string constant writes to (INSERT INTO t, UPDATE t SET, DELETE FROM t, TRUNCATE t)."""
+    found = []
+    for s in _string_constants(source_text):
+        flat = " ".join(s.split()).upper()
+        found += re.findall(r"\bINSERT\s+INTO\s+(\w+)", flat) + re.findall(r"\bUPDATE\s+(\w+)\s+SET\b", flat)
+        found += re.findall(r"\bDELETE\s+FROM\s+(\w+)", flat) + re.findall(r"\bTRUNCATE\s+(?:TABLE\s+)?(\w+)", flat)
+    return [t.lower() for t in found]
+
+
+def test_the_publisher_writes_only_the_two_cache_tables_the_website_reads():
+    from agent.database.security import VIEWER_READ_TABLES
+    from agent.reporting import publish
+
+    text = PUBLISHER.read_text(encoding="utf-8")
+    targets = write_targets(text)
+    assert sorted(set(targets)) == sorted(publish.CACHE_TABLES) and len(targets) >= 2, targets
+    assert tuple(publish.CACHE_TABLES) == VIEWER_READ_TABLES, "the website may read exactly what the publisher writes"
+    for s in _string_constants(text):
+        flat = " ".join(s.split()).upper()
+        assert not re.search(r"\b(CREATE|ALTER|DROP|GRANT|REVOKE|COPY|CALL|SET_CONFIG|TRANSACTION|DELETE|TRUNCATE)\b", flat), s[:60]
+    assert [c for c in forbidden_calls(text) if c not in ("commit", "executemany")] == []
+    for path in READ_ONLY:  # the read side never depends on the write side
+        assert not any(m == "agent.reporting.publish" or (m == "agent.reporting" and n == "publish")
+                       for m, n in _imports(path)), path
+
+
 # ------------------------------------------------------------------ the checks themselves
 def test_the_guards_can_see_a_violation():
     """Perturbations: each check must fire on a real violation, or the tests above prove nothing."""
@@ -175,6 +222,9 @@ def test_the_guards_can_see_a_violation():
     assert not sql_violations('"""Docstring: this module never runs UPDATE predictions."""\n')
     assert forbidden_calls("conn.commit()\n") == ["commit"]
     assert forbidden_calls("Path('x').write_text('y')\n") == ["write_text"]
+    assert write_targets('X = "INSERT INTO predictions (id) VALUES (1)"\n') == ["predictions"]
+    assert write_targets('X = """ update  prediction_outcomes set status = 1"""\n') == ["prediction_outcomes"]
+    assert write_targets('X = "INSERT INTO reporting_runs (hour) VALUES (1) ON CONFLICT (hour) DO UPDATE SET run = 1"\n') == ["reporting_runs"]
     probe = Path("agent/_reporting_import_probe_tmp.py")
     try:
         probe.write_text("from agent.reporting.views import report\n", encoding="utf-8")

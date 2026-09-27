@@ -12,6 +12,13 @@
 > `docs/ops/least_privilege_role.sql` and checked by the watchdog), and the healthchecks.io heartbeat is
 > live and verified. Every action is pinned to a commit SHA and dependencies are audited (below). The only
 > open item is the dispatch-token renewal before 2027-09-20.
+>
+> **2026-09-27: one deliberate read surface.** The private stats read model (`docs/api/stats_access.md`):
+> `reporting_snapshot` and `reporting_runs`, SELECT only, for a signed-in Supabase Auth user whose token
+> carries the owner-set claim `app_metadata.reporting_viewer = true`. `anon` reads nothing, and every
+> other table stays closed. `python -m agent.database.security` checks this exact shape (role, privilege,
+> single policy and its condition) and fails on any widening. It was proven on real Postgres acting as
+> the API roles.
 
 Scope: a research-only backend that runs on GitHub Actions, writes to Supabase Postgres, and
 calls Binance (public), RSS feeds (public), CoinGecko (free key), and the Anthropic API.

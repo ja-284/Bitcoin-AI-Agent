@@ -195,7 +195,7 @@ shadow model's calibrated probability. A test walks every output to keep it that
 | guard | proven by |
 |---|---|
 | Nothing in `agent/` (outside `agent/reporting`), `run.py` or `tools/` imports it | `tests/test_reporting_separation.py` (AST scan + a probe that must be detected); mutation: the orchestrator imports it |
-| No workflow runs it | same test file; mutation: the hourly workflow runs it |
+| No workflow runs it, except the stats publisher's own (2026-09-27: `reporting.yml`, after each hourly run, running only `python -m agent.reporting.publish`, which writes only the two stats caches) | same test file; mutations: the hourly workflow runs it; the stats workflow gains a schedule, the prediction job, or the AI key |
 | It imports only reviewed read-only names (an allowlist: no `save_*`, `track_*`, `publish`, `run`, `main`) | same test file |
 | Its SQL is SELECT-only: no INSERT/UPDATE/DELETE/DDL, and no `SET`, `set_config` or `TRANSACTION` that could undo read-only mode; no `commit`, `executemany` or file writes | same test file; mutation: a write statement |
 | Only one function opens a connection, and it makes the **server** hold it READ ONLY, failing closed if that does not stick | same test file (a fake connection); mutations: read-only off, fail-closed removed |
@@ -205,11 +205,24 @@ shadow model's calibrated probability. A test walks every output to keep it that
 
 ## 8. Updates
 
-There is **no scheduler and no new job**. The views read the record the hourly system already writes, so
-they are current whenever they are asked. The published snapshot (`backend_state`, contract v1) remains
-the only thing the hourly job writes for display.
+There is **no scheduler**. The views read the record the hourly system already writes, so they are
+current whenever they are asked. The published snapshot (`backend_state`, contract v1) remains the only
+thing the hourly job writes for display. **Since 2026-09-27** a separate workflow, triggered when an hourly
+run *completes*, also stores these documents for the private stats website (section 9).
 
-## 9. For the future frontend (not built)
+## 9. For the future frontend
+
+**Decided and built 2026-09-27: `docs/api/stats_access.md`.** In short:
+- the hourly workflow stays unchanged;
+- a separate "Reporting snapshot" workflow, triggered when an hourly run completes, stores these
+  documents unchanged in two derived-cache tables (`reporting_snapshot`, `reporting_runs`);
+- only a signed-in Supabase Auth user carrying the owner-set claim `app_metadata.reporting_viewer =
+  true` may read them, and only with SELECT;
+- `anon` gets nothing, and the security check fails on anything wider.
+
+It deviates from the recommendation below in one way, deliberately: the publish step is **not** a step
+of the hourly job, because the hourly workflow was to stay untouched. The rest of the recommendation is
+what was built. The text below is kept as it was written before the decision.
 
 The UI's statistics page should render these documents as they are, including `sample`, `evidence`,
 `never_use_for` and `limitations`, and never recompute or relabel them. How the phone reaches them is a

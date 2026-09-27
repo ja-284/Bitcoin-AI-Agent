@@ -67,7 +67,9 @@ def known_at(records: Records, at: datetime) -> Records:
     errors = [e for e in records.shadow_errors if e["occurred_at"] <= at]
     state = records.backend_state if records.backend_state and records.backend_state["generated_at"] <= at else None
     detail = records.run_detail if records.run_detail and records.run_detail["created_at"] <= at else None
-    return Records(preds, outcomes, shadow, errors, state, records.schema_version, detail)
+    details = ({h: d for h, d in records.run_details.items() if d["created_at"] <= at}
+               if records.run_details is not None else None)
+    return Records(preds, outcomes, shadow, errors, state, records.schema_version, detail, details)
 
 
 # ------------------------------------------------------------------ small helpers
@@ -242,6 +244,15 @@ def recent_runs(records: Records, at: datetime, limit: int = 24, before: datetim
     return {"runs": [run_view(p, by_pred.get(p["id"], {}), shadow.get(p["as_of"]), at) for p in page],
             "returned": len(page), "total_runs": len(known.predictions),
             "next_before": iso(page[-1]["as_of"]) if len(preds) > len(page) else None}
+
+
+def all_runs(records: Records, at: datetime) -> dict[datetime, dict]:
+    """Every run known at `at`, oldest first, each with its detail when the records carry it (the publisher's view)."""
+    known = known_at(records, at)
+    by_pred, shadow = _indexes(known)
+    details = known.run_details or {}
+    return {p["as_of"]: run_view(p, by_pred.get(p["id"], {}), shadow.get(p["as_of"]), at, detail=details.get(p["as_of"]))
+            for p in sorted(known.predictions, key=lambda p: p["as_of"])}
 
 
 def run_at(records: Records, at: datetime, hour: datetime) -> dict | None:

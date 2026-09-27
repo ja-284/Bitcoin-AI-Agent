@@ -51,6 +51,10 @@ other or with the versions in the code. **Update both, together, from the comman
   (`docs/research/readiness_gate.md`).
 - Research is isolated from production: E026–E029 ran on development data only, and no research module is
   imported by the live or shadow path (tested). None of them changed anything that runs.
+- **Private stats read model (2026-09-27, `docs/api/stats_access.md`): the only thing readable through
+  Supabase's API.** Two derived caches, SELECT only, for one signed-in viewer with an owner-set claim
+  (no viewer account exists yet; the website is not built). `anon` reads nothing. It is not the trading
+  application, and nothing in the system reads these caches.
 
 ## What happens automatically (no one needs to do anything)
 
@@ -68,6 +72,10 @@ other or with the versions in the code. **Update both, together, from the comman
      their proven rights.
    - The **heartbeat** (healthchecks.io, outside GitHub) emails if no successful run pings for 1 h 30 min,
      and at once on a failed run.
+5. **After each successful hourly run**, the separate *Reporting snapshot* workflow refreshes the private
+   stats read model (`python -m agent.reporting.publish`). It is downstream only: it reads the record
+   read-only and writes only its two caches. Its failure cannot touch the live record, and it emails only
+   once the snapshot is more than 3 hours old.
 
 **Nothing routine needs the user.** Nothing in production depends on a PC being on, on a working session
 happening, or on the weekly audit being run on time.
@@ -115,6 +123,7 @@ happening, or on the weekly audit being run on time.
 | GitHub "run failed" emails for several hours in a row | a persistent failure (a source down, a secret, a code defect) | Nothing is lost while it fails; the hour simply isn't recorded. Leave it for the next session unless it lasts > 1 day. |
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
 | a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~17 MB of 500 MB). |
+| a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
 | a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-11-25; any commit resets the clock. |
 
 **Calendar:** renew the GitHub token `supabase-dispatch` before **2027-09-20**

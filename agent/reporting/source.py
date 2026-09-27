@@ -13,10 +13,13 @@ something to publish -- the same rule agent/api/state.py follows), news headline
 snapshots (large, and not needed for statistics).
 """
 
+import json
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 from agent.database.db import get_connection
+from agent.research.live_checkpoint import CHECKPOINTS, OUT_DIR, TERCILES_PATH
 
 PREDICTIONS_SQL = """
     SELECT id, as_of, cutoff_at, fetched_at, created_at, pipeline_version, scoring_version, signal,
@@ -45,6 +48,9 @@ TABLE_EXISTS_SQL = "SELECT to_regclass(%s)"
 RUN_DETAIL_SQL = """
     SELECT explanation, category_scores, created_at FROM predictions WHERE as_of = %s
 """
+ALL_RUN_DETAILS_SQL = """
+    SELECT as_of, explanation, category_scores, created_at FROM predictions ORDER BY as_of
+"""
 
 
 @dataclass(frozen=True)
@@ -58,6 +64,7 @@ class Records:
     backend_state: dict | None
     schema_version: str | None
     run_detail: dict | None = None  # explanation and category scores of ONE requested hour
+    run_details: dict | None = None  # the same for EVERY hour (as_of -> detail), when the publisher asks for it
 
 
 def read_only_connection():
@@ -81,7 +88,7 @@ def _exists(cur, table: str) -> bool:
     return cur.fetchone()[0] is not None
 
 
-def load(detail_hour: datetime | None = None) -> Records:
+def load(detail_hour: datetime | None = None, all_details: bool = False) -> Records:
     """Everything the views need, in one read-only transaction (one consistent snapshot of the record)."""
     with read_only_connection() as conn, conn.cursor() as cur:
         preds = _rows(cur, PREDICTIONS_SQL)
@@ -91,7 +98,20 @@ def load(detail_hour: datetime | None = None) -> Records:
         state = _rows(cur, BACKEND_STATE_SQL) if _exists(cur, "backend_state") else []
         version = _rows(cur, SCHEMA_VERSION_SQL) if _exists(cur, "schema_meta") else []
         detail = _rows(cur, RUN_DETAIL_SQL, (detail_hour,)) if detail_hour is not None else []
+        details = {d.pop("as_of"): d for d in _rows(cur, ALL_RUN_DETAILS_SQL)} if all_details else None
     return Records(predictions=preds, outcomes=outcomes, shadow=shadow, shadow_errors=errors,
                    backend_state=state[0] if state else None,
                    schema_version=version[0]["value"] if version else None,
-                   run_detail=detail[0] if detail else None)
+                   run_detail=detail[0] if detail else None, run_details=details)
+
+
+def computed_readings(out_dir: Path = OUT_DIR) -> dict[int, str]:
+    """Registered checkpoint readings that exist on disk (written once by live_checkpoint, never here)."""
+    return {c: str(out_dir / f"checkpoint_{c}h.md") for c in CHECKPOINTS if (out_dir / f"checkpoint_{c}h.md").exists()}
+
+
+def frozen_terciles(path: Path = TERCILES_PATH) -> tuple[float, float] | None:
+    """The development-period volatility cut points the 5,000-hour checkpoint uses (never recomputed)."""
+    if not path.exists():
+        return None
+    return tuple(json.loads(path.read_text(encoding="utf-8"))["tercile_cut_points"])

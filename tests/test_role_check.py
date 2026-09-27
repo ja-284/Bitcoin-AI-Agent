@@ -14,10 +14,12 @@ def test_the_expectations_are_read_from_the_proven_file():
     tables, columns, policies = EXPECTED
     assert tables == {"predictions": {"SELECT", "INSERT"}, "prediction_outcomes": {"SELECT", "INSERT"},
                       "schema_meta": {"SELECT"}, "shadow_move_size": {"SELECT", "INSERT"},
-                      "shadow_run_errors": {"SELECT", "INSERT"}, "backend_state": {"SELECT", "INSERT", "UPDATE"}}
+                      "shadow_run_errors": {"SELECT", "INSERT"}, "backend_state": {"SELECT", "INSERT", "UPDATE"},
+                      # the private stats read model's two caches (2026-09-27), replaced by the reporting workflow
+                      "reporting_snapshot": {"SELECT", "INSERT", "UPDATE"}, "reporting_runs": {"SELECT", "INSERT", "UPDATE"}}
     assert columns == {"shadow_move_size": {"outcome_status", "outcome_close", "outcome_return", "outcome_large",
                                             "outcome_checked_at"}}
-    assert policies == 13
+    assert policies == 19
 
 
 def test_a_change_to_the_file_changes_the_expectation():

@@ -257,6 +257,21 @@ rather than assumed safe.
 **Also expect** the security advisor to show *"RLS enabled, no policy"* on each table from now on.
 That is informational and is the intended state: deny everything until a policy is added on purpose.
 
+## 6. The private stats website: account and claim, ONLY when the website is being built (not now)
+
+**Nothing to do today.** The backend side is built (2026-09-27, `docs/api/stats_access.md`): two read-only
+stats caches refreshed after every hourly run, readable only by a signed-in account that carries an
+owner-set flag. Until you create that account, nobody can read them, you included. When you build the
+website in Lovable, do these three steps, all described with exact clicks and SQL in
+`docs/api/stats_access.md` section 2:
+
+1. create your one user in Supabase Authentication (email + strong password);
+2. turn off new sign-ups;
+3. set the flag `app_metadata.reporting_viewer = true` on your user with the one SQL statement given there.
+
+Give Lovable only the project URL and the publishable (anon) key, never the service_role key, the
+database URL or any password. This is a private statistics page, **not the trading application**.
+
 ## Not on this list, deliberately
 
 - **Anything involving real money, orders, wallets or exchanges.** The project is analysis-only. The

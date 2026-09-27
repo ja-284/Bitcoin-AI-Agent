@@ -97,7 +97,9 @@ agent/
                          number carrying whether it is a probability (docs/api/contract_v1.md)
   reporting/             read-only statistics over the record: run history, outcomes by
                          horizon, calibration, health (docs/api/reporting_v1.md); downstream
-                         only -- nothing in production imports it, the database refuses its writes
+                         only -- nothing in production imports it, the database refuses its writes;
+                         publish.py stores them for the private stats website
+                         (docs/api/stats_access.md: signed-in viewer only, read-only, not trading)
   research/              everything experimental: periods & holdout guard, labels, features,
                          replay, walk-forward, calibration, model bench, parity, drift,
                          weekly report, holdout evaluation (sealed)
@@ -106,8 +108,9 @@ docs/research/           parity rules, data sources, failure modes, reproducibil
 docs/ops/                STATUS.md (read first: mode, alarms, emergencies, the next
                          checkpoint), external trigger, security audit, performance review,
                          observability review, open user actions, incident write-up
-docs/api/                the frontend contracts: contract_v1 (the published "now" snapshot) and
-                         reporting_v1 (history and statistics); read both before building any screen
+docs/api/                the frontend contracts: contract_v1 (the published "now" snapshot),
+                         reporting_v1 (history and statistics) and stats_access (how the private
+                         stats website may read them); read all three before building any screen
 tests/                   the unit suite, no network or database (CI enforces that with an
                          unreachable DATABASE_URL); tests/integration (opt-in, real DB)
 ```

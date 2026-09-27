@@ -60,7 +60,8 @@ def main() -> int:
     from agent.database.security import posture
 
     p = posture()
-    print("public-API posture:", "OK -- nothing exposed" if p["ok"] else "EXPOSED: " + "; ".join(p["problems"]))
+    print("public-API posture:", "OK -- nothing exposed beyond the designed stats read surface (docs/api/stats_access.md)"
+          if p["ok"] else "EXPOSED: " + "; ".join(p["problems"]))
     return 0 if p["ok"] else 1
 
 

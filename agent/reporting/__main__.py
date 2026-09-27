@@ -15,11 +15,9 @@ import argparse
 import json
 import sys
 from datetime import datetime, timezone
-from pathlib import Path
 
 from agent.reporting import views
-from agent.reporting.source import load
-from agent.research.live_checkpoint import CHECKPOINTS, OUT_DIR, TERCILES_PATH
+from agent.reporting.source import computed_readings, frozen_terciles, load
 
 KINDS = ("latest", "runs", "run", "statistics", "health", "all")
 
@@ -27,17 +25,6 @@ KINDS = ("latest", "runs", "run", "statistics", "health", "all")
 def _utc(text: str) -> datetime:
     t = datetime.fromisoformat(text.replace("Z", "+00:00"))
     return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
-
-
-def computed_readings(out_dir: Path = OUT_DIR) -> dict[int, str]:
-    """Registered checkpoint readings that exist on disk (written once by live_checkpoint, never here)."""
-    return {c: str(out_dir / f"checkpoint_{c}h.md") for c in CHECKPOINTS if (out_dir / f"checkpoint_{c}h.md").exists()}
-
-
-def frozen_terciles(path: Path = TERCILES_PATH) -> tuple[float, float] | None:
-    if not path.exists():
-        return None
-    return tuple(json.loads(path.read_text(encoding="utf-8"))["tercile_cut_points"])
 
 
 def build(kind: str, at: datetime, now: datetime, limit: int = 24, before: datetime | None = None,

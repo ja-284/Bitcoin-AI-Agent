@@ -5,6 +5,40 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## security / observability — 2026-09-27 later (private stats access prepared; no website built)
+
+THIS IS A PRIVATE READ-ONLY STATISTICS INTERFACE. IT IS NOT THE FUTURE AUTOMATED-TRADING APPLICATION.
+Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint or the holdout changed,
+and `hourly.yml` is byte-identical.
+
+- **Read model:** `agent/reporting/schema.sql` creates `reporting_snapshot` (one row, the `all` document) and
+  `reporting_runs` (one row per run hour). They are derived caches, read by nothing in the system, and were
+  applied live with `python -m agent.migrate`. The schema version stays 4: the live job needs nothing new.
+- **Access:**
+  - SELECT to `authenticated` on those two tables only, through one policy each:
+    `(auth.jwt() -> 'app_metadata' ->> 'reporting_viewer') = 'true'`. Only the owner can set app_metadata.
+  - `anon` holds nothing.
+  - `agent/database/security.py`'s empty allowlist became this exact surface, and it fails on any widening:
+    `anon`, another privilege or policy, a RESTRICTIVE or WITH CHECK policy, or any other condition.
+- **Publisher:** `agent/reporting/publish.py`.
+  - It reads through the read-only connection and stores `views.document(...)` / `views.all_runs(...)`
+    unchanged. It refuses holdout-dated hours.
+  - A failure is silent until the snapshot is over 3 h old, then the workflow fails.
+  - It runs in the new `.github/workflows/reporting.yml`, triggered by `workflow_run` after the hourly
+    workflow succeeds, plus manual dispatch. That workflow has no schedule, one command, the database
+    secret only, and SHA-pinned actions.
+- **Job role:** `docs/ops/least_privilege_role.sql` adds SELECT/INSERT/UPDATE on the two caches, with 6
+  policies (19 in total). It was applied live just before the push of this change.
+- **Tests:**
+  - unit: detector (12 widening variants), static schema-file check, separation (only the reporting
+    workflow runs only the publisher; the publisher writes only the two caches), publisher (equality
+    with the reporting layer, holdout refusal, the stale rule, dry run);
+  - integration on real Postgres acting as `anon` / `authenticated` with token claims: the viewer reads;
+    anonymous and five kinds of non-viewer are refused or see 0 rows; 17 viewer writes and record reads
+    are refused; the detector reports five live-style widenings; the job role publishes and is refused
+    everything else.
+- 10 new mutation guards (66 in total). `docs/api/stats_access.md` documents the whole boundary.
+
 ## observability — 2026-09-27 (read-only reporting layer, reporting contract v1; no UI)
 
 Nothing in the predictive path, the checkpoint rules, the workflows or the database schema changed.

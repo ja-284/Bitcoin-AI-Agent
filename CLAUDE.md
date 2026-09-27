@@ -28,8 +28,14 @@ in agreement). The checkpoint rules and the 500-hour procedure live in `research
 - **Read-only reporting layer (2026-09-27, observability only):** `agent/reporting` +
   `docs/api/reporting_v1.md`. It derives the run history, outcomes, statistics and health from the
   existing records, on a server-enforced read-only connection. Nothing in production imports or runs it
-  (tested, mutation-guarded), and its figures are never used for tuning, selection or a checkpoint. No UI;
-  how a phone will reach it is a later, separate access-control decision.
+  (tested, mutation-guarded), and its figures are never used for tuning, selection or a checkpoint.
+- **Private stats access (2026-09-27): `docs/api/stats_access.md`.** A PRIVATE READ-ONLY STATISTICS INTERFACE,
+  NOT the trading application. The separate *Reporting snapshot* workflow (after each successful hourly run;
+  the hourly workflow is untouched) stores the reporting documents in two caches, `reporting_snapshot` and
+  `reporting_runs`. They are readable ONLY with SELECT by a signed-in Supabase Auth user carrying the
+  owner-set claim `app_metadata.reporting_viewer = true` (`anon` reads nothing), and the security check
+  fails on any widening. No website and no viewer account exist yet (owner's steps: `open_user_actions.md`
+  item 6).
 - The dated **Status** log below is history. Where an older entry says something is open or "not set up",
   the newer entries (and STATUS.md) win.
 
@@ -135,6 +141,29 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
   recommended future design is written in the doc.
 - 502 unit tests; 127 of 500 prospective hours (08:10 UTC).
 
+**2026-09-27 (later) — private stats access prepared (the user's request; no website built).**
+- **Design (the safest found):**
+  - two derived-cache tables, `reporting_snapshot` (the `all` document) and `reporting_runs` (one row per
+    hour), filled by `agent/reporting/publish.py` from the reporting layer's own functions (nothing
+    recomputed);
+  - a separate *Reporting snapshot* workflow triggered when an hourly run completes: no schedule, runs
+    only the publisher, holds only the database secret; `hourly.yml` is unchanged;
+  - `bitcoin_agent` may additionally write only those two caches (`least_privilege_role.sql`, 19
+    policies; the watchdog's role check verifies exactly);
+  - readable ONLY with SELECT by a signed-in Supabase Auth user with the owner-set claim
+    `app_metadata.reporting_viewer = true` (users cannot edit app_metadata); `anon` gets nothing.
+- **Checks:** the security check's empty allowlist became this exact surface, and it fails on `anon`, a
+  second privilege or policy, or any other condition. The publisher refuses holdout-dated hours.
+- **Rollout order** (so the watchdog never saw an unknown state for more than seconds): detector pushed
+  first (`5df5d0c`), then `python -m agent.migrate` live (schema version stays 4; the live job needs
+  nothing new), then the job role's cache rights applied live together with the push of the rest.
+- **Proven on real Postgres acting as the API roles:** the viewer reads; `anon` is refused; five
+  non-viewer tokens (including a self-set `user_metadata` flag) see 0 rows; 17 write, create and
+  record-read attempts by the viewer are refused; five widenings are all reported by the check.
+- **Not done, on purpose:** the website, the viewer account (owner's steps, `open_user_actions.md`
+  item 6), any other exposed object.
+- THIS IS A PRIVATE READ-ONLY STATISTICS INTERFACE, NOT THE TRADING APPLICATION.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
@@ -173,6 +202,7 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 - `python -m agent.research.weekly_report` — the Phase 13 weekly live report (reads the database, small Binance fetch for the paper record; `--no-paper` skips that). Output in `research/monitoring/`. Never writes to live tables.
 - `python -m agent.research.live_checkpoint` — the registered prospective checkpoints (`research/LIVE_EVALUATION.md`). Before 500 graded prospective hours it only prints the count and writes nothing (it is the source of truth for that count); at 500 / 2,000 / 5,000 it reads exactly the first N hours, writes `research/monitoring/checkpoint_<N>h.md/.json` once and never rewrites them.
 - `python -m agent.reporting latest|runs|run --hour <ISO>|statistics|health|all [--at <ISO>] [--pretty]`: read-only statistics and run history over the record (`docs/api/reporting_v1.md`). Server-enforced read-only connection; prints JSON; writes nothing. `--at` shows the record exactly as it stood at that moment. Never imported by production code.
+- `python -m agent.reporting.publish [--dry-run]`: stores the reporting documents in the two private stats caches (`docs/api/stats_access.md`). It runs automatically in the *Reporting snapshot* workflow after each successful hourly run; `--dry-run` computes and stores nothing.
 - `python -m agent.research.holdout_eval --dry-run` — proves the Phase 12 script on the validation period. **`--unseal` opens the sealed holdout once and forever — only on the user's explicit go-ahead.**
 - `python -m pytest tests/` — run the tests (no network or database needed).
 - `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` — tests against real Postgres in a scratch schema it creates and drops (skipped by default): idempotency, the public-API lockdown layer by layer, the least-privilege role (`docs/ops/least_privilege_role.sql`, run as a throwaway role), and the **drift check** — the live database must match what the repository builds. **Run it at every weekly audit** (it is too heavy for the 3-hourly watchdog: it creates and drops a schema), and after any change made in the Supabase dashboard.

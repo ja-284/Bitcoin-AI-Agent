@@ -262,11 +262,17 @@ def test_every_table_is_locked_against_the_public_api(scratch_db):
                        WHERE n.nspname = %s AND c.relkind = 'r' ORDER BY 1""", (SCHEMA,))
         tables = dict(cur.fetchall())
         assert set(tables) >= {"predictions", "prediction_outcomes", "schema_meta", "shadow_move_size",
-                               "shadow_run_errors", "backend_state"}
+                               "shadow_run_errors", "backend_state", "reporting_snapshot", "reporting_runs"}
         assert all(tables.values()), f"RLS is off on: {[t for t, on in tables.items() if not on]}"
+        from agent.database.security import VIEWER_READ_TABLES
+
         for t in tables:
             for role in ("anon", "authenticated"):
                 for priv in ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE"):
+                    # The ONE deliberate opening (2026-09-27): SELECT on the two stats caches for signed-in viewers,
+                    # behind an owner-set claim (tests/integration/test_stats_access.py proves the rest). Nothing else.
+                    if t in VIEWER_READ_TABLES and role == "authenticated" and priv == "SELECT":
+                        continue
                     cur.execute("SELECT has_table_privilege(%s, %s, %s)", (role, f"{SCHEMA}.{t}", priv))
                     assert not cur.fetchone()[0], f"`{role}` still holds {priv} on {t}"
 
@@ -414,6 +420,38 @@ def test_the_least_privilege_role_cannot_do_anything_else(least_privileged):
         "drop a table": "DROP TABLE backend_state",
     }
     for what, sql in refused.items():
+        with as_probe() as conn, conn.cursor() as cur:
+            with pytest.raises(psycopg.Error, match="permission denied|must be owner|append-only"):
+                cur.execute(sql)
+            conn.rollback()
+
+
+def test_the_least_privilege_role_can_publish_the_stats_read_model_and_nothing_more(least_privileged, monkeypatch):
+    """
+    The reporting workflow runs as the job's role: it must be able to read the record read-only and replace the
+    two stats caches -- and still be refused everything else, including deleting from the caches themselves.
+    """
+    import psycopg
+
+    import agent.reporting.source as source
+    from agent.reporting import publish
+
+    db, _, _, as_probe = least_privileged
+    monkeypatch.setattr(source, "get_connection", as_probe)
+    monkeypatch.setattr(publish, "_cache_connection", as_probe)
+    # a recent hour: an hour dated inside the sealed holdout (2025-07-01 -> 2026-08-19) is refused by the publisher,
+    # which is exactly what the first version of this test demonstrated by accident
+    as_of = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) - 10 * HOUR
+    db.save_prediction(_prediction(as_of))
+    at = datetime.now(timezone.utc) + timedelta(minutes=5)
+    for _ in range(2):  # the second publish replaces, it does not duplicate
+        snapshot, runs = publish.build(source.load(all_details=True), at, at)
+        publish.store(snapshot, runs, at, at)
+    with as_probe() as conn, conn.cursor() as cur:
+        cur.execute("SELECT current_user, (SELECT count(*) FROM reporting_snapshot), (SELECT count(*) FROM reporting_runs)")
+        assert cur.fetchone() == (PROBE_ROLE, 1, 1)
+    for sql in ("DELETE FROM reporting_runs", "TRUNCATE reporting_snapshot", "DROP TABLE reporting_runs",
+                "ALTER TABLE reporting_runs DISABLE ROW LEVEL SECURITY", "UPDATE predictions SET signal = 'SELL'"):
         with as_probe() as conn, conn.cursor() as cur:
             with pytest.raises(psycopg.Error, match="permission denied|must be owner|append-only"):
                 cur.execute(sql)
