@@ -160,12 +160,9 @@ MUTATIONS = [
              "        for role in []:",
              "the exposure detector ignores functions callable at /rest/v1/rpc"),
     Mutation("security", "agent/database/security.py",
-             '        # No view is ever part of the read surface: the stats viewer reads two tables, under RLS.\n'
-             '        for role, granted in v["api_privileges"].items():\n'
-             '            if granted:',
-             '        # No view is ever part of the read surface: the stats viewer reads two tables, under RLS.\n'
-             '        for role, granted in v["api_privileges"].items():\n'
-             '            if False:',
+             # single line on purpose: a multi-line pattern cannot match a working copy with CRLF line endings
+             '                problems.append(f"view {name}:',
+             '                None and problems.append(f"view {name}:',
              "the exposure detector ignores a view granted to the public API (views bypass RLS)"),
     Mutation("security", "agent/database/schema.sql",
              "EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA %I REVOKE ALL ON TABLES FROM %I', current_schema(), r);",
@@ -308,8 +305,8 @@ MUTATIONS = [
              "        run: python run.py && python -m agent.reporting.publish",
              "the stats workflow also runs the prediction job (stats website)"),
     Mutation("stats-access", ".github/workflows/reporting.yml",
-             "on:\n  workflow_run:",
-             'on:\n  schedule:\n    - cron: "0 * * * *"\n  workflow_run:',
+             "  workflow_run:",  # one line, so the pattern matches whatever the file's line endings are
+             '  schedule:\n    - cron: "0 * * * *"\n  workflow_run:',
              "the stats workflow gets a schedule of its own, a second scheduler (stats website)"),
     Mutation("stats-access", ".github/workflows/reporting.yml",
              "      DATABASE_URL: ${{ secrets.DATABASE_URL }}",
