@@ -189,6 +189,38 @@ tuned; the two lowest dimensions are held down by real things — the lockdown b
 across three schema files (deliberate, so each file stays self-contained), and the least-privilege
 role and the API-log check remain open.
 
+## 2026-10-05 — back after a week away; the stats website backend finished (a side project)
+
+- **The week:**
+  - 199/199 hours, 351/351 hourly runs succeeded, 32/32 watchdog runs, 0 shadow errors;
+  - one degraded hour (2026-09-29 13:00, an AI provider error, marked);
+  - the weekly audit done (0 vulnerabilities, parity 379/379, integration 36/36);
+  - 328 of 500 prospective hours, with the checkpoint ≈ 2026-10-12.
+- **The side project's gaps, closed:**
+  - failed runs are now kept as incidents (append-only; the 16 of 2026-09-21/22 backfilled);
+  - predicted-vs-actual uses the registered mapping;
+  - weekly trends use neutral wording;
+  - there is an overview and a unified incident history;
+  - the Lovable handoff (`docs/api/stats_website_handoff.md`) is written.
+- No research, no tuning, no change to anything that predicts or judges.
+- **The main system returns to pre-500h monitoring.**
+- **PAUSED 2026-10-05 ~20:25 UTC, on the user's instruction, mid-verification. Resume from exactly here.**
+  - Everything is committed and pushed, and the live database is migrated. The stats-website backend is
+    built, tested and live.
+  - **The one open step:** confirm the new *Reporting snapshot* code's first real run. The 20:12 UTC hourly
+    run was still queued on GitHub at the pause, so the new publisher had not yet published.
+  - **First thing on resume:**
+    1. Read `reporting_snapshot` (read-only). Expect `document->'body' ? 'overview'`, `headline_status`,
+       `health.incidents.recorded_total` = 16 (the backfilled 2026-09-21/22 failures) and
+       `run->'outcomes'->'1h' ? 'signal_vs_actual'` on graded run rows.
+    2. Check the reporting workflow on GitHub: the incident job skipped after successes, the publish job
+       green.
+    3. If the publish failed, read the run log before changing anything.
+    4. Then refresh the STATUS snapshot from its source commands, commit and push, and give the user the
+       final report of the side-project brief (section 0 state, what existed, what was built, the
+       A–K proofs, the owner's steps).
+  - Then the main system returns to pre-500h monitoring (checkpoint ≈ 2026-10-12).
+
 ## 2026-09-27 (later) — private stats access prepared (at the user's request; no website built)
 
 - `docs/api/stats_access.md`: two derived caches filled by a separate workflow after each successful

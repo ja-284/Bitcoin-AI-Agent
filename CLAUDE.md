@@ -29,13 +29,20 @@ in agreement). The checkpoint rules and the 500-hour procedure live in `research
   `docs/api/reporting_v1.md`. It derives the run history, outcomes, statistics and health from the
   existing records, on a server-enforced read-only connection. Nothing in production imports or runs it
   (tested, mutation-guarded), and its figures are never used for tuning, selection or a checkpoint.
-- **Private stats access (2026-09-27): `docs/api/stats_access.md`.** A PRIVATE READ-ONLY STATISTICS INTERFACE,
-  NOT the trading application. The separate *Reporting snapshot* workflow (after each successful hourly run;
-  the hourly workflow is untouched) stores the reporting documents in two caches, `reporting_snapshot` and
-  `reporting_runs`. They are readable ONLY with SELECT by a signed-in Supabase Auth user carrying the
-  owner-set claim `app_metadata.reporting_viewer = true` (`anon` reads nothing), and the security check
-  fails on any widening. No website and no viewer account exist yet (owner's steps: `open_user_actions.md`
-  item 6).
+- **Private stats website: a SIDE PROJECT (2026-09-27, finished 2026-10-05).**
+  - What it is: a PRIVATE READ-ONLY STATISTICS INTERFACE, NOT the trading application. The main system
+    always wins any conflict.
+  - Docs: `docs/api/stats_access.md` (the boundary and the precise read/write model) and
+    `docs/api/stats_website_handoff.md` (the Lovable handoff).
+  - Three reporting tables: `reporting_snapshot`, `reporting_runs`, and `reporting_incidents`
+    (append-only).
+  - Written only by the separate *Reporting snapshot* workflow, after each completed hourly or watchdog
+    run: it records failed runs as incidents, then publishes. Neither the hourly workflow nor the
+    watchdog is changed.
+  - Readable ONLY with SELECT by a signed-in Supabase Auth user carrying the owner-set claim
+    `app_metadata.reporting_viewer = true`. `anon` reads nothing, and the security check fails on any
+    widening.
+  - No website and no viewer account exist yet (owner's steps: `open_user_actions.md` item 6).
 - The dated **Status** log below is history. Where an older entry says something is open or "not set up",
   the newer entries (and STATUS.md) win.
 
@@ -178,6 +185,59 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
   129 of 500 prospective hours (10:14 UTC).
 - THIS IS A PRIVATE READ-ONLY STATISTICS INTERFACE, NOT THE TRADING APPLICATION.
 
+**2026-10-05 — back after a week away; the stats website backend finished (the user's side-project brief).**
+- **The week (2026-09-27 10:00 → 2026-10-05 18:05 UTC), from the live record:**
+  - 199 of 199 hours recorded, all Binance, all written by `bitcoin_agent`, 0 timestamp-rule violations.
+  - GitHub: 351 hourly runs succeeded, 0 failed, 1 superseded backup slot was cancelled; 32/32 watchdog
+    runs green; 351 reporting publishes.
+  - One degraded hour: 2026-09-29 13:00, an AI provider server error, so news was left out and no
+    explanation was written, visibly marked. 0 shadow errors.
+  - The AI cost's first full measured week: $0.0135 a run ≈ $9.75 per 30 days.
+  - Weekly audit (overdue): 0 known vulnerabilities, parity 379/379, drift flags descriptive (the calm
+    market; two inputs below the development range in ~12% of hours), integration 36/36.
+  - **328 of 500 prospective hours.**
+- **Audit against the intended product:** most of it already existed. The gaps were:
+  - failed runs left no trace (a backup slot that filled the hour erased the evidence);
+  - no explicit predicted-vs-actual;
+  - no change-over-time view;
+  - no unified incident history.
+- **Built:**
+  - `reporting_incidents` (append-only even for the owner) and `agent/reporting/incidents.py`: failed
+    runs come from GitHub's `workflow_run` event, with fields passed as environment variables and
+    validated strictly; the publisher records its own failures and gaps over 3 h. The 16 failed runs
+    of 2026-09-21/22 were backfilled from GitHub's run history.
+  - The reporting workflow now also follows the Watchdog and publishes after failures too.
+  - `signal_vs_actual` per outcome (registered `SIGNAL_TO_LABEL`); E001's acted-hour comparison (equal
+    to the weekly report's); `trends` per week with neutral wording; `overview`; `latest_matured_run`;
+    `headline_status`; `incident_history` with what is not captured.
+  - The handoff doc.
+- **Rollout:**
+  1. Code first (`c7b52e2`; the publisher tolerates a missing incidents table).
+  2. One transaction created the table AND granted the job role its rights (19:17:10 UTC).
+  3. The role file was pushed 3 s later (`5397242`).
+  4. Verified: the role check is exact, the security check shows only the three tables, and integration
+     passes 36/36 including the live drift check.
+- **Mutation guards:** 77 in total, all 33 on this boundary caught, both controls held.
+- **Nothing** in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or
+  rules, LIVE_EVALUATION.md, the holdout, `hourly.yml` or `watchdog.yml` changed.
+- 555 unit tests.
+- **PAUSED 2026-10-05 ~20:25 UTC, on the user's instruction, mid-verification. Resume from exactly here.**
+  - Everything is committed and pushed, and the live database is migrated. The stats-website backend is
+    built, tested and live.
+  - **The one open step:** confirm the new *Reporting snapshot* code's first real run. The 20:12 UTC hourly
+    run was still queued on GitHub at the pause, so the new publisher had not yet published.
+  - **First thing on resume:**
+    1. Read `reporting_snapshot` (read-only). Expect `document->'body' ? 'overview'`, `headline_status`,
+       `health.incidents.recorded_total` = 16 (the backfilled 2026-09-21/22 failures) and
+       `run->'outcomes'->'1h' ? 'signal_vs_actual'` on graded run rows.
+    2. Check the reporting workflow on GitHub: the incident job skipped after successes, the publish job
+       green.
+    3. If the publish failed, read the run log before changing anything.
+    4. Then refresh the STATUS snapshot from its source commands, commit and push, and give the user the
+       final report of the side-project brief (section 0 state, what existed, what was built, the
+       A–K proofs, the owner's steps).
+  - Then the main system returns to pre-500h monitoring (checkpoint ≈ 2026-10-12).
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
@@ -216,6 +276,7 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 - `python -m agent.research.weekly_report` — the Phase 13 weekly live report (reads the database, small Binance fetch for the paper record; `--no-paper` skips that). Output in `research/monitoring/`. Never writes to live tables.
 - `python -m agent.research.live_checkpoint` — the registered prospective checkpoints (`research/LIVE_EVALUATION.md`). Before 500 graded prospective hours it only prints the count and writes nothing (it is the source of truth for that count); at 500 / 2,000 / 5,000 it reads exactly the first N hours, writes `research/monitoring/checkpoint_<N>h.md/.json` once and never rewrites them.
 - `python -m agent.reporting latest|runs|run --hour <ISO>|statistics|health|all [--at <ISO>] [--pretty]`: read-only statistics and run history over the record (`docs/api/reporting_v1.md`). Server-enforced read-only connection; prints JSON; writes nothing. `--at` shows the record exactly as it stood at that moment. Never imported by production code.
+- `python -m agent.reporting.incidents record-workflow-run`: records a failed hourly/watchdog run as an incident from the `INCIDENT_*` environment variables the *Reporting snapshot* workflow sets (strictly validated; exit 1 on anything unexpected). Not for manual use.
 - `python -m agent.reporting.publish [--dry-run]`: stores the reporting documents in the two private stats caches (`docs/api/stats_access.md`). It runs automatically in the *Reporting snapshot* workflow after each successful hourly run; `--dry-run` computes and stores nothing.
 - `python -m agent.research.holdout_eval --dry-run` — proves the Phase 12 script on the validation period. **`--unseal` opens the sealed holdout once and forever — only on the user's explicit go-ahead.**
 - `python -m pytest tests/` — run the tests (no network or database needed).

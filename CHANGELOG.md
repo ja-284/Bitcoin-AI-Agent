@@ -5,6 +5,40 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## side project — 2026-10-05 (the private stats website's backend, finished; no website built)
+
+A PRIVATE, READ-ONLY STATISTICS INTERFACE, NOT THE TRADING APPLICATION. Nothing in prediction, scoring,
+thresholds, features, the shadow model, the checkpoint code or rules, LIVE_EVALUATION.md, the holdout,
+`hourly.yml` or `watchdog.yml` changed. The schema version stays 4.
+
+- **Incident history.**
+  - `reporting_incidents` is append-only: a trigger refuses edits and deletes even by the owner. Only
+    the signed-in viewer can read it; the job role may only read and insert.
+  - Failed hourly and watchdog runs are recorded from GitHub's `workflow_run` event by
+    `agent/reporting/incidents.py`. Fields arrive as environment variables, never in a shell line, and
+    are validated strictly.
+  - The publisher records its own failed publishes and refresh gaps over 3 h.
+  - `health.incident_history` merges these with incidents derived from the record (missing hours,
+    degraded runs, shadow errors) and lists what is not captured.
+  - The 16 failed runs of 2026-09-21/22 were backfilled from GitHub's run history (source
+    `github_api_backfill`).
+- **Workflow:** `reporting.yml` now also follows the Watchdog. An incident job (own concurrency group)
+  runs before publishing, and publishing also follows failed runs, so failures are reflected, never
+  hidden.
+- **Predicted vs actual (existing definitions only):** `signal_vs_actual` per graded outcome
+  (`labels.SIGNAL_TO_LABEL`); E001's acted-hour comparison per horizon (tested equal to
+  `weekly_report.signal_record`); `absolute_move` beside the shadow probability.
+- **Change over time:** `trends` per calendar week, with neutral wording only and `is_a_conclusion` false.
+  Also `overview`, `latest_matured_run`, `headline_status` and `current_warning`.
+- **Docs:**
+  - `docs/api/stats_website_handoff.md` (new: the Lovable handoff);
+  - `stats_access.md`, which states the precise read/write model;
+  - `reporting_v1.md` §10; STATUS; open user actions.
+- **Rollout:** code first; then the table and the job role's rights in one transaction; then the role
+  file 3 s later. Role check exact, security check OK, integration 36/36 including the live drift check.
+- 33 boundary mutation guards caught (77 in total). 555 unit tests. The weekly report lost a stale
+  "heartbeat not set up" reminder.
+
 ## security / observability — 2026-09-27 later (private stats access prepared; no website built)
 
 THIS IS A PRIVATE READ-ONLY STATISTICS INTERFACE. IT IS NOT THE FUTURE AUTOMATED-TRADING APPLICATION.
