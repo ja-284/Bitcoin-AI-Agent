@@ -72,6 +72,10 @@ CREATE POLICY backend_replace ON reporting_snapshot FOR UPDATE TO bitcoin_agent 
 CREATE POLICY backend_read    ON reporting_runs     FOR SELECT TO bitcoin_agent USING (true);
 CREATE POLICY backend_insert  ON reporting_runs     FOR INSERT TO bitcoin_agent WITH CHECK (true);
 CREATE POLICY backend_replace ON reporting_runs     FOR UPDATE TO bitcoin_agent USING (true) WITH CHECK (true);
+-- (2026-10-05) the incident history: append only -- read and insert, never change (a trigger refuses that anyway)
+GRANT SELECT, INSERT ON reporting_incidents TO bitcoin_agent;
+CREATE POLICY backend_read    ON reporting_incidents FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert  ON reporting_incidents FOR INSERT TO bitcoin_agent WITH CHECK (true);
 
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;
