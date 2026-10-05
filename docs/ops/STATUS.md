@@ -53,9 +53,10 @@ other or with the versions in the code. **Update both, together, from the comman
 - Research is isolated from production: E026–E029 ran on development data only, and no research module is
   imported by the live or shadow path (tested). None of them changed anything that runs.
 - **Private stats read model (2026-09-27, `docs/api/stats_access.md`): the only thing readable through
-  Supabase's API.** Two derived caches, SELECT only, for one signed-in viewer with an owner-set claim
-  (no viewer account exists yet; the website is not built). `anon` reads nothing. It is not the trading
-  application, and nothing in the system reads these caches.
+  Supabase's API.** Three reporting tables (snapshot, run history, incidents; the last since 2026-10-05),
+  SELECT only, for one signed-in viewer with an owner-set claim. No viewer account exists yet, and the
+  website is a separate side project (frontend handoff: `docs/api/stats_website_handoff.md`). `anon`
+  reads nothing. It is not the trading application, and nothing in the prediction system reads these tables.
 
 ## What happens automatically (no one needs to do anything)
 
@@ -73,10 +74,12 @@ other or with the versions in the code. **Update both, together, from the comman
      their proven rights.
    - The **heartbeat** (healthchecks.io, outside GitHub) emails if no successful run pings for 1 h 30 min,
      and at once on a failed run.
-5. **After each successful hourly run**, the separate *Reporting snapshot* workflow refreshes the private
-   stats read model (`python -m agent.reporting.publish`). It is downstream only: it reads the record
-   read-only and writes only its two caches. Its failure cannot touch the live record, and it emails only
-   once the snapshot is more than 3 hours old.
+5. **After each completed hourly or watchdog run**, the separate *Reporting snapshot* workflow:
+   - first records a FAILED run as an incident (`python -m agent.reporting.incidents`, since 2026-10-05);
+   - then refreshes the private stats read model (`python -m agent.reporting.publish`).
+
+   It is downstream only: it reads the record read-only and writes only the three reporting tables. Its
+   failure cannot touch the live record, and it emails only once the snapshot is more than 3 hours old.
 
 **Nothing routine needs the user.** Nothing in production depends on a PC being on, on a working session
 happening, or on the weekly audit being run on time.
@@ -85,17 +88,17 @@ happening, or on the weekly audit being run on time.
 
 - **Every session:** the hourly-health loop. It covers every hour saved, roles, sources, errors, shadow
   rows and outcomes, heartbeat and watchdog runs, cost, and the snapshot above.
-- **Weekly audit, next due ≈ 2026-10-02** (or the first session after it, if the user is away):
-  `python -m agent.research.weekly_report`, `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q`
-  (drift check), and `python tools/dependency_audit.py`. The first report covering a full measured week of
-  AI cost is due then (cost has been measured since Wednesday 2026-09-23).
+- **Weekly audit, last done 2026-10-05, next due ≈ 2026-10-12** (the checkpoint week; or the first session
+  after it): `python -m agent.research.weekly_report`,
+  `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` (drift check), and
+  `python tools/dependency_audit.py`.
 - **The 500-hour checkpoint** (below), at the first session after 500 graded hours.
 
 ## Known, non-critical — nothing to do
 
 - GitHub fires the watchdog irregularly (≈ 4 of 7 slots a day). The heartbeat covers the gap.
-- AI cost follows the news week: ≈ $0.013–0.015 a run at weekends, ≈ $0.019–0.020 on busy weekdays, which
-  is about $11–14 a month, around the accepted ~$12. The weekly report flags a projection above $15.
+- AI cost follows the news week. The first full measured week (to 2026-10-05) came to ≈ $0.0135 a run,
+  ≈ $9.75 per 30 days, under the accepted ~$12. The weekly report flags a projection above $15.
 - Supabase grants its `net` schema to PUBLIC (unrevocable by this project). It is not an exposed API
   schema (checked 2026-09-24), so it is unreachable from outside.
 - Permanent, documented gaps, never backfilled: 9 missing hours on go-live weekend (2026-09-19/20), 7
@@ -115,6 +118,11 @@ happening, or on the weekly audit being run on time.
   - **E027:** it over-states at night and under-states in the US session.
   - **E029:** its calibration naturally wanders in multi-week runs about three to four times a year, so a
     few weeks of over-statement is not by itself a deviation.
+  - **2026-10-05 weekly report (descriptive):** the market stays calm (large moves in 32% of live hours).
+    Two inputs, `tr_mean_14_rel` and `trades_rel_168h`, now sit below the development 1st percentile in
+    about 12% of live hours, so the model is partly working in calmer conditions than anything it was
+    built on. On 328 graded hours it is still ahead of the free EWMA rule (Brier 0.1972 vs 0.2134).
+    Recorded, never tuned on; read at the registered checkpoints.
 
 ## Emergency-only — when the user should act
 

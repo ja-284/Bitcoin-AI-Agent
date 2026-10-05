@@ -22,9 +22,10 @@ import numpy as np
 from agent.api.state import CONFIDENCE_MEANING, LIMITATIONS, MOVE_SIZE_MEANING, MOVE_SIZE_STATUS, SIGNAL_EVIDENCE, Quantity
 from agent.healthcheck import check as staleness_check
 from agent.outcome_tracker import HORIZONS_HOURS
+from agent.reporting import INCIDENT_CAPTURE_STARTED as CAPTURE_STARTED
 from agent.reporting import NEVER_USE_FOR, REPORTING_CONTRACT_VERSION
 from agent.reporting.source import Records
-from agent.research.labels import DOWN, UP
+from agent.research.labels import DOWN, SIGNAL_TO_LABEL, UP
 from agent.research.live_checkpoint import BLOCK_HOURS, CHECKPOINTS, HOUR_BLOCKS, _slice, core, prospective, prospective_graded, regime_of
 from agent.research.metrics import brier_score, wilson_interval
 from agent.research.weekly_report import INTERVALS_NOMINAL_FROM_HOURS, expected_hours
@@ -69,7 +70,8 @@ def known_at(records: Records, at: datetime) -> Records:
     detail = records.run_detail if records.run_detail and records.run_detail["created_at"] <= at else None
     details = ({h: d for h, d in records.run_details.items() if d["created_at"] <= at}
                if records.run_details is not None else None)
-    return Records(preds, outcomes, shadow, errors, state, records.schema_version, detail, details)
+    incidents = [i for i in records.incidents if i["recorded_at"] <= at] if records.incidents is not None else None
+    return Records(preds, outcomes, shadow, errors, state, records.schema_version, detail, details, incidents)
 
 
 # ------------------------------------------------------------------ small helpers
@@ -123,6 +125,19 @@ def _outcome_state(as_of: datetime, horizon: int, row: dict | None, at: datetime
     return {"state": "pending" if at < matures_at + HOUR else "overdue", "matures_at": iso(matures_at)}
 
 
+def _signal_check(state: dict, signal: str) -> dict:
+    """
+    Predicted vs actual for the direction signal, by the REGISTERED mapping (agent/research/labels.SIGNAL_TO_LABEL:
+    BUY -> UP, SELL -> DOWN, HOLD -> no direction) against the registered binary outcome (UP if the return > 0).
+    This is the comparison E001/E017 made over 68,619 hours and found no edge in; one hour of it is a fact, not evidence.
+    """
+    if state["state"] != "graded":
+        return state
+    stated = SIGNAL_TO_LABEL[signal]
+    check = "no_direction_stated" if stated not in (UP, DOWN) else ("matched" if stated == state["direction"] else "not_matched")
+    return {**state, "signal_stated_direction": stated if stated in (UP, DOWN) else None, "signal_vs_actual": check}
+
+
 # ------------------------------------------------------------------ runs
 def _shadow_view(s: dict | None, at: datetime) -> dict:
     if s is None:
@@ -135,6 +150,7 @@ def _shadow_view(s: dict | None, at: datetime) -> dict:
     outcome = _outcome_state(s["as_of"], int(s["horizon_hours"]), row, at, "ret")
     if outcome["state"] == "graded":
         outcome["large_move"] = bool(s["outcome_large"])
+        outcome["absolute_move"] = abs(outcome["return"])  # compare with threshold_pct / 100; the model states no move size
     return {
         "available": True,
         "separate_from_signal": "research shadow model; it has never influenced the BUY/HOLD/SELL signal",
@@ -202,11 +218,13 @@ def run_view(pred: dict, outcomes: dict[int, dict], shadow: dict | None, at: dat
             "explanation_available": bool(pred["has_explanation"]),
             "database_role": meta.get("db_role"),
         },
-        "outcomes": {f"{h}h": _outcome_state(pred["as_of"], h, outcomes.get(h), at, "pct_change_from_prediction")
+        "outcomes": {f"{h}h": _signal_check(_outcome_state(pred["as_of"], h, outcomes.get(h), at, "pct_change_from_prediction"),
+                                             pred["signal"])
                      for h in HORIZONS_HOURS},
         "outcomes_note": ("Raw price change after the reference close, as a fraction (0.0044 = +0.44%), and its "
-                          "direction by the registered binary rule (UP if > 0). Bitcoin drifts on its own: a rise "
-                          "after a BUY is not evidence the signal worked."),
+                          "direction by the registered binary rule (UP if > 0). `signal_vs_actual` compares that with the "
+                          "direction the signal stated (BUY = UP, SELL = DOWN; HOLD states none). Bitcoin drifts on its own: "
+                          "a rise after a BUY is not evidence the signal worked, and no profit is implied."),
         "move_size": _shadow_view(shadow, at),
     }
     if detail is not None:
@@ -298,8 +316,37 @@ def signal_statistics(records: Records, at: datetime) -> dict:
                        "note": "Not a probability, so no calibration or Brier score is computed for it."},
         "by_horizon": {},
     }
+    out["by_horizon"] = _horizon_table(rows, by_pred, at)
+    return out
+
+
+def _acted_agreement(acted: list[tuple[str, float]], all_returns: list[float]) -> dict:
+    """
+    The registered E001 comparison (weekly_report.signal_record computes the same two numbers): on BUY/SELL hours,
+    the share whose direction matched (BUY then a rise, SELL then a fall), next to the share a guess of the more
+    common direction over ALL graded hours would get. Not a profit figure.
+    """
+    n = len(acted)
+    out = {"acted_graded": n, "sample": sample_evidence(n),
+           "note": ("How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common "
+                    "direction of all these hours would have been right. A higher first number on a small sample is not "
+                    "evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.")}
+    if all_returns:
+        up = float(np.mean(np.asarray(all_returns, float) > 0))
+        out["majority_direction_share_all_hours"] = max(up, 1 - up)
+    if n:
+        matched = sum(1 for sig, ret in acted if (sig == "BUY") == (ret > 0))
+        lo, hi = wilson_interval(matched, n)
+        out |= {"matched_share": matched / n, "matched_ci95": [_num(lo), _num(hi)]}
+    return out
+
+
+def _horizon_table(rows: list[dict], by_pred: dict, at: datetime) -> dict:
+    """Per registered horizon: BUY/HOLD/SELL/ALL outcome counts and shares, plus the acted-hour comparison."""
+    table = {}
     for h in HORIZONS_HOURS:
         groups = {g: {"graded": [], "pending": 0, "overdue": 0, "unavailable": 0} for g in ("BUY", "HOLD", "SELL", "ALL")}
+        acted = []
         for p in rows:
             st = _outcome_state(p["as_of"], h, by_pred.get(p["id"], {}).get(h), at, "pct_change_from_prediction")
             for g in (p["signal"], "ALL"):
@@ -307,10 +354,13 @@ def signal_statistics(records: Records, at: datetime) -> dict:
                     groups[g]["graded"].append(st["return"])
                 else:
                     groups[g][st["state"]] += 1
-        out["by_horizon"][f"{h}h"] = {
+            if st["state"] == "graded" and p["signal"] in ("BUY", "SELL"):
+                acted.append((p["signal"], st["return"]))
+        table[f"{h}h"] = {
             g: {"graded": len(v["graded"]), "pending": v["pending"], "overdue": v["overdue"], "unavailable": v["unavailable"]}
             | _return_summary(v["graded"]) for g, v in groups.items()}
-    return out
+        table[f"{h}h"]["acted_direction_agreement"] = _acted_agreement(acted, groups["ALL"]["graded"])
+    return table
 
 
 # ------------------------------------------------------------------ the shadow move-size model
@@ -419,6 +469,103 @@ def move_size_breakdowns(records: Records, at: datetime, terciles: tuple[float, 
     }
 
 
+# ------------------------------------------------------------------ change over time (descriptive only)
+TREND_NOTE = ("A figure that is higher or lower than in the previous week is a DESCRIPTION, not evidence that the system "
+              "improved or got worse. At these sample sizes weekly figures move a lot by chance alone (E024), and this model "
+              "family's calibration naturally wanders for weeks at a time (E029). Only the registered checkpoints judge it.")
+
+
+def _week_start(t: datetime) -> datetime:
+    t = t.astimezone(timezone.utc)
+    return (t - timedelta(days=t.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def _neutral_change(latest: float | None, previous: float | None) -> dict:
+    """'Higher / lower than the previous week' -- never 'better / worse'. Never a conclusion."""
+    if latest is None or previous is None:
+        return {"latest": latest, "previous": previous, "wording": "not enough data to compare", "is_a_conclusion": False}
+    diff = latest - previous
+    wording = ("higher than the previous week" if diff > 0 else "lower than the previous week" if diff < 0
+               else "the same as the previous week")
+    return {"latest": latest, "previous": previous, "difference": diff, "wording": wording, "is_a_conclusion": False}
+
+
+def trends(records: Records, at: datetime) -> dict:
+    """Week by week (Monday 00:00 UTC): the same figures as the statistics, per week, plus neutral comparisons."""
+    known = known_at(records, at)
+    by_pred, _ = _indexes(known)
+    rows = sorted((p for p in known.predictions if p["pipeline_version"] == PIPELINE_VERSION), key=lambda p: p["as_of"])
+    signal_weeks = []
+    for w in sorted({_week_start(p["as_of"]) for p in rows}):
+        week_rows = [p for p in rows if _week_start(p["as_of"]) == w]
+        signal_weeks.append({"week_starting": iso(w), "complete": w + timedelta(days=7) <= at, "runs": len(week_rows),
+                             "signal_counts": {s: sum(1 for p in week_rows if p["signal"] == s) for s in ("BUY", "HOLD", "SELL")},
+                             "by_horizon": _horizon_table(week_rows, by_pred, at)})
+    graded = prospective_graded(known.shadow)
+    shadow_weeks = []
+    if graded:
+        p = np.array([s["p_calibrated"] for s in graded], float)
+        y = np.array([1.0 if s["outcome_large"] else 0.0 for s in graded])
+        size = np.abs(np.array([s["outcome_return"] for s in graded], float))
+        keys = [iso(_week_start(s["as_of"])) for s in graded]
+        for key, g in sorted(_slice(graded, p, y, size, lambda r: iso(_week_start(r["as_of"]))).items()):
+            mask = np.array([k == key for k in keys])
+            shadow_weeks.append({"week_starting": key, "complete": datetime.fromisoformat(key) + timedelta(days=7) <= at,
+                                 "sample": sample_evidence(g["n"]), "brier": brier_score(p[mask], y[mask])}
+                                | {k: _num(v) for k, v in g.items()})
+    complete = [w for w in shadow_weeks if w["complete"]]
+    comparison = {}
+    if len(complete) >= 2:
+        last, prev = complete[-1], complete[-2]
+        comparison = {"latest_week": last["week_starting"], "previous_week": prev["week_starting"],
+                      "samples": [prev["n"], last["n"]],
+                      **{k: _neutral_change(last.get(k), prev.get(k)) for k in ("brier", "ece", "large_move_share", "mean_stated_p")}}
+    return {"what_this_is": "The same figures as the statistics, computed per calendar week (UTC, weeks start on Monday).",
+            "important": TREND_NOTE,
+            "move_size_by_week": shadow_weeks,
+            "move_size_latest_vs_previous_complete_week": comparison or {"wording": "not enough complete weeks to compare"},
+            "signal_by_week": signal_weeks}
+
+
+# ------------------------------------------------------------------ incidents: what went wrong, kept visible
+INCIDENT_CAPTURE = {
+    "recorded": ["a failed hourly run (also when a later backup run filled its hour)", "a failed watchdog run",
+                 "a failed stats publish (when the database could still be reached)",
+                 "a stats snapshot that was not refreshed for more than 3 hours"],
+    "derived_from_the_record": ["a missing hour", "a run with news unavailable, fallback price data, no explanation or an "
+                                "unavailable category", "a research shadow error", "an hour without a shadow row"],
+    "not_captured": ["a heartbeat alarm (it lives on healthchecks.io, outside this database)",
+                     "a reporting-workflow run that failed before it could write anything (its symptom, a stale snapshot, "
+                     "is recorded when publishing resumes)", "anything while the database itself is unreachable"],
+    "recorded_since": CAPTURE_STARTED,
+    "note": ("Failed runs from before 2026-10-05 were backfilled from GitHub's own run history (source "
+             "'github_api_backfill'); GitHub keeps that history for a limited time only."),
+}
+
+
+def incident_history(known: Records, preds: list[dict], missing: list[datetime], at: datetime) -> list[dict]:
+    """Every incident, recorded or derived from the record, newest first -- a problem does not vanish when the next hour succeeds."""
+    items = [{"at": iso(i["occurred_at"]), "kind": i["kind"], "how_known": f"recorded ({i['source']})", "summary": i["detail"],
+              "link": i["run_url"]} for i in (known.incidents or [])]
+    items += [{"at": iso(t), "kind": "missing_hour", "how_known": "derived from the record",
+               "summary": f"No prediction was recorded for the {t:%Y-%m-%d %H:00} UTC hour.", "link": None} for t in missing]
+    for p in preds:
+        problems = run_view(p, {}, None, at)["run"]["problems"]
+        if problems:
+            items.append({"at": iso(p["as_of"]), "kind": "run_degraded", "how_known": "derived from the record",
+                          "summary": f"The {p['as_of']:%Y-%m-%d %H:00} UTC run was recorded with: " + "; ".join(problems) + ".",
+                          "link": None})
+    items += [{"at": iso(e["occurred_at"]), "kind": "shadow_error", "how_known": "derived from the record",
+               "summary": f"The research shadow step failed at '{e['step']}' ({e['error_type']}); the live record is unaffected.",
+               "link": None} for e in known.shadow_errors]
+    shadow_hours = {s["as_of"] for s in known.shadow}
+    first_shadow = min(shadow_hours) if shadow_hours else None
+    items += [{"at": iso(p["as_of"]), "kind": "shadow_row_missing", "how_known": "derived from the record",
+               "summary": f"No shadow probability was recorded for the {p['as_of']:%Y-%m-%d %H:00} UTC hour.", "link": None}
+              for p in preds if first_shadow and p["as_of"] >= first_shadow and p["as_of"] not in shadow_hours]
+    return sorted(items, key=lambda i: (i["at"], i["kind"]), reverse=True)
+
+
 # ------------------------------------------------------------------ system health
 def _window_counts(preds: list[dict], missing: list[datetime], since: datetime | None) -> dict:
     rows = [p for p in preds if since is None or p["as_of"] >= since]
@@ -442,7 +589,8 @@ def health(records: Records, at: datetime, computed: dict[int, str] | None = Non
     preds = sorted(known.predictions, key=lambda p: p["as_of"])
     external = {
         "heartbeat": {"observable_here": False, "where": "the healthchecks.io dashboard (it emails when pings stop)"},
-        "watchdog": {"observable_here": False, "where": "GitHub -> Actions -> Watchdog (a failed run emails the owner)"},
+        "watchdog": {"observable_here": "failed runs only", "where": ("failed runs are recorded as incidents since "
+                     f"{CAPTURE_STARTED}; successful runs are not stored (GitHub -> Actions -> Watchdog)")},
         "job_wall_time": {"observable_here": False, "where": "GitHub -> Actions -> the hourly run"},
     }
     if not preds:
@@ -481,11 +629,23 @@ def health(records: Records, at: datetime, computed: dict[int, str] | None = Non
         problems.append(f"{sum(overdue.values())} outcome(s) overdue")
     if anomalies or unregistered:
         problems.append("outcome records that break the grading rules (see outcomes)")
+    recorded = known.incidents or []
+    recent_incidents = [i for i in recorded if i["occurred_at"] > at - timedelta(hours=24)]
+    if recent_incidents:
+        problems.append(f"{len(recent_incidents)} recorded incident(s) in the last 24 hours: "
+                        + ", ".join(sorted({i['kind'].replace('_', ' ') for i in recent_incidents})))
+    run_failed = any(i["kind"] in ("hourly_run_failed", "watchdog_failed") for i in recent_incidents)
     n_graded = len(prospective_graded(known.shadow))
     state = known.backend_state
+    status = "stale" if not fresh else ("ok" if not problems else "degraded")
     return {
-        "status": "stale" if not fresh else ("ok" if not problems else "degraded"),
+        "status": status,
+        "headline_status": ("attention_required" if status == "stale" or run_failed else
+                            "healthy" if status == "ok" else "degraded"),
+        "headline_rule": ("attention_required: no fresh prediction, or a failed hourly/watchdog run in the last 24 h; "
+                          "degraded: any other problem in the last 24 h; healthy: none. Judged when this was computed."),
         "problems": problems,
+        "current_warning": problems[0] if problems else None,
         "last_run": {"hour": iso(latest["as_of"]), "saved_at": iso(latest["created_at"]), "freshness": staleness,
                      "database_role": (latest.get("run_meta") or {}).get("db_role"),
                      "code_commit": (latest.get("run_meta") or {}).get("code_commit")},
@@ -505,6 +665,9 @@ def health(records: Records, at: datetime, computed: dict[int, str] | None = Non
         "schema_version": known.schema_version,
         "external": external,
         "checkpoint_progress": checkpoint_progress(n_graded, at, computed),
+        "incidents": {"recorded_total": len(recorded), "recorded_last_24h": len(recent_incidents),
+                      "recorded_by_kind": dict(Counter(i["kind"] for i in recorded)), "capture": INCIDENT_CAPTURE},
+        "incident_history": incident_history(known, preds, missing, at),
     }
 
 
@@ -544,6 +707,31 @@ def document(kind: str, body, at: datetime, generated_at: datetime) -> dict:
 def report(records: Records, at: datetime, terciles: tuple[float, float] | None = None,
            computed: dict[int, str] | None = None) -> dict:
     """Everything except the full run history: latest run, statistics, breakdowns and health."""
-    return {"latest_run": latest_run(records, at), "signal_statistics": signal_statistics(records, at),
+    latest, matured, h = latest_run(records, at), latest_matured_run(records, at), health(records, at, computed)
+    return {"overview": overview(latest, matured, h), "latest_run": latest, "latest_matured_run": matured,
+            "signal_statistics": signal_statistics(records, at),
             "move_size_statistics": move_size_statistics(records, at, computed),
-            "move_size_breakdowns": move_size_breakdowns(records, at, terciles), "health": health(records, at, computed)}
+            "move_size_breakdowns": move_size_breakdowns(records, at, terciles), "trends": trends(records, at),
+            "health": h}
+
+
+def latest_matured_run(records: Records, at: datetime) -> dict | None:
+    """The newest run whose 1-hour outcome had been recorded by `at` (what the first screen calls 'latest result')."""
+    known = known_at(records, at)
+    by_pred, shadow = _indexes(known)
+    done = [p for p in known.predictions if by_pred.get(p["id"], {}).get(1, {}).get("status") == "ok"]
+    if not done:
+        return None
+    p = max(done, key=lambda r: r["as_of"])
+    return run_view(p, by_pred.get(p["id"], {}), shadow.get(p["as_of"]), at)
+
+
+def overview(latest: dict | None, matured: dict | None, h: dict) -> dict:
+    """The first screen, taken from the parts below it (nothing computed twice)."""
+    return {"latest_hour": latest and latest["hour"], "latest_signal": latest and latest["signal"],
+            "latest_confidence": latest and latest["confidence"], "latest_move_size": latest and latest["move_size"],
+            "latest_matured_hour": matured and matured["hour"],
+            "latest_matured_1h_outcome": matured and matured["outcomes"]["1h"],
+            "latest_matured_move_size": matured and matured["move_size"],
+            "health": h.get("headline_status", h["status"]), "current_warning": h.get("current_warning"),
+            "prospective_progress": h.get("checkpoint_progress")}

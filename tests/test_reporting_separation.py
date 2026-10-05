@@ -28,7 +28,9 @@ from agent.reporting import source
 
 REPORTING = sorted(Path("agent/reporting").glob("*.py"))
 PUBLISHER = Path("agent/reporting/publish.py")
-READ_ONLY = [p for p in REPORTING if p != PUBLISHER]  # everything but the publisher: SELECT only, no writes of any kind
+INCIDENT_RECORDER = Path("agent/reporting/incidents.py")  # 2026-10-05: the other write path, into reporting_incidents only
+WRITERS = (PUBLISHER, INCIDENT_RECORDER)
+READ_ONLY = [p for p in REPORTING if p not in WRITERS]  # everything else: SELECT only, no writes of any kind
 REPORTING_WORKFLOW = Path(".github/workflows/reporting.yml")
 PRODUCTION_AND_RESEARCH = sorted(p for p in Path("agent").rglob("*.py") if "reporting" not in p.parts) + \
     [Path("run.py"), *sorted(Path("tools").glob("*.py"))]
@@ -41,7 +43,7 @@ ALLOWED = {
     "agent.database.db": {"get_connection"},
     "agent.healthcheck": {"check"},
     "agent.outcome_tracker": {"HORIZONS_HOURS"},
-    "agent.research.labels": {"DOWN", "UP"},
+    "agent.research.labels": {"DOWN", "SIGNAL_TO_LABEL", "UP"},  # the registered signal -> direction mapping (E001)
     "agent.research.live_checkpoint": {"BLOCK_HOURS", "CHECKPOINTS", "HOUR_BLOCKS", "OUT_DIR", "TERCILES_PATH", "_slice", "core",
                                        "prospective", "prospective_graded", "regime_of"},
     "agent.research.metrics": {"brier_score", "wilson_interval"},
@@ -106,22 +108,43 @@ def test_nothing_in_production_or_research_imports_the_reporting_layer():
     assert offenders == [], offenders
 
 
-def test_only_the_reporting_workflow_runs_it_and_it_runs_only_the_publisher():
+REPORTING_TABLES = ("reporting_snapshot", "reporting_runs", "reporting_incidents")
+
+
+def test_only_the_reporting_workflow_runs_it_and_it_runs_only_its_two_commands():
     assert REPORTING_WORKFLOW in WORKFLOWS and len(WORKFLOWS) >= 4
     for wf in WORKFLOWS:
         text = wf.read_text(encoding="utf-8")
         if wf != REPORTING_WORKFLOW:
-            for word in ("agent.reporting", "reporting_snapshot", "reporting_runs"):
+            for word in ("agent.reporting", *REPORTING_TABLES):
                 assert word not in text, f"{wf} mentions {word}"
     text = REPORTING_WORKFLOW.read_text(encoding="utf-8")
     code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
-    runs = [line.split("run:", 1)[1].strip() for line in code.splitlines() if line.strip().startswith(("run:", "- run:"))]
-    assert runs == ["pip install -r requirements.txt", "python -m agent.reporting.publish"], runs
+    run_lines = [line.split("run:", 1)[1].strip() for line in code.splitlines() if line.strip().startswith(("run:", "- run:"))]
+    assert run_lines == ["pip install -r requirements.txt", "python -m agent.reporting.incidents record-workflow-run",
+                         "pip install -r requirements.txt", "python -m agent.reporting.publish"], run_lines
+    assert not any("${{" in line for line in run_lines), "event data must reach a command through env, never the shell line"
     assert "schedule" not in code and "cron" not in code, "it must have no schedule of its own"
-    assert re.search(r'on:\s*\n\s*workflow_run:\s*\n\s*workflows: \["Hourly Bitcoin analysis"\]\s*\n\s*types: \[completed\]', code)
+    assert re.search(r'on:\s*\n\s*workflow_run:\s*\n\s*workflows: \["Hourly Bitcoin analysis", "Watchdog"\]\s*\n\s*types: \[completed\]', code)
     assert re.search(r"^name: Hourly Bitcoin analysis$", Path(".github/workflows/hourly.yml").read_text(encoding="utf-8"), re.M)
+    assert re.search(r"^name: Watchdog$", Path(".github/workflows/watchdog.yml").read_text(encoding="utf-8"), re.M)
     assert set(re.findall(r"secrets\.(\w+)", code)) == {"DATABASE_URL"}, "no AI key, no heartbeat URL, nothing else"
     assert re.search(r"^permissions:\s*\n\s*contents: read\s*$", code, re.M)
+    # the incident job may not be cancelled by later runs: its concurrency group is per triggering run
+    assert "group: reporting-incident-${{ github.event.workflow_run.id }}" in code
+
+
+def test_a_reporting_failure_cannot_hold_up_or_feed_the_hourly_analysis():
+    """Separate workflow, separate concurrency groups, and nothing in production even names a reporting table."""
+    hourly = Path(".github/workflows/hourly.yml").read_text(encoding="utf-8")
+    groups = set(re.findall(r"group:\s*(\S+)", hourly))
+    assert groups == {"hourly-analysis"} and not groups & set(re.findall(r"group:\s*(\S+)", REPORTING_WORKFLOW.read_text(encoding="utf-8")))
+    for path in PRODUCTION_AND_RESEARCH:
+        text = path.read_text(encoding="utf-8")
+        hits = [t for t in REPORTING_TABLES if t in text]
+        # the security check must NAME the tables to police them, and the mutation tool to break their guards on
+        # purpose; neither reads or writes them
+        assert not hits or path.as_posix() in ("agent/database/security.py", "tools/guard_mutations.py"), (path, hits)
 
 
 # ------------------------------------------------------------------ 2. it depends only on reviewed names
@@ -151,7 +174,8 @@ def test_only_the_read_only_helper_opens_a_connection():
         for fn in (n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)):
             calls = {c.func.id for c in ast.walk(fn) if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
             if "get_connection" in calls:
-                assert (path.name, fn.name) in {("source.py", "read_only_connection"), ("publish.py", "_cache_connection")},                     f"{path}:{fn.name} opens its own connection"
+                assert (path.name, fn.name) in {("source.py", "read_only_connection"), ("publish.py", "_cache_connection"),
+                                                ("incidents.py", "_incident_connection")}, f"{path}:{fn.name} opens its own connection"
 
 
 class _Conn:
@@ -192,21 +216,23 @@ def write_targets(source_text: str) -> list[str]:
     return [t.lower() for t in found]
 
 
-def test_the_publisher_writes_only_the_two_cache_tables_the_website_reads():
+def test_the_writers_write_only_the_reporting_tables_the_website_reads():
     from agent.database.security import VIEWER_READ_TABLES
-    from agent.reporting import publish
+    from agent.reporting import incidents, publish
 
-    text = PUBLISHER.read_text(encoding="utf-8")
-    targets = write_targets(text)
-    assert sorted(set(targets)) == sorted(publish.CACHE_TABLES) and len(targets) >= 2, targets
-    assert tuple(publish.CACHE_TABLES) == VIEWER_READ_TABLES, "the website may read exactly what the publisher writes"
-    for s in _string_constants(text):
-        flat = " ".join(s.split()).upper()
-        assert not re.search(r"\b(CREATE|ALTER|DROP|GRANT|REVOKE|COPY|CALL|SET_CONFIG|TRANSACTION|DELETE|TRUNCATE)\b", flat), s[:60]
-    assert [c for c in forbidden_calls(text) if c not in ("commit", "executemany")] == []
+    expected = {PUBLISHER: set(publish.CACHE_TABLES), INCIDENT_RECORDER: {incidents.TABLE}}
+    assert set(publish.CACHE_TABLES) | {incidents.TABLE} == set(VIEWER_READ_TABLES), "the website reads exactly what is written"
+    for path, tables in expected.items():
+        text = path.read_text(encoding="utf-8")
+        targets = write_targets(text)
+        assert set(targets) == tables and targets, (path, targets)
+        for s in _string_constants(text):
+            flat = " ".join(s.split()).upper()
+            assert not re.search(r"\b(CREATE|ALTER|DROP|GRANT|REVOKE|COPY|CALL|SET_CONFIG|TRANSACTION|DELETE|TRUNCATE)\b", flat), s[:60]
+        assert [c for c in forbidden_calls(text) if c not in ("commit", "executemany")] == [], path
     for path in READ_ONLY:  # the read side never depends on the write side
-        assert not any(m == "agent.reporting.publish" or (m == "agent.reporting" and n == "publish")
-                       for m, n in _imports(path)), path
+        assert not any(m in ("agent.reporting.publish", "agent.reporting.incidents")
+                       or (m == "agent.reporting" and n in ("publish", "incidents")) for m, n in _imports(path)), path
 
 
 # ------------------------------------------------------------------ the checks themselves
@@ -233,3 +259,18 @@ def test_the_guards_can_see_a_violation():
         assert _imports_reporting(probe)
     finally:
         probe.unlink()
+
+
+def test_the_snapshot_is_also_refreshed_after_a_failed_run_never_only_after_successes():
+    """A failure must be reflected (its incident, the missing or stale hour), not hidden behind the last success."""
+    code = REPORTING_WORKFLOW.read_text(encoding="utf-8")
+    publish_if = re.search(r"\n  publish:\n(?:.*\n)*?    if: (.*)\n", code).group(1)
+    for conclusion in ("success", "failure", "timed_out", "startup_failure"):
+        assert f'"{conclusion}"' in publish_if, conclusion
+    assert "!cancelled()" in publish_if and "needs: incident" in code
+
+
+def test_the_incident_table_is_append_only_in_its_schema_file():
+    sql = Path("agent/reporting/schema.sql").read_text(encoding="utf-8")
+    assert "CREATE TRIGGER reporting_incidents_append_only BEFORE UPDATE OR DELETE ON reporting_incidents" in " ".join(sql.split())
+    assert "RAISE EXCEPTION 'reporting_incidents is append-only" in sql

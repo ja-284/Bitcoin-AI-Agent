@@ -71,7 +71,7 @@ def test_the_only_read_surface_is_two_cache_tables_for_signed_in_viewers():
     The one deliberate opening (2026-09-27): the private stats read model, SELECT only, for `authenticated`
     only -- never `anon`. Changing any of this is a reviewable security decision, not a convenience.
     """
-    assert security.VIEWER_READ_TABLES == ("reporting_snapshot", "reporting_runs")
+    assert security.VIEWER_READ_TABLES == ("reporting_snapshot", "reporting_runs", "reporting_incidents")
     assert (security.VIEWER_ROLE, security.VIEWER_PRIVILEGE) == ("authenticated", "SELECT")
     assert security.VIEWER_CONDITION == "auth.jwt->'app_metadata'->>'reporting_viewer'='true'"
     assert not set(security.VIEWER_READ_TABLES) & {"predictions", "prediction_outcomes", "shadow_move_size",
@@ -92,7 +92,8 @@ def test_the_reporting_schema_file_opens_exactly_the_designed_surface():
     assert grants == [("SELECT", "authenticated")], grants
     code = re.sub(r"--[^\n]*", "", sql)  # the comments explain user_metadata; the SQL must never use it
     assert "TO anon" not in code and "user_metadata" not in code and "app_metadata" in code
-    assert re.findall(r"ARRAY\['(\w+)', '(\w+)'\]", sql)[0] == security.VIEWER_READ_TABLES
+    arrays = [tuple(re.findall(r"'(\w+)'", a)) for a in re.findall(r"ARRAY\[('reporting_[^\]]+)\]", sql)]
+    assert arrays == [security.VIEWER_READ_TABLES] * 2, arrays  # the lockdown loop and the grant loop name the same tables
 
 
 def test_the_watchdog_runs_the_live_posture_check():

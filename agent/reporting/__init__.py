@@ -23,6 +23,8 @@ What its numbers must never be used for is written into every document it emits 
 """
 
 REPORTING_CONTRACT_VERSION = "1"
+# Incidents are recorded from this date; failed runs from before were backfilled from GitHub's run history.
+INCIDENT_CAPTURE_STARTED = "2026-10-05"
 
 NEVER_USE_FOR = (
     "tuning, refitting or recalibrating any model",

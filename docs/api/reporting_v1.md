@@ -1,7 +1,16 @@
 # Reporting contract v1: read-only statistics over the live record
 
-**Status: built 2026-09-27, backend only.** There is no UI, no dashboard, no scheduler and no published
-endpoint. This document is the contract a future frontend's statistics page will consume.
+**Status: built 2026-09-27, backend only; extended 2026-10-05 (section 10).** There is no UI and no
+dashboard. This document is the contract the private statistics website will consume. Its frontend
+handoff is `docs/api/stats_website_handoff.md`, and its access boundary is `docs/api/stats_access.md`.
+
+**What "read-only" means here, precisely:**
+- the computing side (`source.py`, `views.py`) reads the production records on a connection the
+  database holds READ ONLY, and never writes anything;
+- the only writes in the package are the publisher (`publish.py`) and the incident recorder
+  (`incidents.py`), and they write only the three reporting tables (`reporting_snapshot`,
+  `reporting_runs`, `reporting_incidents`), as the least-privilege role;
+- no production record is ever written by this package.
 
 ```
 live hourly system  ->  authoritative database records  ->  agent/reporting (read-only)  ->  future UI
@@ -244,7 +253,28 @@ The UI's statistics page should render these documents as they are, including `s
 - Any mechanism that exposes run history outside the account holder needs its own review. The history
   contains nothing secret, but it is the user's.
 
-## 10. What must never be done with these statistics
+## 10. Additions, 2026-10-05: for the private statistics website
+
+Each addition reuses an existing definition. None changes a target, a horizon, a checkpoint rule or a
+figure that existed before.
+
+| where | field | meaning |
+|---|---|---|
+| every run's `outcomes[h]`, once graded | `signal_stated_direction`, `signal_vs_actual` | the direction the signal stated by the registered mapping (`labels.SIGNAL_TO_LABEL`: BUY = UP, SELL = DOWN, HOLD = none) and whether the registered binary outcome matched: `matched`, `not_matched` or `no_direction_stated` |
+| every run's `move_size.outcome`, once graded | `absolute_move` | the size of the move that happened, to set beside `threshold_pct` (the model states a probability, not a move size) |
+| `signal_statistics.by_horizon[h]` | `acted_direction_agreement` | E001's comparison: on BUY/SELL hours, the share that matched (Wilson interval), next to the majority-direction share over all graded hours. It is the same calculation as `weekly_report.signal_record` (a test checks equality). Not a profit figure. |
+| `body.trends` | `move_size_by_week`, `signal_by_week`, `move_size_latest_vs_previous_complete_week`, `important` | the same figures per calendar week (Monday 00:00 UTC; `complete` false for the current week), each with its `sample`; comparisons worded only "higher / lower / the same as the previous week", with `is_a_conclusion: false` |
+| `body.latest_matured_run` | a run view | the newest run whose 1-hour outcome had been recorded |
+| `body.overview` | first-screen values | taken from `latest_run`, `latest_matured_run` and `health`; nothing computed twice |
+| `health` | `headline_status`, `headline_rule`, `current_warning` | `attention_required` (no fresh prediction, or a failed hourly or watchdog run in the last 24 h), `degraded` (any other problem in the last 24 h) or `healthy` |
+| `health` | `incidents` | counts of recorded incidents, and `capture`: what is recorded, what is derived from the record, and what is **not captured** |
+| `health` | `incident_history` | every incident, newest first, with `how_known`: recorded (failed hourly or watchdog runs, failed or stale publishes) or derived from the record (missing hours, degraded runs, shadow errors, hours without a shadow row). A problem stays listed after the next hour succeeds. |
+| `health.external.watchdog` | `observable_here: "failed runs only"` | failed watchdog runs are recorded from 2026-10-05; successful ones are not stored |
+
+The recorded incidents live in `reporting_incidents` (append-only). The read side reads them back through
+the same read-only connection, filtered "as known at" by their `recorded_at`.
+
+## 11. What must never be done with these statistics
 
 - Tune, refit or recalibrate any model on them, or select features, thresholds, horizons, targets or
   algorithms from them. The prospective record judges the frozen model; it never shapes it.

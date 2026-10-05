@@ -173,7 +173,10 @@ def test_run_status_labels_and_the_one_probability():
                 yield from probabilities(v, f"{path}/{i}")
 
     doc = views.document("all", views.report(world(), AT), AT, AT)
-    assert set(probabilities(doc)) == {"/body/latest_run/move_size/probability"}
+    # every probability-flagged field is the shadow model's calibrated probability, wherever the document repeats it
+    assert set(probabilities(doc)) == {"/body/latest_run/move_size/probability", "/body/latest_matured_run/move_size/probability",
+                                       "/body/overview/latest_move_size/probability",
+                                       "/body/overview/latest_matured_move_size/probability"}
 
 
 # ------------------------------------------------------------------ statistics
@@ -262,7 +265,12 @@ def test_health_sees_missing_hours_overdue_outcomes_and_anomalies_but_never_erro
     assert h["shadow"]["latest_error"] == {"occurred_at": (T0 + 20 * H).isoformat(), "step": "fetch", "error_type": "HTTPError"}
     assert h["status"] == "degraded" and h["shadow"]["hours_without_a_shadow_row"] == 0
     assert "SECRET-TOKEN" not in _dump(views.clean(h))
-    assert h["external"]["heartbeat"]["observable_here"] is False and h["external"]["watchdog"]["observable_here"] is False
+    assert h["external"]["heartbeat"]["observable_here"] is False
+    assert h["external"]["watchdog"]["observable_here"] == "failed runs only"  # recorded as incidents since 2026-10-05
+    assert h["headline_status"] == "degraded" and h["current_warning"] == h["problems"][0]
+    kinds = {i["kind"] for i in h["incident_history"]}
+    assert {"missing_hour", "shadow_error"} <= kinds  # derived from the record, so they stay visible afterwards
+    assert all(i["how_known"] == "derived from the record" for i in h["incident_history"])  # nothing recorded here
     assert views.health(rec, T0 + 40 * H)["status"] == "stale"
     assert views.health(records(), AT)["status"] == "no_data"
 
@@ -285,3 +293,84 @@ def test_documents_are_deterministic_json_safe_and_carry_their_warnings():
     doc = json.loads(a)
     assert doc["read_only"] is True and doc["descriptive_only"] is True and doc["never_use_for"]
     assert views.clean({"x": float("nan"), "y": np.float64(np.inf), "z": np.int64(3)}) == {"x": None, "y": None, "z": 3}
+
+
+# ------------------------------------------------------------------ the statistics website's additions (2026-10-05)
+def test_each_graded_outcome_says_whether_the_signal_matched_by_the_registered_mapping():
+    a = T0
+    rec = records([pred(1, a, "BUY"), pred(2, a + H, "SELL"), pred(3, a + 2 * H, "HOLD")],
+                  [outcome(1, a, 1, 0.01), outcome(2, a + H, 1, 0.01), outcome(3, a + 2 * H, 1, -0.01)])
+    runs = {r["hour"]: r["outcomes"]["1h"] for r in views.recent_runs(rec, a + 10 * H)["runs"]}
+    assert (runs[a.isoformat()]["signal_vs_actual"], runs[a.isoformat()]["signal_stated_direction"]) == ("matched", "UP")
+    assert runs[(a + H).isoformat()]["signal_vs_actual"] == "not_matched"            # SELL, then a rise
+    assert runs[(a + 2 * H).isoformat()]["signal_vs_actual"] == "no_direction_stated"   # HOLD states no direction
+    pending = views.latest_run(rec, a + 10 * H)["outcomes"]["24h"]
+    assert pending["state"] == "pending" and "signal_vs_actual" not in pending          # nothing to compare yet
+
+
+def test_the_acted_hour_comparison_is_the_weekly_reports_own_calculation():
+    rec, late = world(hours=48), T0 + 300 * H                                            # every outcome recorded by then
+    ours = views.signal_statistics(rec, late)["by_horizon"]
+    by_hour = {p["id"]: p["as_of"] for p in rec.predictions}
+    theirs = weekly_report.signal_record(
+        rec.predictions, [{"prediction_as_of": by_hour[o["prediction_id"]], "horizon_hours": o["horizon_hours"],
+                           "status": o["status"], "pct_change_from_prediction": o["pct_change_from_prediction"]}
+                          for o in rec.outcomes])["by_horizon"]
+    for h in HORIZONS_HOURS:
+        a = ours[f"{h}h"]["acted_direction_agreement"]
+        assert a["acted_graded"] == theirs[f"{h}h"]["acted_n"]
+        assert a["matched_share"] == theirs[f"{h}h"]["acted_accuracy"]
+        assert a["majority_direction_share_all_hours"] == theirs[f"{h}h"]["naive_rate"]
+        assert "profit" in a["note"].lower() and a["sample"]["is_verdict"] is False
+
+
+def test_trends_are_per_week_partitions_described_without_judgement():
+    rec = world(hours=24 * 21)                                                           # three weeks of hours
+    at = T0 + 24 * 21 * H + 3 * H
+    t = views.trends(rec, at)
+    total = views.move_size_statistics(rec, at)["sample"]["n"]
+    assert sum(w["n"] for w in t["move_size_by_week"]) == total
+    assert sum(w["runs"] for w in t["signal_by_week"]) == len(views.known_at(rec, at).predictions)
+    assert all(datetime.fromisoformat(w["week_starting"]).weekday() == 0 for w in t["signal_by_week"])
+    cmp_ = t["move_size_latest_vs_previous_complete_week"]
+    assert cmp_["latest_week"] > cmp_["previous_week"] and all(not v["is_a_conclusion"] for k, v in cmp_.items() if isinstance(v, dict))
+    text = _dump(views.clean(t)).lower()
+    for judging in ("improv", "better", "worse", "success", "failed"):
+        assert judging not in text.replace("not evidence that the system improved or got worse", ""), judging
+    one_week = views.trends(world(hours=48), AT)["move_size_latest_vs_previous_complete_week"]
+    assert one_week == {"wording": "not enough complete weeks to compare"}
+
+
+def _incident(kind, occurred, recorded, key):
+    return {"incident_key": key, "kind": kind, "source": "workflow_event", "occurred_at": occurred, "recorded_at": recorded,
+            "workflow": "Hourly Bitcoin analysis", "conclusion": "failure",
+            "run_url": "https://github.com/ja-284/Bitcoin-AI-Agent/actions/runs/1", "detail": f"{kind} at {occurred:%H:%M}"}
+
+
+def test_a_failed_run_stays_visible_even_when_its_hour_was_filled_and_is_not_known_before_it_was_recorded():
+    base = world(hours=30)
+    failed_at = T0 + 28 * H + timedelta(minutes=12)
+    inc = _incident("hourly_run_failed", failed_at, failed_at + timedelta(minutes=3), "github:1:1")
+    rec = Records(base.predictions, base.outcomes, base.shadow, [], None, "4", None, None, [inc])
+    at = T0 + 29 * H + timedelta(minutes=30)
+    h = views.health(rec, at)
+    assert h["missing_hours_all_time"] == [] and h["headline_status"] == "attention_required"  # every hour IS recorded
+    assert h["incidents"]["recorded_last_24h"] == 1 and "hourly run failed" in h["current_warning"]
+    assert h["incident_history"][0]["kind"] == "hourly_run_failed" and h["incident_history"][0]["how_known"] == "recorded (workflow_event)"
+    later = views.health(rec, at + 30 * H)                                                 # still in the history a day later
+    assert any(i["kind"] == "hourly_run_failed" for i in later["incident_history"]) and later["incidents"]["recorded_last_24h"] == 0
+    before = views.health(rec, failed_at + timedelta(minutes=1))                           # not yet recorded at that moment
+    assert before["incidents"]["recorded_total"] == 0
+
+
+def test_the_overview_and_latest_matured_run_come_from_the_parts_below_them():
+    rec = world()
+    at = T0 + 48 * H + timedelta(minutes=30)  # the 47th hour is saved (48:12) but its 1h outcome is not (49:12)
+    r = views.report(rec, at)
+    assert r["latest_matured_run"]["outcomes"]["1h"]["state"] == "graded"
+    assert r["latest_run"]["outcomes"]["1h"]["state"] == "pending"
+    assert r["latest_matured_run"]["hour"] == (T0 + 46 * H).isoformat() and r["latest_run"]["hour"] == (T0 + 47 * H).isoformat()
+    o = r["overview"]
+    assert o["latest_hour"] == r["latest_run"]["hour"] and o["latest_confidence"]["is_probability"] is False
+    assert o["latest_matured_1h_outcome"] == r["latest_matured_run"]["outcomes"]["1h"]
+    assert o["health"] == r["health"]["headline_status"] and o["prospective_progress"] == r["health"]["checkpoint_progress"]

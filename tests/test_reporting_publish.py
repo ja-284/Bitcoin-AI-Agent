@@ -102,9 +102,14 @@ def test_a_failure_is_loud_only_once_the_snapshot_is_stale(monkeypatch, age, cod
     def boom(**kw):
         raise ConnectionError("database unreachable")
 
+    recorded = []
     monkeypatch.setattr(publish, "load", boom)
+    monkeypatch.setattr(publish, "snapshot_generated_at", lambda: None)
     monkeypatch.setattr(publish, "snapshot_age", lambda now: age)
+    monkeypatch.setattr(publish.incidents, "record", recorded.append)
     assert publish.main([]) == code
+    # the failure itself stays visible afterwards, whether or not the snapshot is stale yet
+    assert [r["kind"] for r in recorded] == ["stats_publish_failed"] and "ConnectionError" in recorded[0]["detail"]
 
 
 def test_a_dry_run_stores_nothing(monkeypatch, capsys):
@@ -116,8 +121,31 @@ def test_a_dry_run_stores_nothing(monkeypatch, capsys):
         raise AssertionError("a dry run must not store")
 
     monkeypatch.setattr(publish, "store", forbidden)
+    monkeypatch.setattr(publish, "snapshot_generated_at", lambda: datetime.now(timezone.utc) - timedelta(hours=9))
+    monkeypatch.setattr(publish.incidents, "record", forbidden)  # a dry run records no incident either
     assert publish.main(["--dry-run"]) == 0
     assert json.loads(capsys.readouterr().out)["would_store"]["runs"] == 3
+
+
+def test_a_stale_gap_is_recorded_before_the_new_snapshot_is_computed(monkeypatch):
+    order = []
+    monkeypatch.setattr(publish, "snapshot_generated_at", lambda: datetime.now(timezone.utc) - timedelta(hours=5))
+    monkeypatch.setattr(publish.incidents, "record", lambda row: order.append(("incident", row["kind"])))
+    monkeypatch.setattr(publish, "load", lambda **kw: order.append(("load", None)) or world(hours=3))
+    monkeypatch.setattr(publish, "frozen_terciles", lambda: None)
+    monkeypatch.setattr(publish, "computed_readings", lambda: {})
+    monkeypatch.setattr(publish, "store", lambda *a, **kw: order.append(("store", None)) or {})
+    assert publish.main([]) == 0
+    assert order == [("incident", "stats_snapshot_was_stale"), ("load", None), ("store", None)]
+
+
+def test_the_stale_rule_is_strictly_more_than_three_hours():
+    now = datetime(2026, 10, 5, 12, tzinfo=timezone.utc)
+    assert publish.stale_incident(None, now) is None
+    assert publish.stale_incident(now - timedelta(hours=3), now) is None
+    gap = publish.stale_incident(now - timedelta(hours=3, minutes=1), now)
+    assert gap["kind"] == "stats_snapshot_was_stale" and gap["occurred_at"] == now - timedelta(hours=3, minutes=1)
+    assert "08:59" in gap["detail"] and "12:00" in gap["detail"] and gap["incident_key"].startswith("publisher:stale:")
 
 
 def test_the_stale_threshold_and_the_cache_tables_are_what_the_docs_say():

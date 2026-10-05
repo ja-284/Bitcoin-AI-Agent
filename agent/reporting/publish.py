@@ -17,7 +17,10 @@ inside the hourly job, which is unchanged. It is downstream only:
 - it refuses to publish anything dated inside the sealed holdout;
 - a transient failure is tolerated (the previous snapshot stays, visibly older by its own timestamp); a
   failure that has left the snapshot older than STALE_AFTER exits 1, so it is noticed without an email
-  every time one attempt fails.
+  every time one attempt fails;
+- (2026-10-05) its own problems stay visible afterwards: a failed publish (if the database can still be
+  reached) and a snapshot that went more than STALE_AFTER without a refresh are recorded as incidents
+  (agent/reporting/incidents.py), before the new snapshot is computed, so the snapshot shows them.
 """
 
 import argparse
@@ -27,7 +30,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 
 from agent.database.db import get_connection
-from agent.reporting import REPORTING_CONTRACT_VERSION, views
+from agent.reporting import REPORTING_CONTRACT_VERSION, incidents, views
 from agent.reporting.source import computed_readings, frozen_terciles, load, read_only_connection
 from agent.research.periods import HOLDOUT
 
@@ -88,12 +91,28 @@ def store(snapshot: dict, runs: dict[datetime, dict], at: datetime, now: datetim
     return {"runs": len(runs), "snapshot_bytes": len(json.dumps(snapshot)), "as_known_at": at.isoformat()}
 
 
-def snapshot_age(now: datetime) -> timedelta | None:
-    """How old the stored snapshot is, read through the read-only connection; None if there is none."""
+def snapshot_generated_at() -> datetime | None:
+    """When the stored snapshot was computed, read through the read-only connection; None if there is none."""
     with read_only_connection() as conn, conn.cursor() as cur:
         cur.execute(SNAPSHOT_AGE_SQL)
         row = cur.fetchone()
-    return None if row is None else now - row[0]
+    return None if row is None else row[0]
+
+
+def snapshot_age(now: datetime) -> timedelta | None:
+    generated = snapshot_generated_at()
+    return None if generated is None else now - generated
+
+
+def stale_incident(previous: datetime | None, now: datetime) -> dict | None:
+    """The incident for a refresh gap longer than STALE_AFTER, or None. Pure."""
+    if previous is None or now - previous <= STALE_AFTER:
+        return None
+    hours = (now - previous).total_seconds() / 3600
+    return incidents.publisher_incident(
+        "stats_snapshot_was_stale", previous,
+        f"The stats snapshot was not refreshed between {previous:%Y-%m-%d %H:%M} and {now:%Y-%m-%d %H:%M} UTC ({hours:.1f} hours).",
+        f"stale:{previous:%Y-%m-%dT%H:%M:%S}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -104,6 +123,9 @@ def main(argv: list[str] | None = None) -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     now = datetime.now(timezone.utc)
     try:
+        gap = stale_incident(snapshot_generated_at(), now)
+        if gap is not None and not args.dry_run:
+            incidents.record(gap)  # before computing, so the new snapshot already shows it
         records = load(all_details=True)
         snapshot, runs = build(records, now, now, frozen_terciles(), computed_readings())
         if args.dry_run:
@@ -114,6 +136,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     except Exception as exc:  # noqa: BLE001 -- a publish failure must never be louder than it deserves
         logger.error("could not publish the stats read model: %s: %s", type(exc).__name__, exc)
+        try:  # best effort: if the database is unreachable this cannot be written either, and the stale rule takes over
+            incidents.record(incidents.publisher_incident(
+                "stats_publish_failed", now, f"Publishing the stats snapshot failed ({type(exc).__name__}).",
+                f"failed:{now:%Y-%m-%dT%H}"))
+        except Exception:  # noqa: BLE001
+            logger.warning("the failure could not be recorded as an incident either")
         try:
             age = snapshot_age(now)
         except Exception:  # noqa: BLE001

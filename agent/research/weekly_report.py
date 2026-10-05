@@ -794,7 +794,7 @@ def render(rep: dict) -> str:
          f"{wl['news_hours']['need']}: {'READY' if wl['news_hours']['ready'] else 'waiting'}; registered verdict point {wl['news_hours'].get('verdict_at', NEWS_HOURS_FOR_VERDICT):,} "
          f"(E025: below it the test cannot detect an effect of plausible size): {'READY' if wl['news_hours'].get('verdict_ready') else 'waiting'}",
           f"- Confirmatory re-tests on live data (funding 24h; dollar/yield 168h): {wl['live_months']['have']} of {wl['live_months']['need']} months — {'READY' if wl['live_months']['ready'] else 'waiting'}",
-          "", "Reminders: healthchecks.io heartbeat not set up; GitHub token `supabase-dispatch` expires 2027-09-20; scheduled workflows on a public repo pause after 60 days without a commit."]
+          "", "Reminders: GitHub token `supabase-dispatch` expires 2027-09-20; scheduled workflows on a public repo pause after 60 days without a commit."]
     return "\n".join(L)
 
 

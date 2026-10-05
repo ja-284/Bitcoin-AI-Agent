@@ -259,9 +259,10 @@ That is informational and is the intended state: deny everything until a policy 
 
 ## 6. The private stats website: account and claim, ONLY when the website is being built (not now)
 
-**Nothing to do today.** The backend side is built (2026-09-27, `docs/api/stats_access.md`): two read-only
-stats caches refreshed after every hourly run, readable only by a signed-in account that carries an
-owner-set flag. Until you create that account, nobody can read them, you included. When you build the
+**Nothing to do today.** The backend side is built (2026-09-27, extended 2026-10-05,
+`docs/api/stats_access.md`): three read-only reporting tables (statistics, run history, incidents) refreshed
+after every completed hourly run, readable only by a signed-in account that carries an owner-set flag. The
+frontend handoff for Lovable is `docs/api/stats_website_handoff.md`. Until you create that account, nobody can read them, you included. When you build the
 website in Lovable, do these three steps, all described with exact clicks and SQL in
 `docs/api/stats_access.md` section 2:
 

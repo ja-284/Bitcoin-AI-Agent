@@ -26,7 +26,7 @@ pytestmark = pytest.mark.skipif(os.getenv("BITCOIN_AGENT_DB_TESTS") != "1", reas
 SCHEMA = "stats_access_test"
 HOUR = timedelta(hours=1)
 VIEWER = {"sub": "00000000-0000-4000-8000-000000000001", "role": "authenticated", "app_metadata": {"reporting_viewer": True}}
-CACHES = ("reporting_snapshot", "reporting_runs")
+CACHES = ("reporting_snapshot", "reporting_runs", "reporting_incidents")
 RECORD = ("predictions", "prediction_outcomes", "shadow_move_size", "shadow_run_errors", "backend_state", "schema_meta")
 
 
@@ -73,6 +73,12 @@ def _publish_one_hour(db):
     pid = db.save_prediction(_prediction(as_of))
     db.save_outcome(pid, 1, 101.0, 0.01)
     at = datetime.now(timezone.utc) + timedelta(minutes=5)
+    from agent.reporting import incidents
+
+    incidents.record(incidents.workflow_incident({  # one failed run, through the real recorder
+        "INCIDENT_WORKFLOW": "Hourly Bitcoin analysis", "INCIDENT_CONCLUSION": "failure", "INCIDENT_RUN_ID": "99",
+        "INCIDENT_RUN_ATTEMPT": "1", "INCIDENT_STARTED_AT": (as_of + 2 * HOUR).isoformat(),
+        "INCIDENT_RUN_URL": "https://github.com/ja-284/Bitcoin-AI-Agent/actions/runs/99", "INCIDENT_TRIGGER": "schedule"}))
     snapshot, runs = publish.build(load(all_details=True), at, at)
     publish.store(snapshot, runs, at, at)
 
@@ -105,6 +111,20 @@ def test_a_signed_in_viewer_reads_exactly_what_was_published(stats_db):
     assert rows == [("all", "1")], rows
     runs = _as(stats_db, "authenticated", "SELECT count(*), max(run->'outcomes'->'1h'->>'state') FROM reporting_runs", VIEWER)
     assert runs == [(1, "graded")], runs
+
+
+def test_the_viewer_sees_the_recorded_incident_and_nobody_can_change_or_erase_it(stats_db):
+    rows = _as(stats_db, "authenticated", "SELECT kind, source FROM reporting_incidents", VIEWER)
+    assert rows == [("hourly_run_failed", "workflow_event")], rows
+    snap = _as(stats_db, "authenticated", "SELECT document->'body'->'health'->'incidents'->>'recorded_total' FROM reporting_snapshot", VIEWER)
+    assert snap == [("1",)], snap  # the snapshot published after it shows it
+    import psycopg
+
+    for sql in ("UPDATE reporting_incidents SET detail = 'nothing happened'", "DELETE FROM reporting_incidents"):
+        with stats_db.get_connection() as conn, conn.cursor() as cur:  # even the OWNER: the trigger refuses it
+            with pytest.raises(psycopg.Error, match="append-only"):
+                cur.execute(sql)
+            conn.rollback()
 
 
 def test_an_anonymous_request_is_refused(stats_db):

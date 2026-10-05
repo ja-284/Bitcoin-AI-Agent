@@ -51,6 +51,12 @@ RUN_DETAIL_SQL = """
 ALL_RUN_DETAILS_SQL = """
     SELECT as_of, explanation, category_scores, created_at FROM predictions ORDER BY as_of
 """
+# The incident history (2026-10-05): the one reporting table the read side reads back. It is not production data;
+# it is what agent/reporting/incidents.py and the publisher recorded about operational failures.
+INCIDENTS_SQL = """
+    SELECT incident_key, kind, source, occurred_at, recorded_at, workflow, conclusion, run_url, detail
+    FROM reporting_incidents ORDER BY occurred_at
+"""
 
 
 @dataclass(frozen=True)
@@ -65,6 +71,7 @@ class Records:
     schema_version: str | None
     run_detail: dict | None = None  # explanation and category scores of ONE requested hour
     run_details: dict | None = None  # the same for EVERY hour (as_of -> detail), when the publisher asks for it
+    incidents: list[dict] | None = None  # recorded operational incidents (reporting_incidents), oldest first
 
 
 def read_only_connection():
@@ -99,10 +106,11 @@ def load(detail_hour: datetime | None = None, all_details: bool = False) -> Reco
         version = _rows(cur, SCHEMA_VERSION_SQL) if _exists(cur, "schema_meta") else []
         detail = _rows(cur, RUN_DETAIL_SQL, (detail_hour,)) if detail_hour is not None else []
         details = {d.pop("as_of"): d for d in _rows(cur, ALL_RUN_DETAILS_SQL)} if all_details else None
+        incidents = _rows(cur, INCIDENTS_SQL) if _exists(cur, "reporting_incidents") else []
     return Records(predictions=preds, outcomes=outcomes, shadow=shadow, shadow_errors=errors,
                    backend_state=state[0] if state else None,
                    schema_version=version[0]["value"] if version else None,
-                   run_detail=detail[0] if detail else None, run_details=details)
+                   run_detail=detail[0] if detail else None, run_details=details, incidents=incidents)
 
 
 def computed_readings(out_dir: Path = OUT_DIR) -> dict[int, str]:

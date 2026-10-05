@@ -1,40 +1,73 @@
-# The private stats read model (docs/api/stats_access.md): refresh it AFTER each hourly run.
+# The private stats read model (docs/api/stats_access.md): refresh it AFTER each hourly run, and keep a record of
+# runs that FAILED, so the stats website can show problems historically instead of only the latest success.
 #
 # THIS IS A PRIVATE READ-ONLY STATISTICS INTERFACE. IT IS NOT THE FUTURE AUTOMATED-TRADING APPLICATION.
 #
 # Downstream only, by construction:
-#   - no schedule of its own: it starts when the hourly workflow has COMPLETED, so it can never run
-#     before, inside or instead of it, and the hourly workflow itself is not changed at all;
-#   - it runs one command, `python -m agent.reporting.publish`, which reads the record through a
-#     read-only connection and writes only the two derived-cache tables a signed-in viewer may read;
+#   - no schedule of its own: it starts when the hourly workflow or the watchdog has COMPLETED, so it can never
+#     run before, inside or instead of them, and neither of them is changed at all;
+#   - it runs two commands: `python -m agent.reporting.incidents record-workflow-run` (only after a failed run)
+#     and `python -m agent.reporting.publish`. They read the record through a read-only connection and write only
+#     the three stats tables a signed-in viewer may read;
+#   - GitHub's event fields reach the code ONLY as environment variables -- never pasted into a shell line -- and
+#     the code validates each one strictly before writing anything;
 #   - it has no AI key and no heartbeat URL: it cannot call a model, and it cannot silence or fake an alarm;
-#   - a failure here cannot touch the live record or the next hourly run (a separate workflow and job).
+#   - a failure here cannot touch the live record or the next hourly run (a separate workflow and jobs).
 # tests/test_reporting_separation.py keeps every line of that true.
 
 name: Reporting snapshot
 
 on:
   workflow_run:
-    workflows: ["Hourly Bitcoin analysis"]
+    workflows: ["Hourly Bitcoin analysis", "Watchdog"]
     types: [completed]
   workflow_dispatch:
 
-# Least privilege: the job only reads the repository. It never needs to write to GitHub.
+# Least privilege: the jobs only read the repository. They never need to write to GitHub.
 permissions:
   contents: read
 
-concurrency:
-  group: reporting-snapshot
-  cancel-in-progress: false
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
 jobs:
-  publish:
-    # Only after an hourly run that succeeded (a failed one may have left the hour half-recorded).
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+  incident:
+    # Only after a run that FAILED. Its own concurrency group per run, so a burst of later runs can never cancel
+    # it before it has written (the publish job's shared group would let a newer run replace a pending one).
+    if: github.event_name == 'workflow_run' && contains(fromJSON('["failure", "timed_out", "startup_failure", "action_required"]'), github.event.workflow_run.conclusion)
+    concurrency:
+      group: reporting-incident-${{ github.event.workflow_run.id }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      INCIDENT_WORKFLOW: ${{ github.event.workflow_run.name }}
+      INCIDENT_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      INCIDENT_RUN_ID: ${{ github.event.workflow_run.id }}
+      INCIDENT_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+      INCIDENT_STARTED_AT: ${{ github.event.workflow_run.run_started_at || github.event.workflow_run.created_at }}
+      INCIDENT_RUN_URL: ${{ github.event.workflow_run.html_url }}
+      INCIDENT_TRIGGER: ${{ github.event.workflow_run.event }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5, pinned 2026-09-26
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Record the failed run as an incident (read by the stats website only)
+        run: python -m agent.reporting.incidents record-workflow-run
+
+  publish:
+    # After every completed hourly or watchdog run that was not cancelled or skipped, so a failure is reflected
+    # too (its incident, the missing or stale hour) -- never a fabricated "all fine". Waits for the incident job.
+    needs: incident
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || contains(fromJSON('["success", "failure", "timed_out", "startup_failure", "action_required"]'), github.event.workflow_run.conclusion)) }}
+    concurrency:
+      group: reporting-snapshot
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5, pinned 2026-09-26

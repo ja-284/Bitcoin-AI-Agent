@@ -14,7 +14,8 @@
 > open item is the dispatch-token renewal before 2027-09-20.
 >
 > **2026-09-27: one deliberate read surface.** The private stats read model (`docs/api/stats_access.md`):
-> `reporting_snapshot` and `reporting_runs`, SELECT only, for a signed-in Supabase Auth user whose token
+> `reporting_snapshot`, `reporting_runs` and (2026-10-05) the append-only `reporting_incidents`, SELECT only,
+> for a signed-in Supabase Auth user whose token
 > carries the owner-set claim `app_metadata.reporting_viewer = true`. `anon` reads nothing, and every
 > other table stays closed. `python -m agent.database.security` checks this exact shape (role, privilege,
 > single policy and its condition) and fails on any widening. It was proven on real Postgres acting as

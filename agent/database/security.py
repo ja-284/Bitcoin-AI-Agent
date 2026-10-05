@@ -50,12 +50,12 @@ PRIVILEGES = ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", 
 LOCKDOWN_MARKER = "Access lockdown"
 
 # The ONE deliberate read surface (2026-09-27): the private stats read model (docs/api/stats_access.md).
-# Exactly these two derived-cache tables, readable ONLY by a signed-in Supabase Auth user (`authenticated`,
+# Exactly these three reporting tables, readable ONLY by a signed-in Supabase Auth user (`authenticated`,
 # never `anon`) whose token carries app_metadata.reporting_viewer = true -- a claim only the project owner
 # can set -- and only with SELECT. Everything about that surface is checked, not just its existence: a
 # second role, a second privilege, a second policy, or a policy whose condition is anything but the
 # viewer claim is reported, so the opening cannot widen quietly. Every other table stays fully closed.
-VIEWER_READ_TABLES = ("reporting_snapshot", "reporting_runs")
+VIEWER_READ_TABLES = ("reporting_snapshot", "reporting_runs", "reporting_incidents")
 VIEWER_ROLE = "authenticated"
 VIEWER_PRIVILEGE = "SELECT"
 # The policy condition, normalised by _normalised(): `(auth.jwt() -> 'app_metadata' ->> 'reporting_viewer') = 'true'`.

@@ -98,8 +98,10 @@ agent/
   reporting/             read-only statistics over the record: run history, outcomes by
                          horizon, calibration, health (docs/api/reporting_v1.md); downstream
                          only -- nothing in production imports it, the database refuses its writes;
-                         publish.py stores them for the private stats website
-                         (docs/api/stats_access.md: signed-in viewer only, read-only, not trading)
+                         publish.py stores them, and incidents.py records failed runs, for the
+                         private stats website (docs/api/stats_access.md; frontend handoff
+                         docs/api/stats_website_handoff.md: signed-in viewer only, read-only,
+                         not trading)
   research/              everything experimental: periods & holdout guard, labels, features,
                          replay, walk-forward, calibration, model bench, parity, drift,
                          weekly report, holdout evaluation (sealed)

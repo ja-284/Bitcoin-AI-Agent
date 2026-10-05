@@ -26,6 +26,7 @@ import pytest
 # Imported HERE, at collection, on purpose: these modules bind `get_connection` when first imported. Imported
 # for the first time inside a test while a fixture has patched db.get_connection (the least-privilege probe),
 # they would keep the probe's connection for the rest of the run -- after the probe role is dropped.
+import agent.reporting.incidents  # noqa: E402,F401
 import agent.reporting.publish  # noqa: E402,F401
 import agent.reporting.source  # noqa: E402,F401
 
@@ -442,9 +443,12 @@ def test_the_least_privilege_role_can_publish_the_stats_read_model_and_nothing_m
     import agent.reporting.source as source
     from agent.reporting import publish
 
+    from agent.reporting import incidents
+
     db, _, _, as_probe = least_privileged
     monkeypatch.setattr(source, "get_connection", as_probe)
     monkeypatch.setattr(publish, "_cache_connection", as_probe)
+    monkeypatch.setattr(incidents, "_incident_connection", as_probe)
     # a recent hour: an hour dated inside the sealed holdout (2025-07-01 -> 2026-08-19) is refused by the publisher,
     # which is exactly what the first version of this test demonstrated by accident
     as_of = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) - 10 * HOUR
@@ -453,10 +457,14 @@ def test_the_least_privilege_role_can_publish_the_stats_read_model_and_nothing_m
     for _ in range(2):  # the second publish replaces, it does not duplicate
         snapshot, runs = publish.build(source.load(all_details=True), at, at)
         publish.store(snapshot, runs, at, at)
+    row = incidents.publisher_incident("stats_publish_failed", at, "probe", "failed:probe")
+    assert incidents.record(row) is True and incidents.record(row) is False  # recorded once, idempotent
     with as_probe() as conn, conn.cursor() as cur:
-        cur.execute("SELECT current_user, (SELECT count(*) FROM reporting_snapshot), (SELECT count(*) FROM reporting_runs)")
-        assert cur.fetchone() == (PROBE_ROLE, 1, 1)
+        cur.execute("SELECT current_user, (SELECT count(*) FROM reporting_snapshot), (SELECT count(*) FROM reporting_runs), "
+                    "(SELECT count(*) FROM reporting_incidents)")
+        assert cur.fetchone() == (PROBE_ROLE, 1, 1, 1)
     for sql in ("DELETE FROM reporting_runs", "TRUNCATE reporting_snapshot", "DROP TABLE reporting_runs",
+                "UPDATE reporting_incidents SET detail = 'x'", "DELETE FROM reporting_incidents",
                 "ALTER TABLE reporting_runs DISABLE ROW LEVEL SECURITY", "UPDATE predictions SET signal = 'SELL'"):
         with as_probe() as conn, conn.cursor() as cur:
             with pytest.raises(psycopg.Error, match="permission denied|must be owner|append-only"):
