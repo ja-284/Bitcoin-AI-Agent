@@ -21,18 +21,18 @@ checkpoint itself.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-09-27 10:14 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-10-06 12:50 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**
 
 | figure | value at the snapshot | source of truth (run it for the current value) |
 |---|---|---|
-| graded prospective shadow hours | **129 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
-| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (371 more hours at one per hour, if none are lost) | derived from the count above |
-| newest prediction | the 09:00 UTC hour, 0.2 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
-| published backend state | refreshed 10:13 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
-| private stats read model | refreshed 10:13 UTC by the *Reporting snapshot* workflow (its first automatic run) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
+| graded prospective shadow hours | **346 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
+| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (154 more hours at one per hour, if none are lost) | derived from the count above |
+| newest prediction | the 11:00 UTC hour, 0.8 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
+| published backend state | refreshed 12:13 UTC, health **degraded**: 1 missing hour in the last 48 h (2026-10-05 19:00 UTC, see below) | the `backend_state` table (rewritten by every hourly run) |
+| private stats read model | refreshed 12:13 UTC; `headline_status` **attention_required** until 2026-10-06 20:12 UTC (it looks back 24 h at the failed 20:12 run) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
 | sealed holdout | **sealed** (`research/HOLDOUT_ACCESS.log` does not exist) | the file's absence |
 | run history, outcomes, running statistics, health (read-only, on demand) | see the reporting layer | `python -m agent.reporting all --pretty` ([`docs/api/reporting_v1.md`](../api/reporting_v1.md)) |
 | everything else that moves (parity, cost, drift flags, the free-rule comparison) | see the latest weekly report | `python -m agent.research.weekly_report` → `research/monitoring/weekly_<date>.md` |
@@ -68,7 +68,9 @@ other or with the versions in the code. **Update both, together, from the comman
 3. A failed news or explanation call degrades the hour **visibly** (news weight 0, error recorded). It never
    fabricates a value. Missing price data fails the run loudly.
 4. **Alarms:**
-   - The **self-check** fails the next run if an hour is missing (GitHub emails).
+   - The **self-check** fails a run whose hour was not saved, i.e. the newest prediction is more than 2 h
+     old (GitHub emails). A single missed hour followed by a good run does not fail it. That hour shows
+     as missing in the weekly report, the published state and the stats incident history.
    - The **watchdog** runs on GitHub, nominally every 3 h but really every 5–7 h. It checks staleness,
      repeated shadow errors, public-API exposure, and that the jobs run as `bitcoin_agent` with exactly
      their proven rights.
@@ -101,8 +103,17 @@ happening, or on the weekly audit being run on time.
   ≈ $9.75 per 30 days, under the accepted ~$12. The weekly report flags a projection above $15.
 - Supabase grants its `net` schema to PUBLIC (unrevocable by this project). It is not an exposed API
   schema (checked 2026-09-24), so it is unreachable from outside.
-- Permanent, documented gaps, never backfilled: 9 missing hours on go-live weekend (2026-09-19/20), 7
-  missing shadow hours (incident 2026-09-21/22; first written as 8, corrected 2026-09-27), 17 hours with news unavailable (2026-09-21/22, marked).
+- Permanent, documented gaps, never backfilled:
+  - 9 missing hours on go-live weekend (2026-09-19/20);
+  - 7 missing shadow hours (incident 2026-09-21/22; first written as 8, corrected 2026-09-27);
+  - 17 hours with news unavailable (2026-09-21/22, marked);
+  - **1 missing hour, 2026-10-05 19:00 UTC.** GitHub had no runner free:
+    - the 20:12 dispatched run waited 15 min without one and was cancelled;
+    - the 21:12 run waited 10 min, then succeeded;
+    - GitHub fired none of its backup slots between 20:12 and 22:32.
+
+    Our code never started. The record, every other hour and the shadow record are unaffected. The
+    stats incident history shows it, as the failed run (with its link) and as the missing hour.
 - Runtime ≈ 75–80 s per real run, under a tenth of the 15-minute budget.
 - The free 24h-EWMA reference (weekly report, checkpoint) downloads raw candles as warm-up, and at the
   500-hour checkpoint those reach into the holdout period's last weeks. No holdout performance is computed,
@@ -131,9 +142,9 @@ happening, or on the weekly audit being run on time.
 | healthchecks.io "DOWN" email, and it stays down > 3 hours | no successful run for hours | Look at GitHub → Actions. If runs fail with *permission denied*, roll back the database switch: copy the `DATABASE_URL` line from your local `.env` into the GitHub secret `DATABASE_URL`. Otherwise wait for the next session. |
 | GitHub "run failed" emails for several hours in a row | a persistent failure (a source down, a secret, a code defect) | Nothing is lost while it fails; the hour simply isn't recorded. Leave it for the next session unless it lasts > 1 day. |
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
-| a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~17 MB of 500 MB). |
+| a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~24 MB of 500 MB). |
 | a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
-| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-11-25; any commit resets the clock. |
+| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-05; any commit resets the clock. |
 
 **Calendar:** renew the GitHub token `supabase-dispatch` before **2027-09-20**
 (`docs/ops/open_user_actions.md` item 3).

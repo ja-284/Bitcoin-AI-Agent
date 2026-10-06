@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-27T10:14:00Z",
+  "as_of": "2026-10-06T12:50:00Z",
   "human_readable": "docs/ops/STATUS.md",
   "consistency_test": "tests/test_status_docs.py",
   "mode": "PRE-500H MONITORING-ONLY",
@@ -36,8 +36,8 @@
     "predictive_path": "frozen for the current prospective evaluation (research/INTERIM_PLAN_PRE_500H.md)"
   },
   "prospective": {
-    "graded_shadow_hours": 129,
-    "counted_at": "2026-09-27T10:14:00Z",
+    "graded_shadow_hours": 346,
+    "counted_at": "2026-10-06T12:50:00Z",
     "next_checkpoint_hours": 500,
     "next_checkpoint_expected": "2026-10-12 (late evening UTC, if no hours are lost)",
     "next_checkpoint_command": "python -m agent.research.live_checkpoint",
@@ -50,7 +50,7 @@
   "automation": {
     "primary_trigger": "Supabase pg_cron -> GitHub workflow_dispatch at :12 UTC",
     "backup_trigger": "GitHub schedule at :07, :22, :37, :52 (early exit once the hour is saved)",
-    "self_check": "every run: the hour's prediction must be saved",
+    "self_check": "every run: the newest prediction must be at most 2 h old (a single missed hour followed by a good run does not fail it)",
     "watchdog": ["staleness < 3h", "shadow errors <= 2 in 6h", "no public-API exposure", "jobs connect as bitcoin_agent with exactly its proven rights"],
     "watchdog_real_cadence": "every 5-7 hours (GitHub fires ~4 of 7 slots a day)",
     "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"},
@@ -66,14 +66,14 @@
   ],
   "known_non_critical": [
     "watchdog fires irregularly on GitHub; the heartbeat covers the gap",
-    "AI cost ~$11-14/month depending on news volume (accepted ~$12; flag above $15)",
+    "AI cost: about $9.75 per 30 days in the first full measured week, to 2026-10-05 (accepted ~$12; flag above $15)",
     "Supabase grants the net schema to PUBLIC (unrevocable); not an exposed API schema",
-    "permanent documented gaps: 9 missing hours (2026-09-19/20), 7 missing shadow hours (2026-09-21/22; first written as 8, corrected 2026-09-27), 17 news-unavailable hours (2026-09-21/22)",
+    "permanent documented gaps: 9 missing hours (2026-09-19/20), 7 missing shadow hours (2026-09-21/22; first written as 8, corrected 2026-09-27), 17 news-unavailable hours (2026-09-21/22), 1 missing hour 2026-10-05 19:00 UTC (GitHub had no runner free; our code never started)",
     "the free EWMA reference's warm-up downloads raw candles reaching into the holdout period's last weeks; no holdout performance computed or used; weight < 2e-10; documented in research/LIVE_EVALUATION.md; unchanged (registered checkpoint code)"
   ],
   "user_actions_required": [],
   "calendar": [
-    {"date": "2026-11-25", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-09-26); any commit resets it"},
+    {"date": "2026-12-05", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-10-06); any commit resets it"},
     {"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}
   ],
   "emergency_rollback_database_role": "copy the DATABASE_URL line from the local .env into the GitHub secret DATABASE_URL"

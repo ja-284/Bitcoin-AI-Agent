@@ -228,7 +228,8 @@ def test_small_samples_can_never_look_like_evidence():
     assert ev(2000)["level"] == "enough_for_nominal_intervals"
     assert not any(ev(n)["is_verdict"] for n in (0, 1, 191, 192, 1999, 2000, 10**6))
     small = views.move_size_statistics(world(hours=48), AT)["running_figures"]
-    assert not any(k.endswith("_ci95") and k != "accuracy_ci95" for k in small)  # no bootstrap interval below 192 hours
+    assert all(v is None for k, v in small.items() if k.endswith("_ci95"))  # no interval of any kind below 192 hours
+    assert "accuracy_ci95" in small                                       # withheld visibly, not dropped (2026-10-06)
     big = views.move_size_statistics(world(hours=200), T0 + 220 * H)["running_figures"]
     assert "brier_rel_gain_ci95" in big and "ece_ci95" in big
 
@@ -322,6 +323,37 @@ def test_the_acted_hour_comparison_is_the_weekly_reports_own_calculation():
         assert a["matched_share"] == theirs[f"{h}h"]["acted_accuracy"]
         assert a["majority_direction_share_all_hours"] == theirs[f"{h}h"]["naive_rate"]
         assert "profit" in a["note"].lower() and a["sample"]["is_verdict"] is False
+
+
+def test_an_interval_is_shown_only_where_its_sample_label_says_one_is_computed():
+    # 2026-10-06: a share below 192 hours carried a Wilson band while its `sample` said "not_computed"
+    labelled = []
+
+    def walk(o):
+        if isinstance(o, dict):
+            if isinstance(o.get("sample"), dict):
+                labelled.append((o["sample"]["intervals"], {k: v for k, v in o.items() if k.endswith("ci95")}))
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+
+    walk(views.report(world(hours=48), T0 + 300 * H))
+    small = [bands for intervals, bands in labelled if intervals == "not_computed"]
+    assert any(small), "the rule must be exercised, not pass vacuously"
+    assert all(v is None for bands in small for v in bands.values())
+    assert views._return_summary([0.01, -0.01] * 95)["share_ci95"] is None              # 190 hours
+    shown = views._return_summary([0.01, -0.01] * 96)                                   # 192 hours
+    assert shown["sample"]["intervals"] == "shown_but_too_narrow" and shown["share_ci95"] is not None
+    assert views._acted_agreement([("BUY", 0.01)] * 191, [0.01] * 191)["matched_ci95"] is None
+    assert views._acted_agreement([("BUY", 0.01)] * 192, [0.01] * 192)["matched_ci95"] is not None
+
+
+def test_the_capture_limits_say_a_short_publish_outage_leaves_no_record():
+    # 2026-10-05 20:27: a publish that never got a GitHub runner, followed by one 2 h 10 min later, left no trace
+    text = " ".join(views.INCIDENT_CAPTURE["not_captured"])
+    assert "more than 3 hours" in text and "shorter gap leaves no record" in text
 
 
 def test_trends_are_per_week_partitions_described_without_judgement():

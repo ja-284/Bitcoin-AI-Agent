@@ -204,22 +204,22 @@ role and the API-log check remain open.
   - the Lovable handoff (`docs/api/stats_website_handoff.md`) is written.
 - No research, no tuning, no change to anything that predicts or judges.
 - **The main system returns to pre-500h monitoring.**
-- **PAUSED 2026-10-05 ~20:25 UTC, on the user's instruction, mid-verification. Resume from exactly here.**
-  - Everything is committed and pushed, and the live database is migrated. The stats-website backend is
-    built, tested and live.
-  - **The one open step:** confirm the new *Reporting snapshot* code's first real run. The 20:12 UTC hourly
-    run was still queued on GitHub at the pause, so the new publisher had not yet published.
-  - **First thing on resume:**
-    1. Read `reporting_snapshot` (read-only). Expect `document->'body' ? 'overview'`, `headline_status`,
-       `health.incidents.recorded_total` = 16 (the backfilled 2026-09-21/22 failures) and
-       `run->'outcomes'->'1h' ? 'signal_vs_actual'` on graded run rows.
-    2. Check the reporting workflow on GitHub: the incident job skipped after successes, the publish job
-       green.
-    3. If the publish failed, read the run log before changing anything.
-    4. Then refresh the STATUS snapshot from its source commands, commit and push, and give the user the
-       final report of the side-project brief (section 0 state, what existed, what was built, the
-       A–K proofs, the owner's steps).
-  - Then the main system returns to pre-500h monitoring (checkpoint ≈ 2026-10-12).
+- Paused at ~20:25 UTC mid-verification; resumed and verified 2026-10-06 (next entry).
+
+## 2026-10-06 — resumed; the stats backend verified live (a side project)
+
+- The 2026-10-05 19:00 hour is missing: GitHub had no runner free from about 20:12 to 21:22 UTC, and our
+  code never started. It is permanent, never backfilled, and the incident history shows it.
+- The new reporting code is verified live:
+  - the failure was recorded as an incident;
+  - 30 of 30 publishes since 21:23 are green;
+  - the snapshot and all 401 run rows equal a recomputation from the record.
+- Small gaps closed in the reporting layer only:
+  - bands below 192 hours are now null, as their label says;
+  - the capture limits are stated exactly;
+  - the handoff has the incident fields and kinds, plus a mobile-first note.
+- 346 of 500 prospective hours. **Nothing that predicts or judges changed.** What remains is the Lovable
+  frontend and the owner's steps.
 
 ## 2026-09-27 (later) — private stats access prepared (at the user's request; no website built)
 

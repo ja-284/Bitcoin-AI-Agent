@@ -90,6 +90,15 @@ const { data: incidents } = await supabase.from('reporting_incidents')
 | **5. Trends** | `trends.move_size_by_week`, `trends.signal_by_week` (per calendar week, Monday 00:00 UTC; `complete` false for the current week), `trends.move_size_latest_vs_previous_complete_week` (neutral `wording`; `is_a_conclusion` always false). Show `trends.important` on the page. |
 | **6. System health** | `health`: `headline_status` + `headline_rule`, `problems`, `last_run`, `windows` (last 24 h / 7 days / all time: runs, missing hours, fallback, news unavailable, partial news, no explanation, timings), `outcomes` (overdue, rule breaks), `shadow`, `published_state`, `incidents` (counts and the capture limits), **`incident_history`** (every incident, recorded or derived, newest first), `external` (what is not observable here). |
 
+**On a phone, which is the main way it will be read.** Design it mobile-first:
+- one column, with no sideways scrolling;
+- the overview fits on one screen;
+- run history is a compact list (hour, signal, run status, 1h result), and tapping a row opens the full run;
+- tables of figures become stacked cards.
+
+Load the snapshot once per visit (about 110 KB) and run history one page at a time (24 rows, about 130 KB).
+The data changes once an hour, so never poll more often than every few minutes.
+
 ## 5. Freshness and outages (never show old data as current)
 
 - **Snapshot age** = now − `generated_at`. It is refreshed a few minutes after every completed hourly run, so
@@ -108,9 +117,38 @@ const { data: incidents } = await supabase.from('reporting_incidents')
 - **Failed runs** are in `reporting_incidents` and `incident_history` (`hourly_run_failed`, `watchdog_failed`).
   A failed run whose hour a later backup run filled is still listed, so the history is not "all fine" just
   because every hour has a row.
+- **Each `incident_history` item** has five fields:
+  - `at` (UTC);
+  - `kind`;
+  - `how_known`: `recorded (workflow_event)`, `recorded (github_api_backfill)`, `recorded (publisher)` or
+    `derived from the record`;
+  - `summary`: a finished plain-English sentence, shown exactly as it is;
+  - `link`: the GitHub run page, or null.
+
+  Do not invent a severity: `health.headline_status` is the only summary.
+
+  | `kind` | meaning |
+  |---|---|
+  | `hourly_run_failed` | an hourly analysis run on GitHub failed (a later backup run may still have filled its hour) |
+  | `watchdog_failed` | a watchdog run failed |
+  | `stats_publish_failed` | publishing the statistics snapshot failed |
+  | `stats_snapshot_was_stale` | the statistics snapshot went more than 3 hours without a refresh |
+  | `missing_hour` | no prediction exists for that hour; it is never filled in afterwards |
+  | `run_degraded` | the run was saved with a problem: news unavailable, fallback price data, no explanation, or an unavailable category |
+  | `shadow_error` | the research shadow step failed; the live record is unaffected |
+  | `shadow_row_missing` | there is no shadow probability for that hour |
+- **`headline_status` looks back 24 hours.**
+  - After one failed run followed by successful ones, it stays `attention_required` until the failure is
+    24 hours old. This happened on 2026-10-05 at 20:12 UTC, when GitHub had no runner free.
+  - Show `current_warning` and `headline_rule` with it, so a problem that is over is not read as an
+    outage happening now.
 - **What is NOT captured:**
   - heartbeat (healthchecks.io) alarms;
-  - a reporting-workflow run that failed before it could write anything;
+  - a reporting-workflow run that failed before it could write anything (for example, when GitHub had no runner
+    free):
+    - a gap longer than 3 h is recorded when publishing resumes;
+    - a shorter gap leaves no record;
+    - nothing is lost either way, because every publish recomputes everything from the record;
   - anything while the database is unreachable.
 
   Show `health.incidents.capture.not_captured` on the health page, so its silence is not read as "nothing
@@ -140,7 +178,9 @@ const { data: incidents } = await supabase.from('reporting_incidents')
   "not matched", "no direction stated".
 - **Small samples look small.** Every statistic carries `sample` (`n`, `level`, `intervals`, `is_verdict`,
   `headline`). Always show `n` and the headline next to the figure.
-  - Below 192 hours (`too_few_to_conclude`): no confidence bands, a muted style, the headline visible.
+  - Below 192 hours (`too_few_to_conclude`): no confidence bands, a muted style, and the headline visible.
+    Every statistic's `*_ci95` field is null there. Calibration bins keep `observed_ci95` under their own
+    `enough_rows` rule (below).
   - Below 2,000 (`early_intervals_optimistic`): bands may be drawn, but labelled too narrow.
   - `is_verdict` is always false. Never write "proven", "significant" or "validated".
 - **Change is not improvement.** Week-on-week figures use the backend's neutral `wording` ("higher than the

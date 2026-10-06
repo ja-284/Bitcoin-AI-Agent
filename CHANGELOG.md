@@ -5,6 +5,26 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## side project — 2026-10-06 (the stats backend verified live; small reporting-layer fixes)
+
+Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,
+LIVE_EVALUATION.md, the holdout or any workflow changed.
+
+- **Verified live:** the first runs of the new reporting code.
+  - The failed 2026-10-05 20:12 run was recorded as an incident. GitHub had no runner free, so the 19:00
+    hour is permanently missing; our code never started.
+  - 30 of 30 publishes since 21:23 are green.
+  - The snapshot and all 401 run rows are byte-identical to a recomputation from the record.
+- **Fix:** below 192 hours, a direction-signal share and the move-size running accuracy no longer carry a
+  Wilson band (`share_ci95`, `matched_ci95`, `accuracy_ci95` null), matching their own
+  `sample.intervals = not_computed`. A test walks the whole report; two new mutation guards (79 in total).
+- **Accuracy:**
+  - The published capture limits say that a publish outage under 3 h leaves no record (nothing is lost).
+  - STATUS states the self-check's real rule.
+- **Handoff:** the incident item fields and kinds, a mobile-first note, and the 24-hour look-back of
+  `headline_status`.
+- 557 unit tests.
+
 ## side project — 2026-10-05 (the private stats website's backend, finished; no website built)
 
 A PRIVATE, READ-ONLY STATISTICS INTERFACE, NOT THE TRADING APPLICATION. Nothing in prediction, scoring,

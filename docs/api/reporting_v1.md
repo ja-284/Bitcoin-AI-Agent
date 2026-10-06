@@ -195,6 +195,11 @@ Every statistic has a `sample` object:
 | 192 – 1,999 | `early_intervals_optimistic` | `shown_but_too_narrow` (E025: about 9% false positives at 500 h) |
 | ≥ 2,000 | `enough_for_nominal_intervals` | `nominal` |
 
+The Wilson intervals follow the same rule. That covers the direction-signal shares (`share_ci95`,
+`matched_ci95`) and the move-size `accuracy_ci95`: they are null below 192 hours (2026-10-06). Before that
+date they were filled in even where the label said `not_computed`. Calibration bins keep their Wilson
+interval (`observed_ci95`) under rule 4's `enough_rows` (100 rows).
+
 `is_verdict` is always `false`, and every level has a plain-English `headline`. A UI must show `n` and the
 headline next to every number. Only one field in the whole contract has `is_probability: true`: the
 shadow model's calibrated probability. A test walks every output to keep it that way.
@@ -268,7 +273,7 @@ figure that existed before.
 | `body.overview` | first-screen values | taken from `latest_run`, `latest_matured_run` and `health`; nothing computed twice |
 | `health` | `headline_status`, `headline_rule`, `current_warning` | `attention_required` (no fresh prediction, or a failed hourly or watchdog run in the last 24 h), `degraded` (any other problem in the last 24 h) or `healthy` |
 | `health` | `incidents` | counts of recorded incidents, and `capture`: what is recorded, what is derived from the record, and what is **not captured** |
-| `health` | `incident_history` | every incident, newest first, with `how_known`: recorded (failed hourly or watchdog runs, failed or stale publishes) or derived from the record (missing hours, degraded runs, shadow errors, hours without a shadow row). A problem stays listed after the next hour succeeds. |
+| `health` | `incident_history` | every incident, newest first, with `how_known`: recorded (failed hourly or watchdog runs, failed or stale publishes) or derived from the record (missing hours, degraded runs, shadow errors, hours without a shadow row). A problem stays listed after the next hour succeeds. Each item: `at`, `kind`, `how_known`, `summary`, `link` (the kinds are listed in `stats_website_handoff.md` §5). |
 | `health.external.watchdog` | `observable_here: "failed runs only"` | failed watchdog runs are recorded from 2026-10-05; successful ones are not stored |
 
 The recorded incidents live in `reporting_incidents` (append-only). The read side reads them back through

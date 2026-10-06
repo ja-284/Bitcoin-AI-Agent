@@ -221,22 +221,46 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 - **Nothing** in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or
   rules, LIVE_EVALUATION.md, the holdout, `hourly.yml` or `watchdog.yml` changed.
 - 555 unit tests.
-- **PAUSED 2026-10-05 ~20:25 UTC, on the user's instruction, mid-verification. Resume from exactly here.**
-  - Everything is committed and pushed, and the live database is migrated. The stats-website backend is
-    built, tested and live.
-  - **The one open step:** confirm the new *Reporting snapshot* code's first real run. The 20:12 UTC hourly
-    run was still queued on GitHub at the pause, so the new publisher had not yet published.
-  - **First thing on resume:**
-    1. Read `reporting_snapshot` (read-only). Expect `document->'body' ? 'overview'`, `headline_status`,
-       `health.incidents.recorded_total` = 16 (the backfilled 2026-09-21/22 failures) and
-       `run->'outcomes'->'1h' ? 'signal_vs_actual'` on graded run rows.
-    2. Check the reporting workflow on GitHub: the incident job skipped after successes, the publish job
-       green.
-    3. If the publish failed, read the run log before changing anything.
-    4. Then refresh the STATUS snapshot from its source commands, commit and push, and give the user the
-       final report of the side-project brief (section 0 state, what existed, what was built, the
-       A–K proofs, the owner's steps).
-  - Then the main system returns to pre-500h monitoring (checkpoint ≈ 2026-10-12).
+- Paused at ~20:25 UTC mid-verification; resumed and verified 2026-10-06 (next entry).
+
+**2026-10-06 — resumed; the stats backend's first live runs verified; last small gaps closed.**
+- **Overnight (GitHub and the live database):**
+  - On 2026-10-05, GitHub had no runner free from about 20:12 to 21:22 UTC:
+    - the 20:12 dispatched run waited 15 min without one and was cancelled;
+    - the 21:12 run waited 10 min, then succeeded;
+    - GitHub fired none of its backup slots between 20:12 and 22:32.
+  - So **the 2026-10-05 19:00 hour is missing**. It is permanent and never backfilled; our code never
+    started.
+  - Every other hour since was recorded by `bitcoin_agent`, with 0 shadow errors.
+  - The heartbeat went 2 h 10 min without a ping, beyond its 1 h 30 min allowance, so healthchecks.io most
+    likely sent a "down" email.
+- **The new reporting code, verified live:**
+  - **Its first run (20:27, after the failed run):** the incident job recorded the failure. The publish
+    job got no runner either (the same outage) and was cancelled. The gap, 2 h 10 min, is under the
+    3 h stale rule, so no stale incident was written (by design).
+  - **Since 21:23:** 30 of 30 publishes green, with the incident job skipped after every success.
+  - **The stored data matches the record:** the snapshot and all 401 run rows are byte-identical to a
+    recomputation from the record at the same moment. There are 401 run rows for 401 predictions, and
+    every graded 1h outcome carries `signal_vs_actual`.
+  - **The incident history** shows the 16 backfilled September failures, the overnight failure (with its
+    GitHub link) and the missing hour. `headline_status` stays `attention_required` until the failure is
+    24 h old.
+- **Gaps closed (small, reporting layer only):**
+  - Below 192 hours, a signal share and the move-size running accuracy carried a Wilson band while their
+    `sample` said `not_computed`. The band is now null there (a test walks the whole report; two new
+    mutation guards).
+  - The published capture limits now say that a publish outage under 3 h leaves no record. Nothing is
+    lost, because every publish recomputes everything.
+  - The handoff gained the incident item fields and kinds, a mobile-first note, and the 24-hour look-back
+    of `headline_status`.
+  - STATUS now states the self-check's rule correctly: it fails a run whose hour was not saved, not a past
+    gap.
+- **Nothing** in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or
+  rules, LIVE_EVALUATION.md, the holdout or any workflow changed.
+- 557 unit tests; integration 36/36; mutation guards 79, with all 35 on this boundary caught.
+  **346 of 500 prospective hours.**
+- **The stats backend is complete.** What remains is the Lovable frontend and the owner's steps
+  (`open_user_actions.md` item 6). The main system is back in pre-500h monitoring (checkpoint ≈ 2026-10-12).
 
 ## Research phase — rules and decisions (2026-09-19)
 
@@ -277,7 +301,7 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 - `python -m agent.research.live_checkpoint` — the registered prospective checkpoints (`research/LIVE_EVALUATION.md`). Before 500 graded prospective hours it only prints the count and writes nothing (it is the source of truth for that count); at 500 / 2,000 / 5,000 it reads exactly the first N hours, writes `research/monitoring/checkpoint_<N>h.md/.json` once and never rewrites them.
 - `python -m agent.reporting latest|runs|run --hour <ISO>|statistics|health|all [--at <ISO>] [--pretty]`: read-only statistics and run history over the record (`docs/api/reporting_v1.md`). Server-enforced read-only connection; prints JSON; writes nothing. `--at` shows the record exactly as it stood at that moment. Never imported by production code.
 - `python -m agent.reporting.incidents record-workflow-run`: records a failed hourly/watchdog run as an incident from the `INCIDENT_*` environment variables the *Reporting snapshot* workflow sets (strictly validated; exit 1 on anything unexpected). Not for manual use.
-- `python -m agent.reporting.publish [--dry-run]`: stores the reporting documents in the two private stats caches (`docs/api/stats_access.md`). It runs automatically in the *Reporting snapshot* workflow after each successful hourly run; `--dry-run` computes and stores nothing.
+- `python -m agent.reporting.publish [--dry-run]`: stores the reporting documents in the two private stats caches (`docs/api/stats_access.md`). It runs automatically in the *Reporting snapshot* workflow after each completed hourly or watchdog run (failures included); `--dry-run` computes and stores nothing.
 - `python -m agent.research.holdout_eval --dry-run` — proves the Phase 12 script on the validation period. **`--unseal` opens the sealed holdout once and forever — only on the user's explicit go-ahead.**
 - `python -m pytest tests/` — run the tests (no network or database needed).
 - `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` — tests against real Postgres in a scratch schema it creates and drops (skipped by default): idempotency, the public-API lockdown layer by layer, the least-privilege role (`docs/ops/least_privilege_role.sql`, run as a throwaway role), and the **drift check** — the live database must match what the repository builds. **Run it at every weekly audit** (it is too heavy for the 3-hourly watchdog: it creates and drops a schema), and after any change made in the Supabase dashboard.

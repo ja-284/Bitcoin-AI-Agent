@@ -283,14 +283,21 @@ def run_at(records: Records, at: datetime, hour: datetime) -> dict | None:
 
 
 # ------------------------------------------------------------------ direction signal statistics
+def _shown_interval(successes: int, hours: int) -> list | None:
+    """A share's Wilson interval, or None below MIN_HOURS_FOR_INTERVALS, where its `sample` says `not_computed`."""
+    if hours < MIN_HOURS_FOR_INTERVALS:
+        return None
+    lo, hi = wilson_interval(successes, hours)
+    return [_num(lo), _num(hi)]
+
+
 def _return_summary(returns: list[float]) -> dict:
     n = len(returns)
     if n == 0:
         return {"sample": sample_evidence(0), "share_followed_by_a_rise": None}
     r = np.asarray(returns, float)
     ups = int((r > 0).sum())
-    lo, hi = wilson_interval(ups, n)
-    return {"sample": sample_evidence(n), "share_followed_by_a_rise": ups / n, "share_ci95": [_num(lo), _num(hi)],
+    return {"sample": sample_evidence(n), "share_followed_by_a_rise": ups / n, "share_ci95": _shown_interval(ups, n),
             "mean_return": float(r.mean()), "median_return": float(np.median(r))}
 
 
@@ -336,8 +343,7 @@ def _acted_agreement(acted: list[tuple[str, float]], all_returns: list[float]) -
         out["majority_direction_share_all_hours"] = max(up, 1 - up)
     if n:
         matched = sum(1 for sig, ret in acted if (sig == "BUY") == (ret > 0))
-        lo, hi = wilson_interval(matched, n)
-        out |= {"matched_share": matched / n, "matched_ci95": [_num(lo), _num(hi)]}
+        out |= {"matched_share": matched / n, "matched_ci95": _shown_interval(matched, n)}
     return out
 
 
@@ -367,6 +373,8 @@ def _horizon_table(rows: list[dict], by_pred: dict, at: datetime) -> dict:
 def _descriptive_core(p: np.ndarray, y: np.ndarray, size: np.ndarray) -> dict:
     s = core(p, y, size)
     d = {k: s[k] for k in CORE_DESCRIPTIVE_KEYS if k in s}
+    if len(y) < MIN_HOURS_FOR_INTERVALS:  # the `sample` beside these figures says `not_computed`
+        d |= {k: None for k in d if k.endswith("_ci95")}
     d["brier"] = brier_score(p, y)
     d["brier_of_the_observed_rate"] = brier_score(np.full(len(y), y.mean()), y)
     d["calibration_bins"] = [{"from": b["from"], "to": b["to"], "n": b["n"], "stated": b["stated"],
@@ -535,8 +543,10 @@ INCIDENT_CAPTURE = {
     "derived_from_the_record": ["a missing hour", "a run with news unavailable, fallback price data, no explanation or an "
                                 "unavailable category", "a research shadow error", "an hour without a shadow row"],
     "not_captured": ["a heartbeat alarm (it lives on healthchecks.io, outside this database)",
-                     "a reporting-workflow run that failed before it could write anything (its symptom, a stale snapshot, "
-                     "is recorded when publishing resumes)", "anything while the database itself is unreachable"],
+                     "a reporting-workflow run that failed before it could write anything, e.g. no GitHub runner (when "
+                     "publishing resumes after more than 3 hours the gap is recorded; a shorter gap leaves no record, and "
+                     "nothing is lost, because every publish recomputes everything from the record)",
+                     "anything while the database itself is unreachable"],
     "recorded_since": CAPTURE_STARTED,
     "note": ("Failed runs from before 2026-10-05 were backfilled from GitHub's own run history (source "
              "'github_api_backfill'); GitHub keeps that history for a limited time only."),
