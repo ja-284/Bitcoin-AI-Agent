@@ -257,7 +257,9 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
     gap.
 - **Nothing** in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or
   rules, LIVE_EVALUATION.md, the holdout or any workflow changed.
-- 557 unit tests; integration 36/36; mutation guards 79, with all 35 on this boundary caught.
+- 557 unit tests; integration 36/36. Mutation guards: 79 in total, and all 34 on this boundary were caught
+  (23 "stats website" + 11 reporting layer), with both controls held.
+  - Correction: the 2026-10-05 entry's "33" counted one re-run guard twice. The boundary then had 32.
   **346 of 500 prospective hours.**
 - **The stats backend is complete.** What remains is the Lovable frontend and the owner's steps
   (`open_user_actions.md` item 6). The main system is back in pre-500h monitoring (checkpoint ≈ 2026-10-12).

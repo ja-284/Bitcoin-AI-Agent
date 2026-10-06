@@ -18,6 +18,8 @@ LIVE_EVALUATION.md, the holdout or any workflow changed.
 - **Fix:** below 192 hours, a direction-signal share and the move-size running accuracy no longer carry a
   Wilson band (`share_ci95`, `matched_ci95`, `accuracy_ci95` null), matching their own
   `sample.intervals = not_computed`. A test walks the whole report; two new mutation guards (79 in total).
+  All 34 boundary guards were caught. (The 2026-10-05 entry's 33 boundary guards were 32: one re-run was
+  counted twice.)
 - **Accuracy:**
   - The published capture limits say that a publish outage under 3 h leaves no record (nothing is lost).
   - STATUS states the self-check's real rule.
