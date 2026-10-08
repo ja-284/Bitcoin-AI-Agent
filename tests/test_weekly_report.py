@@ -29,6 +29,18 @@ def test_expected_hours_respects_the_run_minute():
     assert expected_hours(T0, now)[-1] == datetime(2026, 9, 21, 15, tzinfo=timezone.utc)
 
 
+def test_a_window_that_opens_between_hours_expects_whole_hours():
+    # 2026-10-08: the 7-day window opens at now - 7 days (e.g. 19:23:34); stepping from that instant matched no
+    # real hour, so the reports of 2026-09-26 and 2026-10-05 printed "0 of 167 expected hours" with all of them missing
+    now = T0 + 30 * H + timedelta(minutes=40)
+    since = T0 + 3 * H + timedelta(minutes=23, seconds=34)
+    assert expected_hours(since, now)[0] == T0 + 4 * H and expected_hours(T0, now)[0] == T0  # aligned starts unchanged
+    rows = [_pred(T0 + i * H) for i in range(30) if i != 10]
+    hlt = health(rows, [], now, since)
+    assert hlt["expected_hours"] == 26 and hlt["present_hours"] == 25 and hlt["rows_not_yet_due"] == 0
+    assert hlt["missing_hours"] == [(T0 + 10 * H).isoformat()]
+
+
 def test_health_finds_missing_hours_late_runs_and_errors():
     now = T0 + 30 * H + timedelta(minutes=40)
     rows = [_pred(T0 + i * H) for i in range(30) if i not in (5, 6)]  # two missing hours

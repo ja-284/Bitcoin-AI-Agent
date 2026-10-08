@@ -62,7 +62,10 @@ def expected_hours(start: datetime, now: datetime, run_minute: int = 12, allowan
     last_closed = now.replace(minute=0, second=0, microsecond=0) - HOUR
     if now.minute < run_minute + allowance_min:
         last_closed -= HOUR  # this hour's run may legitimately still be in progress
-    hours, t = [], start
+    # The first whole hour at or after `start` (2026-10-08 fix): a window opened at 19:23 expects 20:00, 21:00, ...
+    # Stepping from 19:23 itself matched no real hour, so the 7-day line said "0 of 167" from 2026-09-26 on.
+    floor = start.replace(minute=0, second=0, microsecond=0)
+    hours, t = [], (start if start == floor else floor + HOUR)
     while t <= last_closed:
         hours.append(t)
         t += HOUR
