@@ -221,6 +221,44 @@ role and the API-log check remain open.
 - 346 of 500 prospective hours. **Nothing that predicts or judges changed.** What remains is the Lovable
   frontend and the owner's steps.
 
+## 2026-10-08 — formal audit and quality gate (observational): `research/AUDIT_2026-10-08.md`
+
+- **400 of 500 prospective hours.** The brief's 500+ premise was wrong, so the figures are descriptive and
+  no checkpoint was computed.
+- **Gate YELLOW** (observability and reliability; research validity intact).
+- **Direction signal:** no predictive value.
+- **Move-size model:** ahead of the no-fitting rule on the same 400 hours (−0.0140 [−0.0231, −0.0054],
+  optimistic), in the low-volatility regime only.
+- **One monitoring fix** (`c05ee3c`: the weekly report's 7-day line). A second missing hour,
+  2026-10-07 14:00, most likely raised no alarm.
+- Candidate next directions are listed for the user, none tested.
+- **PAUSED 2026-10-08 ~20:40 UTC, on the user's instruction, after the formal audit was finished.**
+  - Everything is committed and pushed: `c05ee3c` (the fix) and `2deb42f` (the audit). GitHub's tests
+    are green, the tree is clean, and nothing is running.
+  - **The governing prompt on resume** is the user's 2026-10-08 "formal AUDIT / STATUS / EVALUATION
+    GATE" brief:
+    - its 37 rules, the anti-rush rule and the one-change rule;
+    - no tuning on prospective or holdout results;
+    - "do not decide the next feature yet".
+
+    Its report is `research/AUDIT_2026-10-08.md`. The next research step is the USER's decision after
+    reviewing it.
+  - **First thing on resume:**
+    1. Re-measure, do not assume. Run `python -m agent.research.live_checkpoint` (400 of 500 at 19:54 UTC)
+       and the healthcheck, and check the missing hours since 2026-10-08 19:00, the GitHub runs and
+       `reporting_incidents`.
+    2. Ask for, or apply if already given, the user's decision on the audit's §15 candidates. Start none
+       without it.
+       - **Time-sensitive:** candidate 1, the calm-stretch expectation study (development data only), is
+         useful only if it is committed before the 500-hour reading (≈ 2026-10-12 23:00 UTC). It lapses
+         once 500 graded hours exist.
+    3. At 500 graded hours, run `python -m agent.research.live_checkpoint` exactly as registered, then the
+       strict readiness audit (`research/LIVE_EVALUATION.md`, the 500-hour procedure).
+    4. Recorded, not fixed (each awaits a decision; one change at a time):
+       - the weekly report's 1h edge interval "n/a" (one resample had no SELL hour);
+       - the experiment-JSON field drift;
+       - the operational decisions: a missed-hour alarm, `pg_net` response retention, the news cost.
+
 ## 2026-09-27 (later) — private stats access prepared (at the user's request; no website built)
 
 - `docs/api/stats_access.md`: two derived caches filled by a separate workflow after each successful
