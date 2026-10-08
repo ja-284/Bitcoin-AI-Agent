@@ -5,6 +5,26 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## audit — 2026-10-08 (formal quality gate; one monitoring fix; `research/AUDIT_2026-10-08.md`)
+
+Observational. Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint
+code or rules, LIVE_EVALUATION.md, the holdout or any workflow changed.
+
+- **Fix (`c05ee3c`):** `weekly_report.expected_hours()` now starts at the first whole hour at or after
+  its start.
+  - From 2026-09-26 the 7-day window opened at an unaligned instant (now − 7 days), so the 7-day health
+    line read "0 of 167 expected hours" with every hour listed as missing.
+  - Aligned callers are unchanged: the since-go-live window, the shadow record and the reporting layer.
+  - One regression test was added; it fails on the old code.
+  - Only that line of the 2026-09-26 and 2026-10-05 reports was wrong. They are kept as written.
+- **Docs:**
+  - `docs/ops/observability.md`: a skipped hour does not fail the next self-check, and a single missed
+    hour can pass without an alarm;
+  - `research/INTERIM_PLAN_AUDIT.md` row A: the two missed hours of 2026-10-05 and 2026-10-07;
+  - the STATUS snapshot refreshed from its sources (400 of 500).
+- **The weekly report was run early** (`research/monitoring/weekly_2026-10-08.*`) as part of the audit.
+- 558 unit tests.
+
 ## side project — 2026-10-06 (the stats backend verified live; small reporting-layer fixes)
 
 Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,

@@ -264,6 +264,45 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 - **The stats backend is complete.** What remains is the Lovable frontend and the owner's steps
   (`open_user_actions.md` item 6). The main system is back in pre-500h monitoring (checkpoint ≈ 2026-10-12).
 
+**2026-10-08 — formal audit and quality gate (the user's brief; observational): `research/AUDIT_2026-10-08.md`.**
+- **The brief assumed 500+ prospective hours; the system has 400.**
+  - The 500-hour first look is due ≈ 2026-10-12 23:00 UTC, and its command refuses to run early.
+  - Every live figure below is descriptive, not a checkpoint. Nothing was decided or changed on it.
+- **Integrity clean:**
+  - parity 451/451 hours (0 breaks); shadow inputs 401 × 9 within 1e-6;
+  - all 451 stored signals reproduce from their stored category scores;
+  - 0 of 2,008 outcomes graded early; 0 non-prospective shadow rows; holdout sealed;
+  - security, role and drift checks OK; 0 vulnerable packages.
+  - 558 unit and 36 integration tests pass; mutation guards 79/79 (both controls held).
+- **Direction signal: still no predictive value.**
+  - 1h: matched 0.519 [0.462, 0.575] (n = 293) against a majority baseline of 0.504.
+  - 24h and 72h are below baseline, on only about 18 and 5 independent windows.
+  - The consistency score is unrelated to being right (Spearman −0.024).
+  - News alone changed 22 of 451 signals (4.9%), mostly to HOLD.
+- **Move-size model, 400 prospective hours:**
+  - ahead of E019's no-fitting EWMA rule by Brier **−0.0140 [−0.0231, −0.0054]** (validation −0.0146;
+    the interval is optimistic, E025);
+  - calibration-in-the-large +0.034 [−0.013, +0.080];
+  - ECE 0.071, which cannot be interpreted at this size (E024).
+  - **All 400 hours are in the low-volatility tercile.**
+- **Found and fixed (the one change):** from 2026-09-26 the weekly report's 7-day health line read
+  "0 of 167", because `expected_hours` stepped from an unaligned start. Fixed in `c05ee3c` with a
+  regression test; the two affected reports are left as written.
+- **Found, recorded, not fixed:**
+  - the 1h edge interval prints n/a (1 of 2,000 resamples has no SELL hour);
+  - the experiment-JSON field names drifted from their README.
+- **A second missing hour, 2026-10-07 14:00:**
+  - no run started between 14:46 and 16:12 UTC;
+  - `pg_cron` queued the dispatch, but GitHub's answer is gone after `pg_net`'s ~6 h retention;
+  - no backup slot fired;
+  - most likely **no alarm**: the heartbeat pings were 87 min apart, inside the 90 min allowance.
+  - 11 of 466 hours are now missing.
+- **Docs corrected:** `observability.md` (a skipped hour does not fail the next self-check),
+  `INTERIM_PLAN_AUDIT.md` row A, and the STATUS snapshot.
+- **Gate YELLOW:** for observability and reliability, not research validity. Candidate research
+  directions are listed for the user's review, none tested. The one with a deadline is a calm-market
+  expectation study, useful only before the 500-hour reading.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
