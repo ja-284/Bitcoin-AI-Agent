@@ -21,18 +21,18 @@ checkpoint itself.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-10-08 19:54 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-10-09 12:02 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**
 
 | figure | value at the snapshot | source of truth (run it for the current value) |
 |---|---|---|
-| graded prospective shadow hours | **400 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
-| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (100 more hours at one per hour, if none are lost) | derived from the count above |
-| newest prediction | the 18:00 UTC hour, 0.9 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
-| published backend state | refreshed 19:13 UTC, health **degraded**: a missing hour in the last 48 h (2026-10-07 14:00 UTC, see below) | the `backend_state` table (rewritten by every hourly run) |
-| private stats read model | refreshed 19:14 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
+| graded prospective shadow hours | **416 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
+| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (84 more hours at one per hour, if none are lost) | derived from the count above |
+| newest prediction | the 10:00 UTC hour, 1.0 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
+| published backend state | refreshed 11:13 UTC, health **degraded**: a missing hour in the last 48 h (2026-10-07 14:00 UTC, see below; it leaves the window at about 15:00 UTC today) | the `backend_state` table (rewritten by every hourly run) |
+| private stats read model | refreshed 11:14 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
 | sealed holdout | **sealed** (`research/HOLDOUT_ACCESS.log` does not exist) | the file's absence |
 | run history, outcomes, running statistics, health (read-only, on demand) | see the reporting layer | `python -m agent.reporting all --pretty` ([`docs/api/reporting_v1.md`](../api/reporting_v1.md)) |
 | everything else that moves (parity, cost, drift flags, the free-rule comparison) | see the latest weekly report | `python -m agent.research.weekly_report` → `research/monitoring/weekly_<date>.md` |
@@ -156,7 +156,7 @@ happening, or on the weekly audit being run on time.
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
 | a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~26 MB of 500 MB). |
 | a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
-| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-07; any commit resets the clock. |
+| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-08; any commit resets the clock. |
 
 **Calendar:** renew the GitHub token `supabase-dispatch` before **2027-09-20**
 (`docs/ops/open_user_actions.md` item 3).

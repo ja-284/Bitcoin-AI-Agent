@@ -328,6 +328,30 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
        - the weekly report's 1h edge interval "n/a" (one resample had no SELL hour);
        - the experiment-JSON field drift;
        - the operational decisions: a missed-hour alarm, `pg_net` response retention, the news cost.
+  - Resumed 2026-10-09 (next entry).
+
+**2026-10-09 — resumed from the pause; session check; two recorded defects closed; waiting for the user's decision.**
+- **Since the pause (2026-10-08 18:00 → 2026-10-09 10:00 UTC):**
+  - 17 of 17 hours recorded, all by `bitcoin_agent`, all Binance;
+  - 0 timestamp violations, 0 news or explanation errors, 17 shadow rows with 0 errors, no incidents;
+  - GitHub: 29/29 hourly runs, 31/31 publishes and 2/2 test runs green;
+  - the watchdog ran only twice in about 17 h (01:22 and 10:51 UTC), GitHub's known irregularity.
+  - Descriptive only: 16 of the 17 overnight signals were SELL. Nothing is read into it.
+  - **416 of 500 prospective hours**; the 500-hour reading is still due ≈ 2026-10-12 23:00 UTC.
+- **Closed (each its own commit, tested, nothing that predicts or judges touched):**
+  - `4ec90ea`: a bootstrap resample with no BUY or no SELL hour no longer erases the weekly report's edge
+    interval. It is counted and left out; above 5% the interval is withheld. Identical to the old method
+    when none is undefined, which is the case on today's data at every horizon (1h: [−0.062%, +0.120%]).
+  - `c6ad88a`: **E014 had no row in the experiment index**, and yesterday's audit wrongly said every
+    experiment was indexed (corrected with a dated note).
+    - The row is added, and the README documents how the record schema actually evolved.
+    - `tests/test_experiment_log.py` now requires one record and one index row per experiment, with no
+      numbering gaps, and every record must state what was fixed in advance and what happened.
+- **Still open:**
+  - the operational decisions (a missed-hour alarm, `pg_net` response retention, the news cost);
+  - **the user's decision on the audit's §15 candidates**. None has been started. Candidate 1 lapses at
+    the 500-hour reading.
+- 561 unit tests.
 
 ## Research phase — rules and decisions (2026-09-19)
 

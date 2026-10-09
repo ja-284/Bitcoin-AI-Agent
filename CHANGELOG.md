@@ -5,6 +5,23 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## monitoring / log — 2026-10-09 (two defects recorded by the audit, closed)
+
+Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,
+LIVE_EVALUATION.md, the holdout or any workflow changed.
+
+- **`4ec90ea`, the weekly report's BUY − SELL edge interval:**
+  - a block-bootstrap resample that holds no BUY or no SELL hour is counted and left out, never filled in;
+  - above 5% of resamples the interval is withheld, with the reason;
+  - with none undefined it equals the plain block bootstrap exactly (tested). On 2026-10-08 one such
+    resample in 2,000 had made the 1h interval print n/a.
+- **`c6ad88a`, the experiment log:**
+  - E014 (the sealed-holdout evaluation, pre-registered, not run) gets its missing index row;
+  - `research/experiments/README.md` documents the required core and how the record schema evolved;
+  - `tests/test_experiment_log.py` requires one record and one index row per experiment and no numbering
+    gaps. No historical record was rewritten.
+- 561 unit tests.
+
 ## audit — 2026-10-08 (formal quality gate; one monitoring fix; `research/AUDIT_2026-10-08.md`)
 
 Observational. Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint

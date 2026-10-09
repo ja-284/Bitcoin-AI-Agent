@@ -258,6 +258,15 @@ role and the API-log check remain open.
        - the weekly report's 1h edge interval "n/a" (one resample had no SELL hour);
        - the experiment-JSON field drift;
        - the operational decisions: a missed-hour alarm, `pg_net` response retention, the news cost.
+  - Resumed 2026-10-09 (next entry).
+
+## 2026-10-09 — resumed; two recorded defects closed; waiting for the user's decision
+
+- 17/17 hours since the pause; all checks green; 416 of 500 prospective hours.
+- Closed: the weekly report's edge interval on degenerate resamples (`4ec90ea`), and E014's missing
+  experiment-index row plus a completeness test (`c6ad88a`).
+- Open: the user's decision on the audit's §15 candidates (candidate 1 lapses at the 500-hour reading),
+  and the operational decisions.
 
 ## 2026-09-27 (later) — private stats access prepared (at the user's request; no website built)
 
