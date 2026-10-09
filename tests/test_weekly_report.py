@@ -109,6 +109,39 @@ def test_signal_record_accuracy_edge_and_interval_gate():
     assert sr["by_horizon"]["168h"] == {"n": 0}
 
 
+def _edge_with_sell_at(sell_hours, n=200, seed=1):
+    rng = np.random.default_rng(seed)
+    rows = [_pred(T0 + i * H, signal="SELL" if i in sell_hours else "BUY") for i in range(n)]
+    outs = [{"prediction_as_of": r["as_of"], "horizon_hours": 1, "status": "ok", "pct_change_from_prediction": float(x)}
+            for r, x in zip(rows, rng.normal(0, 0.005, size=n))]
+    return signal_record(rows, outs)["by_horizon"]["1h"]["edge"]
+
+
+def test_a_resample_without_a_sell_hour_is_left_out_and_counted_never_filled_in():
+    # 2026-10-08 audit: one of 2,000 resamples held no SELL hour, its edge was undefined, and the whole 1h interval
+    # printed n/a. Two clusters of SELL hours: a few resamples miss both, and the interval must survive them.
+    from agent.research.metrics import block_bootstrap, signal_edge
+    from agent.research.weekly_report import MAX_UNDEFINED_SHARE, N_BOOT
+
+    some = _edge_with_sell_at(set(range(0, 10)) | set(range(100, 110)))
+    assert 0 < some["resamples_without_an_edge"] <= MAX_UNDEFINED_SHARE * N_BOOT
+    assert some["interval_available"] is True and not some["interval_withheld"]
+    assert np.isfinite(some["ci_low"]) and some["ci_low"] <= some["point"] <= some["ci_high"]
+    # one short cluster: far more than 5% of resamples hold no SELL hour, so the interval is withheld, not invented
+    few = _edge_with_sell_at({50, 51, 52})
+    assert few["interval_withheld"] is True and few["interval_available"] is False and np.isnan(few["ci_low"])
+    # with nothing undefined the interval is exactly the plain block bootstrap's, so no existing figure moves
+    rng = np.random.default_rng(0)
+    rows = [_pred(T0 + i * H, signal=("BUY", "SELL")[i % 2]) for i in range(200)]
+    rets = rng.normal(0, 0.005, size=200)
+    outs = [{"prediction_as_of": r["as_of"], "horizon_hours": 1, "status": "ok", "pct_change_from_prediction": float(x)}
+            for r, x in zip(rows, rets)]
+    plain = signal_record(rows, outs)["by_horizon"]["1h"]["edge"]
+    stacked = np.column_stack([[r["signal"] for r in rows], rets]).astype(object)
+    expected = block_bootstrap(stacked, lambda a: signal_edge(a[:, 0], a[:, 1].astype(float)), block=48, n_boot=N_BOOT, seed=13)
+    assert plain["resamples_without_an_edge"] == 0 and (plain["point"], plain["ci_low"], plain["ci_high"]) == expected
+
+
 def test_signal_record_uses_only_the_corrected_pipeline_rows():
     rows = [_pred(T0, pv="0.1.0"), _pred(T0 + H)]
     outs = [{"prediction_as_of": r["as_of"], "horizon_hours": 1, "status": "ok", "pct_change_from_prediction": 0.3} for r in rows]

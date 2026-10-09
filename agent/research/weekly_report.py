@@ -31,7 +31,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from agent.research.metrics import block_bootstrap, brier_score, reliability_table, signal_edge, wilson_interval
+from agent.research.metrics import (block_bootstrap, block_bootstrap_estimates, brier_score, reliability_table, signal_edge,
+                                    wilson_interval)
 from agent.research.periods import LIVE
 from agent.scoring.scorer import SCORING_VERSION
 from agent.version import PIPELINE_VERSION
@@ -48,6 +49,10 @@ OUT_DIR = Path("research") / "monitoring"
 # the large historical experiments keep 500, both for cost and to stay comparable with E001.
 N_BOOT = 2000
 BOOTSTRAP_ENDPOINT_NOISE_PP = 0.02  # how finely an endpoint may honestly be read, in percentage points
+# The BUY - SELL edge is undefined in a resample that holds no BUY or no SELL hour. Up to this share of such
+# resamples are left out (and counted in the report); beyond it the interval is withheld, because the
+# remaining resamples would no longer describe the record's own variability (2026-10-09).
+MAX_UNDEFINED_SHARE = 0.05
 # E025 (2026-09-24, simulated): the 48h block-bootstrap interval excludes a true zero ~9% of the time at 500
 # hours (about 10 blocks) instead of 5%; at 2,000 and 5,000 hours it is at the nominal rate.
 INTERVALS_NOMINAL_FROM_HOURS = 2000
@@ -205,14 +210,25 @@ def signal_record(pred_rows: list[dict], outcome_rows: list[dict]) -> dict:
         acc = float(np.mean((sig[acted] == "BUY") == up[acted])) if acted.any() else float("nan")
         block = max(48, 2 * h)
         stacked = np.column_stack([sig, ret]).astype(object)
+        undefined, withheld = 0, False
         if len(ret) >= 2 * block:
-            pt, lo, hi = block_bootstrap(stacked, lambda a: signal_edge(a[:, 0], a[:, 1].astype(float)), block=block, n_boot=N_BOOT, seed=13)
+            pt, est = block_bootstrap_estimates(stacked, lambda a: signal_edge(a[:, 0], a[:, 1].astype(float)), block=block,
+                                                n_boot=N_BOOT, seed=13)
+            # A resample that happens to hold no BUY or no SELL hour has no edge (2026-10-09: one in 2,000 made the
+            # whole 1h interval print n/a). It is counted and left out, never filled in; above MAX_UNDEFINED_SHARE
+            # the interval is withheld. With none undefined this is exactly block_bootstrap's interval.
+            defined = est[~np.isnan(est)]
+            undefined = int(len(est) - len(defined))
+            withheld = undefined > MAX_UNDEFINED_SHARE * len(est)
+            lo, hi = ((float("nan"), float("nan")) if withheld else
+                      (float(np.percentile(defined, 2.5)), float(np.percentile(defined, 97.5))))
         else:
             pt, lo, hi = signal_edge(sig, ret), float("nan"), float("nan")
         d = {
             "n": int(len(graded)), "base_rate_up": base, "naive_rate": max(base, 1 - base), "acted_share": float(acted.mean()),
             "acted_accuracy": acc, "acted_n": int(acted.sum()),
-            "edge": {"point": pt, "ci_low": lo, "ci_high": hi, "interval_available": bool(len(ret) >= 2 * block), "hours_needed_for_interval": 2 * block},
+            "edge": {"point": pt, "ci_low": lo, "ci_high": hi, "interval_available": bool(len(ret) >= 2 * block) and not withheld,
+                     "hours_needed_for_interval": 2 * block, "resamples_without_an_edge": undefined, "interval_withheld": withheld},
             "buy_and_hold_mean_return": float(ret.mean()),
             "mean_return_by_signal": {s: {"n": int((sig == s).sum()), "mean": float(ret[sig == s].mean()) if (sig == s).any() else None} for s in ("BUY", "HOLD", "SELL")},
         }
@@ -690,7 +706,13 @@ def render(rep: dict) -> str:
             L.append(f"| {k} | 0 | | | | | | |")
             continue
         e = d["edge"]
-        ci = f"[{_pct(e['ci_low'])}, {_pct(e['ci_high'])}]" if e["interval_available"] else f"needs {e['hours_needed_for_interval']} h"
+        undefined = e.get("resamples_without_an_edge", 0)
+        if e.get("interval_withheld"):
+            ci = f"withheld: {undefined} of {N_BOOT} resamples had no BUY or no SELL hour"
+        elif e["interval_available"]:
+            ci = f"[{_pct(e['ci_low'])}, {_pct(e['ci_high'])}]" + (f" ({undefined} of {N_BOOT} resamples left out: no BUY or no SELL hour)" if undefined else "")
+        else:
+            ci = f"needs {e['hours_needed_for_interval']} h"
         L.append(f"| {k} | {d['n']} | {d['acted_share']:.2f} | {d['acted_accuracy']:.3f} (n={d['acted_n']}) | {d['naive_rate']:.3f} | {_pct(e['point'])} | {ci} | {_pct(d['buy_and_hold_mean_return'])} |")
     for k, d in sr["by_horizon"].items():
         cr = d.get("confidence_reliability")
