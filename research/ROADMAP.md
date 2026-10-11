@@ -265,8 +265,25 @@ role and the API-log check remain open.
 - 17/17 hours since the pause; all checks green; 416 of 500 prospective hours.
 - Closed: the weekly report's edge interval on degenerate resamples (`4ec90ea`), and E014's missing
   experiment-index row plus a completeness test (`c6ad88a`).
+  - *Corrected 2026-10-11:* the edge defect affected five weekly reports, not one (audit §18.1).
 - Open: the user's decision on the audit's §15 candidates (candidate 1 lapses at the 500-hour reading),
   and the operational decisions.
+
+## 2026-10-11 — the user's decisions after the audit; documentation corrections
+
+- 470 of 500 prospective hours (18:08 UTC); the 500-hour reading is estimated at ≈ 2026-10-12 23:10 UTC.
+- **Decisions:**
+  - the calm-market study lapses;
+  - the 500-hour checkpoint runs at the first active session after 500 graded hours, exactly as
+    registered, then the readiness audit (not a final verdict);
+  - operational changes come afterwards, one at a time: the missed-hour alarm, then trigger-response
+    retention; news cost and value reviewed separately;
+  - the frozen model continues to 2,000 hours.
+- **Corrections (audit §18):**
+  - the edge-defect scope;
+  - the holdout is sealed for evaluation, not untouched;
+  - the checkpoint is not blind;
+  - test counts reconciled.
 
 ## 2026-09-27 (later) — private stats access prepared (at the user's request; no website built)
 

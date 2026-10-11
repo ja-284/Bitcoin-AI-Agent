@@ -21,19 +21,19 @@ checkpoint itself.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-10-09 12:02 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-10-11 18:08 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**
 
 | figure | value at the snapshot | source of truth (run it for the current value) |
 |---|---|---|
-| graded prospective shadow hours | **416 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
-| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (84 more hours at one per hour, if none are lost) | derived from the count above |
-| newest prediction | the 10:00 UTC hour, 1.0 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
-| published backend state | refreshed 11:13 UTC, health **degraded**: a missing hour in the last 48 h (2026-10-07 14:00 UTC, see below; it leaves the window at about 15:00 UTC today) | the `backend_state` table (rewritten by every hourly run) |
-| private stats read model | refreshed 11:14 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
-| sealed holdout | **sealed** (`research/HOLDOUT_ACCESS.log` does not exist) | the file's absence |
+| graded prospective shadow hours | **470 of 500** | `python -m agent.research.live_checkpoint`: the checkpoint's own selection rule; before 500 it prints the count and writes nothing |
+| first checkpoint expected | **≈ 2026-10-12, late evening UTC** (an estimate: 30 more hours at one per hour, ≈ 23:10 UTC, if none are lost) | derived from the count above |
+| newest prediction | the 16:00 UTC hour, 1.1 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
+| published backend state | refreshed 17:13 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
+| private stats read model | refreshed 17:13 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
+| sealed holdout | **sealed** for evaluation (`research/HOLDOUT_ACCESS.log` does not exist): never scored, nothing learned from it. **Not "untouched"**: raw candles of its last weeks were fetched as warm-up inputs, and the whole period is stored on disk (`research/AUDIT_2026-10-08.md` §18.2) | the file's absence |
 | run history, outcomes, running statistics, health (read-only, on demand) | see the reporting layer | `python -m agent.reporting all --pretty` ([`docs/api/reporting_v1.md`](../api/reporting_v1.md)) |
 | everything else that moves (parity, cost, drift flags, the free-rule comparison) | see the latest weekly report | `python -m agent.research.weekly_report` → `research/monitoring/weekly_<date>.md` |
 
@@ -132,6 +132,10 @@ happening, or on the weekly audit being run on time.
   shown or used, and their weight in any value used is below 2e-10. It is recorded precisely in
   `research/LIVE_EVALUATION.md` (500-hour procedure, item 3) and left unchanged as registered checkpoint
   code. Clipping the warm-up would be a separate, later decision.
+  - *Added 2026-10-11:* the E000 backtest (2026-09-19) also used about 233 holdout-period candles
+    (2026-08-10 → 08-19) as indicator warm-up. Its scored hours all lay in the buffer.
+  - The 2026-09-19 snapshot stores the whole holdout period.
+  - Full account: audit §18.2.
 - **Watch item — the calm market (drift flag "outcomes" in the weekly report since 2026-09-26).** The live
   market is calmer than in development (large moves in ~34% of hours vs ~47% on validation). The pipeline
   is ruled out. The model may be over-stating slightly in this calm market. It is judged **only** at the
@@ -156,7 +160,7 @@ happening, or on the weekly audit being run on time.
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
 | a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~26 MB of 500 MB). |
 | a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
-| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-08; any commit resets the clock. |
+| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-10; any commit resets the clock. |
 
 **Calendar:** renew the GitHub token `supabase-dispatch` before **2027-09-20**
 (`docs/ops/open_user_actions.md` item 3).
@@ -174,6 +178,10 @@ At the first working session after **500 graded prospective hours**, run
 - It reports skill, ranking and calibration with intervals, against the free 24h-EWMA rule.
 - **By registration the 500-hour reading gives no verdict.** Intervals at that size are known to be
   optimistic (E025), and ECE above 0.03 is expected there (E024).
+- **It is not blind.** The first 400 of its 500 hours were reviewed in aggregate in the 2026-10-08 audit,
+  and the weekly reports show the running record by design.
+- **When (the user's decision, 2026-10-11):** at the first active session after the counter reaches 500,
+  with no separate approval. Never early.
 
 **After it, in order:**
 
@@ -185,5 +193,10 @@ At the first working session after **500 graded prospective hours**, run
    tuned against.
 3. Then the news first look (descriptive, ≈ 2026-10-11 by the weekly report's counter), the 2,000-hour
    E012 verdict (≈ mid-December 2026) and the 5,000-hour E013 verdict (≈ spring 2027).
+4. Only after the readiness audit, one at a time, each with tests and its own commit (the user's decision,
+   2026-10-11):
+   - the single-missed-hour alarm;
+   - then keeping GitHub trigger responses;
+   - news cost and value reviewed separately, with no change to the live weights or model.
 
 The holdout opens only on the user's explicit instruction.

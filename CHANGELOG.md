@@ -5,6 +5,25 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## docs — 2026-10-11 (corrections and clarifications; documentation only)
+
+No code, model, threshold, feature, evaluation rule, stored record or dependency changed.
+
+- `research/AUDIT_2026-10-08.md` §18:
+  - the edge-interval defect's real scope (five reports), with what was rerun kept apart from what was
+    inferred, and the 5% cut-off stated as a judgement;
+  - **the holdout is sealed for evaluation, not "untouched"** (E014/E023 never run; warm-up candle
+    contact by E000, the weekly reports and the checkpoint; the stored snapshot; E000's "not touched"
+    superseded);
+  - the 500-hour reading is not blind (400 of its hours reviewed in aggregate);
+  - test counts reconciled.
+- The 2026-10-09 notes in CLAUDE.md, ROADMAP and this file are corrected the same way.
+- STATUS refreshed from its sources (470 of 500), with the holdout row worded exactly.
+- The user's decisions are recorded in CLAUDE.md and ROADMAP:
+  - the calm-market study lapses;
+  - the checkpoint runs at the first session after 500 hours;
+  - operational changes wait until after the readiness audit.
+
 ## monitoring / log — 2026-10-09 (two defects recorded by the audit, closed)
 
 Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,
@@ -15,6 +34,13 @@ LIVE_EVALUATION.md, the holdout or any workflow changed.
   - above 5% of resamples the interval is withheld, with the reason;
   - with none undefined it equals the plain block bootstrap exactly (tested). On 2026-10-08 one such
     resample in 2,000 had made the 1h interval print n/a.
+  - *Corrected 2026-10-11:* five weekly reports printed n/a, not one:
+    - 2026-09-24: 1h and 6h;
+    - 2026-09-25, 09-26 and 10-05: 1h, 6h and 24h;
+    - 2026-10-08: 1h.
+
+    Only the 2026-10-08 case was rerun; the earlier causes are inferred from the code. The 5% cut-off is
+    a judgement, not a pre-registered rule.
 - **`c6ad88a`, the experiment log:**
   - E014 (the sealed-holdout evaluation, pre-registered, not run) gets its missing index row;
   - `research/experiments/README.md` documents the required core and how the record schema evolved;

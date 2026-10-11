@@ -342,6 +342,14 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
   - `4ec90ea`: a bootstrap resample with no BUY or no SELL hour no longer erases the weekly report's edge
     interval. It is counted and left out; above 5% the interval is withheld. Identical to the old method
     when none is undefined, which is the case on today's data at every horizon (1h: [−0.062%, +0.120%]).
+    - *Corrected 2026-10-11 (audit §18.1):* the defect affected **five** weekly reports, not only the 1h
+      interval of 2026-10-08:
+      - 2026-09-24: 1h and 6h;
+      - 2026-09-25, 09-26 and 10-05: 1h, 6h and 24h;
+      - 2026-10-08: 1h.
+
+      Its cause in the four earlier reports is inferred from the code, not rerun. The 5% cut-off is a
+      judgement, not a pre-registered rule.
   - `c6ad88a`: **E014 had no row in the experiment index**, and yesterday's audit wrongly said every
     experiment was indexed (corrected with a dated note).
     - The row is added, and the README documents how the record schema actually evolved.
@@ -352,6 +360,41 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
   - **the user's decision on the audit's §15 candidates**. None has been started. Candidate 1 lapses at
     the 500-hour reading.
 - 561 unit tests.
+
+**2026-10-11 — status review; the user's decisions; documentation corrections only (audit §18).**
+- **State at 18:08 UTC:**
+  - **470 of 500 prospective hours**; the 500-hour reading is estimated at ≈ 2026-10-12 23:10 UTC;
+  - no missed hour since 2026-10-07 and no new incident;
+  - 204/204 GitHub runs since 2026-10-09 green; 0 overdue outcomes.
+- **The user's decisions:**
+  - **The calm-market study lapses.** A properly registered study for the 2,000-hour milestone may be
+    considered after the 500-hour reading and readiness audit.
+  - **The 500-hour checkpoint runs at the first active session after the counter reaches 500**, exactly
+    as registered, followed by the prescribed readiness audit. No separate approval is needed. It is not
+    a final verdict, and there is no tuning, no threshold change, no feature and no holdout access.
+  - **Operational changes wait until after that audit.** In order: the single-missed-hour alarm, then
+    keeping GitHub trigger responses. News cost and value get a separate review, with no change to the
+    live weights or model. One change at a time.
+  - The frozen move-size model continues to the registered 2,000-hour evaluation.
+- **Corrections, documentation only (`research/AUDIT_2026-10-08.md` §18):**
+  - **The edge-interval defect's scope:** five reports, not one. What was rerun is kept apart from what
+    was inferred from the code, and the 5% cut-off is stated to be a judgement.
+  - **The holdout is sealed for evaluation, not "untouched".** E014 and E023 have never run, no holdout
+    hour has been scored, and the access log does not exist. But raw holdout-period candles were
+    fetched as warm-up inputs:
+    - about 233 hours by the E000 backtest;
+    - about 71 hours by the weekly reports' EWMA rule since 2026-09-22;
+    - back to about 2026-07-26 by the checkpoint's EWMA rule;
+    - and the whole period is stored in the 2026-09-19 snapshot.
+
+    E000's record says "sealed (not touched)"; that phrase is superseded.
+  - **The 500-hour reading is not blind:** 400 of its hours were reviewed in aggregate in the audit.
+  - **Test counts reconciled:**
+    - full unit suite: 558 on 2026-10-08, 561 since 2026-10-09 (561/561 passed again 2026-10-11);
+    - the 96 tests of 2026-10-11 were a targeted subset.
+- No code, model, threshold, feature, evaluation rule, stored record or dependency changed.
+- **Next:** at the first session with 500 graded hours, run `python -m agent.research.live_checkpoint`,
+  then the readiness audit.
 
 ## Research phase — rules and decisions (2026-09-19)
 
