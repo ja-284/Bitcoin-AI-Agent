@@ -1,0 +1,156 @@
+{
+  "checkpoint_hours": 500,
+  "first_hour": "2026-09-21T17:00:00+00:00",
+  "last_hour": "2026-10-12T21:00:00+00:00",
+  "prospective_graded_available": 520,
+  "registered": {
+    "verdict": null,
+    "what": "first look: skill and calibration points with intervals; NO verdict",
+    "chance": "a model as good as on validation passes E012's Brier part 78%, accuracy 59%, rho 100% of the time at this size; ECE stays under 0.03 only ~10% of the time -- a high ECE here is not evidence"
+  },
+  "intervals": "48h circular block bootstrap, 500 resamples, seed 17",
+  "stats": {
+    "n": 500,
+    "large_move_share": 0.304,
+    "mean_stated_p": 0.33447428550779135,
+    "brier_rel_gain": 0.08908861352169095,
+    "accuracy": 0.698,
+    "accuracy_ci95": [
+      0.6563715243917267,
+      0.7366091266700354
+    ],
+    "naive_rate": 0.696,
+    "rho": 0.3237887511550046,
+    "ece": 0.058701986153759725,
+    "e013_ece_ok": false,
+    "e013_buckets_ok": true,
+    "buckets": [
+      {
+        "from": 0.0,
+        "to": 0.1,
+        "n": 25,
+        "stated": 0.08575939823336032,
+        "observed": 0.08,
+        "ci95": [
+          0.02221993369109193,
+          0.24966512122957818
+        ],
+        "counts_for_e013": false,
+        "within_0_05": true
+      },
+      {
+        "from": 0.1,
+        "to": 0.2,
+        "n": 89,
+        "stated": 0.1411591711954759,
+        "observed": 0.056179775280898875,
+        "ci95": [
+          0.024232521079919085,
+          0.1248558186298662
+        ],
+        "counts_for_e013": false,
+        "within_0_05": false
+      },
+      {
+        "from": 0.2,
+        "to": 0.3,
+        "n": 71,
+        "stated": 0.25596557027807276,
+        "observed": 0.3380281690140845,
+        "ci95": [
+          0.2388482890600142,
+          0.4538359934780396
+        ],
+        "counts_for_e013": false,
+        "within_0_05": false
+      },
+      {
+        "from": 0.3,
+        "to": 0.4,
+        "n": 155,
+        "stated": 0.3521906224151941,
+        "observed": 0.33548387096774196,
+        "ci95": [
+          0.26592684807262523,
+          0.41299857196847223
+        ],
+        "counts_for_e013": true,
+        "within_0_05": true
+      },
+      {
+        "from": 0.4,
+        "to": 0.5,
+        "n": 89,
+        "stated": 0.44513666982932915,
+        "observed": 0.3707865168539326,
+        "ci95": [
+          0.27773476646124157,
+          0.47453145902388577
+        ],
+        "counts_for_e013": false,
+        "within_0_05": false
+      },
+      {
+        "from": 0.5,
+        "to": 0.6,
+        "n": 54,
+        "stated": 0.5440779006294633,
+        "observed": 0.4444444444444444,
+        "ci95": [
+          0.3200225687559781,
+          0.5762458608863554
+        ],
+        "counts_for_e013": false,
+        "within_0_05": false
+      },
+      {
+        "from": 0.6,
+        "to": 0.7,
+        "n": 17,
+        "stated": 0.6335011381626313,
+        "observed": 0.7058823529411765,
+        "ci95": [
+          0.468664666737861,
+          0.8672020613444361
+        ],
+        "counts_for_e013": false,
+        "within_0_05": false
+      }
+    ],
+    "brier_rel_gain_ci95": [
+      0.019374029371545587,
+      0.13745754944905786
+    ],
+    "rho_ci95": [
+      0.14251163391563906,
+      0.4294231935255033
+    ],
+    "ece_ci95": [
+      0.041223795755728584,
+      0.09278823817951992
+    ]
+  },
+  "verdicts": {},
+  "vs_free_ewma_rule": {
+    "why": "E019: a 24-hour EWMA of 'did recent hours move a lot?' needs no fitting at all and reached 40% of the model's skill on development data. Comparing the model only against the base rate, as E012 did, sets the bar far too low.",
+    "hours_compared": 500,
+    "model_brier": 0.19273427479662653,
+    "reference_brier": 0.20914648335460398,
+    "model_skill": 0.08908861352169095,
+    "reference_skill": 0.011520325948067955,
+    "model_brier_minus_reference": -0.016412208557977453,
+    "observed_large_move_share": 0.304,
+    "development_expectation": "the model had 2.47x the reference's skill on validation data (E019)",
+    "note": "Pre-committed before the live sample was large enough to judge, so the comparison could not be chosen after seeing the answer. Far too few hours to mean anything yet -- this line exists to be read at the 500-hour checkpoint. Both skill figures are measured against a base rate computed on these very hours, which at small n is an ORACLE that knew whether the period turned out calm or wild; it flatters neither side but makes both look worse than they are. The difference between the two Briers is the part that is comparable."
+  },
+  "reproducibility": {
+    "rows": 500,
+    "artefact": "move_size_1h_v1",
+    "row_model_versions": [
+      "move_size_1h_v1"
+    ],
+    "max_abs_diff": 5.551115123125783e-16,
+    "not_reproducible": 0,
+    "ok": true
+  }
+}
