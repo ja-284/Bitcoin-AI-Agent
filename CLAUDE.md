@@ -10,21 +10,35 @@ The system leans on solid, deterministic math (indicators, formulas) for anythin
 
 **This is analysis only.** It does not place real trades — not in this phase, and not any time soon.
 
-## Current stage (read first): PRE-500H MONITORING-ONLY MODE (since 2026-09-26)
+## Current stage (read first): POST-500H MONITORING-ONLY MODE (since 2026-10-13)
 
-The pre-500h plan (`research/INTERIM_PLAN_PRE_500H.md`) is complete (`research/INTERIM_PLAN_AUDIT.md`).
+The registered 500-hour first look was taken on 2026-10-13 (`research/monitoring/checkpoint_500h.md`; no
+verdict, by registration). The strict readiness audit after it is revision 3 of
+`docs/research/readiness_gate.md`: **19 PASS, 3 PARTIAL, a RELEASE CANDIDATE, not FINAL.**
 **Operational truth lives in `docs/ops/STATUS.md` + `status.json`** (one dated snapshot; every figure
 names the command that is its source; `tests/test_status_docs.py` keeps the two and the code's versions
-in agreement). The checkpoint rules and the 500-hour procedure live in `research/LIVE_EVALUATION.md`.
+in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
 
 - The live system, data collection, heartbeat and watchdog keep running unattended; hourly health is
   checked at each session; real production, security, data-integrity and reliability problems are still
   fixed; scheduled audits still run.
 - **No predictive tuning, no frontend, no ML, no new research experiment** unless new live or system
-  evidence raises a genuinely new question. The 500-hour checkpoint stays exactly as registered.
-- Work before 500 hours only for: a real production problem; a security / data-integrity / reliability
-  problem; a due scheduled audit; genuinely new live evidence; the checkpoint itself. Otherwise do not
-  create work. The freeze is for the current prospective evaluation, not permanent.
+  evidence raises a genuinely new question. The frozen model `move_size_1h_v1` continues untouched. The
+  2,000-hour checkpoint (the E012 verdict, ≈ 2026-12-14) and the 5,000-hour checkpoint (the E013 verdict)
+  stay exactly as registered.
+- **Approved operational changes** (the user's decision, 2026-10-11), one at a time, each with tests and its
+  own commit:
+  1. the single-missed-hour alarm;
+  2. keeping GitHub's trigger responses;
+  3. a separate review of news cost and value, with no change to the live weights or model.
+
+  Waiting for the user: the go-ahead for these, the registered news first look (ready, descriptive), and
+  any registered study for the 2,000-hour milestone.
+- Other work only for: a real production problem; a security / data-integrity / reliability problem; a
+  due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
+  The freeze is for the current prospective evaluation, not permanent.
+- From 2026-09-26 to 2026-10-13 the stage was PRE-500H MONITORING-ONLY (`research/INTERIM_PLAN_PRE_500H.md`,
+  complete per `research/INTERIM_PLAN_AUDIT.md`).
 - **Read-only reporting layer (2026-09-27, observability only):** `agent/reporting` +
   `docs/api/reporting_v1.md`. It derives the run history, outcomes, statistics and health from the
   existing records, on a server-enforced read-only connection. Nothing in production imports or runs it
@@ -396,6 +410,53 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 - **Next:** at the first session with 500 graded hours, run `python -m agent.research.live_checkpoint`,
   then the readiness audit.
 
+**2026-10-13 — the 500-hour first look, as registered; the strict readiness audit (revision 3).**
+- **Before running:** no checkpoint file present, tree clean, `main` = GitHub; 520 graded prospective
+  hours. The count reached 500 late on 2026-10-12, so this was the first active session after it.
+- **The reading:** `python -m agent.research.live_checkpoint` ran once (19:32:58 → 19:33:10 UTC) and wrote
+  `research/monitoring/checkpoint_500h.md/.json`, committed unchanged (`ed96b2a`, with the weekly report).
+  - It read exactly the first 500 graded hours, 2026-09-21 17:00 → 2026-10-12 21:00 UTC. Checked
+    independently: the 9 hours of the span left out are exactly the hours with no shadow row.
+  - Integrity: 500 of 500 probabilities reproduce from their stored inputs (5.6e-16).
+  - Brier gain +0.089 [+0.019, +0.137]; ρ +0.324; ahead of the free EWMA rule (Brier 0.1927 vs 0.2091).
+  - Accuracy 0.698 against 0.696 for "always small", so E012's +0.05 bar is missed. ECE 0.059, which E024
+    expects at this size. The model stated 0.335 on average against 0.304 observed, about 0.03 too high.
+  - **No verdict, by registration.** All 500 hours were in the low-volatility regime, the reading was not
+    blind, and its intervals are optimistic (E025).
+- **The readiness audit, revision 3 of `docs/research/readiness_gate.md` (added; history untouched):
+  19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN. RELEASE CANDIDATE, not FINAL.**
+  - Row 8, calibration, is counted PARTIAL from now on: prospective evidence exists and does not yet
+    confirm the validation result. That is a stricter count, not a new defect; the old count gives 20/2.
+  - Row 18, observability, PASS → PARTIAL: a single missed hour can pass with no alarm, GitHub's trigger
+    response is lost after ~6 h, and two weekly-report defects went unseen for days (both fixed).
+  - Row 21: the calendar (520 of 2,000).
+  - Frontend: ready for a read-only display that shows the research state truthfully.
+  - Holdout: still NOT READY. Sealed for evaluation, not untouched; the E000 runner's guard bypass is
+    fixed before any E014/E023 run.
+- **Evidence, 2026-10-13:**
+  - unit 561/561, integration 36/36 (drift check included), dependency audit 0 vulnerable of 43,
+    security and role checks OK;
+  - weekly report `weekly_2026-10-13`: parity 571/571, 166 of 167 hours in 7 days, AI ≈ $10.59 per
+    30 days;
+  - GitHub 177/177 runs since 2026-10-11 18:00; 562 of 564 hours since the trigger fix; all Binance, all
+    `bitcoin_agent`; 0 of 2,605 outcomes graded early;
+  - mutation guards 79/79 on 2026-10-11 (no code has changed since).
+- **Docs:** STATUS and `status.json` moved to the post-500h stage (520 of 2,000; next ≈ 2026-12-14).
+  `tests/test_status_docs.py` is generalised so it stays truthful after 500:
+  - the mode is read from `status.json`;
+  - the verdict flag is read from the registration;
+  - the count source changes after the first reading;
+  - every earlier reading must exist exactly when a later checkpoint is named.
+
+  Each new assertion was broken on purpose and caught.
+- **Nothing** in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or
+  rules, LIVE_EVALUATION.md, the holdout, any workflow, any stored record or any dependency changed.
+- **Next:**
+  - the user's go-ahead for the operational queue (first, the single-missed-hour alarm) and for the news
+    first look;
+  - the weekly audit, due ≈ 2026-10-20;
+  - the 2,000-hour reading at the first session after 2,000 graded hours.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
@@ -432,7 +493,7 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 - `python -m agent.healthcheck --max-age-hours 2` — exit 1 if the newest prediction is stale (used by the workflows).
 - `python -m agent.backtest.runner --days 30` — technical-only backtest; CSV lands in `backtests/`. Never run it over the sealed holdout.
 - `python -m agent.research.weekly_report` — the Phase 13 weekly live report (reads the database, small Binance fetch for the paper record; `--no-paper` skips that). Output in `research/monitoring/`. Never writes to live tables.
-- `python -m agent.research.live_checkpoint` — the registered prospective checkpoints (`research/LIVE_EVALUATION.md`). Before 500 graded prospective hours it only prints the count and writes nothing (it is the source of truth for that count); at 500 / 2,000 / 5,000 it reads exactly the first N hours, writes `research/monitoring/checkpoint_<N>h.md/.json` once and never rewrites them.
+- `python -m agent.research.live_checkpoint` — the registered prospective checkpoints (`research/LIVE_EVALUATION.md`). Before 500 graded prospective hours it only prints the count and writes nothing; at 500 / 2,000 / 5,000 it reads exactly the first N hours, writes `research/monitoring/checkpoint_<N>h.md/.json` once and never rewrites them. Between checkpoints it only says the last reading exists, so the running count comes from `python -m agent.reporting health` → `checkpoint_progress` (the same selection function).
 - `python -m agent.reporting latest|runs|run --hour <ISO>|statistics|health|all [--at <ISO>] [--pretty]`: read-only statistics and run history over the record (`docs/api/reporting_v1.md`). Server-enforced read-only connection; prints JSON; writes nothing. `--at` shows the record exactly as it stood at that moment. Never imported by production code.
 - `python -m agent.reporting.incidents record-workflow-run`: records a failed hourly/watchdog run as an incident from the `INCIDENT_*` environment variables the *Reporting snapshot* workflow sets (strictly validated; exit 1 on anything unexpected). Not for manual use.
 - `python -m agent.reporting.publish [--dry-run]`: stores the reporting documents in the two private stats caches (`docs/api/stats_access.md`). It runs automatically in the *Reporting snapshot* workflow after each completed hourly or watchdog run (failures included); `--dry-run` computes and stores nothing.

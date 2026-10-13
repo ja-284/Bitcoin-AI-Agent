@@ -1,9 +1,12 @@
 # Research roadmap — progress tracker
 
-> **CURRENT STATE: read this first (2026-09-26 evening).** The project is in **PRE-500H MONITORING-ONLY
-> MODE**: the pre-500h plan is complete (`research/INTERIM_PLAN_AUDIT.md`), the predictive path is frozen
-> for the current prospective evaluation, and no new experiment starts unless new live evidence justifies
-> one. Operational status, alarms and the checkpoint procedure: `docs/ops/STATUS.md`. The checkpoint rules:
+> **CURRENT STATE: read this first (2026-10-13).** The project is in **POST-500H MONITORING-ONLY MODE**.
+> The registered 500-hour first look is taken (no verdict), and the readiness audit after it is revision 3
+> of `docs/research/readiness_gate.md`. The predictive path stays frozen for the current prospective
+> evaluation, and no new experiment starts unless new live evidence justifies one. The user-approved
+> operational changes come one at a time. *(From 2026-09-26 to 2026-10-13 the stage was PRE-500H
+> MONITORING-ONLY; the pre-500h plan is complete, `research/INTERIM_PLAN_AUDIT.md`.)* Operational status,
+> alarms and the checkpoint procedure: `docs/ops/STATUS.md`. The checkpoint rules:
 > `research/LIVE_EVALUATION.md`. Everything below is a **dated history**. Any "resume point", "first thing
 > tomorrow", "next actions" or "open user action" in an older section is superseded. The heartbeat and the
 > least-privilege role are done (2026-09-25), the schema is version 4, and the live scoring is 0.2.0.
@@ -284,6 +287,23 @@ role and the API-log check remain open.
   - the holdout is sealed for evaluation, not untouched;
   - the checkpoint is not blind;
   - test counts reconciled.
+
+## 2026-10-13 — the 500-hour first look, as registered; the readiness audit
+
+- **Reading** (`research/monitoring/checkpoint_500h.md`, `ed96b2a`):
+  - exactly the first 500 graded hours, all reproducing;
+  - Brier gain +0.089 [+0.019, +0.137], ρ +0.324, ahead of the free EWMA rule (0.1927 vs 0.2091);
+  - accuracy 0.698 against 0.696 for "always small" (E012's bar missed);
+  - ECE 0.059, with 0.335 stated against 0.304 observed.
+
+  No verdict, by registration. All hours were calm, the reading was not blind, and its intervals are
+  optimistic.
+- **Readiness gate, revision 3:** 19 PASS, 3 PARTIAL (calibration, observability, the calendar); a
+  RELEASE CANDIDATE, not FINAL. Frontend: ready for a truthful read-only display. Holdout: not ready.
+- **Next:**
+  - the user's go-ahead for the operational queue (alarm → trigger responses → news review) and the news
+    first look;
+  - the 2,000-hour E012 verdict ≈ 2026-12-14.
 
 ## 2026-09-27 (later) — private stats access prepared (at the user's request; no website built)
 

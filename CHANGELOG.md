@@ -5,6 +5,26 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## monitoring / docs — 2026-10-13 (the 500-hour first look, as registered; readiness gate revision 3)
+
+Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,
+LIVE_EVALUATION.md, the holdout, any workflow, any stored record or any dependency changed.
+
+- `ed96b2a`: `research/monitoring/checkpoint_500h.md/.json`, written once by
+  `python -m agent.research.live_checkpoint` (19:33 UTC) and committed unchanged, together with the weekly
+  report `weekly_2026-10-13`.
+  - It covers exactly the first 500 graded prospective hours (2026-09-21 17:00 → 2026-10-12 21:00 UTC),
+    and all 500 probabilities reproduce.
+  - It is a first look with no verdict, by registration.
+- `docs/research/readiness_gate.md`: **revision 3 added** (history left as written):
+  - 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN; a RELEASE CANDIDATE, not FINAL;
+  - row 8 (calibration) is counted PARTIAL from now on, and row 18 (observability) moves PASS → PARTIAL.
+- STATUS and `status.json` moved to the post-500h stage: 520 of 2,000, next ≈ 2026-12-14.
+- `tests/test_status_docs.py` is generalised so it stays truthful after 500. The mode comes from
+  `status.json` and the verdict flag from `REGISTERED`. The count source changes once the first reading
+  exists. Every earlier reading must exist exactly when a later checkpoint is named.
+- CLAUDE.md's "Current stage" and its run line for the checkpoint command are updated.
+
 ## docs — 2026-10-11 (corrections and clarifications; documentation only)
 
 No code, model, threshold, feature, evaluation rule, stored record or dependency changed.

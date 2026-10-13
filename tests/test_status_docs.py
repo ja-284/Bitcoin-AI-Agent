@@ -15,6 +15,7 @@ from pathlib import Path
 
 from agent.api.state import CONTRACT_VERSION
 from agent.database.db import SCHEMA_VERSION
+from agent.research.live_checkpoint import CHECKPOINTS, OUT_DIR, REGISTERED
 from agent.scoring.scorer import SCORING_VERSION
 from agent.shadow.model import DEFAULT_VERSION
 from agent.version import PIPELINE_VERSION
@@ -22,6 +23,9 @@ from agent.version import PIPELINE_VERSION
 STATUS_MD = Path("docs/ops/STATUS.md")
 STATUS_JSON = Path("docs/ops/status.json")
 CHECKPOINT_COMMAND = "python -m agent.research.live_checkpoint"
+# Once a reading exists the checkpoint command only says so, so between checkpoints the count comes from the
+# reporting layer, which applies the checkpoint's own selection function (agent/reporting/views.checkpoint_progress).
+COUNT_COMMAND = "python -m agent.reporting health"
 
 
 def _md() -> str:
@@ -61,8 +65,7 @@ def test_versions_match_the_code():
 
 
 def test_the_mode_and_the_readiness_score_are_the_same_everywhere():
-    assert _js()["mode"] == "PRE-500H MONITORING-ONLY"
-    assert "## Mode: PRE-500H MONITORING-ONLY" in _md()
+    assert f"## Mode: {_js()['mode']} (since {_js()['mode_since']})" in _md()
     gate = _js()["production"]["readiness_gate"]
     score = f"{gate['pass']} PASS, {gate['partial']} PARTIAL"
     assert f"**{score}**" in _md()
@@ -75,10 +78,16 @@ def test_the_holdout_claim_matches_the_repository():
     assert ("**sealed**" in _md()) == sealed
 
 
-def test_the_checkpoint_command_is_the_same_everywhere_and_gives_no_verdict_at_500():
+def test_the_checkpoint_command_is_the_same_everywhere_and_the_verdict_matches_the_registration():
     p = _js()["prospective"]
-    assert p["next_checkpoint_command"] == CHECKPOINT_COMMAND == _js()["sources_of_truth"]["graded_shadow_hours"]
-    assert p["next_checkpoint_gives_verdict"] is False
+    nxt = p["next_checkpoint_hours"]
+    assert p["next_checkpoint_command"] == CHECKPOINT_COMMAND
+    count_source = CHECKPOINT_COMMAND if nxt == CHECKPOINTS[0] else COUNT_COMMAND
+    assert _js()["sources_of_truth"]["graded_shadow_hours"].startswith(count_source)
+    assert p["next_checkpoint_gives_verdict"] is (REGISTERED[nxt]["verdict"] is not None)
+    # The status may name a later checkpoint only once every earlier reading is on disk, and never the reverse.
+    for cp in CHECKPOINTS:
+        assert (OUT_DIR / f"checkpoint_{cp}h.md").exists() == (cp < nxt), cp
     for doc in (STATUS_MD, Path("research/LIVE_EVALUATION.md"), Path("CLAUDE.md")):
         assert CHECKPOINT_COMMAND in doc.read_text(encoding="utf-8"), doc
     assert Path("agent/research/live_checkpoint.py").exists()

@@ -1,5 +1,12 @@
 # Backend readiness gate
 
+> **Current score (2026-10-13, revision 3, the strict readiness audit after the 500-hour first look):
+> 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN.** The three PARTIALs are row 8 (calibration: not yet confirmed
+> prospectively, counted strictly from this revision), row 18 (observability: a single missed hour can
+> still pass with no alarm) and row 21 (prospective monitoring: the calendar). Status: **RELEASE
+> CANDIDATE, not FINAL.** Revision 3 is the first section below. The next paragraph is the previous
+> score, kept as it was written.
+
 > **Current score (unchanged since 2026-09-25, confirmed 2026-09-26): 21 PASS, 1 PARTIAL, 0 FAIL,
 > 0 UNKNOWN.** The one PARTIAL is row 21, prospective monitoring, closed only by the calendar (the
 > 500 / 2,000 / 5,000-hour checkpoints). Rows 16 (heartbeat) and 17 (least-privilege role) became PASS on
@@ -19,6 +26,167 @@
 > commit `d222bd7`); the affected rows are corrected below and dated. The engineering
 > conclusion holds **after** that fix, not before it. Nothing about the research conclusions
 > or the sealed holdout changed.
+
+## Revision 3 — 2026-10-13: the strict readiness audit after the 500-hour first look
+
+This is the audit that `research/LIVE_EVALUATION.md` (the 500-hour procedure, item 6) and
+`docs/ops/STATUS.md` ("After it, in order", item 1) prescribe. It is added here; every other section of
+this file is history and is left as written. Figures come from commands run on 2026-10-13 between about
+19:30 and 19:50 UTC, unless a row names another date.
+
+### The reading this audit follows
+
+- `python -m agent.research.live_checkpoint` was run once, from 19:32:58 to 19:33:10 UTC. It wrote
+  `research/monitoring/checkpoint_500h.md` and `.json`, which are committed unchanged (`ed96b2a`).
+  Running it again prints "already computed" and changes nothing (checked: both files byte-identical).
+- **Selection: exactly the first 500 graded prospective hours**, 2026-09-21 17:00 → 2026-10-12 21:00 UTC
+  (520 were available). Checked independently: the span holds 509 hours, and the 9 left out are exactly
+  the hours with no shadow row (2026-09-21 19:00; 09-22 01, 02, 04, 05, 07 and 09; 10-05 19:00;
+  10-07 14:00). The large-move share (0.304) and the mean stated probability (0.3345) recompute to the
+  values in the JSON.
+- **Integrity: all 500 judged probabilities reproduce** from their stored inputs with the frozen artefact
+  (largest difference 5.6e-16).
+
+| measure | 500-hour value | registered bar | met at this size? | a model as good as on validation meets it (E024) |
+|---|---|---|---|---|
+| Brier gain vs these hours' base rate | +0.089 [+0.019, +0.137] | ≥ +0.050 (E012) | yes | 78% of 500-hour stretches |
+| accuracy, large vs small move | 0.698 [0.656, 0.737]; "always small" scores 0.696 | ≥ 0.696 + 0.05 (E012) | **no** | 59% |
+| Spearman ρ(probability, move size) | +0.324 [+0.143, +0.429] | ≥ 0.10, interval above 0 (E012) | yes | 100% |
+| ECE | 0.059 [0.041, 0.093] | ≤ 0.03 (E013) | **no** | about 10% |
+| buckets with n ≥ 100 within 0.05 | one bucket qualifies: stated 0.35, observed 0.34 (n = 155) | every qualifying bucket (E013) | yes, on a single bucket | 46% |
+| against the free 24h-EWMA rule (E019) | Brier 0.1927 vs 0.2091, a difference of −0.0164 | a comparison, not a bar | the model is ahead | 100% |
+
+**No verdict, by registration.** The E012 verdict comes at 2,000 hours and the E013 verdict at 5,000.
+
+What the reading says, in plain words:
+
+- **The probabilities rank hours well.** Hours the model called likelier to move did move more
+  (ρ +0.32). By Brier it beats both the base rate and the free EWMA rule: skill +0.089 against the rule's
+  +0.012. That points the same way as development, where it had 2.47 times the rule's skill.
+- **As a yes/no call at 0.5, it is no better than "always small" in this calm market** (0.698 vs 0.696).
+  This is the weakest figure in the reading. E024 makes missing this bar at 500 hours a roughly
+  four-in-ten event for a model as good as on validation, so it is not evidence on its own. The
+  2,000-hour verdict decides it.
+- **Calibration is not confirmed.**
+  - The model stated 0.335 on average, and large moves happened in 0.304 of these hours: about 0.03 too
+    high overall.
+  - By bucket, it over-states at 0.14 (observed 0.06), 0.45 (0.37) and 0.54 (0.44), and under-states at
+    0.26 (0.34) and 0.63 (0.71).
+  - An ECE of 0.059 is ordinary noise at this size (E024), and E029 found that this family's calibration
+    wanders for weeks at a time three to four times a year.
+  - This is the E026 watch item (possible over-statement in a calm market). It stays a watch item, not a
+    finding. Only the 2,000- and 5,000-hour readings judge whether it persists, and nothing is tuned on it.
+
+Limits on every figure above:
+
+- **All 500 hours are in the low-volatility regime** of the frozen development terciles (`rv_168` at most
+  0.00451, below the cut at 0.00476). The reading says nothing about normal or volatile markets.
+- **It is not blind.** 400 of the 500 hours were reviewed in aggregate in the 2026-10-08 audit, and the
+  weekly reports show the running record by design.
+- **The intervals are optimistic at this size.** E025 measured about 9% false positives instead of 5%.
+- **Both skill figures use the base rate of these very hours**, which knew in hindsight how calm the
+  period was. The difference between the model's and the rule's Brier is the comparable part.
+
+### The 22 categories, re-scored
+
+| # | category | 2026-10-13 | evidence |
+|---|---|---|---|
+| 1 | Research correctness | **PASS** | E000–E029 pre-registered, with negative results kept. The 2026-10-08 formal audit found research integrity clean. Two of that audit's own claims were wrong (the experiment index, and the scope of the edge-interval defect); both were corrected with dated notes (§18), and the experiment log's completeness is now tested (`c6ad88a`) |
+| 2 | Point-in-time safety | **PASS** | 0 timestamp-rule violations in 575 live hours; 0 of 2,605 outcomes graded before their candle closed; the checkpoint used prospective rows only (its rule is in code) |
+| 3 | Validation | **PASS** | unchanged (E010). Validation wear (E022) still binds: validation results are hypothesis-generating only |
+| 4 | Target/label correctness | **PASS** | unchanged; the outcome tracker and research labels agree in parity (571/571, weekly report 2026-10-13) |
+| 5 | Feature quality | **PASS** | unchanged. Drift flags are descriptive: two inputs sit below the development 1st percentile in about 12% of live hours (2026-10-05). That limits coverage (row 22); it is not a defect |
+| 6 | Feature redundancy | **PASS** | unchanged (E018, E022) |
+| 7 | Model behaviour | **PASS** | the development evidence stands (E019, E020). Over the 500 prospective hours the model is ahead of the free EWMA rule (Brier −0.0164), as E024 expects in every 500-hour stretch |
+| 8 | Calibration | **PARTIAL** (counted as PASS until now) | Validation ECE 0.014 (E013) stands. Prospectively: ECE 0.059, about 0.03 over-stated overall, five of seven buckets more than 0.05 from what happened. By E024 none of this is evidence against the model, but none of it confirms calibration either. **The row is counted PARTIAL from this revision because prospective evidence now exists and does not yet confirm the validation result.** That is a stricter count, not a newly found defect; under the old count the score would be 20 PASS, 2 PARTIAL. Only the 5,000-hour E013 verdict closes it |
+| 9 | Live/research parity | **PASS** | 571/571 hours; shadow inputs 521 × 9 agree with research; the checkpoint's 500 probabilities all reproduce (5.6e-16) |
+| 10 | Data quality | **PASS** | all 575 live hours from Binance, 0 synthetic; gaps flagged, never filled; 18 hours without news and 1 without an explanation, every one marked in its row |
+| 11 | Failure recovery | **PASS** | unchanged. The 2026-10-05 runner outage and the 2026-09-29 AI provider error were both visible and left no wrong record |
+| 12 | Idempotency | **PASS** | integration 36/36 on real Postgres, including the idempotency tests |
+| 13 | Database integrity | **PASS** | integration drift check: the live database matches what the repository builds; append-only triggers; schema version 4 |
+| 14 | Reproducibility | **PASS** | the checkpoint's integrity line (500 of 500 reproduce) and parity 571/571 |
+| 15 | Versioning | **PASS** | every shadow row is `move_size_1h_v1` (521 rows, one version); no version has changed since 2026-09-22; `tests/test_status_docs.py` keeps the docs and the code's versions in agreement |
+| 16 | Automation | **PASS, with a stated limit** | 562 of 564 hours recorded since the trigger fix (from the 2026-09-20 07:00 hour). The two losses, 2026-10-05 19:00 and 2026-10-07 14:00, came when GitHub started no run at all, backup slots included. 177/177 GitHub runs succeeded since 2026-10-11 18:00. The heartbeat sits outside GitHub. A lost hour is recorded as missing, never backfilled |
+| 17 | Security | **PASS** | security check OK (only the three reporting tables are reachable, viewer only); role check OK (`bitcoin_agent` with exactly its proven rights; 121 of 121 hours since 2026-10-08 18:00 written by it); dependency audit: 0 known vulnerabilities in 43 packages |
+| 18 | Observability | **PARTIAL** (was PASS) | (a) A single missed hour can pass with no alarm at all: on 2026-10-07 the heartbeat pings were 87 min apart against a 90-min allowance, and the self-check, by design, fails only a run whose own hour was not saved. (b) Why a dispatch failed cannot be found out after about 6 h, because `pg_net` drops GitHub's answer; the 2026-10-07 cause is therefore unknown. (c) Two weekly-report defects went unseen for days: the 7-day health line read "0 of 167" from 2026-09-26 to 10-08 (fixed, `c05ee3c`), and the edge interval was erased in five reports (fixed, `4ec90ea`). Nothing in the record was lost or wrong, and a missed hour does show afterwards (weekly report, `backend_state`, stats incident history). (a) and (b) are the first two operational changes the user approved for after this audit |
+| 19 | Performance | **PASS** | analysis median 25.3 s, longest 34.6 s (last 7 days); database 28 MB of 500 MB |
+| 20 | Maintainability | **PASS** | 561 unit tests with no database reachable, 36 integration tests, 79/79 mutation guards with both controls held (2026-10-11 at `3ae0265`; no code has changed since) |
+| 21 | Prospective monitoring | **PARTIAL, by the calendar** | The 500-hour first look is done. 520 of 2,000 graded hours. The E012 verdict is due ≈ 2026-12-14 if no hour is lost (each lost hour adds one; 2 were lost since 2026-09-20). The E013 verdict comes at 5,000 hours (≈ spring 2027) |
+| 22 | Known limitations | **PASS** | documented, now including this reading's own: low volatility only, not blind, optimistic intervals. Holdout-period candles were used as inputs: the holdout is sealed for evaluation, not untouched (`research/AUDIT_2026-10-08.md` §18.2) |
+
+**Score: 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN** (rows 8, 18 and 21).
+
+### Hard gates, re-checked
+
+| hard gate | status | evidence, 2026-10-13 |
+|---|---|---|
+| correctness | PASS | rows 1, 4, 9 |
+| point-in-time safety / leakage | PASS | row 2; the checkpoint read prospective rows only |
+| data integrity | PASS | row 13 |
+| critical security | PASS | row 17 |
+| reproducibility | PASS | row 14 |
+| required tests | PASS | 561 unit, 36 integration, 79 mutation guards; GitHub's test workflow green |
+| live/research consistency | PASS | parity 571/571 |
+| no known critical regression | PASS | the last code changes were `4ec90ea` and `c6ad88a` (2026-10-09); every commit since adds documents or checkpoint files only |
+
+### Release status, 2026-10-13: RELEASE CANDIDATE, not FINAL
+
+Every hard gate passes and nothing critical is open. It is **not FINAL** because three PARTIALs remain,
+and because the one deliverable that might work, the calibrated move-size probability, has a first look
+and no verdict. **"Backend finished" is not claimed.** The one engineering gap (row 18) is known, and its
+fix is first in the user's queue.
+
+### Is the backend ready for a frontend?
+
+**Yes, for a read-only display that shows the research state truthfully.** Contract v1 and the private
+stats read model already label every number. A frontend must show three things as they are:
+
+- the BUY/HOLD/SELL signal has **no demonstrated predictive value** (still true: at 1h it matched 0.500
+  of 348 graded hours against a 0.509 baseline, weekly report 2026-10-13);
+- the move-size probability is calibrated on development data. Live it has a first look at 500 hours,
+  with no verdict, in calm markets only;
+- confidence is a labelled heuristic, not a probability.
+
+**No, for anything else:** presenting the move-size probability as validated live, presenting the signal
+as advice, or writing anything back.
+
+### Holdout readiness, 2026-10-13: still NOT READY
+
+- **Prospective monitoring:** the 500-hour first look now exists. E024 places the first sound verdict at
+  2,000 hours, so the protocol's own logic still points to waiting.
+- **A precondition recorded 2026-10-11:** the E000 backtest runner fetches candles directly, so it is not
+  covered by the `load_bars` holdout guard. That must be fixed before any E014 or E023 run.
+- **Its state, stated exactly:** sealed for evaluation (no holdout score has been computed or used, and
+  `research/HOLDOUT_ACCESS.log` does not exist), but not untouched. Raw candles from its last weeks were
+  fetched as warm-up inputs, and the 2026-09-19 snapshot stores the whole period (`research/AUDIT_2026-10-08.md`
+  §18.2). Opening it remains the user's explicit decision.
+
+### What is proven, and what is not
+
+**Proven, for the system as a measuring instrument:**
+- it ran unattended for 24 days with 11 documented hours missing (9 before the trigger fix), none
+  backfilled, and nothing fabricated;
+- every row is timestamped honestly, append-only, and reproducible from its stored inputs;
+- the 500-hour reading used exactly the registered rows, and every judged probability reproduces;
+- it has been secure since 2026-09-25 (least privilege; nothing reachable from outside except the
+  viewer-only reporting tables).
+
+**Not proven:**
+- that the move-size probability is calibrated live (a first look shows about 0.03 over-statement in a
+  calm market; the verdict comes at 5,000 hours);
+- that it beats "always small" as a yes/no call (0.698 vs 0.696; decided at 2,000 hours);
+- anything about normal or volatile markets: none of the 500 hours was in either;
+- any value in the BUY/HOLD/SELL signal: none has been demonstrated.
+
+### Next, in the order the user set on 2026-10-11
+
+1. The single-missed-hour alarm (row 18a).
+2. Keeping GitHub's answers to the dispatch (row 18b).
+3. A separate review of news cost and value, with no change to the live weights or the model.
+
+They come one at a time, each with tests and its own commit. Meanwhile the frozen model continues
+untouched to the 2,000-hour reading. The registered news first look (descriptive) has enough hours
+(553 usable, weekly report 2026-10-13), and it waits for the user's go-ahead.
 
 ## Revision 2 — 2026-09-22 evening: the 22 categories of the master plan, scored
 
