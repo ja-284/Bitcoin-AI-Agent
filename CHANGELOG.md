@@ -5,6 +5,23 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-14 (E031: the first offline challenger; not a candidate)
+
+Nothing in the live system, `move_size_1h_v1`, the shadow record, the checkpoints or the holdout changed. No
+holdout candle was loaded (`load_bars(end=HOLDOUT.start)`; `research/HOLDOUT_ACCESS.log` still does not exist).
+
+- **What:** pre-registered in `61db93d` before the code (`4ccf10b`). One variant: the same model, rows and folds,
+  with four Platt maps (one per six-hour UTC block) on each fold's same purged 90-day slice instead of one.
+- **Result:**
+  - H_a holds: the worst block offset goes 0.047 → 0.013 and 0.057 → 0.012.
+  - H_b holds: no skill loss.
+  - H_d holds: ranking unchanged.
+  - **H_c fails** on E013's bucket rule. The [0.8, 0.9) bucket over-states by +0.077 (n = 317), and the slope
+    goes 0.976 → 0.928.
+- **Reading, decided in advance:** better intraday calibration at a cost, so it is recorded and not pursued. There
+  is no shadow-track proposal, and no further variant is run automatically.
+- **Caveat:** hypothesis-generating only (validation wear).
+
 ## research — 2026-10-14 (E030: the registered news first look; descriptive, no verdict)
 
 Nothing in prediction, scoring, news weights, prompts, the shadow model, the checkpoints or the live system

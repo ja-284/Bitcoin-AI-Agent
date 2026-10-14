@@ -1,8 +1,8 @@
 {
   "id": "E031",
   "date": "2026-10-14",
-  "git_commit": "(registration commit; the code and the result are added in later commits)",
-  "status": "PRE-REGISTERED, RESEARCH-ONLY, offline challenger study (post-500h plan, Phase 3). Development data only, walk-forward out-of-sample. HYPOTHESIS-GENERATING, not confirmatory (validation wear, below). One variant, fixed in advance: not a search. Nothing is adopted, deployed or shadowed: move_size_1h_v1 stays frozen and keeps its prospective record. A passing result leads at most to a written shadow-track proposal for the user's review.",
+  "git_commit": "pre-registration 61db93d; code 4ccf10b; run 2026-10-14 14:05 UTC; result recorded in the next commit",
+  "status": "DONE -- NOT A CANDIDATE (H_c fails; the pre-registered consequence applies: better intraday calibration at a cost, recorded, not pursued without a new hypothesis). Research-only and hypothesis-generating. Nothing adopted, deployed or shadowed; move_size_1h_v1 untouched.",
   "why": "E027 (2026-09-26, development data, both periods) found that the model family's good overall calibration hides offsetting intraday miscalibration. Large moves are over-stated at night (00-06 UTC: +0.047 exploration / +0.022 validation) and under-stated in the US session (12-18 UTC: -0.022 / -0.057). E028 then tested the mechanism 'the calendar enters the logistic as one harmonic' and FAILED: a second harmonic moved the offsets between blocks instead of removing them. It left one idea untested: the miscalibration is CONDITIONAL on the time of day. E020 found that interaction terms inside the logistic fail calibration. This tests the narrowest conditional fix there is, which leaves the logistic alone and lets the calibration step depend on the hour block. Nothing in the 500-hour first look motivated it: that reading has no hour-of-day breakdown (the 2,000-hour one will), and its misses were by probability level and overall level, which a block calibration is not designed to fix.",
   "hypothesis": "If E027's intraday offsets are a stable property of the family, then calibrating each six-hour UTC block separately, on the same purged 90-day slice that precedes every test quarter, removes most of them out of sample, without costing skill, overall calibration or ranking.",
   "variant": {
@@ -41,6 +41,96 @@
     "H_a_holds_but_another_fails": "Better intraday calibration at a cost in skill, overall calibration or ranking. Recorded; not pursued without a new hypothesis.",
     "in_every_case": "The live system, move_size_1h_v1, the shadow record, the checkpoints and their rules, and the holdout are untouched."
   },
-  "result": "PENDING: added by a later commit, after this registration is committed",
-  "command": "python -m agent.research.block_calibration --experiment E031"
+  "result": {
+    "rows": 54472,
+    "folds_calibrated": 27,
+    "fallback_blocks_used": "never",
+    "cross_check": "The incumbent reproduces E027/E028's block offsets and E019's validation skill (+0.0983) to the digit.",
+    "exploration": {
+      "skill": {
+        "incumbent": 0.1457,
+        "variant": 0.1464
+      },
+      "skill_over_ewma_rule": {
+        "incumbent": 1.2,
+        "variant": 1.2
+      },
+      "rho": {
+        "incumbent": 0.44,
+        "variant": 0.443
+      },
+      "ece": {
+        "incumbent": 0.004,
+        "variant": 0.011
+      },
+      "e013_buckets_ok": {
+        "incumbent": true,
+        "variant": true
+      },
+      "calibration_slope": {
+        "incumbent": 0.989,
+        "variant": 0.953
+      },
+      "worst_block_offset": {
+        "incumbent": 0.047,
+        "variant": 0.013
+      },
+      "incumbent_minus_variant_brier": [
+        0.00017,
+        -0.00026,
+        0.00061
+      ]
+    },
+    "validation": {
+      "skill": {
+        "incumbent": 0.0983,
+        "variant": 0.0989
+      },
+      "skill_over_ewma_rule": {
+        "incumbent": 2.47,
+        "variant": 2.48
+      },
+      "rho": {
+        "incumbent": 0.36,
+        "variant": 0.365
+      },
+      "ece": {
+        "incumbent": 0.014,
+        "variant": 0.015
+      },
+      "e013_buckets_ok": {
+        "incumbent": true,
+        "variant": false
+      },
+      "calibration_slope": {
+        "incumbent": 0.976,
+        "variant": 0.928
+      },
+      "worst_block_offset": {
+        "incumbent": 0.057,
+        "variant": 0.012
+      },
+      "incumbent_minus_variant_brier": [
+        0.00014,
+        -0.00058,
+        0.00085
+      ]
+    },
+    "verdict": {
+      "H_a_removes_the_offsets": "HOLDS",
+      "H_b_no_skill_loss": "HOLDS",
+      "H_c_calibration": "FAILS",
+      "H_d_ranking": "HOLDS"
+    },
+    "format": "stated minus observed; paired Brier as [point, 2.5%, 97.5%], positive = variant better"
+  },
+  "command": "python -m agent.research.block_calibration --experiment E031",
+  "reading_by_the_pre_registered_consequences": [
+    "H_a HOLDS clearly: the worst block offset falls 0.047 -> 0.013 (exploration) and 0.057 -> 0.012 (validation); every block's interval now contains 0 on validation. E027's offsets ARE a stable calibration property: they carry from each fold's 90-day slice to the next quarter. That answers the question E028 left open.",
+    "H_b and H_d hold: no skill loss (validation +0.0983 -> +0.0989; paired interval includes 0) and ranking unchanged (rho 0.360 -> 0.365).",
+    "H_c FAILS on E013's bucket rule (ECE itself is fine: 0.015). Descriptive follow-up of the same deterministic run, choosing nothing: the failing validation bucket is [0.8, 0.9) (n = 317, stated 0.841 vs observed 0.763, gap +0.077); [0.7, 0.8) is +0.046 and the lowest bucket under-states (-0.052, n = 61). The four block maps, each fitted on ~540 rows, spread the extremes: the calibration slope falls 0.976 -> 0.928. Fixing intraday level cost the most confident hours their calibration.",
+    "Consequence, decided in advance: better intraday calibration at a cost in overall calibration -- recorded, NOT pursued without a new hypothesis. No shadow-track proposal. Stop and reassess; no further variant is run automatically.",
+    "For the reassessment, an idea only (NOT registered, NOT run): constrain the block maps (one shared slope with four block intercepts) so the tails stay as calibrated as the single map. It would have to be registered first and would be tested on a validation period this study has now also seen, so even a pass would be weaker evidence than E031's own H_a.",
+    "Nothing changes: move_size_1h_v1, the live system, the shadow record, the checkpoints and their rules, and the holdout are untouched."
+  ]
 }

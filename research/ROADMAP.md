@@ -289,6 +289,19 @@ role and the API-log check remain open.
   - the checkpoint is not blind;
   - test counts reconciled.
 
+## 2026-10-14 — post-500h plan: operational changes 1-2, the news first look (E030), the first offline challenger (E031)
+
+- **Ops 1 (`afdb5ca`):** an alarm for a single missed hour. The run that saves the first hour after a gap sends the
+  heartbeat check a failure signal naming the missing hours, once per gap.
+- **Ops 2 (`76c7aff`):** GitHub's answers to the :12 dispatch are kept 90 days by the owner-only `pg_cron` recorder
+  (`dispatch_responses`).
+- **E030** (registered `014cdef` → code `acf3782` → result `f459e7e`): the news first look. 1h ρ +0.046
+  [−0.052, +0.151]; every interval includes zero; no verdict.
+- **E031** (registered `61db93d` → code `4ccf10b`): block-wise Platt calibration. It removes E027's intraday
+  offsets (worst block 0.057 → 0.012 on validation) without losing skill or ranking. But it **fails E013's bucket
+  rule** ([0.8, 0.9) +0.077, slope 0.976 → 0.928). **Not a candidate.** Stopped and reassessing; no further variant is
+  run without a new registration and the user's view.
+
 ## 2026-10-13 — the 500-hour first look, as registered; the readiness audit
 
 - **Reading** (`research/monitoring/checkpoint_500h.md`, `ed96b2a`):
