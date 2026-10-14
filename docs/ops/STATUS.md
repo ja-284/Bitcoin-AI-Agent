@@ -97,6 +97,16 @@ other or with the versions in the code. **Update both, together, from the comman
 
    It is downstream only: it reads the record read-only and writes only the three reporting tables. Its
    failure cannot touch the live record, and it emails only once the snapshot is more than 3 hours old.
+6. **Every hour at :47 UTC** (since 2026-10-14) a second `pg_cron` job, `dispatch-response-log`, copies
+   GitHub's answers to the :12 dispatch into `dispatch_responses`, before `pg_net` deletes them after
+   6 h.
+   - It keeps the status, timed-out flag, error text and GitHub's request id, redacted and
+     length-capped. It never keeps a header otherwise, a successful answer's body, or the request with
+     its token.
+   - Rows are kept 90 days.
+   - The table is owner-only; the job role and the public API hold nothing on it.
+   - It is a separate job from the dispatch, so its failure can never stop one.
+   - Read it with `python -m agent.database.dispatch_log [--hours 48 --list]`.
 
 **Nothing routine needs the user.** Nothing in production depends on a PC being on, on a working session
 happening, or on the weekly audit being run on time.
@@ -140,7 +150,8 @@ happening, or on the weekly audit being run on time.
     stats incident history shows it, as the failed run (with its link) and as the missing hour.
   - **1 missing hour, 2026-10-07 14:00 UTC. No run started between 14:46 and 16:12 UTC.**
     - Supabase's `pg_cron` queued the 15:12 dispatch ("succeeded").
-    - GitHub's answer to it is gone, because `pg_net` keeps responses about 6 h.
+    - GitHub's answer to it is gone, because `pg_net` keeps responses about 6 h. *(Since 2026-10-14 the
+      answers are kept for 90 days, item 6 above, so a future case can be told apart.)*
     - GitHub fired none of its backup slots.
     - The cause is therefore unknown. Nothing failed, so no incident was recorded; the stats history
       shows the missing hour.
@@ -225,7 +236,8 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
 ## After the readiness audit, in order (the user's decisions, 2026-10-11)
 
 1. The single-missed-hour alarm. **Done 2026-10-14** (alarms, above).
-2. Then keeping GitHub's answers to the dispatch requests (trigger responses).
+2. Then keeping GitHub's answers to the dispatch requests (trigger responses). **Done 2026-10-14**
+   ("What happens automatically", item 6).
 3. News cost and value, reviewed separately, with no change to the live weights or model.
 
 Each comes one at a time, with tests and its own commit. Also waiting on the user:

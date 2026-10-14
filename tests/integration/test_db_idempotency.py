@@ -766,3 +766,81 @@ def test_the_revoke_alone_blocks_writes_even_with_rls_off(scratch_db):
         conn.commit()
     result = _as_role(db, "anon", "UPDATE schema_meta SET value = '0'")
     assert isinstance(result, psycopg.errors.InsufficientPrivilege), result
+
+
+# ---------------------------------------------------------------- dispatch answers (operational change 2, 2026-10-14)
+def test_dispatch_answers_are_kept_once_redacted_bounded_and_for_90_days(scratch_db):
+    """
+    agent/database/dispatch_log.sql in the scratch schema. The recorder READS the live net._http_response (pg_net's
+    six-hour answer buffer, never written here) and writes only the scratch copy of dispatch_responses.
+    """
+    import psycopg
+
+    db, _ = scratch_db
+    with db.get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT to_regclass('net._http_response') IS NOT NULL")
+        if not cur.fetchone()[0]:
+            pytest.skip("pg_net is not installed on this database")
+        cur.execute("SELECT count(*) FROM net._http_response")
+        held = cur.fetchone()[0]
+        cur.execute("SELECT record_dispatch_responses()")
+        copied = cur.fetchone()[0]
+        assert copied >= held  # everything pg_net still holds is kept (>=: an answer may land in between) ...
+        cur.execute("SELECT record_dispatch_responses()")
+        assert cur.fetchone()[0] == 0  # ... once
+        cur.execute("SELECT count(*), count(*) FILTER (WHERE status_code BETWEEN 200 AND 299 AND detail IS NOT NULL) FROM dispatch_responses")
+        assert cur.fetchone() == (copied, 0), "a successful answer's body must never be kept"
+        cur.execute("""SELECT column_name FROM information_schema.columns
+                       WHERE table_schema = current_schema() AND table_name = 'dispatch_responses'""")
+        assert {c for (c,) in cur.fetchall()} == {"response_id", "responded_at", "status_code", "timed_out", "error_msg",
+                                                  "github_request_id", "detail", "recorded_at"}
+
+        # retention: older than 90 days goes at the next run, younger stays
+        cur.execute("""INSERT INTO dispatch_responses (response_id, responded_at, status_code)
+                       VALUES (-1, now() - interval '91 days', 204), (-2, now() - interval '89 days', 401)""")
+        cur.execute("SELECT record_dispatch_responses()")
+        cur.execute("SELECT response_id FROM dispatch_responses WHERE response_id < 0")
+        assert [r for (r,) in cur.fetchall()] == [-2]
+
+        # redaction: nothing token-shaped survives, whatever the wording around it
+        secret = "ghp_" + "A1b2C3d4" * 5
+        pat = "github_pat_11ABCDEFG0" + "x" * 60
+        cur.execute("SELECT dispatch_redact(%s)", (f'Bad credentials for {secret}; "Authorization": "Bearer {pat}", '
+                                                  f"Authorization: token abc.DEF-123 and Bearer zzz.yyy",))
+        cleaned = cur.fetchone()[0]
+        for leaked in (secret, pat, "github_pat_11", "ghp_A1", "abc.DEF-123", "zzz.yyy"):
+            assert leaked not in cleaned, (leaked, cleaned)
+        assert "Bad credentials" in cleaned and "[redacted]" in cleaned
+        conn.commit()
+        # bounded: an over-long value cannot be stored even by hand
+        with pytest.raises(psycopg.errors.CheckViolation):
+            cur.execute("INSERT INTO dispatch_responses (response_id, responded_at, detail) VALUES (-3, now(), %s)", ("x" * 301,))
+        conn.rollback()
+
+        # owner-only: the public API roles can neither read it nor call either function
+        for role in ("anon", "authenticated"):
+            cur.execute("SELECT 1 FROM pg_roles WHERE rolname = %s", (role,))
+            if not cur.fetchone():
+                continue
+            for priv in ("SELECT", "INSERT", "UPDATE", "DELETE"):
+                cur.execute("SELECT has_table_privilege(%s, %s, %s)", (role, f"{SCHEMA}.dispatch_responses", priv))
+                assert not cur.fetchone()[0], (role, priv)
+            for fn in ("record_dispatch_responses()", "dispatch_redact(text)"):
+                cur.execute("SELECT has_function_privilege(%s, %s, 'EXECUTE')", (role, f"{SCHEMA}.{fn}"))
+                assert not cur.fetchone()[0], (role, fn)
+    from agent.database.security import posture
+
+    assert posture(SCHEMA)["ok"], posture(SCHEMA)["problems"]
+
+
+def test_the_job_role_cannot_read_the_dispatch_answers(least_privileged):
+    """The hourly job never needs them, so `bitcoin_agent` holds nothing on them."""
+    import psycopg
+
+    _, _, _, as_probe = least_privileged
+    for sql in ("SELECT count(*) FROM dispatch_responses", "SELECT record_dispatch_responses()",
+                "INSERT INTO dispatch_responses (response_id, responded_at) VALUES (-9, now())"):
+        with as_probe() as conn, conn.cursor() as cur:
+            with pytest.raises(psycopg.Error, match="permission denied"):
+                cur.execute(sql)
+            conn.rollback()

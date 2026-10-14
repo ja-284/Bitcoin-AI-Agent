@@ -5,6 +5,38 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## ops — 2026-10-14 (operational change 2: GitHub's answers to the dispatch are kept)
+
+Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,
+LIVE_EVALUATION.md, the holdout, any workflow or any stored record changed. Schema version stays 4: nothing in
+the running code needs the new table.
+
+- **Why:** `pg_net` keeps GitHub's answer to the :12 dispatch for six hours (`pg_net.ttl`). So on 2026-10-07 the
+  one fact that separates "GitHub refused or never answered" from "GitHub accepted, then ran nothing" was gone.
+  `cron.job_run_details` keeps every run, but it only says that the request was queued.
+- **What:**
+  - `agent/database/dispatch_log.sql` (applied by `agent.migrate`) adds the table `dispatch_responses`, plus
+    `dispatch_redact()` and `record_dispatch_responses()`.
+    - Kept: status, timed-out flag, `pg_net`'s error text, GitHub's request id, and the body of a non-2xx
+      answer only. Free text is redacted, then truncated (500 / 100 / 300 characters, also enforced by
+      CHECKs). Retention is 90 days.
+    - Never kept: any other header, a successful answer's body, or the request, which carries the token.
+    - Access: owner-only (RLS on with no policy; the API roles revoked; the functions revoked from PUBLIC).
+      Nothing is granted to `bitcoin_agent`, and there is no sequence.
+  - `docs/ops/dispatch_responses_cron.sql` is run once. It schedules the recorder as its own `pg_cron` job,
+    `dispatch-response-log`, at :47, separate from the dispatch job, which it never touches. It is not a
+    schema file, so the integration tests' scratch builds can never schedule anything live.
+  - `python -m agent.database.dispatch_log` gives a read-only summary: answers by status, timed out, and
+    :12 slots with no answer kept.
+- **Tests:**
+  - 11 unit tests: the fields copied, redaction before truncation, retention, owner-only access, no
+    sequence, bounded text, the cron job's isolation, nothing on the hourly path or in a workflow, the job
+    role given nothing, and the summary logic;
+  - 2 integration tests on real Postgres: copied once, the body of a 2xx answer never kept, the exact
+    columns, 90-day retention, redaction of GitHub tokens, Bearer and Authorization values, the length
+    CHECK, API roles refused, the security check OK, and the job role refused;
+  - 3 new mutation guards.
+
 ## ops — 2026-10-14 (operational change 1: an alarm for a single missed hour)
 
 Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,

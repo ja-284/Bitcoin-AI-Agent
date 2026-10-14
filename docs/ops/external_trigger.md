@@ -33,6 +33,21 @@ stored encrypted in Supabase Vault, not in this repository.
 To change the minute, edit the cron expression in the script and re-run it (the
 `cron.unschedule` line removes the old job first).
 
+## GitHub's answers are kept (since 2026-10-14)
+
+`pg_net` deletes each answer after six hours, which once left a missed hour unexplained (2026-10-07). A second
+`pg_cron` job, `dispatch-response-log` (:47 each hour, `docs/ops/dispatch_responses_cron.sql`), copies them into
+the owner-only table `dispatch_responses` (`agent/database/dispatch_log.sql`): status, timed-out flag, error text
+and GitHub's request id, redacted and length-capped, kept 90 days. It never copies the request, which carries the
+token. It is a separate job, so it can never stop a dispatch.
+
+    python -m agent.database.dispatch_log --hours 48 --list
+
+A 204 means GitHub accepted the dispatch. If no run followed it, the problem is on GitHub's side (as on
+2026-10-05, when no runner was free). A non-2xx answer or no answer at all means the dispatch itself failed (a 401
+means the token is wrong or expired). A :12 slot with no answer kept means pg_cron did not run or pg_net stored
+nothing (check `cron.job_run_details`).
+
 ## Option B: cron-job.org
 
 A free external cron service can make the same API call. Create a job with:
