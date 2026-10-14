@@ -57,6 +57,7 @@
     "watchdog": ["staleness < 3h", "shadow errors <= 2 in 6h", "no public-API exposure", "jobs connect as bitcoin_agent with exactly its proven rights"],
     "watchdog_real_cadence": "every 5-7 hours (GitHub fires ~4 of 7 slots a day)",
     "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"},
+    "missed_hour_signal": {"since": "2026-10-14", "step": "Heartbeat missed-hour signal (hourly.yml)", "command": "python -m agent.healthcheck --new-gap-since \"$JOB_STARTED_AT\" --gap-body-file missed-hours.txt", "rule": "the run that saves the first hour after a gap sends the heartbeat /fail with the missing hours in the body; once per gap; a late run is never reported; the success ping right after clears it", "email_seen": false},
     "stats_read_model": {"workflow": "Reporting snapshot (.github/workflows/reporting.yml), after each completed hourly or watchdog run; records failed runs as incidents, then publishes; no schedule of its own", "writes": ["reporting_snapshot", "reporting_runs", "reporting_incidents"], "frontend_handoff": "docs/api/stats_website_handoff.md", "readable_by": "one signed-in Supabase Auth user with app_metadata.reporting_viewer = true (none set up yet)", "fails_loudly_after_hours": 3, "doc": "docs/api/stats_access.md", "is_trading_application": false}
   },
   "scheduled_checks": {
@@ -68,7 +69,7 @@
     "calm live market (drift flag 'outcomes'): possible over-statement, judged only at the registered checkpoints, never tuned -- context E026, E027, E029. 500-hour first look: all hours calm; stated 0.335 vs observed 0.304; ECE 0.059 (ordinary at that size, E024); ahead of the free EWMA rule"
   ],
   "operational_queue": [
-    "1. the single-missed-hour alarm",
+    "1. the single-missed-hour alarm -- done 2026-10-14 (automation.missed_hour_signal)",
     "2. keeping GitHub's answers to the dispatch requests (trigger responses)",
     "3. news cost and value reviewed separately, with no change to the live weights or model"
   ],
@@ -77,7 +78,7 @@
     "AI cost: about $9.75 per 30 days in the first full measured week, to 2026-10-05 (accepted ~$12; flag above $15)",
     "Supabase grants the net schema to PUBLIC (unrevocable); not an exposed API schema",
     "permanent documented gaps: 9 missing hours (2026-09-19/20), 7 missing shadow hours (2026-09-21/22; first written as 8, corrected 2026-09-27), 17 news-unavailable hours (2026-09-21/22), 1 missing hour 2026-10-05 19:00 UTC (GitHub had no runner free; our code never started), 1 missing hour 2026-10-07 14:00 UTC (no run started; the dispatch result is gone after pg_net's ~6 h retention; cause unknown)",
-    "the heartbeat proves a successful workflow run, not a saved hour: an early-exit backup run pings too, so a single missed hour can pass without an alarm (2026-10-07); it still shows in the weekly report, backend_state and the stats incident history; the alarm is first in operational_queue",
+    "the heartbeat proves a successful workflow run, not a saved hour: an early-exit backup run pings too, so until 2026-10-14 a single missed hour could pass without an alarm (2026-10-07); closed by automation.missed_hour_signal; a missed hour also shows in the weekly report, backend_state and the stats incident history",
     "the free EWMA reference's warm-up downloads raw candles reaching into the holdout period's last weeks; no holdout performance computed or used; weight < 2e-10; documented in research/LIVE_EVALUATION.md; unchanged (registered checkpoint code). Also: the E000 backtest used ~233 holdout-period candles as indicator warm-up, and the 2026-09-19 snapshot stores the whole holdout period. The holdout is sealed for evaluation (never scored), not untouched (research/AUDIT_2026-10-08.md section 18.2)"
   ],
   "user_actions_required": [],

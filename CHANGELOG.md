@@ -5,6 +5,33 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## ops — 2026-10-14 (operational change 1: an alarm for a single missed hour)
+
+Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,
+LIVE_EVALUATION.md, the holdout or any stored record changed. Pipeline and scoring stay 0.2.0.
+
+- **Why:** on 2026-10-07 the 14:00 hour was lost with no alarm. The heartbeat proves that a workflow ran,
+  not that an hour was saved, and the pings either side were 87 min apart (the allowance is 90).
+- **How:** nothing is ever backfilled, so an hour is missing for good once a later hour is saved, and
+  only the run that saved that later hour sees it as new.
+  - `agent/healthcheck.py::new_gap()` returns exactly those hours, using the job's start time and the
+    database's `created_at`.
+  - `python -m agent.healthcheck --new-gap-since ... --gap-body-file ...` writes the report, and never
+    fails.
+  - The new step *Heartbeat missed-hour signal* (`hourly.yml`, right before the success ping,
+    `continue-on-error`) POSTs the report to the heartbeat's `/fail`. The success ping seconds later
+    clears the check, so the heartbeat's own silence alarm still works.
+  - A first step records `JOB_STARTED_AT`. `agent/database/db.py::newest_predictions()` is one SELECT.
+- **Tests:**
+  - 12 unit tests cover a normal hour, a late run, one and several missed hours, repeated checks,
+    recovery, the first row ever, a row created at the job's start second, a long outage summarised,
+    the CLI and a stale report file;
+  - 3 workflow-text tests and 1 integration test on real Postgres;
+  - 3 new mutation guards.
+  - A local delivery check confirmed the report is POSTed to `…/fail`, and that a dead endpoint fails
+    in about 2 s (bounded; the job stays green).
+- **Not yet seen live:** the email itself. No hour has been missed since.
+
 ## monitoring / docs — 2026-10-13 (the 500-hour first look, as registered; readiness gate revision 3)
 
 Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,

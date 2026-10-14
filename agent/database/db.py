@@ -105,6 +105,13 @@ def latest_prediction_as_of() -> Optional[datetime]:
         return row[0] if row else None
 
 
+def newest_predictions(n: int = 2) -> list[tuple[datetime, datetime]]:
+    """(as_of, created_at) of the n newest predictions, newest first. created_at is the database's own clock."""
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT as_of, created_at FROM predictions ORDER BY as_of DESC LIMIT %s", (n,))
+        return [(r[0], r[1]) for r in cur.fetchall()]
+
+
 def save_prediction(prediction: Prediction) -> Optional[int]:
     category_scores_json = [dataclasses.asdict(c) for c in prediction.category_scores]
 

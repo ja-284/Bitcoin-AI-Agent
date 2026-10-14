@@ -54,3 +54,38 @@ def test_the_real_work_steps_are_not_allowed_to_fail_silently():
     for name, block in _steps().items():
         if not name.startswith("Heartbeat"):
             assert "continue-on-error" not in block, name
+
+
+# ---- the single-missed-hour signal (2026-10-14) ------------------------------------------------------------
+
+def _run_lines(block: str) -> list[str]:
+    """The shell lines of a `run: |` step."""
+    lines = block.split("\n")
+    start = next(i for i, line in enumerate(lines) if line.strip() == "run: |")
+    return [line.strip() for line in lines[start + 1:] if line.strip()]
+
+
+def test_the_job_records_its_start_before_anything_else():
+    """Rows this run saves are created after this moment; that is how a gap is reported exactly once."""
+    steps = _steps()
+    first = list(steps)[0]
+    assert first == "Record when this job started"
+    assert 'echo "JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"' in steps[first]
+
+
+def test_the_missed_hour_signal_sits_right_before_the_success_ping_and_cannot_change_the_result():
+    steps = _steps()
+    names = list(steps)
+    assert names.index("Heartbeat missed-hour signal") == names.index("Heartbeat ping") - 1
+    sig = steps["Heartbeat missed-hour signal"]
+    assert "continue-on-error: true" in sig
+    # It runs after a failed later step too (the hour may already be saved), never after a cancellation.
+    assert "if: ${{ !cancelled() && env.HEARTBEAT_URL != '' }}" in sig
+
+
+def test_the_missed_hour_signal_sends_only_a_written_report_and_never_logs_the_url():
+    detect, send = _run_lines(_steps()["Heartbeat missed-hour signal"])
+    assert detect == 'python -m agent.healthcheck --new-gap-since "$JOB_STARTED_AT" --gap-body-file missed-hours.txt'
+    # Only when the report file is non-empty: no gap, no signal. The URL stays inside curl, silenced.
+    assert send.startswith("if [ -s missed-hours.txt ]; then curl -fsS -m 10 --retry 3 --data-binary @missed-hours.txt ")
+    assert '"${HEARTBEAT_URL%/}/fail" > /dev/null; fi' in send and "echo" not in send

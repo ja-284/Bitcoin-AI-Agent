@@ -116,6 +116,28 @@ def test_retry_after_a_failed_save_produces_exactly_one_row(scratch_db, monkeypa
         assert cur.fetchone()[0] == 1
 
 
+def test_a_missed_hour_is_reported_once_on_real_rows(scratch_db):
+    """The single-missed-hour signal (2026-10-14) against real rows, whose created_at is the database's own clock."""
+    import agent.healthcheck as hc
+
+    db, _ = scratch_db
+
+    def db_now():
+        with db.get_connection() as conn, conn.cursor() as cur:
+            cur.execute("SELECT now()")
+            return cur.fetchone()[0]
+
+    t0 = datetime(2026, 10, 7, 12, tzinfo=timezone.utc)
+    db.save_prediction(_prediction(t0))
+    db.save_prediction(_prediction(t0 + HOUR))
+    job_started = db_now()
+    assert db.save_prediction(_prediction(t0 + 3 * HOUR)) is not None  # the 14:00 hour is never saved
+    assert db.newest_predictions(2)[0][0] == t0 + 3 * HOUR
+    assert hc.new_gap(job_started) == ([t0 + 2 * HOUR], t0 + 3 * HOUR)
+    assert hc.new_gap(db_now()) == ([], None)  # a later run in the same hour: nothing new to report
+    assert db.save_prediction(_prediction(t0 + 3 * HOUR)) is None  # and that later run could not save the hour again
+
+
 def test_grading_twice_keeps_the_first_outcome(scratch_db):
     db, _ = scratch_db
     as_of = datetime(2026, 1, 3, tzinfo=timezone.utc)

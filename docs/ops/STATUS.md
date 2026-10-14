@@ -86,6 +86,11 @@ other or with the versions in the code. **Update both, together, from the comman
      their proven rights.
    - The **heartbeat** (healthchecks.io, outside GitHub) emails if no successful run pings for 1 h 30 min,
      and at once on a failed run.
+   - **A single missed hour** (since 2026-10-14): the run that saves the first hour after a gap sends the
+     heartbeat check a failure signal naming the missing hour(s), so healthchecks.io emails "down" with
+     the hours in the check's log. The success ping seconds later emails "up" again. Each gap is reported
+     once, and a late run is never reported, because an hour is missing only once a later hour is saved
+     (nothing is backfilled). A complete GitHub outage is still caught by the heartbeat's silence alarm.
 5. **After each completed hourly or watchdog run**, the separate *Reporting snapshot* workflow:
    - first records a FAILED run as an incident (`python -m agent.reporting.incidents`, since 2026-10-05);
    - then refreshes the private stats read model (`python -m agent.reporting.publish`).
@@ -111,12 +116,13 @@ happening, or on the weekly audit being run on time.
 
 - GitHub fires the watchdog irregularly (≈ 4 of 7 slots a day). The heartbeat covers the gap.
 - **The heartbeat proves a successful workflow run, not a saved hour** (found 2026-10-08).
-  - An early-exit backup run pings too, so a single missed hour can pass with no alarm at all. On
-    2026-10-07 the pings were 87 min apart, against an allowance of 90 min.
+  - An early-exit backup run pings too, so until 2026-10-14 a single missed hour could pass with no alarm
+    at all. On 2026-10-07 the pings were 87 min apart, against an allowance of 90 min.
+  - **Closed 2026-10-14 by the missed-hour signal** (alarms, above). It is proven by tests and by a
+    local delivery check, and its step is watched in the live runs. A real missed hour has not happened
+    since, so the email itself has not been seen yet.
   - A missed hour still shows in the weekly report, `backend_state` health and the stats incident
     history.
-  - Whether a single missed hour should alarm was decided by the user on 2026-10-11: that alarm is the
-    first operational change, now that the readiness audit is done (the last section of this file).
 - AI cost follows the news week. The first full measured week (to 2026-10-05) came to ≈ $0.0135 a run,
   ≈ $9.75 per 30 days, under the accepted ~$12. The weekly report flags a projection above $15.
 - Supabase grants its `net` schema to PUBLIC (unrevocable by this project). It is not an exposed API
@@ -218,7 +224,7 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
 
 ## After the readiness audit, in order (the user's decisions, 2026-10-11)
 
-1. The single-missed-hour alarm.
+1. The single-missed-hour alarm. **Done 2026-10-14** (alarms, above).
 2. Then keeping GitHub's answers to the dispatch requests (trigger responses).
 3. News cost and value, reviewed separately, with no change to the live weights or model.
 

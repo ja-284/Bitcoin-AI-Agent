@@ -42,6 +42,10 @@ jobs:
       HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
 
     steps:
+      # For the missed-hour signal near the end: a row this run saves is created after this moment.
+      - name: Record when this job started
+        run: echo "JOB_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
 
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5, pinned 2026-09-26
@@ -78,6 +82,21 @@ jobs:
       # able to cost an hour of the record it describes (incident 2026-09-21/22).
       - name: Publish the backend state
         run: python -m agent.api.publish
+
+      # A SINGLE missed hour (2026-10-07: no run at all for one hour, and the pings either side were
+      # 87 min apart, inside the 90 min allowance, so nothing alarmed). Nothing is ever backfilled, so an
+      # hour is missing for good once a later hour is saved -- and only the run that saved that later
+      # hour sees it as new. That run reports the gap to the heartbeat service as a failure, with the
+      # missing hours in the body; the success ping right after turns the check green again. Each gap is
+      # reported once, and a late run is never reported. A total GitHub outage is still caught by the
+      # heartbeat's own silence alarm. This step cannot change the job's result; it also runs after a
+      # failed later step, because the hour may have been saved before the failure.
+      - name: Heartbeat missed-hour signal
+        if: ${{ !cancelled() && env.HEARTBEAT_URL != '' }}
+        continue-on-error: true
+        run: |
+          python -m agent.healthcheck --new-gap-since "$JOB_STARTED_AT" --gap-body-file missed-hours.txt
+          if [ -s missed-hours.txt ]; then curl -fsS -m 10 --retry 3 --data-binary @missed-hours.txt "${HEARTBEAT_URL%/}/fail" > /dev/null; fi
 
       # Only reached if every step above succeeded. If the heartbeat service doesn't
       # hear from us within its grace window, it emails you -- an alarm that lives
