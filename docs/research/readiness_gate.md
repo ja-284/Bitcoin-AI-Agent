@@ -4,7 +4,8 @@
 > 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN.** The three PARTIALs are row 8 (calibration: not yet confirmed
 > prospectively, counted strictly from this revision), row 18 (observability: a single missed hour can
 > still pass with no alarm) and row 21 (prospective monitoring: the calendar). Status: **RELEASE
-> CANDIDATE, not FINAL.** Revision 3 is the first section below. The next paragraph is the previous
+> CANDIDATE, not FINAL.** Revision 3 is the first section below; its addendum of 2026-10-14 leaves the score
+> unchanged (row 18 waits until the new missed-hour alert has been seen delivered). The next paragraph is the previous
 > score, kept as it was written.
 
 > **Current score (unchanged since 2026-09-25, confirmed 2026-09-26): 21 PASS, 1 PARTIAL, 0 FAIL,
@@ -187,6 +188,31 @@ as advice, or writing anything back.
 They come one at a time, each with tests and its own commit. Meanwhile the frozen model continues
 untouched to the 2,000-hour reading. The registered news first look (descriptive) has enough hours
 (553 usable, weekly report 2026-10-13), and it waits for the user's go-ahead.
+
+### Addendum, 2026-10-14: operational changes 1 and 2, and the holdout route review (score unchanged)
+
+- **Row 18 (a), a single missed hour: addressed** (`afdb5ca`).
+  - The run that saves the first hour after a gap sends the heartbeat check a failure signal naming the missing
+    hours, once per gap, and never for a late run.
+  - Proven by tests (12 unit, 3 workflow-text, 1 integration on real Postgres, 3 mutation guards) and by a
+    local delivery check.
+  - Live since 13:36 UTC, every run green. The 14:04 run saved the 13:00 hour and correctly reported no gap.
+  - **Not yet observed: the email itself.** No hour has been missed since.
+- **Row 18 (b), the dispatch answers: addressed and verified live** (`76c7aff`, `68dd8d3`).
+  - Owner-only, redacted, kept 90 days.
+  - The recorder's scheduled run at 14:47 UTC kept the 14:12 answer (204).
+- **Row 18 stays PARTIAL** until (a)'s alert has been seen delivered, either by the first real missed hour or
+  by a test the user watches on healthchecks.io. **Score unchanged: 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN.**
+- **Holdout readiness:** the E000 precondition is met (`ae72678`). The backtest refuses any window touching the
+  holdout, and every route is reviewed and tested (`research/HOLDOUT_ROUTES.md`).
+  - Still NOT READY, because prospective monitoring has not reached 2,000 hours.
+  - One decision is open for the user: whether to clip the checkpoint's EWMA warm-up before the 2,000-hour
+    reading.
+- **E030, E031 and E032 change no row.** E030 is a descriptive first look with no verdict. E031 (move-size) and
+  E032 (direction) are research-only, and neither is adopted.
+- **Quality gate, 2026-10-14:** 615 unit tests with no database; integration 39/39, including the live drift
+  check; security and role checks OK; dependencies unchanged; mutation guards 87/87 (both controls held; full run at 68dd8d3, 77 min); GitHub's tests green on
+  every push.
 
 ## Revision 2 — 2026-09-22 evening: the 22 categories of the master plan, scored
 

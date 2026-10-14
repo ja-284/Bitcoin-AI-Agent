@@ -28,12 +28,21 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   stay exactly as registered.
 - **Approved operational changes** (the user's decision, 2026-10-11), one at a time, each with tests and its
   own commit:
-  1. the single-missed-hour alarm;
-  2. keeping GitHub's trigger responses;
-  3. a separate review of news cost and value, with no change to the live weights or model.
+  1. the single-missed-hour alarm — **done 2026-10-14** (`afdb5ca`);
+  2. keeping GitHub's trigger responses — **done 2026-10-14** (`76c7aff`, `68dd8d3`);
+  3. a separate review of news cost and value, with no change to the live weights or model — not started.
+- **The governing brief since 2026-10-14** is the user's "Post-500h Research and Improvement Plan" (Phases 0–6):
+  - keep v1 frozen as the reference;
+  - offline challengers must be registered first, and use development data only;
+  - no deployment or shadow track without the user's review;
+  - the 2,000-hour checkpoint needs no separate approval.
 
-  Waiting for the user: the go-ahead for these, the registered news first look (ready, descriptive), and
-  any registered study for the 2,000-hour milestone.
+  Waiting for the user:
+  - the E031 reassessment (move-size, not a candidate);
+  - whether a prospective direction shadow track is wanted after E032 (direction is a required track; E032 is
+    measurable, not useful);
+  - the news cost/value review;
+  - whether to clip the checkpoint's EWMA warm-up (`research/HOLDOUT_ROUTES.md`).
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -456,6 +465,54 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
     first look;
   - the weekly audit, due ≈ 2026-10-20;
   - the 2,000-hour reading at the first session after 2,000 graded hours.
+
+**2026-10-14 — the post-500h plan, Phases 0–6 (the user's brief): two operational changes, the news first look, the
+first offline challenger, the directional assessment, the holdout routes.**
+- **Phase 0 (read-only):**
+  - 537 of 2,000 graded hours at 13:12 UTC; 11 missing hours in total, none since 2026-10-07; 0 shadow errors;
+    0 overdue outcomes; no new incident.
+  - `main` = GitHub at `c7ece54`; the 500-hour files are byte-identical to the committed ones.
+  - The artefact's canonical sha256 is `7d53cd07…`, as pinned. Its numbers are identical to the first export
+    (`d222bd7` changed guard metadata only).
+- **1A (`afdb5ca`): the alarm for a single missed hour.**
+  - The run that saves the first hour after a gap sends the heartbeat's `/fail` with the missing hours, once per
+    gap. A late run is never reported, because nothing is backfilled, so an hour is missing only once a later hour
+    is saved.
+  - The success ping right after clears the check, so the heartbeat's silence alarm still works.
+  - healthchecks.io's source was read: superseded "down" flips are still emailed.
+  - Live: the 13:36 and 14:04 runs were green; the 14:04 run saved 13:00 and reported no gap. The email itself has
+    not been seen yet.
+- **1B (`76c7aff`, then `68dd8d3`): GitHub's dispatch answers are kept for 90 days.**
+  - The `dispatch_responses` table is owner-only and redacted, written by its own `pg_cron` job at :47.
+  - It was migrated live (schema stays 4) and scheduled. It kept 6 answers at once, and the 14:47 scheduled run
+    kept the 14:12 answer (all 204).
+  - `68dd8d3` fixed my summary, which had called an answer not yet copied "silent" (found live).
+- **1C, E030: the news first look** (registered `014cdef` with four execution details fixed before any outcome;
+  code `acf3782`; result `f459e7e`).
+  - It was blind until it ran, on exactly the first 500 usable hours.
+  - 1h ρ +0.046 [−0.052, +0.151], 6h +0.001, 24h −0.096. Every interval includes zero; no verdict.
+- **Phase 3, E031: the first offline challenger** (registered `61db93d`; code `4ccf10b`; result `3a61547`).
+  - Block-wise Platt calibration on identical rows. It removes E027's intraday offsets: worst block 0.057 → 0.012
+    on validation, with no loss of skill or ranking.
+  - It **fails E013's bucket rule** ([0.8, 0.9) +0.077, slope 0.976 → 0.928). **Not a candidate**; stopped for
+    reassessment.
+  - Hypothesis-generating only (validation wear).
+- **Phase 4 (`281e368`), then the user's clarification that direction is a required track** (addendum and E032,
+  registered `d8a3d5f`, code `d1b5dca`, result `237612c`). E011's faint 1h P(UP) is real, calibrated and positive in
+  8 of 8 years (Brier skill +0.0038 / +0.0043 vs a leak-free base rate). But it is essentially one reversal feature
+  (H_b fails) and economically negligible: measurable, not useful. Reported separately from move-size.
+- **Phase 5 (`ae72678`):** the backtest runner can no longer read the holdout (it was E000's bypass). Every route
+  is reviewed in `research/HOLDOUT_ROUTES.md` and pinned by `tests/test_holdout_routes.py`. The holdout is still
+  sealed for evaluation, and the access log is absent.
+- **Quality gate:** 615 unit tests, integration 39/39, security and role checks OK, mutation guards 87/87 (both controls held; full run at 68dd8d3, 77 min),
+  GitHub's tests green on every push.
+- **Nothing** in prediction, scoring, thresholds, features, `move_size_1h_v1`, the shadow record, the checkpoint
+  code or rules, LIVE_EVALUATION.md or the holdout changed. 539 of 2,000 hours at 14:58 UTC.
+- **Next:**
+  - the user's review;
+  - operational change 3 (the news cost/value review) on the user's go-ahead;
+  - the weekly audit ≈ 2026-10-20;
+  - the 2,000-hour reading ≈ 2026-12-14, pre-authorised.
 
 ## Research phase — rules and decisions (2026-09-19)
 

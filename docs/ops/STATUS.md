@@ -28,19 +28,19 @@ approved operational changes, in their order.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-10-13 19:46 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-10-14 14:58 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**
 
 | figure | value at the snapshot | source of truth (run it for the current value) |
 |---|---|---|
-| graded prospective shadow hours | **520 of 2000** | `python -m agent.reporting health` → `checkpoint_progress`, which applies the registered checkpoint's own selection function (`prospective_graded`). Since the 500-hour reading exists, `python -m agent.research.live_checkpoint` only says so until 2,000 is reached |
+| graded prospective shadow hours | **539 of 2000** | `python -m agent.reporting health` → `checkpoint_progress`, which applies the registered checkpoint's own selection function (`prospective_graded`). Since the 500-hour reading exists, `python -m agent.research.live_checkpoint` only says so until 2,000 is reached |
 | 500-hour first look | **taken 2026-10-13 19:33 UTC**, no verdict (by registration); read in the readiness gate's revision 3 | `research/monitoring/checkpoint_500h.md` (written once by the command; never rewritten) |
-| next checkpoint expected | **≈ 2026-12-14, late morning UTC**: the 2,000-hour E012 verdict (an estimate: 1,480 more hours at one per hour, if none are lost; each lost hour adds one) | derived from the count above |
-| newest prediction | the 18:00 UTC hour, 0.8 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
-| published backend state | refreshed 19:34 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
-| private stats read model | refreshed 19:35 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
+| next checkpoint expected | **≈ 2026-12-14, late morning UTC**: the 2,000-hour E012 verdict (an estimate: 1,461 more hours at one per hour, if none are lost; each lost hour adds one) | derived from the count above |
+| newest prediction | the 13:00 UTC hour, 1.0 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
+| published backend state | refreshed 14:12 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
+| private stats read model | refreshed 14:39 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
 | sealed holdout | **sealed** for evaluation (`research/HOLDOUT_ACCESS.log` does not exist): never scored, nothing learned from it. **Not "untouched"**: raw candles of its last weeks were fetched as warm-up inputs, and the whole period is stored on disk (`research/AUDIT_2026-10-08.md` §18.2) | the file's absence |
 | run history, outcomes, running statistics, health (read-only, on demand) | see the reporting layer | `python -m agent.reporting all --pretty` ([`docs/api/reporting_v1.md`](../api/reporting_v1.md)) |
 | everything else that moves (parity, cost, drift flags, the free-rule comparison) | see the latest weekly report | `python -m agent.research.weekly_report` → `research/monitoring/weekly_<date>.md` |
@@ -197,7 +197,7 @@ happening, or on the weekly audit being run on time.
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
 | a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~28 MB of 500 MB). |
 | a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
-| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-12; any commit resets the clock. |
+| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-13; any commit resets the clock. |
 
 **Calendar:** renew the GitHub token `supabase-dispatch` before **2027-09-20**
 (`docs/ops/open_user_actions.md` item 3).
@@ -226,8 +226,8 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
 - It gives **the E012 verdict**, calibration by bucket with intervals, the comparison with the free
   24h-EWMA rule, and weekday/weekend and hour-of-day blocks. The blocks are descriptive and are read
   against E027's development offsets.
-- The user's "no separate approval" decision (2026-10-11) was given for the 500-hour reading. Confirm
-  with the user that it also covers this one.
+- **No separate approval is needed** (the user's post-500h plan, 2026-10-14): run it at the first active session
+  when the authoritative counter confirms 2,000, exactly as written. Never open the holdout.
 - E024: a model as good as on validation passes every E012 part in about 98% of 2,000-hour stretches.
   A fail there means something.
 - Commit the reading together with this file's and `status.json`'s move to the next checkpoint:
@@ -244,7 +244,15 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
    ("What happens automatically", item 6).
 3. News cost and value, reviewed separately, with no change to the live weights or model.
 
-Each comes one at a time, with tests and its own commit. Also waiting on the user:
+Items 1 and 2 are done and verified live (2026-10-14). Item 3 has not been started. Also waiting on the user:
+- **E031** (the first offline challenger, block-wise calibration) is not a candidate: H_c fails. The experiment
+  is stopped for reassessment, and no further variant runs without a new registration
+  (`research/experiments/E031_block_calibration.json`).
+- **E032** (the directional challenger, after the user's clarification) finds the faint 1h P(UP) real, calibrated
+  and year-stable. But it is essentially one feature and economically negligible. Is a prospective direction
+  shadow track wanted?
+- **Whether to clip the registered checkpoint's EWMA warm-up** at the holdout's end before the 2,000-hour
+  reading (`research/HOLDOUT_ROUTES.md`).
 
 - The registered **news first look**: **done 2026-10-14 (E030, `research/results/E030/`)**. It was blind until
   it ran, it used exactly the first 500 usable hours, and it gives no verdict, by registration.
