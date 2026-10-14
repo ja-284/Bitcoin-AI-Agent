@@ -1,0 +1,46 @@
+{
+  "id": "E031",
+  "date": "2026-10-14",
+  "git_commit": "(registration commit; the code and the result are added in later commits)",
+  "status": "PRE-REGISTERED, RESEARCH-ONLY, offline challenger study (post-500h plan, Phase 3). Development data only, walk-forward out-of-sample. HYPOTHESIS-GENERATING, not confirmatory (validation wear, below). One variant, fixed in advance: not a search. Nothing is adopted, deployed or shadowed: move_size_1h_v1 stays frozen and keeps its prospective record. A passing result leads at most to a written shadow-track proposal for the user's review.",
+  "why": "E027 (2026-09-26, development data, both periods) found that the model family's good overall calibration hides offsetting intraday miscalibration. Large moves are over-stated at night (00-06 UTC: +0.047 exploration / +0.022 validation) and under-stated in the US session (12-18 UTC: -0.022 / -0.057). E028 then tested the mechanism 'the calendar enters the logistic as one harmonic' and FAILED: a second harmonic moved the offsets between blocks instead of removing them. It left one idea untested: the miscalibration is CONDITIONAL on the time of day. E020 found that interaction terms inside the logistic fail calibration. This tests the narrowest conditional fix there is, which leaves the logistic alone and lets the calibration step depend on the hour block. Nothing in the 500-hour first look motivated it: that reading has no hour-of-day breakdown (the 2,000-hour one will), and its misses were by probability level and overall level, which a block calibration is not designed to fix.",
+  "hypothesis": "If E027's intraday offsets are a stable property of the family, then calibrating each six-hour UTC block separately, on the same purged 90-day slice that precedes every test quarter, removes most of them out of sample, without costing skill, overall calibration or ranking.",
+  "variant": {
+    "name": "block Platt",
+    "model": "UNCHANGED: the nine incumbent inputs, the same L2 logistic (same C), the same frame, the same identical rows and the same 27 expanding walk-forward folds (agent/research/feature_count.prepare / evaluate, as E018-E028)",
+    "calibration": "Four Platt maps per fold instead of one: p -> sigmoid(a_b * logit(p) + b_b) for each block b in E027's HOUR_BLOCKS (00-06, 06-12, 12-18, 18-24 UTC, the reference hour's block; agent/research/slice_calibration.block_group). Each is fitted on that block's rows of the fold's own purged 90-day calibration slice (the slice the incumbent's single Platt uses), with the same PlattCalibrator. Each test row is transformed by its block's map.",
+    "fallback_fixed_in_advance": "A block whose calibration rows number fewer than 100, or hold only one class, uses the fold's single incumbent Platt map. Every use is counted and reported.",
+    "incumbent": "the same walk-forward with ONE Platt map per fold, i.e. E013's deliverable, which must reproduce E027/E028's block offsets and E019's validation skill (+0.0983) to the digit as a cross-check"
+  },
+  "data": {
+    "permitted": "The development period only: exploration (2017-08 -> 2023-12) and validation (2024-01 -> 2025-06-29), through build_frame / load_bars, which truncate at the holdout's start (2025-07-01).",
+    "never": "No holdout candle is loaded (allow_holdout stays False; research/HOLDOUT_ACCESS.log must still not exist afterwards). No prospective or live outcome is read. The 2026-08-20 -> 2026-09-19 buffer is not used.",
+    "target": "large_move: |return over the next hour| > 0.25% (fixed), reference close to the close of the candle opening at as_of + 1h, exactly as move_size_1h_v1",
+    "features_and_leakage": "The nine point-in-time inputs (perturbation-tested), already log-transformed as in E013. The block uses the reference hour, known at prediction time. The walk-forward runner asserts on every fold that the calibration slice is separated from the fit rows by the purge (horizon + 24h embargo) and from the test block by another purge (check_fold).",
+    "splits": "make_folds(expanding, min_train_days 365, test_block_days 90, embargo 24h, calib_days 90): the folds of E013 and E018-E028, unchanged"
+  },
+  "validation_wear": "About 30 experiments have examined these development periods, and E027 found these very offsets on these very out-of-sample rows. So whatever is found here is HYPOTHESIS-GENERATING, NEVER a confirmation. A clean confirmation is impossible offline: the validation period is worn, the sealed holdout's one use is reserved for E014/E023, and prospective outcomes may not be used for fitting. The only defensible confirmatory route is a NEW, separate prospective shadow track for a frozen candidate, with its own model id and checkpoints. Optionally, and only by the user's decision before unsealing, a secondary holdout hypothesis could be registered like E023. Neither is started here.",
+  "hypotheses": {
+    "H_a_removes_the_offsets": "The largest |stated - observed| across the four six-hour blocks falls by at least half against the incumbent, in BOTH periods (E028's criterion, unchanged).",
+    "H_b_no_skill_loss": "On validation, the paired Brier difference (incumbent minus variant) has a 95% interval that does not lie wholly below zero (48h circular block bootstrap, agent/research/simple_baselines.paired_difference, as E028).",
+    "H_c_calibration": "The variant's overall ECE is <= 0.03 in both periods, AND on validation every reliability bucket with >= 100 rows is within 0.05 of its observed frequency (E013's rule).",
+    "H_d_ranking": "On validation, the variant's Spearman rho(p, |move|) is within 0.02 of the incumbent's (E018's ranking-preserved rule). Separate block maps can reorder hours across blocks; within a block the order cannot change."
+  },
+  "metrics_reported_for_both_models_and_both_periods": [
+    "probabilistic skill: Brier and Brier skill against the base rate of the same rows (a proper-score baseline), and against E019's free 24h-EWMA rule on the same rows",
+    "discrimination: Spearman rho(p, |move|)",
+    "calibration: ECE, the reliability buckets, the calibration intercept and slope (logistic regression of the outcome on logit(p)), and the four block offsets with block-bootstrap intervals; ECE is read cautiously (E024)",
+    "binary classification at the fixed threshold 0.5: accuracy against the naive 'always small' rule",
+    "stability: Brier skill and the worst block offset per calendar year (descriptive)",
+    "pre-defined regimes: stated - observed per frozen E026/E027 volatility tercile (research/monitoring/regime_terciles_v1.json), descriptive"
+  ],
+  "multiple_comparisons": "One variant, one block definition (E027's, fixed before this study), one calibration slice (E013's), and one fallback rule, so there is nothing to choose among. Years and regimes are descriptive only and are never used to pick, tune or rescue anything. All four hypotheses must hold; none is re-tried with a changed setting.",
+  "what_each_answer_means_decided_in_advance": {
+    "all_four_hold": "Block calibration becomes a CANDIDATE. The next step is a written shadow-track proposal for the user: a frozen artefact under a new model id, its feature/version fingerprint, a start time, append-only storage and its own prospective checkpoint schedule. Nothing is deployed or started until the user has reviewed the evidence and the proposal. It is never swapped into move_size_1h_v1.",
+    "H_a_fails": "The intraday offsets are not a stable calibration property: they do not carry from the 90-day slice to the next quarter. Recorded as a negative result. Stop and reassess; no further variant (another block count, another slice length) is run automatically. E027's offsets remain the reference for reading the 2,000-hour slices.",
+    "H_a_holds_but_another_fails": "Better intraday calibration at a cost in skill, overall calibration or ranking. Recorded; not pursued without a new hypothesis.",
+    "in_every_case": "The live system, move_size_1h_v1, the shadow record, the checkpoints and their rules, and the holdout are untouched."
+  },
+  "result": "PENDING: added by a later commit, after this registration is committed",
+  "command": "python -m agent.research.block_calibration --experiment E031"
+}
