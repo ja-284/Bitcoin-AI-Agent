@@ -111,13 +111,16 @@ def test_a_refused_a_silent_and_a_timed_out_dispatch_are_each_visible():
     assert s["slots_without_an_answer"] == [datetime(2026, 10, 14, 12, 12, tzinfo=timezone.utc)]  # the 12:12 dispatch left nothing
 
 
-def test_time_before_the_log_existed_and_a_slot_still_in_flight_are_not_called_silent():
-    rows = [_row(15), _row(16)]  # the log starts at 15:12
+def test_time_before_the_log_existed_and_a_slot_not_yet_copied_are_not_called_silent():
+    rows = [_row(15), _row(16)]  # the log starts at 15:12; the 16:12 answer was copied at 16:47
     assert dl.summarise(rows, NOW, 168)["slots_without_an_answer"] == []
-    early = datetime(2026, 10, 14, 17, 15, tzinfo=timezone.utc)  # the 17:12 slot fired 3 minutes ago
-    assert dl.summarise(rows, early, 168)["slots_without_an_answer"] == []
-    later = datetime(2026, 10, 14, 17, 20, tzinfo=timezone.utc)
+    # 17:20 / 17:47: the 17:12 answer is not copied before the 17:47 recorder run -- not yet silence (found live,
+    # 2026-10-14 14:20 UTC, when the first version called the in-flight slot silent)
+    for t in ((17, 20), (17, 47)):
+        assert dl.summarise(rows, datetime(2026, 10, 14, *t, tzinfo=timezone.utc), 168)["slots_without_an_answer"] == []
+    later = datetime(2026, 10, 14, 17, 52, tzinfo=timezone.utc)  # the recorder has had its chance
     assert dl.summarise(rows, later, 168)["slots_without_an_answer"] == [datetime(2026, 10, 14, 17, 12, tzinfo=timezone.utc)]
+    assert dl.JUDGE_AFTER.total_seconds() == 40 * 60
 
 
 def test_an_empty_log_is_reported_as_empty_not_as_healthy():

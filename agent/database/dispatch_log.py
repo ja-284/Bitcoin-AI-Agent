@@ -19,6 +19,9 @@ from agent.database.db import get_connection
 
 HOUR = timedelta(hours=1)
 DISPATCH_MINUTE = 12  # docs/ops/supabase_dispatch.sql: '12 * * * *'
+# A slot is judged only once the recorder (docs/ops/dispatch_responses_cron.sql: '47 * * * *', 35 minutes later) has
+# had its chance to copy the answer, plus a margin. Before that, "no answer kept" would only mean "not copied yet".
+JUDGE_AFTER = timedelta(minutes=40)
 SQL = """SELECT responded_at, status_code, timed_out, error_msg, github_request_id, detail
          FROM dispatch_responses WHERE responded_at >= %s ORDER BY responded_at"""
 
@@ -27,8 +30,10 @@ def summarise(rows: list[tuple], now: datetime, hours: float) -> dict:
     """
     rows: (responded_at, status_code, timed_out, error_msg, github_request_id, detail), oldest first.
     A dispatch hour "without an answer" is a :12 slot inside the covered period with no row in its clock
-    hour: either pg_cron never ran, or pg_net stored nothing (both worth knowing). The covered period
-    starts at the first kept row, so the time before the log existed is never counted as silence.
+    hour, judged only after the :47 recorder has had its chance (JUDGE_AFTER): pg_cron never ran, pg_net
+    stored nothing, or the recorder itself did not run (all worth knowing; cron.job_run_details tells them
+    apart). The covered period starts at the first kept row, so the time before the log existed is never
+    counted as silence.
     """
     since = now - timedelta(hours=hours)
     by_status = Counter("no HTTP answer" if r[1] is None else str(r[1]) for r in rows)
@@ -37,7 +42,7 @@ def summarise(rows: list[tuple], now: datetime, hours: float) -> dict:
     if rows:
         slot = rows[0][0].replace(minute=DISPATCH_MINUTE, second=0, microsecond=0)
         answered = {r[0].replace(minute=0, second=0, microsecond=0) for r in rows}
-        while slot + timedelta(minutes=5) <= now:  # a slot is judged five minutes after it fires
+        while slot + JUDGE_AFTER <= now:  # judged once the :47 recorder has had its chance
             if slot >= since and slot.replace(minute=0) not in answered:
                 silent.append(slot)
             slot += HOUR
