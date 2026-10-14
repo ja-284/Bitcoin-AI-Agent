@@ -1,0 +1,51 @@
+{
+  "id": "E032",
+  "date": "2026-10-14",
+  "git_commit": "(registration commit; the code and the result are added in later commits)",
+  "status": "PRE-REGISTERED, RESEARCH-ONLY, offline DIRECTIONAL challenger (the user's 2026-10-14 clarification: direction is a required research track). Development data only, walk-forward out-of-sample. HYPOTHESIS-GENERATING, not confirmatory (validation wear, below). One model, one horizon, fixed in advance: not a search. Kept separate from the move-size track; nothing is combined into a BUY/HOLD/SELL decision. Nothing is adopted, deployed or shadowed.",
+  "why": "The user's long-term objective includes predicting DIRECTION with measurable, calibrated skill. Every earlier directional test asked an ECONOMIC question (an edge in returns) or a fit-free correlation question, and every one failed (E001, E002-E008, E011, E015, E017). E011 is the only fitted directional model: its pre-registered criterion required a return edge, which was zero. Its numbers also show, without any interval, a tiny probabilistic signal at 1h: Brier 0.2490 vs the base rate's 0.2499 (gain about 0.0009), ECE 0.005-0.007, and accuracy 1.5-2.5 points above naive in both periods. Three things were never established: whether that Brier gain is distinguishable from zero with an interval that respects hour-to-hour dependence; whether it is more than one reversal feature, since E011 had no simple directional baseline; and whether it holds year by year on a proper score. This answers exactly those questions and nothing else. It does NOT ask whether direction is useful: E011 and E015 already show it is not, at retail costs.",
+  "hypothesis": "At 1h, E011's pre-defined reversal-family logistic produces out-of-sample probabilities of UP that beat a leak-free base rate on the Brier score with an interval excluding zero, in both periods; that beat a one-feature reversal logistic by a practically meaningful margin; that are calibrated; and that are stable across calendar years.",
+  "target": "binary direction: y = 1 if the 1h return > 0 (UP). Reference = close at the cutoff (the reference candle's close); outcome = close of the candle opening at as_of + 1h (agent/research/labels, as E011). 1h only: E011 found 6h and 24h at chance, and E025 showed that longer overlapping targets need far more data for the same power.",
+  "data": {
+    "permitted": "The development period only, exploration (to 2023-12) and validation (2024-01 -> 2025-06-29), through model_test.build_frame -> load_bars(end=HOLDOUT.start).",
+    "never": "No holdout candle (allow_holdout stays False; research/HOLDOUT_ACCESS.log must still not exist afterwards). No prospective or live outcome. Not the buffer.",
+    "category_scores": "From the cached historical replay at the current scoring 0.2.0 (E017's). E011 used 0.1.0; the two are identical on every clean hour (E016) and differ only on the 9% of hours whose windows contain a gap."
+  },
+  "features_and_leakage": {
+    "model_inputs": "E011's 'A_minus_volpct' list, unchanged: trend_score, momentum_score, volume_score, chart_pattern_score, tr_mean_14_rel, trades_rel_168h, taker_buy_share_1h, taker_buy_share_6h. It is E011's set A without vol_pct_720, a list E011 declared before it ran, chosen here for full coverage, since vol_pct_720 blanks about 24% of exploration hours after candle gaps. No new feature, no search.",
+    "leakage": "Every input is point-in-time (perturbation-tested: tests/test_point_in_time.py, test_features_point_in_time.py). The walk-forward runner asserts on every fold that the last fitted row's label is realised before the first test cutoff (purge = horizon + 24h embargo; check_fold). Rows are restricted ONCE to hours where every candidate's inputs and the label exist, so all candidates are scored on identical rows."
+  },
+  "validation_design": "make_folds: expanding walk-forward, min_train_days 365, test blocks 90 days, embargo 24h, no calibration slice (E011's design, kept so the probabilities are E011's raw logistic, whose calibration is itself one of the questions). Exploration = out-of-sample hours before 2024-01-01; validation = 2024-01-01 -> 2025-06-29.",
+  "candidates": {
+    "M_model": "L2 logistic (agent/research/model_test.LogisticModel, C = 0.1, scaler fitted on each fold's training rows), the eight inputs above",
+    "F_one_feature": "the same logistic on taker_buy_share_1h alone. It is the largest-magnitude, always-same-sign coefficient in E011's 1h model (tied with momentum_score), so it is the strongest simple reversal rule this record offers, which makes H_b conservative",
+    "B0_base_rate": "agent/research/model_test.BaseRateModel: each fold's training-range share of UP hours, a leak-free constant (the proper-score baseline; E010 verified it)"
+  },
+  "metrics_reported_for_every_candidate_and_both_periods": [
+    "Brier score; Brier skill against B0 (1 - Brier/Brier_B0) and, descriptively, against the oracle base rate of the same rows; log loss",
+    "paired Brier differences with a 48h circular block bootstrap (agent/research/simple_baselines.paired_difference: 500 resamples), B0 - M and F - M",
+    "calibration: ECE, the reliability buckets with E013's rule, and the calibration intercept and slope; ECE is read cautiously",
+    "discrimination: Spearman rho(p, the 1h return)",
+    "binary classification at the fixed threshold 0.5: accuracy against the naive majority of the same rows",
+    "economics, descriptive and never a criterion: the return edge (mean 1h return when p > 0.5 minus when p < 0.5) with a block-bootstrap interval, and the gross mean signed return per hour of 'long if p > 0.5 else short' against a 0.10% round trip",
+    "stability: Brier skill against B0 per calendar year 2018-2025"
+  ],
+  "multiple_comparisons": "One horizon, one model, two fixed baselines, so there is nothing to choose among. No other horizon, feature set, regulariser or threshold is run. Years are a pre-specified stability criterion, not a search; no subgroup is examined to rescue a failure.",
+  "hypotheses": {
+    "H_a_skill_beyond_the_base_rate": "In BOTH periods, Brier(B0) - Brier(M) > 0 and its paired 95% interval excludes zero.",
+    "H_b_more_than_one_reversal_feature": "On validation, M's Brier skill against B0 is >= 1.10x F's AND the paired difference Brier(F) - Brier(M) has a 95% interval excluding zero (E020's two-part rule: statistically AND practically better).",
+    "H_c_calibrated": "M's ECE <= 0.03 in both periods AND, on validation, every reliability bucket with >= 100 rows is within 0.05 of its observed frequency (E013's rule).",
+    "H_d_stable": "M's Brier skill against B0 is positive in at least 6 of the 8 calendar years 2018-2025."
+  },
+  "expectation_stated_in_advance": "E011's figures, which this design will largely re-measure, suggest: a Brier gain of roughly 0.0009 (about 0.4%); H_a likely holds given ~45-56k hours; H_c likely holds (E011 ECE 0.005-0.007); H_d plausible (E011's accuracy was below naive in 2018); H_b genuinely uncertain. The return edge is expected to be about zero (E011). Written down so the result is read against what was already known, not as a discovery.",
+  "validation_wear": "About ten directional experiments (E001-E011, E015, E017) and about 30 experiments in all have examined these periods, and E011 measured nearly this quantity on these rows. So the result is HYPOTHESIS-GENERATING ONLY: a pass re-describes a known faint signal with proper uncertainty, and a fail closes the probabilistic question on this data. It cannot be confirmed offline. The only clean confirmation would be a NEW, separately registered prospective direction shadow track, and that is the user's decision.",
+  "what_each_answer_means_decided_in_advance": {
+    "all_four_hold": "A tiny, calibrated, year-stable probabilistic 1h directional signal exists in the development data beyond a one-feature rule. It is NOT usefulness: unless the return edge is also clearly positive it says nothing for trading, and E011/E015 found it is not. Next, at most: a written proposal for a prospective direction shadow track (its own model id, frozen artefact, start time and checkpoints) for the user to decide on. No BUY/HOLD/SELL change; no combination with move-size until each component has credible prospective evidence.",
+    "H_a_fails": "No measurable probabilistic directional skill at 1h in the free candle data. The directional track stays closed on this data until a genuinely new information source exists (research/DIRECTIONAL_ASSESSMENT_2026-10-14.md).",
+    "H_a_holds_H_b_fails": "The skill is essentially one reversal feature (taker-buy share), and the combination adds nothing practical. Recorded; any future directional track would start from the one-feature rule.",
+    "H_c_or_H_d_fails": "Measurable but miscalibrated or unstable: recorded, not pursued without a new hypothesis.",
+    "in_every_case": "The live BUY/HOLD/SELL signal, scoring 0.2.0, move_size_1h_v1, the shadow record, the checkpoints and the holdout are untouched. The two research tracks stay separate."
+  },
+  "result": "PENDING: added by a later commit, after this registration is committed",
+  "command": "python -m agent.research.direction_probability --experiment E032"
+}

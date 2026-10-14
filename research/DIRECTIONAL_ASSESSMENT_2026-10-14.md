@@ -72,3 +72,57 @@ record, and the only clean data are months away. Keep what is already registered
 
 Keep the BUY/HOLD/SELL signal labelled *no demonstrated predictive value* in every report and in the contract.
 Revisit only if a genuinely new free data source with a stated mechanism appears.
+
+## Addendum, 2026-10-14 (later): direction is a required research track (the user's clarification)
+
+The recommendation above was written before the user clarified that direction is a required research track. This
+addendum keeps the text above as it was and answers the clarification point by point. The move-size track
+(`move_size_1h_v1`, E031) stays separate.
+
+**1. What has been tested, and what it showed.** It is all listed above. One correction matters for what comes next.
+E011 is the only *fitted* directional model, and its 1h numbers also show a faint *probabilistic* signal: Brier
+0.2490 vs the base rate's 0.2499, ECE 0.005–0.007, and accuracy 1.5–2.5 points above naive in both periods and in 7 of
+8 years. E011 failed because its criterion demanded a return edge, which was zero, not because the probabilities were
+uninformative. No experiment has put an interval on that Brier gain, compared it with a simple directional baseline,
+or checked its stability per year on a proper score.
+
+**2. A defensible next hypothesis, or overuse?** Both, with the limits stated.
+- The development data are heavily overused for direction: about ten directional experiments, and E011 measured
+  nearly this quantity on these rows.
+- One narrow question is still open and is not a repeat of failed work: is that faint 1h probability *measurably and
+  stably* better than a leak-free base rate and than a one-feature reversal rule?
+- Asking it needs no new feature and no search. Its answer is hypothesis-generating only. It is registered as
+  **E032** (`research/experiments/E032_direction_probability.json`), with what each answer means fixed in advance.
+- Nothing broader is defensible on this data: no new feature sweep, no new horizons, and no tuning of the
+  BUY/HOLD/SELL weights.
+
+**3. Targets and horizons that are justified.**
+- **1h binary direction only**, the sign of the next hour's return. It is the only horizon where anything consistent
+  was seen (E002, E008, E011, E015).
+- 6h and 24h are at chance (E011), and overlapping targets need several times more data for the same power (E025).
+- A cost-banded three-class target (moves beyond the 0.10% round trip) is not justified now. E011 found the
+  reversal signal *loses* on the largest 10% of moves (0.465 vs 0.509), so its expected answer is already negative.
+
+**4. Baselines and metrics.**
+- Baselines: a leak-free base rate (each fold's training share of UP hours) and a one-feature reversal logistic
+  (taker-buy share, E011's strongest input). The live scoring 0.2.0 is already known to carry no value (E017).
+- Metrics: Brier skill against the base rate with a paired 48h block-bootstrap interval (the primary measure); log
+  loss; calibration (ECE, E013's bucket rule, intercept and slope); Spearman ρ; accuracy at a fixed 0.5 against the
+  naive majority; and per-year skill.
+- Economic figures (the return edge, and gross return against a 0.10% round trip) are reported but never used as
+  the criterion. *Measurable skill is not usefulness.*
+
+**5. Validation, leakage, calibration, uncertainty.**
+- E010's expanding walk-forward: quarterly test blocks, at least 365 days of training, purge = horizon + 24h embargo,
+  asserted on every fold.
+- Point-in-time inputs only (perturbation-tested). Identical rows for every candidate. Development data only; no
+  holdout candle; no prospective outcome.
+- The raw logistic's calibration is itself one of the questions, so there is no post-hoc recalibration.
+- Uncertainty comes from block-bootstrap intervals, which respect hour-to-hour dependence.
+
+**What would be needed beyond E032.**
+- For confirmation: a *prospective* direction shadow track, frozen and with its own checkpoints. That is the user's
+  decision, and at |ρ| ≈ 0.05 it needs roughly 3,000 hours.
+- For usefulness: a positive return edge after costs, which no test so far has shown.
+- Combining direction with move-size into a decision belongs only after each component has credible evidence, and
+  neither has a prospective verdict yet.
