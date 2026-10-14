@@ -1,0 +1,56 @@
+{
+ "hours": {
+  "first": "2026-09-19T20:00:00+00:00",
+  "last": "2026-10-11T13:00:00+00:00",
+  "n": 500,
+  "usable_available": 571
+ },
+ "news_score": {
+  "mean": 0.10070940064252128,
+  "sd": 0.14468926495742312,
+  "min": -0.246974063400576,
+  "max": 0.551639344262295,
+  "hours_negative": 138
+ },
+ "horizons": {
+  "1h": {
+   "role": "primary",
+   "n": 500,
+   "left_out_without_ok_outcome": 0,
+   "rho": 0.04560426788958404,
+   "ci95": [
+    -0.05198484217185539,
+    0.15140855529525052
+   ],
+   "interval_excludes_zero": false,
+   "min_detectable_rho_80pct_power_at_500h": 0.125
+  },
+  "6h": {
+   "role": "descriptive only",
+   "n": 500,
+   "left_out_without_ok_outcome": 0,
+   "rho": 0.0014353019134438938,
+   "ci95": [
+    -0.19996641387419545,
+    0.20973591515585577
+   ],
+   "interval_excludes_zero": false,
+   "min_detectable_rho_80pct_power_at_500h": 0.274
+  },
+  "24h": {
+   "role": "descriptive only",
+   "n": 500,
+   "left_out_without_ok_outcome": 0,
+   "rho": -0.09612970805439788,
+   "ci95": [
+    -0.37987441322412613,
+    0.20864726773211423
+   ],
+   "interval_excludes_zero": false,
+   "min_detectable_rho_80pct_power_at_500h": 0.416
+  }
+ },
+ "verdict": null,
+ "computed_at": "2026-10-14T13:55:34.257952+00:00",
+ "registration": "E025 adopted_design_for_8_6 (2026-09-24); E030 execution details (commit 014cdef)"
+}

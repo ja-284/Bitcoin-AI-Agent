@@ -5,6 +5,22 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-14 (E030: the registered news first look; descriptive, no verdict)
+
+Nothing in prediction, scoring, news weights, prompts, the shadow model, the checkpoints or the live system
+changed.
+
+- **Registration:** E025 (2026-09-24) fixed the measure. It left four execution details open (the first-500
+  prefix, the seed, hours without an outcome, write-once output), and they were fixed in `014cdef`, pushed
+  before any news-versus-outcome figure existed. None ever had: the look was blind until it ran.
+- **Code:** `acf3782`, `agent/research/news_first_look.py`, with 9 tests on synthetic data.
+- **Result:** on the first 500 usable hours (2026-09-19 20:00 → 2026-10-11 13:00 UTC), 1h ρ **+0.046
+  [−0.052, +0.151]**, 6h +0.001 [−0.200, +0.210], 24h −0.096 [−0.380, +0.209]. Every interval includes zero.
+- **Reading, fixed in advance:** not evidence of no effect. At 500 hours only |ρ| ≥ 0.125 is detectable at 1h.
+  The verdict needs 3,140 usable hours.
+- **Side observation, descriptive:** the news score's mean is +0.101 and 138 of 500 hours are negative. E025's
+  first 97 hours showed +0.224 with 5 negative.
+
 ## ops — 2026-10-14 (operational change 2: GitHub's answers to the dispatch are kept)
 
 Nothing in prediction, scoring, thresholds, features, the shadow model, the checkpoint code or rules,

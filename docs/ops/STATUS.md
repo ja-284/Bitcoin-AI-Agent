@@ -242,8 +242,11 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
 
 Each comes one at a time, with tests and its own commit. Also waiting on the user:
 
-- The registered **news first look** (descriptive) has enough hours (553 usable, weekly report
-  2026-10-13) and waits for the user's go-ahead.
+- The registered **news first look**: **done 2026-10-14 (E030, `research/results/E030/`)**. It was blind until
+  it ran, it used exactly the first 500 usable hours, and it gives no verdict, by registration.
+  - 1h ρ +0.046 [−0.052, +0.151], 6h +0.001, 24h −0.096. Every interval includes zero.
+  - That is not evidence of no effect: this size can only see |ρ| ≥ 0.125.
+  - The verdict needs 3,140 usable hours (≈ 2027-02). Nothing changed.
 - A properly registered study for the 2,000-hour milestone may be considered; that is the user's
   decision. The calm-market study has lapsed.
 

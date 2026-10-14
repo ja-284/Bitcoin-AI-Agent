@@ -1,8 +1,8 @@
 {
   "id": "E030",
   "date": "2026-10-14",
-  "git_commit": "(registration commit; the result is added in a later commit)",
-  "status": "REGISTERED, not run. The news first look of roadmap 8.6, whose design E025 registered on 2026-09-24. DESCRIPTIVE, NO VERDICT. Live data only (the archive has no history); reads the stored news score and the stored 1h/6h/24h outcomes; fits nothing, selects nothing, changes nothing in the live system.",
+  "git_commit": "registration 014cdef (before any news-versus-outcome figure); code acf3782; run 2026-10-14 13:55 UTC; result recorded in the commit after acf3782",
+  "status": "done. DESCRIPTIVE FIRST LOOK, NO VERDICT (by registration). Live data only; blind until this run; fitted nothing, selected nothing, changed nothing in the live system.",
   "why": "E025 registered the news test before any news-versus-outcome figure existed: primary 1h direction (Spearman of the hour's news score with the next-hour return, 48h circular block bootstrap, 500 resamples, 95% interval); a FIRST LOOK at 500 usable news hours, descriptive with no verdict; a verdict only from 3,140 usable hours; 6h and 24h descriptive only. The count passed 500 on 2026-10-11 (571 usable hours on 2026-10-14).",
   "registered_in": "research/experiments/E025_news_power.json -> adopted_design_for_8_6 (2026-09-24); research/ROADMAP.md -> J (d)",
   "blindness": "No news-versus-outcome figure has ever been computed. Checked 2026-10-14: E025 read the news score only (enforced by a test); the 2026-10-08 audit lists the question as untested; no module, weekly report or reporting view computes it. Unlike the 500-hour move-size reading, this first look is blind. The details below are fixed before the first such figure exists.",
@@ -23,6 +23,62 @@
     "6h_and_24h": "Descriptive only whatever they show: no feasible record can power them (E025: variance inflation about 5 and 12).",
     "in_every_case": "No news weight, model parameter, feature, threshold, prompt or live signal changes because of this look. The separate news cost-and-value review (operational change 3) may cite it only as what it is: a first look below the registered verdict size."
   },
-  "result": "PENDING: added by the execution commit, after this registration is committed",
-  "command": "python -m agent.research.news_first_look --experiment E030"
+  "result": "1h (primary): rho +0.046 [-0.052, +0.151]; 6h: +0.001 [-0.200, +0.210]; 24h: -0.096 [-0.380, +0.209]. Every interval includes zero. By the reading fixed in advance this is NOT evidence of no effect: at 500 hours only |rho| >= 0.125 is detectable at 1h, and a plausible effect (|rho| 0.05) is not. The 1h point estimate sits at that plausible size, with an interval about six times wider than it. No verdict; the registered verdict needs 3,140 usable hours. Nothing changed.",
+  "command": "python -m agent.research.news_first_look --experiment E030",
+  "metrics": {
+    "hours": {
+      "first": "2026-09-19T20:00:00+00:00",
+      "last": "2026-10-11T13:00:00+00:00",
+      "n": 500,
+      "usable_available": 571
+    },
+    "news_score": {
+      "mean": 0.1007,
+      "sd": 0.1447,
+      "min": -0.247,
+      "max": 0.5516,
+      "hours_negative": 138
+    },
+    "rho": {
+      "1h": {
+        "n": 500,
+        "rho": 0.0456,
+        "ci95": [
+          -0.052,
+          0.1514
+        ],
+        "interval_excludes_zero": false,
+        "min_detectable_rho_80pct_power_at_500h": 0.125
+      },
+      "6h": {
+        "n": 500,
+        "rho": 0.0014,
+        "ci95": [
+          -0.2,
+          0.2097
+        ],
+        "interval_excludes_zero": false,
+        "min_detectable_rho_80pct_power_at_500h": 0.274
+      },
+      "24h": {
+        "n": 500,
+        "rho": -0.0961,
+        "ci95": [
+          -0.3799,
+          0.2086
+        ],
+        "interval_excludes_zero": false,
+        "min_detectable_rho_80pct_power_at_500h": 0.416
+      }
+    },
+    "hours_left_out_without_ok_outcome": {
+      "1h": 0,
+      "6h": 0,
+      "24h": 0
+    },
+    "output": "research/results/E030/news_first_look.md and .json (written once)"
+  },
+  "side_observations_descriptive": [
+    "The news score is less positive than E025's first 97 hours suggested: mean +0.101 (E025: +0.224), 138 of 500 hours negative (E025: 5 of 97). Descriptive; nothing is read into it."
+  ]
 }

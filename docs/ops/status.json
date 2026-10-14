@@ -47,7 +47,8 @@
     "next_checkpoint_gives_verdict": true,
     "next_checkpoint_verdict": "E012",
     "after_checkpoint": "a dated readiness assessment appended to the gate, then a plain report; never an automatic 'finished'",
-    "news_first_look": "ready (553 usable hours, weekly report 2026-10-13); descriptive; waits for the user's go-ahead",
+    "news_first_look": "done 2026-10-14 (E030; research/results/E030/): first 500 usable hours, blind until run, no verdict by registration; 1h rho +0.046 [-0.052, +0.151], 6h +0.001, 24h -0.096 -- every interval includes zero; not evidence of no effect (detectable only |rho| >= 0.125 at this size)",
+    "news_verdict_expected": "2027-02 (3,140 usable hours, E025)",
     "news_verdict_usable_hours": 3140
   },
   "automation": {
