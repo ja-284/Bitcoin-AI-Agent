@@ -150,6 +150,43 @@ selection rule or the order of the checkpoints. None used a prospective outcome.
    another problem; a weak one is investigated, never tuned against. The weekly reports show the running
    record descriptively in between. They are not checkpoints, and nothing is decided on them (rule 2).
 
+## Amendment A1 — 2026-10-14, before the 2,000-hour reading: the EWMA warm-up never reads the sealed holdout
+
+*Protocol version 1 → **1.1**. Registered 2026-10-14, at 544 of 2,000 graded hours, before any 2,000-hour figure
+exists. Rules 1–11, the selection of hours, every metric, every pass rule and the 500-hour reading are unchanged.*
+
+**What changes.** E019's free 24h-EWMA rule (the reference in every checkpoint's "Against the free 24h-EWMA rule"
+section and in the weekly reports) is computed from candles that start **no earlier than the buffer's first hour,
+2026-08-20 00:00 UTC** (the end of the sealed holdout). `ewma_reference_series` enforces this in three ways:
+- it clips the window's start there;
+- it refuses a window that would end before it;
+- it checks every returned candle.
+
+**What it replaces.** The warm-up started 800 hours before the live start. At a checkpoint, the live span was
+added twice: once by the checkpoint's own lookback and once by the fetch. So the warm-up reached back to about
+2026-07-26 at the 500-hour reading, and would have reached back to about 2026-05-23 at the 2,000-hour reading.
+That is far into the sealed holdout (500-hour procedure, item 3, above).
+
+**Why.** The user's master plan (2026-10-14), rule 1.3: no sealed-holdout row may be read as part of a warm-up,
+and "the effect is negligible" is not a reason to keep an unnecessary dependency on holdout data.
+
+**What it does to the numbers, stated as a bound, not a measurement.** The two warm-ups cannot be compared
+directly, because that would mean reading the holdout's candles again, which this amendment forbids.
+- At every judged hour, the candles A1 drops are at least 785 hours older. The first shadow hour is
+  2026-09-21 17:00, and the buffer starts 2026-08-20 00:00, so they are at least 32.7 half-lives away.
+- The rule averages a 0/1 indicator. So dropping them moves its value at any judged hour by at most about
+  2 × 2^(−785/24) ≈ 3e-10, far below every printed digit.
+- The 2,000-hour comparison with the free rule therefore stays directly comparable with the 500-hour one. The
+  difference is stated here, not hidden.
+- `tests/test_holdout_routes.py` checks that bound on synthetic candles with the rule's own code
+  (`simple_baselines.simple_rules`), and checks that the window can no longer reach the holdout.
+
+**What it does not do.**
+- It does not recompute or rewrite the 500-hour reading. That reading was written 2026-10-13 under the old warm-up
+  and stays as written, with this amendment as its context.
+- It opens nothing: no holdout candle is read to make or check the change.
+- It changes no model, no rule and no selection.
+
 ## What is checked every week regardless of sample size (weekly report §3)
 
 Coverage (rows vs expected hours), honest blanks and their reasons, reference-close agreement
