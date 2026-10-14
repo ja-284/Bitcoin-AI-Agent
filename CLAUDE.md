@@ -31,7 +31,10 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   1. the single-missed-hour alarm — **done 2026-10-14** (`afdb5ca`);
   2. keeping GitHub's trigger responses — **done 2026-10-14** (`76c7aff`, `68dd8d3`);
   3. a separate review of news cost and value, with no change to the live weights or model — not started.
-- **The governing brief since 2026-10-14** is the user's "Post-500h Research and Improvement Plan" (Phases 0–6):
+- **The governing brief since 2026-10-14 (evening)** is the user's "MASTER PLAN AFTER THE 500-HOUR EVALUATION",
+  which supersedes the post-500h plan's open items and answered its four pending decisions (see the 2026-10-14
+  evening entry and its PAUSED note). Before it, the user's "Post-500h Research and Improvement Plan" (Phases 0–6)
+  governed:
   - keep v1 frozen as the reference;
   - offline challengers must be registered first, and use development data only;
   - no deployment or shadow track without the user's review;
@@ -538,6 +541,61 @@ first offline challenger, the directional assessment, the holdout routes.**
     3. Apply the user's decisions, one change at a time.
     4. The weekly audit is due ≈ 2026-10-20. The 2,000-hour reading (≈ 2026-12-14) runs at the first session
        after 2,000 graded hours, as registered, with no separate approval.
+
+**2026-10-14 (evening) — the user's "MASTER PLAN AFTER THE 500-HOUR EVALUATION": Phase 0 and Phase 1 (3A, 3B) so far.**
+- **The master plan answered the four pending decisions:**
+  - the news cost/value review: yes, read-only;
+  - one new move-size hypothesis: yes, after the diagnosis, if justified;
+  - a prospective direction shadow track: yes, isolated and pre-registered;
+  - the EWMA warm-up must not read the holdout: yes.
+
+  It is sequential: Phase 0 → 1 → 2 (diagnosis) → 3 (direction shadow track) → 4 (one move-size hypothesis) → 5
+  (monitoring, weekly audit) → 6 (report).
+- **Phase 0 (read-only, passed):**
+  - `main` = GitHub at `f6b49f4`, the tree clean, no processes;
+  - every live run since the pause green (8 hourly, 1 watchdog, 9 reporting, 2 tests);
+  - 544 of 2,000 graded hours at 19:56 UTC, no new missing hour, 0 shadow errors, 0 overdue;
+  - security and role checks OK; 615 unit tests.
+  - One doc/code mismatch was corrected (`d46bb0e`: `migrate` applies five schema files, not three).
+  - An old stash from September exists ("duplicate drafts … superseded by e272d40"). It predates this work and is
+    left untouched.
+- **3A, the warm-up and the holdout (passed):**
+  - **Amendment A1** to `research/LIVE_EVALUATION.md` (protocol 1 → 1.1) was registered first (`f258fa2`), then
+    the code (`48e080b`).
+  - The free EWMA rule's warm-up now starts no earlier than the buffer's first hour (2026-08-20 00:00 UTC). It is
+    clipped in `weekly_report.ewma_fetch_hours`, refused for invalid windows, and the returned candles are
+    checked.
+  - The old window reached ~2026-07-26 at 500 h and would have reached ~2026-05-23 at 2,000 h, because the live
+    span was counted twice.
+  - The effect is a stated bound, ≤ ~3e-10 at judged hours, tested on synthetic candles. It is not measured,
+    because measuring it would mean reading the holdout.
+  - The 500-hour reading stays as written.
+  - Verified live: the real fetch asks only from 2026-08-20 00:00, and no holdout log exists.
+  - The E000 bypass closure was re-verified from code and tests. 7 new tests; holdout mutation guards 5/5.
+- **3B, the missed-hour email (PARTIAL, waiting for the user):** the manual workflow *Alert delivery test*
+  (`029c2d5`, `.github/workflows/alert_test.yml`, active on GitHub) sends ONE report labelled as a test, through
+  the real signal's code and curl line. The user must run it once and confirm the email. Row 18 stays PARTIAL
+  until then.
+- 627 unit tests; GitHub's tests are green on every push.
+- **PAUSED 2026-10-14 ~20:45 UTC, on the user's instruction, after 3B was finished.**
+  - `main` = GitHub at the pause commit, the tree is clean, and no background job is running.
+  - **Governing prompt on resume:** the user's "MASTER PLAN AFTER THE 500-HOUR EVALUATION" (2026-10-14). Its rules
+    1.1–1.6 are binding: sequential phases; v1 frozen; the holdout absolute; evidence before models; statistics
+    ≠ economics; small, traceable changes.
+  - **Resume at exactly this spot: master plan Phase 1, step 3C.**
+    1. Re-measure first: `python -m agent.reporting health`, the healthcheck, missing hours, GitHub runs.
+    2. Ask whether the user has run *Alert delivery test* and received the email. If yes, record 3B as verified
+       (readiness row 18 can then be re-assessed). If not, it stays PARTIAL.
+    3. **3C:** verify the dispatch-answer retention.
+       - Inspect the recent rows and timestamps of `dispatch_responses` against `cron.job_run_details`.
+       - Confirm owner-only access, redaction and length limits on the live table.
+       - Show that a future failure cannot vanish silently. The answer is kept for 90 days, and a slot with no
+         answer shows in `dispatch_log`. Consider whether the weekly audit should run the summary.
+    4. **3D:** the read-only news cost/value report: costs, calls and tokens, errors, how often news changes the
+       signal, the documented weighting, and what E030 can and cannot say. No production change.
+    5. Quality gate 1, then Phase 2 (the diagnosis table), then Phase 3, Phase 4, and Phase 5 alongside.
+  - Weekly audit due ≈ 2026-10-20. The 2,000-hour reading (≈ 2026-12-14) runs only after every integrity check
+    passes.
 
 ## Research phase — rules and decisions (2026-09-19)
 

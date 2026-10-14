@@ -289,6 +289,16 @@ role and the API-log check remain open.
   - the checkpoint is not blind;
   - test counts reconciled.
 
+## 2026-10-14 (evening) — the master plan after the 500-hour evaluation: Phase 0, 3A, 3B; PAUSED
+
+- **Phase 0:** passed (`d46bb0e` corrected a doc/code mismatch).
+- **3A:** Amendment A1 (`f258fa2`, `48e080b`). The EWMA warm-up never reads the holdout. Tested, verified live,
+  and the 500-hour reading is unchanged.
+- **3B:** the manual *Alert delivery test* workflow (`029c2d5`). It stays PARTIAL until the user runs it and
+  confirms the email.
+- **PAUSED ~20:45 UTC.** Resume at **Phase 1, step 3C** (dispatch-answer retention), then 3D (the news
+  cost/value report), Quality gate 1 and Phase 2. The full note is in CLAUDE.md's 2026-10-14 (evening) entry.
+
 ## 2026-10-14 — post-500h plan: operational changes 1-2, the news first look (E030), the first offline challenger (E031)
 
 - **Ops 1 (`afdb5ca`):** an alarm for a single missed hour. The run that saves the first hour after a gap sends the
