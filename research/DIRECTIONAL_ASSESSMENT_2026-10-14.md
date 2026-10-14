@@ -126,3 +126,18 @@ or checked its stability per year on a proper score.
 - For usefulness: a positive return edge after costs, which no test so far has shown.
 - Combining direction with move-size into a decision belongs only after each component has credible evidence, and
   neither has a prospective verdict yet.
+
+### E032's result (2026-10-14, recorded after it ran)
+
+H_a, H_c and H_d hold; H_b fails.
+- **What holds:** the faint 1h probability of UP is real in the development data. It is about 0.4% better than a
+  leak-free base rate on the Brier score, with intervals excluding zero in both periods. It is calibrated, and its skill
+  is positive in all 8 years.
+- **Why H_b fails:** it is essentially one reversal feature. On validation the eight-input model is not statistically
+  better than taker-buy share alone.
+- **Economics:** it is negligible. Trading its sign every hour would gross roughly 1–13% of the round-trip cost.
+- **Decision:** that is the directional answer this data can give. Measurable, yes; useful, no. The recommendation
+  above stands: no further directional experiment on this data.
+- **The clean next step,** if the user wants one: a prospective, frozen one-feature direction shadow track, judged on
+  Brier skill against the base rate with its own checkpoints. It would be the user's decision. Even then, it would
+  measure skill, not usefulness.

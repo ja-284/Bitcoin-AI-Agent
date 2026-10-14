@@ -1,8 +1,8 @@
 {
   "id": "E032",
   "date": "2026-10-14",
-  "git_commit": "(registration commit; the code and the result are added in later commits)",
-  "status": "PRE-REGISTERED, RESEARCH-ONLY, offline DIRECTIONAL challenger (the user's 2026-10-14 clarification: direction is a required research track). Development data only, walk-forward out-of-sample. HYPOTHESIS-GENERATING, not confirmatory (validation wear, below). One model, one horizon, fixed in advance: not a search. Kept separate from the move-size track; nothing is combined into a BUY/HOLD/SELL decision. Nothing is adopted, deployed or shadowed.",
+  "git_commit": "pre-registration d8a3d5f; code d1b5dca; run 2026-10-14 15:14 UTC; result recorded in the next commit",
+  "status": "DONE. H_a, H_c, H_d HOLD; H_b FAILS. Pre-registered reading: a faint, calibrated, year-stable 1h probability of UP exists in the development data, but it is essentially one reversal feature. Research-only, hypothesis-generating, economically negligible. Nothing adopted; directional track only.",
   "why": "The user's long-term objective includes predicting DIRECTION with measurable, calibrated skill. Every earlier directional test asked an ECONOMIC question (an edge in returns) or a fit-free correlation question, and every one failed (E001, E002-E008, E011, E015, E017). E011 is the only fitted directional model: its pre-registered criterion required a return edge, which was zero. Its numbers also show, without any interval, a tiny probabilistic signal at 1h: Brier 0.2490 vs the base rate's 0.2499 (gain about 0.0009), ECE 0.005-0.007, and accuracy 1.5-2.5 points above naive in both periods. Three things were never established: whether that Brier gain is distinguishable from zero with an interval that respects hour-to-hour dependence; whether it is more than one reversal feature, since E011 had no simple directional baseline; and whether it holds year by year on a proper score. This answers exactly those questions and nothing else. It does NOT ask whether direction is useful: E011 and E015 already show it is not, at retail costs.",
   "hypothesis": "At 1h, E011's pre-defined reversal-family logistic produces out-of-sample probabilities of UP that beat a leak-free base rate on the Brier score with an interval excluding zero, in both periods; that beat a one-feature reversal logistic by a practically meaningful margin; that are calibrated; and that are stable across calendar years.",
   "target": "binary direction: y = 1 if the 1h return > 0 (UP). Reference = close at the cutoff (the reference candle's close); outcome = close of the candle opening at as_of + 1h (agent/research/labels, as E011). 1h only: E011 found 6h and 24h at chance, and E025 showed that longer overlapping targets need far more data for the same power.",
@@ -46,6 +46,152 @@
     "H_c_or_H_d_fails": "Measurable but miscalibrated or unstable: recorded, not pursued without a new hypothesis.",
     "in_every_case": "The live BUY/HOLD/SELL signal, scoring 0.2.0, move_size_1h_v1, the shadow record, the checkpoints and the holdout are untouched. The two research tracks stay separate."
   },
-  "result": "PENDING: added by a later commit, after this registration is committed",
-  "command": "python -m agent.research.direction_probability --experiment E032"
+  "result": {
+    "rows": 56309,
+    "folds": 28,
+    "exploration": {
+      "rows": 43182,
+      "up_share": 0.509,
+      "brier": {
+        "base_rate": 0.24995,
+        "model": 0.24901,
+        "one_feature": 0.24947
+      },
+      "skill_vs_base_rate": {
+        "model": 0.00375,
+        "one_feature": 0.0019
+      },
+      "base_minus_model_brier": [
+        0.000937,
+        0.00072,
+        0.001138
+      ],
+      "one_feature_minus_model_brier": [
+        0.000461,
+        0.000277,
+        0.000633
+      ],
+      "ece": {
+        "model": 0.006,
+        "one_feature": 0.007
+      },
+      "calibration_slope": {
+        "model": 1.22,
+        "one_feature": 2.5
+      },
+      "rho": {
+        "model": 0.0459,
+        "one_feature": 0.0429
+      },
+      "accuracy": {
+        "model": 0.525,
+        "one_feature": 0.514,
+        "naive": 0.509
+      },
+      "return_edge_pct_descriptive": {
+        "model": [
+          -0.004,
+          -0.0184,
+          0.0099
+        ],
+        "one_feature": [
+          -0.0199,
+          -0.0431,
+          0.002
+        ]
+      },
+      "gross_signed_return_per_hour_pct_descriptive": {
+        "model": 0.0009,
+        "one_feature": 0.0027,
+        "round_trip_cost_pct": 0.1
+      },
+      "model_skill_by_year": {
+        "2018": 0.0017,
+        "2019": 0.0024,
+        "2020": 0.0036,
+        "2021": 0.0029,
+        "2022": 0.0036,
+        "2023": 0.0067
+      }
+    },
+    "validation": {
+      "rows": 13127,
+      "up_share": 0.508,
+      "brier": {
+        "base_rate": 0.24994,
+        "model": 0.24887,
+        "one_feature": 0.24898
+      },
+      "skill_vs_base_rate": {
+        "model": 0.00428,
+        "one_feature": 0.00384
+      },
+      "base_minus_model_brier": [
+        0.00107,
+        0.00057,
+        0.001573
+      ],
+      "one_feature_minus_model_brier": [
+        0.00011,
+        -0.000179,
+        0.000405
+      ],
+      "ece": {
+        "model": 0.004,
+        "one_feature": 0.005
+      },
+      "calibration_slope": {
+        "model": 1.02,
+        "one_feature": 1.3
+      },
+      "rho": {
+        "model": 0.0543,
+        "one_feature": 0.0535
+      },
+      "accuracy": {
+        "model": 0.527,
+        "one_feature": 0.526,
+        "naive": 0.508
+      },
+      "return_edge_pct_descriptive": {
+        "model": [
+          0.0095,
+          -0.0091,
+          0.0294
+        ],
+        "one_feature": [
+          0.0239,
+          0.0073,
+          0.0417
+        ]
+      },
+      "gross_signed_return_per_hour_pct_descriptive": {
+        "model": 0.0069,
+        "one_feature": 0.0134,
+        "round_trip_cost_pct": 0.1
+      },
+      "model_skill_by_year": {
+        "2024": 0.0047,
+        "2025": 0.0034
+      }
+    },
+    "verdict": {
+      "H_a_skill_beyond_the_base_rate": "HOLDS",
+      "H_b_more_than_one_reversal_feature": "FAILS",
+      "H_c_calibrated": "HOLDS",
+      "H_d_stable": "HOLDS",
+      "positive_years": 8
+    }
+  },
+  "command": "python -m agent.research.direction_probability --experiment E032",
+  "reading_by_the_pre_registered_consequences": [
+    "H_a HOLDS: the model's 1h P(UP) beats the leak-free base rate in both periods (Brier skill +0.0038 exploration, +0.0043 validation; both paired intervals exclude zero). E011's unexamined Brier gain is real, as expected in advance.",
+    "H_c HOLDS: calibrated (ECE 0.006 / 0.004, E013's bucket rule met). Exploration's calibration slope 1.22 says the raw logistic is slightly UNDER-confident there (probabilities too close to 0.5); validation's 1.02 is near ideal.",
+    "H_d HOLDS: skill positive in all 8 calendar years (2018 the weakest, +0.0017).",
+    "H_b FAILS on its statistical part: on validation the model's skill is 1.11x the one-feature rule's (the practical bar of 1.10x is met), but the paired difference [-0.00018, +0.00041] includes zero. In exploration the model IS clearly better than the one feature ([+0.00028, +0.00063]). By the rule as registered, H_b fails.",
+    "Consequence, decided in advance (H_a holds, H_b fails): the skill is essentially one reversal feature, taker-buy share, and the eight-input combination adds nothing practical on the most recent data. Any future directional track starts from the one-feature rule.",
+    "Economics (descriptive, never judged): the model's return edge is about zero in both periods. Trading the sign every hour grosses +0.0009% / +0.0069% per hour (model) and +0.0027% / +0.0134% (one feature), against a 0.10% round trip: 1-13% of the cost. The one feature's validation edge interval excludes zero (+0.024% [+0.007, +0.042]), but its exploration sign is negative (-0.020% [-0.043, +0.002]), so it is not stable. Measurable skill is not usefulness.",
+    "Size of the signal, plainly: about 0.4% better than the base rate on the Brier score, with Spearman rho about 0.05. It is the same faint short-horizon reversal the programme has seen since E002. Hypothesis-generating only (validation wear).",
+    "Nothing changes: the live BUY/HOLD/SELL signal, scoring 0.2.0, move_size_1h_v1, the checkpoints and the holdout are untouched, and nothing is combined with the move-size track. A prospective direction shadow track would be the only clean test, and it would be the user's decision."
+  ]
 }

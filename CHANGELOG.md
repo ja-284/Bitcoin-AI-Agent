@@ -5,6 +5,23 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-14 (E032: the first directional challenger, after the user's clarification)
+
+Nothing in the live BUY/HOLD/SELL signal, scoring, `move_size_1h_v1`, the checkpoints or the holdout changed. No
+holdout candle was loaded. The directional track is kept separate from move-size.
+
+- **The question:** does E011's faint 1h P(UP) carry measurable, calibrated, stable skill? Pre-registered in
+  `d8a3d5f` together with the directional assessment's addendum; code `d1b5dca`.
+- **Result:**
+  - **H_a holds:** Brier skill vs a leak-free base rate is +0.0038 / +0.0043, with both intervals excluding 0.
+  - **H_c holds:** ECE 0.006 / 0.004.
+  - **H_d holds:** skill positive in 8 of 8 years.
+  - **H_b fails:** on validation the 8-input model is 1.11× the one-feature rule (taker-buy share) but not
+    statistically better.
+- **Reading, decided in advance:** a faint, calibrated, year-stable 1h probability exists. It is essentially one
+  reversal feature, and economically negligible: its gross is about 1–13% of a 0.10% round trip per hour.
+- **Caveat:** hypothesis-generating only.
+
 ## integrity — 2026-10-14 (the technical backtest can no longer read the sealed holdout)
 
 Nothing in the live system, the model, the checkpoints or any stored record changed. The holdout was not opened,

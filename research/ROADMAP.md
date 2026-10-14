@@ -301,6 +301,10 @@ role and the API-log check remain open.
   offsets (worst block 0.057 → 0.012 on validation) without losing skill or ranking. But it **fails E013's bucket
   rule** ([0.8, 0.9) +0.077, slope 0.976 → 0.928). **Not a candidate.** Stopped and reassessing; no further variant is
   run without a new registration and the user's view.
+- **E032** (registered `d8a3d5f` → code `d1b5dca`), the directional track (the user's clarification): E011's faint
+  1h P(UP) is real, calibrated and year-stable (Brier skill +0.0038 / +0.0043 vs a leak-free base rate). But it is
+  **essentially one reversal feature** (H_b fails) and **economically negligible**. Measurable, not useful. Nothing
+  adopted.
 
 ## 2026-10-13 — the 500-hour first look, as registered; the readiness audit
 

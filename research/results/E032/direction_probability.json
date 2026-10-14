@@ -1,0 +1,253 @@
+{
+  "experiment": "E032",
+  "generated_at": "2026-10-14T15:14:53.016391+00:00",
+  "pipeline_version": "0.2.0",
+  "rows": 56309,
+  "folds": 28,
+  "inputs": [
+    "trend_score",
+    "momentum_score",
+    "volume_score",
+    "chart_pattern_score",
+    "tr_mean_14_rel",
+    "trades_rel_168h",
+    "taker_buy_share_1h",
+    "taker_buy_share_6h"
+  ],
+  "one_feature": [
+    "taker_buy_share_1h"
+  ],
+  "by_period": {
+    "exploration": {
+      "model": {
+        "rows": 43182,
+        "brier": 0.24901235949000894,
+        "skill_vs_base_rate": 0.003747373568232626,
+        "skill_vs_oracle_base": 0.003645173937415924,
+        "log_loss": 0.6911683193421813,
+        "ece": 0.006391797344116445,
+        "e013_ece_ok": true,
+        "e013_buckets_ok": true,
+        "calibration_line": {
+          "intercept": -0.039054887294313397,
+          "slope": 1.2227763461952899
+        },
+        "mean_stated": 0.515133025783789,
+        "observed_up_share": 0.5087536473530638,
+        "rho_p_vs_return": 0.045915094244870946,
+        "accuracy_at_0_5": 0.5249177898198324,
+        "naive_accuracy": 0.5087536473530638,
+        "share_called_up": 0.7224769579917558,
+        "return_edge": {
+          "point": -4.0488820640950366e-05,
+          "ci95": [
+            -0.00018430907548363878,
+            9.893534278115275e-05
+          ]
+        },
+        "gross_signed_return_per_hour": 8.824718864024606e-06,
+        "round_trip_cost": 0.001,
+        "by_year": {
+          "2018": {
+            "rows": 2662,
+            "skill_vs_base_rate": 0.001719477568081662
+          },
+          "2019": {
+            "rows": 7886,
+            "skill_vs_base_rate": 0.0024116722423307424
+          },
+          "2020": {
+            "rows": 7506,
+            "skill_vs_base_rate": 0.003583455644672884
+          },
+          "2021": {
+            "rows": 7778,
+            "skill_vs_base_rate": 0.0028593188204113495
+          },
+          "2022": {
+            "rows": 8760,
+            "skill_vs_base_rate": 0.003640679955427051
+          },
+          "2023": {
+            "rows": 8590,
+            "skill_vs_base_rate": 0.00665963726109986
+          }
+        }
+      },
+      "one_feature": {
+        "rows": 43182,
+        "brier": 0.24947307189630322,
+        "skill_vs_base_rate": 0.0019041480121180232,
+        "skill_vs_oracle_base": 0.001801759295755767,
+        "log_loss": 0.6920920414055883,
+        "ece": 0.007120828267363477,
+        "e013_ece_ok": true,
+        "e013_buckets_ok": true,
+        "calibration_line": {
+          "intercept": -0.1235960465484945,
+          "slope": 2.50001498432774
+        },
+        "mean_stated": 0.515856338022923,
+        "observed_up_share": 0.5087536473530638,
+        "rho_p_vs_return": 0.04290833361448252,
+        "accuracy_at_0_5": 0.5135704691769719,
+        "naive_accuracy": 0.5087536473530638,
+        "share_called_up": 0.9395581492288454,
+        "return_edge": {
+          "point": -0.00019904222215862998,
+          "ci95": [
+            -0.00043093835271518194,
+            2.0444782860599524e-05
+          ]
+        },
+        "gross_signed_return_per_hour": 2.6907639007834224e-05,
+        "round_trip_cost": 0.001,
+        "by_year": {
+          "2018": {
+            "rows": 2662,
+            "skill_vs_base_rate": 0.002212870444574966
+          },
+          "2019": {
+            "rows": 7886,
+            "skill_vs_base_rate": 0.0014121564863115443
+          },
+          "2020": {
+            "rows": 7506,
+            "skill_vs_base_rate": 0.0018196581179746874
+          },
+          "2021": {
+            "rows": 7778,
+            "skill_vs_base_rate": 0.00025210139115250385
+          },
+          "2022": {
+            "rows": 8760,
+            "skill_vs_base_rate": 0.0017183184733776669
+          },
+          "2023": {
+            "rows": 8590,
+            "skill_vs_base_rate": 0.0040215743627824985
+          }
+        }
+      },
+      "base_rate": {
+        "brier": 0.24994901181027263,
+        "mean_stated": 0.5137479650542497
+      },
+      "base_minus_model_brier": {
+        "diff": 0.0009366523202636867,
+        "ci_low": 0.0007200713030251979,
+        "ci_high": 0.001138138592862676,
+        "se": 0.00010814508041982014
+      },
+      "one_feature_minus_model_brier": {
+        "diff": 0.000460712406294278,
+        "ci_low": 0.00027741977994770185,
+        "ci_high": 0.0006332534478786815,
+        "se": 9.334040539045063e-05
+      }
+    },
+    "validation": {
+      "model": {
+        "rows": 13127,
+        "brier": 0.2488663145227134,
+        "skill_vs_base_rate": 0.004281506700078763,
+        "skill_vs_oracle_base": 0.004257598688137465,
+        "log_loss": 0.6908757610454709,
+        "ece": 0.004070124979123016,
+        "e013_ece_ok": true,
+        "e013_buckets_ok": true,
+        "calibration_line": {
+          "intercept": -0.017083307481696012,
+          "slope": 1.0174943972992112
+        },
+        "mean_stated": 0.5123807154492187,
+        "observed_up_share": 0.5083415860440313,
+        "rho_p_vs_return": 0.05426501369599617,
+        "accuracy_at_0_5": 0.5272339453035728,
+        "naive_accuracy": 0.5083415860440313,
+        "share_called_up": 0.6462253370914908,
+        "return_edge": {
+          "point": 9.536404651160042e-05,
+          "ci95": [
+            -9.062548979049562e-05,
+            0.0002943826082928362
+          ]
+        },
+        "gross_signed_return_per_hour": 6.865117584657607e-05,
+        "round_trip_cost": 0.001,
+        "by_year": {
+          "2024": {
+            "rows": 8784,
+            "skill_vs_base_rate": 0.00470984057532875
+          },
+          "2025": {
+            "rows": 4343,
+            "skill_vs_base_rate": 0.0034158265525502385
+          }
+        }
+      },
+      "one_feature": {
+        "rows": 13127,
+        "brier": 0.24897643259177457,
+        "skill_vs_base_rate": 0.003840922372621791,
+        "skill_vs_oracle_base": 0.003817003781891981,
+        "log_loss": 0.6910967293058944,
+        "ece": 0.005078458761663964,
+        "e013_ece_ok": true,
+        "e013_buckets_ok": true,
+        "calibration_line": {
+          "intercept": -0.03638066557989782,
+          "slope": 1.2987812414476243
+        },
+        "mean_stated": 0.5134200448056954,
+        "observed_up_share": 0.5083415860440313,
+        "rho_p_vs_return": 0.05349097027608168,
+        "accuracy_at_0_5": 0.5261674411518245,
+        "naive_accuracy": 0.5083415860440313,
+        "share_called_up": 0.7141768873314542,
+        "return_edge": {
+          "point": 0.00023948535634993112,
+          "ci95": [
+            7.2954278234382e-05,
+            0.000417138753046319
+          ]
+        },
+        "gross_signed_return_per_hour": 0.00013445830675372226,
+        "round_trip_cost": 0.001,
+        "by_year": {
+          "2024": {
+            "rows": 8784,
+            "skill_vs_base_rate": 0.004379312232207666
+          },
+          "2025": {
+            "rows": 4343,
+            "skill_vs_base_rate": 0.00275281461368726
+          }
+        }
+      },
+      "base_rate": {
+        "brier": 0.2499364189751492,
+        "mean_stated": 0.5099614815973692
+      },
+      "base_minus_model_brier": {
+        "diff": 0.0010701044524357994,
+        "ci_low": 0.0005699959642143377,
+        "ci_high": 0.001573109053800858,
+        "se": 0.00025885182448410934
+      },
+      "one_feature_minus_model_brier": {
+        "diff": 0.00011011806906116584,
+        "ci_low": -0.00017870934543566321,
+        "ci_high": 0.00040490918850424537,
+        "se": 0.00015023392036089331
+      }
+    }
+  },
+  "verdict": {
+    "H_a_skill_beyond_the_base_rate": true,
+    "H_b_more_than_one_reversal_feature": false,
+    "H_c_calibrated": true,
+    "H_d_stable": true,
+    "positive_years": 8
+  }
+}
