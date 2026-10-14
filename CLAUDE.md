@@ -513,6 +513,30 @@ first offline challenger, the directional assessment, the holdout routes.**
   - operational change 3 (the news cost/value review) on the user's go-ahead;
   - the weekly audit ≈ 2026-10-20;
   - the 2,000-hour reading ≈ 2026-12-14, pre-authorised.
+- **PAUSED 2026-10-14 ~15:45 UTC, on the user's instruction**, after the post-500h plan's Phases 0–6 and E032.
+  - `main` = GitHub, the tree is clean, and no background job is running.
+  - Checks: 615 unit tests and integration 39/39; mutation guards 87/87; GitHub's tests green on every push.
+  - Live: the 14:00 hour was saved, there is no missed hour since 2026-10-07, and the holdout is sealed (no
+    access log).
+  - **Governing prompt on resume:** the user's 2026-10-14 "Post-500h Research and Improvement Plan" (Phases 0–6),
+    plus the user's clarification that direction is a required research track, kept separate from move-size.
+  - **Waiting for the user's decisions; start none of them without one:**
+    1. operational change 3, the news cost and value review;
+    2. after E031, whether to register a new move-size hypothesis;
+    3. after E032, whether to start a prospective direction shadow track (a frozen one-feature rule with its
+       own checkpoints);
+    4. whether to clip the registered checkpoint's EWMA warm-up at the holdout's end before the 2,000-hour
+       reading (`research/HOLDOUT_ROUTES.md`).
+  - **First thing on resume:**
+    1. Re-measure, do not assume: `python -m agent.reporting health` (the count),
+       `python -m agent.healthcheck --max-age-hours 2`, any missing hours since 2026-10-14 14:00 UTC,
+       `python -m agent.database.dispatch_log --hours 24` (each :12 answer is copied at :47), the GitHub runs,
+       and `reporting_incidents`.
+    2. If an hour was missed, confirm with the user that healthchecks.io emailed the missed-hour signal. That
+       is the one unobserved piece of operational change 1, and readiness row 18 waits on it.
+    3. Apply the user's decisions, one change at a time.
+    4. The weekly audit is due ≈ 2026-10-20. The 2,000-hour reading (≈ 2026-12-14) runs at the first session
+       after 2,000 graded hours, as registered, with no separate approval.
 
 ## Research phase — rules and decisions (2026-09-19)
 
