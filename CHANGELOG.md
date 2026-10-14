@@ -5,6 +5,21 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## ops — 2026-10-14 (a manual, labelled delivery test for the missed-hour signal)
+
+Nothing in production changed: `hourly.yml`, the watchdog, the data, the model and the checkpoints are untouched.
+
+- **Why:** the missed-hour email had never been seen, and waiting for a real missed hour to find out whether it
+  works is not a test (the user's master plan, 3B).
+- **The workflow:** `.github/workflows/alert_test.yml`, *Alert delivery test*.
+  - It runs only when started by hand, holds only the heartbeat secret, and needs no database.
+  - It sends ONE report labelled "DELIVERY TEST … NO hour is missing" through the same module and the same curl
+    line as the real signal. The Reporting workflow does not follow it.
+- **Code:** `agent/healthcheck.py --delivery-test-body` writes that report without reading the database.
+- **Tests:** `tests/test_alert_test_workflow.py` (5): manual-only, one secret, one send, the URL never logged, the
+  label, no database access.
+- **Status:** PARTIAL until the user runs it once and confirms the email arrived.
+
 ## integrity — 2026-10-14 (Amendment A1: the free EWMA rule's warm-up never reads the sealed holdout)
 
 Nothing in the model, the shadow record, any selection, metric or pass rule changed, and the 500-hour reading

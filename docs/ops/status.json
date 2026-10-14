@@ -59,7 +59,7 @@
     "watchdog": ["staleness < 3h", "shadow errors <= 2 in 6h", "no public-API exposure", "jobs connect as bitcoin_agent with exactly its proven rights"],
     "watchdog_real_cadence": "every 5-7 hours (GitHub fires ~4 of 7 slots a day)",
     "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"},
-    "missed_hour_signal": {"since": "2026-10-14", "step": "Heartbeat missed-hour signal (hourly.yml)", "command": "python -m agent.healthcheck --new-gap-since \"$JOB_STARTED_AT\" --gap-body-file missed-hours.txt", "rule": "the run that saves the first hour after a gap sends the heartbeat /fail with the missing hours in the body; once per gap; a late run is never reported; the success ping right after clears it", "email_seen": false},
+    "missed_hour_signal": {"since": "2026-10-14", "step": "Heartbeat missed-hour signal (hourly.yml)", "command": "python -m agent.healthcheck --new-gap-since \"$JOB_STARTED_AT\" --gap-body-file missed-hours.txt", "rule": "the run that saves the first hour after a gap sends the heartbeat /fail with the missing hours in the body; once per gap; a late run is never reported; the success ping right after clears it", "email_seen": false, "delivery_test_workflow": ".github/workflows/alert_test.yml (manual only; one labelled TEST report; awaiting the user's run and confirmation)"},
     "dispatch_answers": {"since": "2026-10-14", "table": "dispatch_responses (owner-only; RLS on, API roles and the job role hold nothing)", "writer": "pg_cron job dispatch-response-log at :47 UTC, running record_dispatch_responses() (agent/database/dispatch_log.sql; schedule docs/ops/dispatch_responses_cron.sql)", "kept": ["status_code", "timed_out", "error_msg (redacted, <= 500)", "github_request_id (<= 100)", "detail: non-2xx body only (redacted, <= 300)"], "never_kept": ["headers other than x-github-request-id", "a successful answer's body", "the request (its Authorization header holds the token)"], "retention_days": 90, "read_with": "python -m agent.database.dispatch_log [--hours 48 --list]"},
     "stats_read_model": {"workflow": "Reporting snapshot (.github/workflows/reporting.yml), after each completed hourly or watchdog run; records failed runs as incidents, then publishes; no schedule of its own", "writes": ["reporting_snapshot", "reporting_runs", "reporting_incidents"], "frontend_handoff": "docs/api/stats_website_handoff.md", "readable_by": "one signed-in Supabase Auth user with app_metadata.reporting_viewer = true (none set up yet)", "fails_loudly_after_hours": 3, "doc": "docs/api/stats_access.md", "is_trading_application": false}
   },
@@ -97,7 +97,7 @@
     "after E032: whether a prospective direction shadow track (frozen one-feature rule, its own checkpoints) is wanted",
     "(answered 2026-10-14 by the user's master plan: the EWMA warm-up must not read the holdout -> Amendment A1, done)"
   ],
-  "user_actions_required": [],
+  "user_actions_required": ["run the manual 'Alert delivery test' workflow once (Actions tab) and confirm the 'down' email from healthchecks.io arrived"],
   "calendar": [
     {"date": "2026-12-13", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-10-14); any commit resets it"},
     {"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}

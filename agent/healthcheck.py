@@ -100,6 +100,18 @@ def gap_message(missing: list[datetime], saved: datetime) -> str:
             f"succeeded. Look at GitHub Actions for that period.")
 
 
+def delivery_test_message(now: datetime) -> str:
+    """
+    The body of the ONE labelled test the manual "Alert delivery test" workflow sends (2026-10-14): it checks the
+    delivery chain of the missed-hour signal (the runner, this module, curl, healthchecks.io's /fail, the email)
+    without a real missed hour and without touching any production data. It says plainly that it is a test.
+    """
+    example = gap_message([datetime(2026, 10, 7, 14, tzinfo=timezone.utc)], datetime(2026, 10, 7, 15, tzinfo=timezone.utc))
+    return (f"Bitcoin-AI-Agent DELIVERY TEST of the missed-hour signal, sent {now:%Y-%m-%d %H:%M} UTC by the manual "
+            f"'Alert delivery test' workflow. NO hour is missing and nothing failed. The next real hourly run turns this "
+            f"check green again. A real report looks like this: \"{example}\"")
+
+
 def _utc(stamp: str) -> datetime:
     when = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
     if when.tzinfo is None:
@@ -114,9 +126,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--shadow-errors-hours", type=float, default=6.0)
     parser.add_argument("--new-gap-since", type=_utc, help="this job's start (UTC): report hours missing before the hour it saved")
     parser.add_argument("--gap-body-file", type=Path, help="with --new-gap-since: always written; holds the report, or nothing")
+    parser.add_argument("--delivery-test-body", type=Path, help="write the labelled TEST report (manual alert delivery test only)")
     args = parser.parse_args(argv)
+    if args.delivery_test_body is not None:
+        args.delivery_test_body.write_text(delivery_test_message(datetime.now(tz=timezone.utc)) + "\n", encoding="utf-8")
+        print("DELIVERY TEST report written (no hour is missing; this is a test)")
+        return 0
     if args.max_age_hours is None and args.shadow_errors_max is None and args.new_gap_since is None:
-        parser.error("give --max-age-hours, --shadow-errors-max and/or --new-gap-since")
+        parser.error("give --max-age-hours, --shadow-errors-max, --new-gap-since or --delivery-test-body")
 
     failed = False
     if args.max_age_hours is not None:

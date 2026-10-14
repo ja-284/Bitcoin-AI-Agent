@@ -131,6 +131,13 @@ happening, or on the weekly audit being run on time.
   - **Closed 2026-10-14 by the missed-hour signal** (alarms, above). It is proven by tests and by a
     local delivery check, and its step is watched in the live runs. A real missed hour has not happened
     since, so the email itself has not been seen yet.
+  - **To see the email without a real missed hour:** the manual workflow *Alert delivery test*
+    (`.github/workflows/alert_test.yml`, since 2026-10-14). It sends ONE report labelled "DELIVERY TEST …
+    NO hour is missing" through the same code and curl line. It has no schedule, needs no database, and
+    records no incident.
+    - **User action:** Actions tab → *Alert delivery test* → Run workflow, once. Then confirm the "down"
+      email arrived. The next hourly run's success ping turns the check green again.
+    - Until the email is confirmed, readiness row 18 stays PARTIAL.
   - A missed hour still shows in the weekly report, `backend_state` health and the stats incident
     history.
 - AI cost follows the news week. The first full measured week (to 2026-10-05) came to ≈ $0.0135 a run,

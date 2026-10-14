@@ -1,0 +1,41 @@
+# A MANUAL, one-shot check of the missed-hour signal's delivery chain (2026-10-14, operational change 1):
+# this runner -> agent.healthcheck -> curl -> healthchecks.io's /fail -> your email. It sends ONE report,
+# clearly labelled "DELIVERY TEST ... NO hour is missing", through the same code and the same curl line as the
+# real signal in hourly.yml, so a real missed hour never has to happen to prove the alarm reaches you.
+#
+# It runs only when started by hand (Actions tab -> "Alert delivery test" -> Run workflow). It has no schedule,
+# needs no database and no AI key, writes nothing anywhere, and changes no production data. The check goes
+# "down" with the test text in its log; the next real hourly run's success ping turns it green again.
+# The Reporting snapshot workflow does not follow this workflow, so no incident is recorded.
+
+name: Alert delivery test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-one-test-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5, pinned 2026-09-26
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # No continue-on-error: if the report cannot be sent, this run must show as failed.
+      - name: Send one labelled test report to the heartbeat's /fail
+        run: |
+          test -n "$HEARTBEAT_URL" || { echo "::error::the HEARTBEAT_URL secret is not set"; exit 1; }
+          python -m agent.healthcheck --delivery-test-body test-report.txt
+          curl -fsS -m 10 --retry 3 --data-binary @test-report.txt "${HEARTBEAT_URL%/}/fail" > /dev/null
