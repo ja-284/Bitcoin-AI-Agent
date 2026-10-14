@@ -5,6 +5,24 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## integrity — 2026-10-14 (the technical backtest can no longer read the sealed holdout)
+
+Nothing in the live system, the model, the checkpoints or any stored record changed. The holdout was not opened,
+and nothing was scored. `research/HOLDOUT_ACCESS.log` still does not exist.
+
+- **The bypass:** `agent/backtest/runner.py` fetched straight from the exchange, past `load_bars`' guard. That is
+  how E000's warm-up read 233 holdout-period candles on 2026-09-19.
+- **The fix:**
+  - `holdout_overlap()`, which mirrors `get_history`'s window, refuses before any fetch, with no override;
+  - a second check on what comes back.
+- **Every route reviewed:** `research/HOLDOUT_ROUTES.md`, and `tests/test_holdout_routes.py` (6 tests). The tests
+  cover the exact window edges; E000's window reproduced as 233 candles and refused; refusal before fetching;
+  the second lock; an inventory that fails on any unreviewed `get_history` or `get_bar_at` call site or any
+  direct use of the snapshot file; and that only `holdout_eval.py` may pass `allow_holdout=True`.
+- **Guards:** 2 new mutation guards.
+- **Still open, for the user:** the registered checkpoint's EWMA warm-up reaches further into the holdout as the
+  live record grows. It is left unchanged as registered code; clipping it would be a separate, dated decision.
+
 ## research — 2026-10-14 (E031: the first offline challenger; not a candidate)
 
 Nothing in the live system, `move_size_1h_v1`, the shadow record, the checkpoints or the holdout changed. No

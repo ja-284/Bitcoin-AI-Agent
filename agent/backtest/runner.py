@@ -41,6 +41,7 @@ from agent.data_providers.quality import BarQualityReport, validate_bars
 from agent.decision.decision import compute_confidence, decide_signal
 from agent.indicators.engine import HISTORY_HOURS, compute_indicators
 from agent.patterns.rules import detect_patterns
+from agent.research.periods import HOLDOUT
 from agent.scoring.scorer import SCORING_VERSION, score_all
 from agent.shared.types import PriceBar
 from agent.version import PIPELINE_VERSION
@@ -50,6 +51,27 @@ logger = logging.getLogger(__name__)
 HORIZONS_HOURS = [1, 6, 24, 72, 168]
 OUTPUT_DIR = Path("backtests")
 HOUR = timedelta(hours=1)
+
+
+class HoldoutRefused(RuntimeError):
+    """A backtest window would read a candle of the sealed holdout."""
+
+
+def holdout_overlap(end: datetime, n_bars: int) -> tuple[datetime, datetime] | None:
+    """
+    The sealed-holdout hours a fetch of `n_bars` candles ending at the candle that opened at `end` would read, as
+    (first, last), or None. Mirrors BinanceProvider.get_history's window (end floored to the hour, n_bars back).
+
+    Until 2026-10-14 this runner fetched straight from the exchange, past research/history.load_bars' guard, so
+    nothing stopped a window from reaching into the holdout. The E000 run of 2026-09-19 did: its warm-up read
+    about 233 holdout-period candles (scored hours all in the buffer). The holdout has exactly one route in:
+    load_bars(allow_holdout=True, reason=...), which logs to research/HOLDOUT_ACCESS.log -- and a backtest is
+    never that route, so there is no override here.
+    """
+    last = end.replace(minute=0, second=0, microsecond=0)
+    first = last - (n_bars - 1) * HOUR
+    lo, hi = max(first, HOLDOUT.start), min(last, HOLDOUT.end - HOUR)
+    return (lo, hi) if lo <= hi else None
 
 
 @dataclass
@@ -147,8 +169,17 @@ def summarize(rows: list[dict], quality: BarQualityReport | None = None, horizon
 def run_backtest(days: int, end: datetime | None = None) -> tuple[list[dict], Path, BarQualityReport]:
     end = end or (datetime.now(tz=timezone.utc).replace(minute=0, second=0, microsecond=0) - HOUR)
     hours = days * 24
+    overlap = holdout_overlap(end, hours + HISTORY_HOURS)  # checked BEFORE anything is fetched
+    if overlap:
+        raise HoldoutRefused(
+            f"refused: this backtest (warm-up included) would read sealed-holdout candles {overlap[0]:%Y-%m-%d %H:%M} -> "
+            f"{overlap[1]:%Y-%m-%d %H:%M} UTC. Choose fewer days or a later --end, so that the window and its "
+            f"{HISTORY_HOURS}-hour warm-up start after {HOLDOUT.end - HOUR:%Y-%m-%d %H:%M} UTC, or a window that ends before "
+            f"{HOLDOUT.start:%Y-%m-%d}. The holdout opens only through holdout_eval --unseal.")
     logger.info("Fetching %d hours of history (+%d warm-up) ending %s", hours, HISTORY_HOURS, end.isoformat())
     bars = BinanceProvider().get_history(end=end, hours=hours + HISTORY_HOURS)
+    if any(HOLDOUT.contains(b.as_of) for b in bars):  # never expected; a second lock in case the provider over-returns
+        raise HoldoutRefused("refused: the exchange returned a sealed-holdout candle; nothing was analysed")
     quality = validate_bars(bars)
     if quality.gaps:
         logger.warning("History has %d gap(s), %d missing hour(s) -- flagged, not filled", len(quality.gaps), quality.missing_hours)

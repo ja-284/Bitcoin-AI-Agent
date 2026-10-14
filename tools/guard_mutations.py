@@ -190,6 +190,15 @@ MUTATIONS = [
     Mutation("live", ".github/workflows/hourly.yml",
              "if [ -s missed-hours.txt ]; then curl", "if [ -e missed-hours.txt ]; then curl",
              "the missed-hour signal is sent on every run, even when nothing is missing"),
+    # The technical backtest's holdout guard (post-500h plan, Phase 5, 2026-10-14): it used to bypass load_bars.
+    Mutation("holdout", "agent/backtest/runner.py",
+             "    overlap = holdout_overlap(end, hours + HISTORY_HOURS)  # checked BEFORE anything is fetched",
+             "    overlap = None",
+             "the technical backtest fetches a window reaching into the sealed holdout again (the E000 bypass)"),
+    Mutation("holdout", "agent/backtest/runner.py",
+             "    lo, hi = max(first, HOLDOUT.start), min(last, HOLDOUT.end - HOUR)",
+             "    lo, hi = max(first, HOLDOUT.start), min(last, HOLDOUT.end - 2 * HOUR)",
+             "the backtest's holdout check misses the holdout's last hour"),
     # GitHub's answers to the dispatch, kept 90 days (operational change 2, 2026-10-14).
     Mutation("security", "agent/database/dispatch_log.sql",
              "ELSE left(dispatch_redact(r.content), 300) END", "ELSE left(r.content, 300) END",

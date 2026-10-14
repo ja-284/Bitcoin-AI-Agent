@@ -163,6 +163,10 @@ happening, or on the weekly audit being run on time.
   code. Clipping the warm-up would be a separate, later decision.
   - *Added 2026-10-11:* the E000 backtest (2026-09-19) also used about 233 holdout-period candles
     (2026-08-10 → 08-19) as indicator warm-up. Its scored hours all lay in the buffer.
+  - *Closed 2026-10-14:* the backtest runner now refuses any window touching the holdout, and every route into
+    the holdout is reviewed and tested (`research/HOLDOUT_ROUTES.md`, `tests/test_holdout_routes.py`). Still
+    open, as a user decision before the 2,000-hour reading: the checkpoint's EWMA warm-up reaches further into
+    the holdout as the record grows (registered code, so it is unchanged).
   - The 2026-09-19 snapshot stores the whole holdout period.
   - Full account: audit §18.2.
 - **Watch item — the calm market (drift flag "outcomes" in the weekly report since 2026-09-26).** The live
