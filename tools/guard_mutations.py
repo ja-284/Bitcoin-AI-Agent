@@ -199,6 +199,9 @@ MUTATIONS = [
              "    lo, hi = max(first, HOLDOUT.start), min(last, HOLDOUT.end - HOUR)",
              "    lo, hi = max(first, HOLDOUT.start), min(last, HOLDOUT.end - 2 * HOUR)",
              "the backtest's holdout check misses the holdout's last hour"),
+    Mutation("holdout", "agent/research/weekly_report.py",
+             "    return min(wanted, allowed)", "    return wanted",
+             "the free EWMA rule's warm-up reaches into the sealed holdout again (Amendment A1 undone)"),
     # GitHub's answers to the dispatch, kept 90 days (operational change 2, 2026-10-14).
     Mutation("security", "agent/database/dispatch_log.sql",
              "ELSE left(dispatch_redact(r.content), 300) END", "ELSE left(r.content, 300) END",

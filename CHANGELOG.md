@@ -5,6 +5,26 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## integrity — 2026-10-14 (Amendment A1: the free EWMA rule's warm-up never reads the sealed holdout)
+
+Nothing in the model, the shadow record, any selection, metric or pass rule changed, and the 500-hour reading
+stays as written. No holdout candle was read to make or check this change.
+
+- **Registration first:** Amendment A1 was registered in `f258fa2`, in `research/LIVE_EVALUATION.md` (protocol
+  1 → 1.1), before the 2,000-hour reading. It follows the user's master plan, rule 1.3.
+- **Code:** `agent/research/weekly_report.py`.
+  - `ewma_fetch_hours()` clips the free rule's window at the buffer's first hour (2026-08-20 00:00 UTC) and
+    refuses a window ending inside or before the holdout.
+  - `ewma_reference_series()` uses it, and checks the candles that come back.
+  - The checkpoint code is unchanged.
+- **What it fixes:** the old window reached ~71 holdout hours for the weekly report and ~2026-07-26 at the
+  500-hour reading. It would have reached ~2026-05-23 at the 2,000-hour reading, because the live span was
+  counted twice.
+- **Tests** (`tests/test_holdout_routes.py`, 7 new): the window at the 500/2,000/5,000-hour readings and for a
+  weekly report starts exactly at the buffer; a short window is untouched; an invalid window is refused; only
+  allowed candles are asked for; an over-returning provider is refused; and the stated bound, checked with the
+  rule's own code on synthetic candles. 1 new mutation guard.
+
 ## research — 2026-10-14 (E032: the first directional challenger, after the user's clarification)
 
 Nothing in the live BUY/HOLD/SELL signal, scoring, `move_size_1h_v1`, the checkpoints or the holdout changed. No

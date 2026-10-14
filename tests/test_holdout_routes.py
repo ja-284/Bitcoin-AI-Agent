@@ -95,11 +95,9 @@ REVIEWED_GET_HISTORY = {
                                  "allow_holdout=True with a written reason (logged to research/HOLDOUT_ACCESS.log)",
     "agent/research/parity.py": "live hours only: from the first live prediction (2026-09-19) minus the 250-hour window, ~2026-09-08",
     "agent/research/weekly_report.py": "live_features: from LIVE.start - 400 h (~2026-09-02), after the holdout. ewma_reference_series: "
-                                       "the free EWMA rule's warm-up, which DOES reach into the holdout's last weeks (about 71 hours "
-                                       "for the weekly report; for the registered checkpoints it grows with the live span, back to "
-                                       "~2026-07-26 at 500 h). Only the rule's values at live hours are used, where holdout candles "
-                                       "weigh < 2e-10. Recorded in research/LIVE_EVALUATION.md (500-hour procedure, item 3); left "
-                                       "unchanged as registered checkpoint code -- clipping it would be a separate, dated decision",
+                                       "the free EWMA rule's warm-up -- clipped at the buffer's first hour since Amendment A1 "
+                                       "(research/LIVE_EVALUATION.md, 2026-10-14), so it no longer reads the holdout (tested below); "
+                                       "until then it reached ~71 holdout hours (weekly) and back to ~2026-07-26 (500-hour reading)",
 }
 LIVE_ONLY_GET_BAR_AT = {"agent/outcome_tracker.py", "agent/shadow/outcomes.py"}  # grade live predictions' target hours
 
@@ -139,3 +137,84 @@ def test_the_only_holdout_route_is_the_logged_one_and_nothing_has_used_it():
     allowing = _calls_allowing_the_holdout()
     assert allowing == {"agent/research/holdout_eval.py"}, allowing
     assert not Path("research/HOLDOUT_ACCESS.log").exists(), "the holdout has been opened -- that must be the user's decision"
+
+
+# ---- Amendment A1 (research/LIVE_EVALUATION.md, 2026-10-14): the free EWMA rule's warm-up never reads the holdout ----
+FIRST_SHADOW_HOUR = _utc(2026, 9, 21, 17)
+
+
+def _checkpoint_lookback(now: datetime) -> int:
+    """What agent/research/live_checkpoint.main passes (registered code, unchanged): the live span plus 800 h."""
+    return int((now - FIRST_SHADOW_HOUR).total_seconds() // 3600) + 800
+
+
+@pytest.mark.parametrize("now, lookback", [
+    (_utc(2026, 10, 13, 19, 33), None),     # the 500-hour reading's moment (it ran under the old warm-up; never recomputed)
+    (_utc(2026, 12, 14, 12), None),         # the expected 2,000-hour reading
+    (_utc(2027, 5, 1), None),               # the 5,000-hour reading, roughly
+    (_utc(2026, 10, 20, 9), 800),           # a weekly report
+])
+def test_the_ewma_window_starts_no_earlier_than_the_buffer(now, lookback):
+    import agent.research.weekly_report as wr
+
+    end = now.replace(minute=0, second=0, microsecond=0) - H
+    hours = wr.ewma_fetch_hours(end, _checkpoint_lookback(now) if lookback is None else lookback)
+    first = end - (hours - 1) * H
+    assert first == HOLDOUT.end, first          # clipped exactly at the buffer's first hour: as much warm-up as is allowed
+    assert runner.holdout_overlap(end, hours) is None
+
+
+def test_a_short_window_is_left_alone_and_an_invalid_one_is_refused():
+    import agent.research.weekly_report as wr
+
+    end = _utc(2026, 10, 14, 13)
+    assert wr.ewma_fetch_hours(end, -10_000) < int((end - HOLDOUT.end) / H) + 1   # nothing to clip: the old window, unchanged
+    assert wr.ewma_fetch_hours(HOLDOUT.end, 800) == 1                            # the buffer's very first hour, alone
+    with pytest.raises(ValueError, match="sealed holdout"):
+        wr.ewma_fetch_hours(LAST_HOLDOUT_HOUR, 800)                              # a window ending inside the holdout
+
+
+def test_the_ewma_reference_asks_only_for_allowed_candles_and_refuses_a_holdout_candle(monkeypatch):
+    import agent.data_providers.binance as binance
+    import agent.research.weekly_report as wr
+
+    asked = {}
+
+    class _Recording:
+        def get_history(self, end, hours):
+            asked.update(end=end, hours=hours)
+            return _bars(end - (hours - 1) * H, hours)
+
+    monkeypatch.setattr(binance, "BinanceProvider", _Recording)
+    now = _utc(2026, 12, 14, 12)
+    series = wr.ewma_reference_series(now, lookback_hours=_checkpoint_lookback(now))
+    assert asked["end"] - (asked["hours"] - 1) * H == HOLDOUT.end and series.index.min() >= HOLDOUT.end
+
+    class _OverReturning:
+        def get_history(self, end, hours):
+            return _bars(LAST_HOLDOUT_HOUR, hours)
+
+    monkeypatch.setattr(binance, "BinanceProvider", _OverReturning)
+    with pytest.raises(RuntimeError, match="sealed-holdout candle"):
+        wr.ewma_reference_series(now)
+
+
+def test_dropping_the_holdout_warm_up_moves_the_rule_by_at_most_the_stated_bound():
+    """A1's bound, checked with the rule's own code on synthetic candles: at every hour >= 785 h after the buffer's
+    first hour (the first shadow hour is 785 h after it), clipping the warm-up there moves the value by <= 2 * 2^(-785/24)."""
+    import numpy as np
+
+    from agent.research.simple_baselines import simple_rules
+
+    rng = np.random.default_rng(1)
+    start = _utc(2026, 4, 1)
+    n = int((_utc(2026, 11, 1) - start) / H)
+    close = 100 * np.exp(np.cumsum(rng.normal(0, 0.004, n)))
+    bars = [PriceBar(as_of=start + i * H, open=float(c), high=float(c), low=float(c), close=float(c), volume=1.0, source="binance")
+            for i, c in enumerate(close)]
+    full = simple_rules(bars)["E_ewma_halflife_24h"]
+    clipped = simple_rules([b for b in bars if b.as_of >= HOLDOUT.end])["E_ewma_halflife_24h"]
+    judged = full.index[full.index >= HOLDOUT.end + 785 * H]
+    diff = (full.reindex(judged) - clipped.reindex(judged)).abs()
+    assert len(judged) > 900 and diff.notna().all()
+    assert diff.max() <= 2 * 2 ** (-785 / 24), diff.max()

@@ -37,17 +37,20 @@ less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
 | `agent/backtest/runner.py` | **was the bypass; closed 2026-10-14.** It now refuses, before fetching anything, any window whose candles (warm-up included) touch the holdout, and it checks what came back as a second lock. There is no override. It would have refused E000's window, and the test reproduces E000's 233 candles exactly |
 | `research/parity.py` | no: live hours only, from about 2026-09-08 |
 | `weekly_report.live_features` | no: from LIVE.start − 400 h, about 2026-09-02 |
-| `weekly_report.ewma_reference_series` | **yes, as warm-up only** (rows above). It is registered checkpoint code, so it is left unchanged |
+| `weekly_report.ewma_reference_series` | **no, since Amendment A1 (2026-10-14).** The window is clipped at the buffer's first hour (`ewma_fetch_hours`), a window ending inside or before the holdout is refused, and the returned candles are checked. Until A1 it read holdout candles as warm-up (rows above) |
 | live paths (the hourly job, outcome grading, the shadow model) | no: they fetch the latest hours, or the target hours of live predictions |
 
-Two mutation guards keep the new lock honest (`tools/guard_mutations.py`, area *holdout*).
+Three mutation guards keep these locks honest (`tools/guard_mutations.py`, area *holdout*: two for the backtest,
+one for Amendment A1's clip).
 
 ## Still open, for the user (nothing changed without a decision)
 
-1. **The checkpoint's EWMA warm-up keeps reaching further into the holdout as the live record grows.** At the
-   2,000-hour reading it will start about two months earlier than at 500 hours. Its weight in any judged value
-   stays far below any printed digit. Clipping the warm-up at the buffer's start would change no result, but it
-   is registered checkpoint code, so it would be a separate, dated decision made *before* the 2,000-hour reading.
+1. ~~The checkpoint's EWMA warm-up keeps reaching further into the holdout as the live record grows.~~
+   **Resolved 2026-10-14 by Amendment A1** (`research/LIVE_EVALUATION.md`, protocol 1.1, registered before the
+   2,000-hour reading at the user's instruction). The warm-up starts no earlier than the buffer's first hour, so it
+   no longer reads the holdout, and this is enforced and tested. The effect on the rule's values is a stated bound
+   (≤ ~3e-10), not a measurement, because measuring it would mean reading the holdout again. The 500-hour reading
+   was made under the old warm-up and is left as written.
 2. **The E000 read cannot be undone.** Its 233 candles were indicator inputs for buffer hours. The holdout's
    one-time evaluation (E014/E023) scores none of the buffer, and nothing was learned about holdout outcomes.
 3. **Opening the holdout** stays the user's explicit decision, through `holdout_eval --unseal`, and only after

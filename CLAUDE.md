@@ -42,7 +42,8 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - whether a prospective direction shadow track is wanted after E032 (direction is a required track; E032 is
     measurable, not useful);
   - the news cost/value review;
-  - whether to clip the checkpoint's EWMA warm-up (`research/HOLDOUT_ROUTES.md`).
+  - ~~whether to clip the checkpoint's EWMA warm-up~~ — answered by the user's master plan (2026-10-14): done as
+    Amendment A1 (protocol 1.1), so the warm-up never reads the holdout.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.

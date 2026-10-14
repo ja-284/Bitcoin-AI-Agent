@@ -33,7 +33,7 @@ import pandas as pd
 
 from agent.research.metrics import (block_bootstrap, block_bootstrap_estimates, brier_score, reliability_table, signal_edge,
                                     wilson_interval)
-from agent.research.periods import LIVE
+from agent.research.periods import HOLDOUT, LIVE
 from agent.scoring.scorer import SCORING_VERSION
 from agent.version import PIPELINE_VERSION
 
@@ -433,14 +433,37 @@ def ewma_reference_series(now: datetime, lookback_hours: int = 800) -> "pd.Serie
 
     The SAME function the experiment used (`agent.research.simple_baselines.simple_rules`) is
     called here, so the monitoring reference and the research reference cannot drift apart.
+
+    Amendment A1 (research/LIVE_EVALUATION.md, 2026-10-14): the warm-up never reads the sealed holdout.
+    The window is clipped at the buffer's first hour (ewma_fetch_hours), and the returned candles are
+    checked as a second lock.
     """
     from agent.data_providers.binance import BinanceProvider
     from agent.research.simple_baselines import simple_rules
 
     end = now.replace(minute=0, second=0, microsecond=0) - HOUR  # last closed candle
-    hours = int((end - LIVE.start).total_seconds() // 3600) + lookback_hours
-    bars = BinanceProvider().get_history(end=end, hours=hours)
+    bars = BinanceProvider().get_history(end=end, hours=ewma_fetch_hours(end, lookback_hours))
+    if any(HOLDOUT.contains(b.as_of) for b in bars):  # never expected; a second lock in case the provider over-returns
+        raise RuntimeError("refused: the exchange returned a sealed-holdout candle for the EWMA warm-up")
     return simple_rules(bars)["E_ewma_halflife_24h"]
+
+
+def ewma_fetch_hours(end: datetime, lookback_hours: int) -> int:
+    """
+    How many candles ending at the candle that opened at `end` the free EWMA rule may fetch. It is the
+    window it always asked for (from LIVE.start - lookback_hours), clipped so that its first candle is
+    never earlier than the buffer's first hour, HOLDOUT.end (Amendment A1, 2026-10-14).
+
+    Before A1 that window reached into the sealed holdout: about 71 hours for the weekly report, and,
+    because the checkpoint's lookback adds the live span that this window already includes, back to
+    ~2026-07-26 at 500 h and ~2026-05-23 at 2,000 h. The candles dropped are >= 785 hours older than any
+    judged hour, so the rule's value there moves by at most ~3e-10 (tested on synthetic candles).
+    """
+    if end < HOLDOUT.end:
+        raise ValueError(f"refused: an EWMA window ending {end:%Y-%m-%d %H:%M} UTC would lie inside or before the sealed holdout")
+    wanted = int((end - LIVE.start).total_seconds() // 3600) + lookback_hours
+    allowed = int((end - HOLDOUT.end).total_seconds() // 3600) + 1
+    return min(wanted, allowed)
 
 
 def shadow_record(rows: list[dict], now: datetime, errors: list[dict] | None = None,
