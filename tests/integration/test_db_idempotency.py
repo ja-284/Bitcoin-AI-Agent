@@ -59,7 +59,7 @@ def scratch_db(monkeypatch):
         assert cur.fetchone()[0] == SCHEMA, "search_path option not honoured -- refusing to touch the database"
     from agent.migrate import migrate
 
-    migrate()  # the one migration entry point: all three schema files, one transaction
+    migrate()  # the one migration entry point: every schema file in agent/migrate.py, one transaction
     with db.get_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT table_schema FROM information_schema.tables WHERE table_name = 'predictions' AND table_schema = %s", (SCHEMA,))
         assert cur.fetchone(), "scratch tables were not created in the scratch schema"
@@ -285,7 +285,7 @@ def _as_role(db, role: str, sql: str):
 
 
 def test_every_table_is_locked_against_the_public_api(scratch_db):
-    db, _ = scratch_db  # the fixture applied all three schema files through agent.migrate
+    db, _ = scratch_db  # the fixture applied every schema file through agent.migrate
     with db.get_connection() as conn, conn.cursor() as cur:
         cur.execute("""SELECT c.relname, c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
                        WHERE n.nspname = %s AND c.relkind = 'r' ORDER BY 1""", (SCHEMA,))
