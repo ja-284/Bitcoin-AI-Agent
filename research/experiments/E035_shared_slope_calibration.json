@@ -1,0 +1,55 @@
+{
+  "id": "E035",
+  "date": "2026-10-15",
+  "git_commit": "(registration commit; the code and the result are added in later commits)",
+  "status": "PRE-REGISTERED, RESEARCH-ONLY, offline move-size challenger: the master plan's (2026-10-14) Phase 4, its one authorised move-size hypothesis. Development data only, walk-forward out-of-sample. HYPOTHESIS-GENERATING, not confirmatory (validation wear, below). One variant fixed in advance; the SECOND and LAST variant on the intraday-calibration line (research/DIAGNOSIS_2026-10-15.md, row 5). Nothing is adopted, deployed or shadowed; move_size_1h_v1 is untouched.",
+  "why": "E027 found offsetting intraday miscalibration in both development periods (large moves over-stated at night, under-stated in the US session). E031's four separate block Platt maps removed it (worst block offset 0.057 -> 0.012 on validation) but failed E013's bucket rule: the [0.8, 0.9) bucket over-stated by +0.077 and the calibration slope fell 0.976 -> 0.928. The Phase 2 diagnosis (2B, development data, research/results/E031/block_slopes_by_fold.json) looked at why, per fold: the four block maps' SLOPES average the same as the single map's (mean difference -0.001) but are noisy (sd 0.159 across folds, range 0.00-1.57, about 505 calibration rows each), while their INTERCEPTS differ (-0.08 / +0.07 / +0.19 / +0.15). The most plausible explanation is that E031 had too many degrees of freedom: the real intraday effect is a level per block, and fitting four slopes on ~505 rows each only added noise that spread the tails. This tests exactly that explanation, with the smallest change that could address it. The 500-hour prospective reading did NOT motivate it and it does not target that reading's misses (whose six-hour pattern differs from development's).",
+  "hypothesis": "If the intraday miscalibration is a LEVEL shift per six-hour block, then one calibration map per fold with a SHARED slope and four block intercepts (5 parameters instead of E031's 8), fitted on the same purged 90-day slice, removes most of E027's offsets out of sample (as E031 did) WITHOUT spreading the confident tail (unlike E031): E013's bucket rule holds, and skill, overall calibration and ranking are not lost.",
+  "variant": {
+    "name": "shared-slope block intercepts",
+    "model": "UNCHANGED: the nine incumbent inputs, the same L2 logistic (same C), the same frame, the same identical rows and the same 27 expanding walk-forward folds (agent/research/feature_count.prepare / evaluate, as E018-E031)",
+    "calibration": "One map per fold: p -> sigmoid(a * logit(p) + b_k), with ONE slope a shared by all blocks and one intercept b_k for each of E027's six-hour UTC blocks k of the reference hour (00-06, 06-12, 12-18, 18-24; agent/research/slice_calibration.block_group). Fitted on the fold's own purged 90-day calibration slice (the slice the incumbent's single Platt uses) by unregularised logistic regression of the outcome on [logit(p), the four block indicators] with no separate global intercept (logit clipped exactly as PlattCalibrator clips it). Each test row is mapped with its block's intercept.",
+    "fallback_fixed_in_advance": "E031's rule, unchanged: if any block of a fold's calibration slice has fewer than 100 rows or only one class, that fold uses its single incumbent Platt map for every test row. Every use is counted and reported.",
+    "incumbent": "the same walk-forward with ONE Platt map per fold (E013's deliverable, the family of move_size_1h_v1). It must reproduce E031's incumbent figures to the digit (validation skill +0.0983, worst block offset 0.057) as a cross-check, or the study stops.",
+    "also_reported_descriptively": "E031's four-map variant on the same rows, so the trade-off between the two block designs is visible; it is not a baseline the candidate must beat and nothing is chosen between them"
+  },
+  "data": {
+    "permitted": "The development period only: exploration (2017-08 -> 2023-12) and validation (2024-01 -> 2025-06-29), through build_frame / load_bars, which truncate at the holdout's start (2025-07-01).",
+    "never": "No holdout candle is loaded (allow_holdout stays False; research/HOLDOUT_ACCESS.log must still not exist afterwards). No prospective or live outcome is read, from either shadow track. The 2026-08-20 -> 2026-09-19 buffer is not used.",
+    "target": "large_move: |return over the next hour| > 0.25% (fixed), reference close to the close of the candle opening at as_of + 1h, exactly as move_size_1h_v1",
+    "features_and_leakage": "The nine point-in-time inputs (perturbation-tested). The block uses the reference hour, known at prediction time. The walk-forward runner asserts on every fold that the calibration slice is separated from the fit rows by the purge (horizon + 24h embargo) and from the test block by another purge (check_fold).",
+    "splits": "make_folds(expanding, min_train_days 365, test_block_days 90, embargo 24h, calib_days 90): the folds of E013 and E018-E031, unchanged"
+  },
+  "baselines_on_identical_rows": [
+    "the base rate of the same rows (Brier skill)",
+    "E019's free 24h-EWMA rule (skill as a multiple of the rule's)",
+    "the incumbent: one Platt map per fold, the frozen reference model's family"
+  ],
+  "hypotheses": {
+    "H_a_removes_the_offsets": "The largest |stated - observed| across the four six-hour blocks falls by at least half against the incumbent, in BOTH periods (E028's and E031's criterion, unchanged).",
+    "H_b_no_skill_loss": "On validation, the paired Brier difference (incumbent minus variant) has a 95% interval that does not lie wholly below zero (48h circular block bootstrap, agent/research/simple_baselines.paired_difference, as E028 and E031).",
+    "H_c_calibration": "The variant's overall ECE is <= 0.03 in both periods, AND on validation every reliability bucket with >= 100 rows is within 0.05 of its observed frequency (E013's rule; the one E031 failed).",
+    "H_d_ranking": "On validation, the variant's Spearman rho(p, |move|) is within 0.02 of the incumbent's (E018's rule)."
+  },
+  "metrics_reported_for_both_models_and_both_periods": [
+    "probabilistic skill: Brier and Brier skill against the base rate of the same rows, and against E019's free 24h-EWMA rule on the same rows",
+    "discrimination: Spearman rho(p, |move|)",
+    "calibration: ECE, the reliability buckets, the calibration intercept and slope, and the four block offsets with block-bootstrap intervals; ECE is read cautiously (E024)",
+    "binary classification at the fixed threshold 0.5 against the naive 'always small' rule",
+    "the fitted shared slope and the four block intercepts per fold (mean, sd, range across folds)",
+    "stability: Brier skill and the worst block offset per calendar year (descriptive)",
+    "pre-defined regimes: stated - observed per frozen volatility tercile (research/monitoring/regime_terciles_v1.json), descriptive"
+  ],
+  "uncertainty": "Paired Brier differences and block offsets with 48h circular block-bootstrap 95% intervals (the functions E031 used, same seeds); every hour of a period is one row, and the blocks respect hour-to-hour dependence.",
+  "multiple_comparisons": "One variant, E027's block definition (fixed before E031), E013's calibration slice and E031's fallback rule, so there is nothing to choose among. Years and regimes are descriptive only and never used to pick, tune or rescue anything. All four hypotheses must hold; none is re-tried with a changed setting.",
+  "trade_offs": "If the variant improves one registered measure and worsens another, both are reported side by side; no aggregate score hides a trade-off.",
+  "validation_wear": "About 32 experiments have examined these development periods; E027 found these offsets on these out-of-sample rows; E031 tried the first fix on them, and the Phase 2 diagnosis that motivates this design looked at E031's per-fold maps on the same folds. So the choice of this variant was itself informed by these rows (a second look at the same data), and whatever is found here is HYPOTHESIS-GENERATING ONLY. It cannot be confirmed offline. The only clean confirmation would be a NEW, separately registered prospective shadow track for a frozen candidate, which needs the user's review first.",
+  "what_each_answer_means_decided_in_advance": {
+    "all_four_hold": "Shared-slope block calibration becomes a CANDIDATE, hypothesis-generating only. The next step is a written shadow-track proposal for the user (a frozen artefact under a new model id, its fingerprints, a start time, append-only storage and its own registered prospective checkpoints). Nothing is deployed or started before the user has reviewed it. It is never swapped into move_size_1h_v1, whose registered 2,000- and 5,000-hour readings continue unchanged.",
+    "H_a_or_H_c_fails": "CLOSE THE INTRADAY-CALIBRATION LINE (the stop rule of research/DIAGNOSIS_2026-10-15.md, row 5): no further variant (other blocks, slice lengths, smoothers, penalties) is run. E027's offsets stay a descriptive reference for reading the 2,000-hour slices.",
+    "H_a_and_H_c_hold_but_H_b_or_H_d_fails": "Better intraday calibration at a cost in skill or ranking: recorded as a trade-off, not a candidate, and not pursued without a genuinely new hypothesis.",
+    "in_every_case": "The live system, move_size_1h_v1, the move-size shadow record and its checkpoints, the direction track, and the holdout are untouched. A failure is a valid research result: the reference model stays, and the limitation is documented."
+  },
+  "command": "python -m agent.research.shared_slope_calibration --experiment E035",
+  "result": "PENDING: added by a later commit, after this registration is committed"
+}
