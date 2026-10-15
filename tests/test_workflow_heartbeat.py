@@ -89,3 +89,15 @@ def test_the_missed_hour_signal_sends_only_a_written_report_and_never_logs_the_u
     # Only when the report file is non-empty: no gap, no signal. The URL stays inside curl, silenced.
     assert send.startswith("if [ -s missed-hours.txt ]; then curl -fsS -m 10 --retry 3 --data-binary @missed-hours.txt ")
     assert '"${HEARTBEAT_URL%/}/fail" > /dev/null; fi' in send and "echo" not in send
+
+
+# ---- the direction shadow track (E034, 2026-10-15) ---------------------------------------------------------
+def test_the_direction_track_runs_after_the_live_record_is_saved_checked_and_published():
+    names = list(_steps())
+    live = ("Run hourly analysis", "Self-check that this hour's prediction was saved", "Shadow move-size probability",
+            "Grade shadow rows", "Publish the backend state")
+    for step in ("Shadow direction probability", "Grade direction shadow rows"):
+        assert all(names.index(step) > names.index(x) for x in live), step
+        assert names.index(step) < names.index("Heartbeat missed-hour signal")
+    assert "run: python -m agent.direction_shadow.run\n" in _steps()["Shadow direction probability"] + "\n"
+    assert "--raise-errors" not in WF and "--no-save" not in WF  # the recording entry point, never the debugging one

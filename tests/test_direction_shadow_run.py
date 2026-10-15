@@ -145,3 +145,16 @@ def test_a_grading_failure_is_recorded_and_exits_0(monkeypatch):
     monkeypatch.setattr(ddb, "rows_awaiting_outcome", lambda now: (_ for _ in ()).throw(RuntimeError("database down")))
     monkeypatch.setattr(ddb, "save_run_error", lambda row: recorded.append(row) or 1)
     assert outcomes.track_and_record() == 0 and recorded[0]["step"] == "outcomes"
+
+
+def test_the_schema_makes_rows_immutable_and_errors_append_only():
+    """Text-level (the triggers are proven on real Postgres in tests/integration): the guards are present as written."""
+    from pathlib import Path
+
+    sql = " ".join(Path("agent/direction_shadow/schema.sql").read_text(encoding="utf-8").split())
+    assert "CREATE TRIGGER shadow_direction_guard_update BEFORE UPDATE ON shadow_direction" in sql
+    assert "IF (to_jsonb(NEW) - outcome) IS DISTINCT FROM (to_jsonb(OLD) - outcome) THEN" in sql
+    assert "IF OLD.outcome_status IS NOT NULL THEN" in sql
+    assert "CREATE TRIGGER shadow_direction_forbid_delete BEFORE DELETE ON shadow_direction" in sql
+    assert "CREATE TRIGGER shadow_direction_errors_append_only BEFORE UPDATE OR DELETE ON shadow_direction_errors" in sql
+    assert "CHECK (fetched_at >= cutoff_at)" in sql and "CHECK (cutoff_at = as_of + interval '1 hour')" in sql

@@ -397,6 +397,62 @@ MUTATIONS = [
              "GRANT SELECT, INSERT ON reporting_incidents TO bitcoin_agent;",
              "GRANT SELECT, INSERT, UPDATE ON reporting_incidents TO bitcoin_agent;",
              "the job role may rewrite recorded incidents (stats website)"),
+    # ---- the prospective direction shadow track (E034, research/DIRECTION_TRACK.md; 2026-10-15)
+    Mutation("direction", "agent/direction_shadow/run.py",
+             "    raw = [k for k in payload if k[6] <= now_ms][-count:]",
+             "    raw = payload[-count:]",
+             "the still-open target candle is mixed into the model's input window (direction track)"),
+    Mutation("direction", "agent/direction_shadow/run.py",
+             "price_at_prediction = next((price for opened, price in open_candles if opened == cutoff), None)",
+             "price_at_prediction = next((price for opened, price in open_candles if True), None)",
+             "the economics' entry price may come from a candle other than the target one (direction track)"),
+    Mutation("direction", "agent/direction_shadow/run.py",
+             "    if fetched_at < cutoff:",
+             "    if fetched_at < reference.as_of:",
+             "a row fetched before its reference candle closed is accepted (direction track)"),
+    Mutation("direction", "agent/direction_shadow/run.py",
+             "    if quality.gaps:",
+             "    if False:",
+             "a window with missing hours still gets probabilities (direction track)"),
+    Mutation("direction", "agent/direction_shadow/run.py",
+             "    if scoring_version != model.scoring_version:",
+             "    if False:",
+             "the frozen artefact runs on category scores from another scoring version (direction track)"),
+    Mutation("direction", "agent/direction_shadow/run.py",
+             """        logger.error("Could not even record the failure (%s) -- failing the step so it is visible", record_exc)
+        return 1""",
+             """        logger.error("Could not even record the failure (%s) -- failing the step so it is visible", record_exc)
+        return 0""",
+             "a failure that could not even be recorded passes silently (direction track)"),
+    Mutation("direction", "agent/direction_shadow/model.py",
+             """        if problems:
+            raise ModelVersionError(
+                f"input definitions changed""",
+             """        if False:
+            raise ModelVersionError(
+                f"input definitions changed""",
+             "old coefficients run on changed input definitions (direction track)"),
+    Mutation("direction", "agent/direction_shadow/features.py",
+             "    detail = analyze_window_detailed(bars)",
+             "    detail = analyze_window_detailed(bars[1:])",
+             "the category scores are computed on a different window than the replay's (direction track)"),
+    Mutation("direction", "agent/direction_shadow/outcomes.py",
+             "    return ret, ret > 0",
+             "    return ret, ret >= 0",
+             "a tie is graded UP (direction track)"),
+    Mutation("direction", "agent/direction_shadow/schema.sql",
+             "    IF (to_jsonb(NEW) - outcome) IS DISTINCT FROM (to_jsonb(OLD) - outcome) THEN",
+             "    IF false THEN",
+             "a stored direction probability or input can be rewritten (direction track)"),
+    Mutation("direction", "docs/ops/least_privilege_role.sql",
+             """GRANT UPDATE (outcome_status, outcome_close, outcome_return, outcome_up, outcome_checked_at)
+  ON shadow_direction TO bitcoin_agent;""",
+             "GRANT UPDATE ON shadow_direction TO bitcoin_agent;",
+             "the job role may update any column of a direction row (direction track)"),
+    Mutation("direction", ".github/workflows/hourly.yml",
+             "        run: python -m agent.direction_shadow.run",
+             "        run: python -m agent.direction_shadow.run --raise-errors",
+             "a direction failure is no longer recorded and fails the hourly job (direction track)"),
 ]
 
 

@@ -83,6 +83,16 @@ jobs:
       - name: Publish the backend state
         run: python -m agent.api.publish
 
+      # Research DIRECTION shadow track (E034, research/DIRECTION_TRACK.md): the frozen 1h direction probability, in
+      # its own tables. Like the move-size shadow it never touches the live decision, and a failure is recorded in
+      # shadow_direction_errors and exits 0 (only a failure to record it fails the step). It comes after the publish
+      # step, so even that case can never skip the backend-state publish or cost an hour of the live record.
+      - name: Shadow direction probability
+        run: python -m agent.direction_shadow.run
+
+      - name: Grade direction shadow rows
+        run: python -m agent.direction_shadow.outcomes
+
       # A SINGLE missed hour (2026-10-07: no run at all for one hour, and the pings either side were
       # 87 min apart, inside the 90 min allowance, so nothing alarmed). Nothing is ever backfilled, so an
       # hour is missing for good once a later hour is saved -- and only the run that saved that later
