@@ -844,3 +844,88 @@ def test_the_job_role_cannot_read_the_dispatch_answers(least_privileged):
             with pytest.raises(psycopg.Error, match="permission denied"):
                 cur.execute(sql)
             conn.rollback()
+
+
+def _direction_row(as_of: datetime, **over) -> dict:
+    row = {"as_of": as_of, "cutoff_at": as_of + HOUR, "fetched_at": as_of + HOUR + timedelta(minutes=12),
+           "model_version": "direction_1h_v1", "artefact_sha256": "f" * 64, "pipeline_version": "0.2.0", "scoring_version": "0.2.0",
+           "code_commit": None, "price_source": "binance", "reference_close": 100.0, "price_at_prediction": 100.2,
+           "live_close_match": True, "live_scores_match": True, "status": "ok", "status_reason": None,
+           "features": {"taker_buy_share_1h": 0.5}, "regime_rv_168": 0.004, "p_model": 0.52, "p_one_feature": 0.51,
+           "p_base": 0.5097, "horizon_hours": 1}
+    row.update(over)
+    return row
+
+
+def test_the_direction_track_rows_are_immutable_and_impossible_rows_are_refused(scratch_db):
+    """E034 (research/DIRECTION_TRACK.md, section 4), as the OWNER: the triggers and CHECKs hold even for it."""
+    import psycopg
+
+    import agent.direction_shadow.db as ddb
+
+    db, _ = scratch_db
+    as_of = datetime(2026, 2, 4, tzinfo=timezone.utc)
+    rid = ddb.save_row(_direction_row(as_of))
+    impossible = {
+        "ok without probabilities": _direction_row(as_of + HOUR, p_model=None),
+        "unavailable with a probability": _direction_row(as_of + 2 * HOUR, status="unavailable"),
+        "a probability of 1": _direction_row(as_of + 3 * HOUR, p_model=1.0),
+        "a cutoff that is not as_of + 1h": _direction_row(as_of + 4 * HOUR, cutoff_at=as_of + 6 * HOUR),
+        "fetched before the cutoff": _direction_row(as_of + 5 * HOUR, fetched_at=as_of + 5 * HOUR + timedelta(minutes=30)),
+        "a horizon other than 1h": _direction_row(as_of + 6 * HOUR, horizon_hours=6),
+    }
+    for what, row in impossible.items():
+        with pytest.raises(psycopg.errors.CheckViolation):
+            ddb.save_row(row)
+    for sql, msg in (("UPDATE shadow_direction SET p_model = 0.9 WHERE id = %s", "only the outcome columns"),
+                     ("UPDATE shadow_direction SET price_at_prediction = 1 WHERE id = %s", "only the outcome columns"),
+                     ("DELETE FROM shadow_direction WHERE id = %s", "append-only")):
+        with db.get_connection() as conn, conn.cursor() as cur:
+            with pytest.raises(psycopg.Error, match=msg):
+                cur.execute(sql, (rid,))
+            conn.rollback()
+    ddb.save_outcome(rid, 100.5, 0.005, True, "ok", as_of + 3 * HOUR)
+    with db.get_connection() as conn, conn.cursor() as cur:
+        with pytest.raises(psycopg.Error, match="already has an outcome"):
+            cur.execute("UPDATE shadow_direction SET outcome_close = 1 WHERE id = %s", (rid,))
+        conn.rollback()
+
+
+def test_the_least_privilege_role_runs_the_direction_track_and_nothing_more(least_privileged, monkeypatch):
+    """E034: the job's role writes a row, grades it exactly once and records an error; everything else is refused."""
+    import psycopg
+
+    import agent.direction_shadow.db as ddb
+
+    db, _, _, as_probe = least_privileged
+    monkeypatch.setattr(ddb, "get_connection", as_probe)
+    as_of = datetime(2026, 2, 3, tzinfo=timezone.utc)
+    db.save_prediction(_prediction(as_of))  # the live row the read-only cross-check reads
+    rid = ddb.save_row(_direction_row(as_of))
+    assert rid and ddb.row_exists(as_of)
+    assert ddb.save_row(_direction_row(as_of, p_model=0.6)) is None, "a second run for the same hour must change nothing"
+    assert ddb.live_reference_for(as_of) == (100.0, {"trend_score": 0.1})
+    now = as_of + 3 * HOUR
+    assert [r[0] for r in ddb.rows_awaiting_outcome(now)] == [rid]
+    ddb.save_outcome(rid, 100.5, 0.005, True, "ok", now)
+    assert ddb.rows_awaiting_outcome(now) == [], "grading was silently refused"
+    ddb.save_outcome(rid, 1.0, -0.99, False, "ok", now)  # a second grading must change nothing
+    with as_probe() as conn, conn.cursor() as cur:
+        cur.execute("SELECT outcome_status, outcome_close, outcome_up, p_model FROM shadow_direction WHERE id = %s", (rid,))
+        assert cur.fetchone() == ("ok", 100.5, True, 0.52)
+    assert ddb.save_run_error({"expected_as_of": as_of, "step": "probe", "error_type": "Probe", "error_message": "probe",
+                               "model_version": None, "pipeline_version": None, "code_commit": None})
+    assert [e["step"] for e in ddb.run_errors_since(as_of)] == ["probe"]
+    refused = {
+        "change a probability": "UPDATE shadow_direction SET p_model = 0.9",
+        "change an input": "UPDATE shadow_direction SET features = '{}'::jsonb",
+        "delete a row": "DELETE FROM shadow_direction",
+        "rewrite an error": "UPDATE shadow_direction_errors SET error_message = 'x'",
+        "delete an error": "DELETE FROM shadow_direction_errors",
+        "write the move-size shadow's probability": "UPDATE shadow_move_size SET p_calibrated = 0",
+    }
+    for what, sql in refused.items():
+        with as_probe() as conn, conn.cursor() as cur:
+            with pytest.raises(psycopg.Error, match="permission denied|append-only|only the outcome|already has an outcome"):
+                cur.execute(sql)
+            conn.rollback()

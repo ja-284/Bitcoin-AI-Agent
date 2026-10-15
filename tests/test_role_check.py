@@ -17,10 +17,13 @@ def test_the_expectations_are_read_from_the_proven_file():
                       "shadow_run_errors": {"SELECT", "INSERT"}, "backend_state": {"SELECT", "INSERT", "UPDATE"},
                       # the private stats read model's two caches (2026-09-27), replaced by the reporting workflow
                       "reporting_snapshot": {"SELECT", "INSERT", "UPDATE"}, "reporting_runs": {"SELECT", "INSERT", "UPDATE"},
-                      "reporting_incidents": {"SELECT", "INSERT"}}  # (2026-10-05) append only
+                      "reporting_incidents": {"SELECT", "INSERT"},  # (2026-10-05) append only
+                      # (2026-10-15) the prospective direction shadow track (E034): append, grade once
+                      "shadow_direction": {"SELECT", "INSERT"}, "shadow_direction_errors": {"SELECT", "INSERT"}}
     assert columns == {"shadow_move_size": {"outcome_status", "outcome_close", "outcome_return", "outcome_large",
-                                            "outcome_checked_at"}}
-    assert policies == 21
+                                            "outcome_checked_at"},
+                       "shadow_direction": {"outcome_status", "outcome_close", "outcome_return", "outcome_up", "outcome_checked_at"}}
+    assert policies == 26
 
 
 def test_a_change_to_the_file_changes_the_expectation():

@@ -40,6 +40,7 @@ SCHEMA_FILES = [
     ROOT / "api" / "schema.sql",        # the published backend-state cache
     ROOT / "reporting" / "schema.sql",  # the private stats read model (derived caches; read by nothing in the system)
     ROOT / "database" / "dispatch_log.sql",  # GitHub's answers to the hourly dispatch, kept 90 days (owner-only diagnostics)
+    ROOT / "direction_shadow" / "schema.sql",  # the prospective direction shadow track (E034) and its error log
 ]
 
 

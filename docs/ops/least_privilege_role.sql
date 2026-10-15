@@ -77,5 +77,17 @@ GRANT SELECT, INSERT ON reporting_incidents TO bitcoin_agent;
 CREATE POLICY backend_read    ON reporting_incidents FOR SELECT TO bitcoin_agent USING (true);
 CREATE POLICY backend_insert  ON reporting_incidents FOR INSERT TO bitcoin_agent WITH CHECK (true);
 
+-- (2026-10-15) the prospective direction shadow track (E034, research/DIRECTION_TRACK.md): append, and write each
+-- row's outcome exactly once; its own error log, append only. The same shape as the move-size shadow's rights.
+GRANT SELECT, INSERT ON shadow_direction, shadow_direction_errors TO bitcoin_agent;
+GRANT UPDATE (outcome_status, outcome_close, outcome_return, outcome_up, outcome_checked_at)
+  ON shadow_direction TO bitcoin_agent;
+CREATE POLICY backend_read   ON shadow_direction        FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON shadow_direction        FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_grade  ON shadow_direction        FOR UPDATE TO bitcoin_agent
+  USING (outcome_status IS NULL) WITH CHECK (true);
+CREATE POLICY backend_read   ON shadow_direction_errors FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON shadow_direction_errors FOR INSERT TO bitcoin_agent WITH CHECK (true);
+
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;

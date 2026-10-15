@@ -20,6 +20,7 @@ SCHEMA_FILES = [
     Path("agent/api/schema.sql"),
     Path("agent/reporting/schema.sql"),
     Path("agent/database/dispatch_log.sql"),
+    Path("agent/direction_shadow/schema.sql"),
 ]
 
 
