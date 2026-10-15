@@ -164,3 +164,20 @@ def test_the_artefact_on_its_own_reference_window_gives_probabilities_near_one_h
     values, _, reason = df_.input_row(bars, extras)
     p_model, p_one, p_base = load_model().predict(values)
     assert reason is None and all(0.4 < p < 0.6 for p in (p_model, p_one, p_base))  # a faint signal, by construction
+
+
+def test_the_inputs_are_exactly_the_replays_and_the_feature_codes_output_on_the_whole_window():
+    """
+    Same machine, so exact. The definition guard compares across machines with rtol 1e-6 (the 2026-09-21/22 lesson),
+    which cannot see a window one candle shorter: that moves the momentum score by only ~1e-7 (measured 2026-10-15,
+    when the mutation 'category scores on a different window' first survived). This pins the window itself.
+    """
+    from agent.research.replay import analyze_window_detailed
+    from agent.shadow.features import extras_frame, feature_row
+
+    bars, extras = _window()
+    values, rv, _ = df_.input_row(bars, extras)
+    detail = analyze_window_detailed(bars)
+    assert all(values[k] == detail[k] for k in df_.CATEGORY_INPUTS)
+    candle, _ = feature_row(bars, extras_frame(extras), df_.CANDLE_INPUTS + (df_.REGIME_FEATURE,))
+    assert all(values[k] == candle[k] for k in df_.CANDLE_INPUTS) and rv == candle[df_.REGIME_FEATURE]
