@@ -446,6 +446,22 @@ MUTATIONS = [
              "        run: python -m agent.direction_shadow.run",
              "        run: python -m agent.direction_shadow.run --raise-errors",
              "a direction failure is no longer recorded and fails the hourly job (direction track)"),
+    Mutation("direction-reading", "agent/research/direction_checkpoint.py",
+             "    first = ok[:n]",
+             "    first = ok[-n:]",
+             "a reading uses the latest hours instead of the registered fixed prefix (direction track)"),
+    Mutation("direction-reading", "agent/research/direction_checkpoint.py",
+             "    return r[\"fetched_at\"] < limit and r[\"created_at\"] < limit",
+             "    return r[\"fetched_at\"] < limit",
+             "a row stored after its outcome was known counts as prospective (direction track)"),
+    Mutation("direction-reading", "agent/research/direction_checkpoint.py",
+             "    if hi < SESOI:",
+             "    if hi < 2 * SESOI:",
+             "'no improvement' is declared on a looser rule than registered (direction track)"),
+    Mutation("direction-reading", "agent/research/direction_checkpoint.py",
+             "            \"live_scores_mismatches\": sum(1 for r in mine if r[\"live_scores_match\"] is False),",
+             "            \"live_scores_mismatches\": sum(1 for r in mine if r[\"live_scores_match\"] is False), \"up_share\": 0,",
+             "an outcome-based figure leaks into the blind operational view (direction track)"),
 ]
 
 

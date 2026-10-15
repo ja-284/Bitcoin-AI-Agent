@@ -602,6 +602,42 @@ def _render_dispatch(d: dict | None) -> str:
     return line
 
 
+def direction_track(now: datetime) -> dict:
+    """
+    The prospective direction shadow track (E034, research/DIRECTION_TRACK.md): OPERATIONAL figures only. Its
+    Amendment 1.1 makes the readings blind, so no outcome-based figure for it may appear in a routine report before
+    each registered reading. Read-only; reported as unavailable, never fatal.
+    """
+    try:
+        from agent.direction_shadow.db import run_errors_since
+        from agent.research.direction_checkpoint import operational, read_rows
+
+        op = operational(read_rows(), now)
+        errors = run_errors_since(now - timedelta(days=7))
+    except Exception as exc:  # noqa: BLE001 -- e.g. the tables are missing on an old database
+        return {"available": False, "reason": f"{type(exc).__name__}: {str(exc)[:200]}"}
+    attention = bool(errors or op["not_prospective"] or op["live_close_mismatches"] or op["live_scores_mismatches"])
+    return {"available": True, "operational": op, "errors_last_7_days": len(errors),
+            "error_steps": sorted({e["step"] for e in errors}), "attention": attention}
+
+
+def _render_direction(d: dict | None) -> str:
+    head = "- Direction shadow track (E034; operational figures only, its readings are blind by Amendment 1.1)"
+    if not d:
+        return head + ": not computed"
+    if not d["available"]:
+        return head + f": unavailable ({d['reason']})"
+    o = d["operational"]
+    line = (f"{head}: {o['rows']} rows since {(o['first_hour'] or 'n/a')[:16]} ({o['expected_hours_since_first']} hours expected), "
+            f"statuses {o['status_counts']}; eligible graded {o['eligible_graded']} (next reading at {o['next_reading']}); "
+            f"pending {o['pending_outcome']}; outcome unavailable {o['outcome_unavailable']}; not prospective {o['not_prospective']}; "
+            f"live mismatches: close {o['live_close_mismatches']}, scores {o['live_scores_mismatches']}; "
+            f"errors (7d) {d['errors_last_7_days']}{' ' + str(d['error_steps']) if d['error_steps'] else ''}")
+    if d["attention"]:
+        line += " — **ATTENTION: read `shadow_direction_errors` and the flagged rows**"
+    return line
+
+
 def fetch_shadow_errors(since: datetime) -> list[dict]:
     from agent.shadow.db import run_errors_since
 
@@ -670,6 +706,7 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "health_since_go_live": health(preds, outs, now, LIVE.start),
         "ai_cost_last_7_days": ai_cost(preds, max(week_ago, LIVE.start)),
         "dispatch_answers_last_7_days": dispatch_answers(now),
+        "direction_track_operational": direction_track(now),
         "signal_record": signal_record(preds, outs),
         "watch_list": watch_list(preds, now),
     }
@@ -762,6 +799,7 @@ def render(rep: dict) -> str:
          "- Outcome coverage (since go-live): " + " · ".join(f"{k}: {v['ok']} ok / {v['unavailable']} unavailable / **{v['overdue']} overdue** of {v['due']} due" for k, v in hall["outcome_coverage"].items()),
          _render_ai_cost(rep.get("ai_cost_last_7_days")),
          _render_dispatch(rep.get("dispatch_answers_last_7_days")),
+         _render_direction(rep.get("direction_track_operational")),
          "", "## 2. Live signal record — the scoring under test", "",
          f"Rows (pipeline 0.2.0): {sr['rows_pipeline_0_2_0']} · signal mix {sr['signal_mix']} · scoring versions {sr['scoring_versions']}", "",
          "| horizon | graded n | acted | acted accuracy | naive | edge (BUY − SELL) | 95% interval | buy-and-hold mean |", "|---|---|---|---|---|---|---|---|"]

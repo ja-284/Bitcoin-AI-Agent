@@ -441,3 +441,25 @@ def test_ai_cost_renders_before_and_after_measurement_begins():
     assert "not measured yet" in _render_ai_cost(ai_cost([_pred(T0)], T0))
     line = _render_ai_cost(ai_cost([_pred(T0, meta=_usage_meta())], T0))
     assert "per run" in line and "2026-09-23" in line and "news" in line
+
+
+def test_the_direction_track_section_is_operational_only_and_never_fatal(monkeypatch):
+    """E034 Amendment 1.1: the weekly report shows counts for the direction track, never an outcome-based figure."""
+    import agent.direction_shadow.db as ddb
+    import agent.research.direction_checkpoint as dc
+    from agent.research import weekly_report as wr
+
+    now = T0 + 50 * H
+    row = {"model_version": "direction_1h_v1", "status": "ok", "outcome_status": "ok", "as_of": T0,
+           "fetched_at": T0 + H + timedelta(minutes=12), "created_at": T0 + H + timedelta(minutes=12), "horizon_hours": 1,
+           "live_close_match": True, "live_scores_match": None, "p_model": 0.99, "outcome_up": False}
+    monkeypatch.setattr(dc, "read_rows", lambda: [row])
+    monkeypatch.setattr(ddb, "run_errors_since", lambda since: [])
+    d = wr.direction_track(now)
+    assert d["available"] and not d["attention"] and set(d["operational"]) == set(dc.operational([], now))
+    text = wr._render_direction(d)
+    assert "eligible graded 1 (next reading at 1000)" in text
+    for word in ("brier", "accuracy", "calibrat", "skill", "0.99", "return", "hit"):
+        assert word not in text.lower(), word  # nothing that reveals how the model is doing
+    monkeypatch.setattr(dc, "read_rows", lambda: (_ for _ in ()).throw(RuntimeError("no such table")))
+    assert wr.direction_track(now)["available"] is False and "unavailable" in wr._render_direction(wr.direction_track(now))
