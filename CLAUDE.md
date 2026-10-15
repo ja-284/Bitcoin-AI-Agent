@@ -636,7 +636,16 @@ first offline challenger, the directional assessment, the holdout routes.**
     tolerance; closed with an exact same-machine parity test (`e8f7da8`).
 - **Nothing** in prediction, scoring, thresholds, features, `move_size_1h_v1`, its shadow record, its checkpoint code
   or rules, `LIVE_EVALUATION.md` or the holdout changed. `research/HOLDOUT_ACCESS.log` does not exist.
-- 674 unit tests; integration 41/41 (live drift included); GitHub's tests green on every push; security and role checks OK.
+- **Grading verified live:** the 17:07 UTC backup slot wrote the second row (the 16:00 hour) and graded the first
+  (17:07:40, after its target candle closed). Both cross-checks matched, 0 errors.
+- **Phase 5, the 2,000-hour pre-check (`9e7cd41`):** `python -m agent.research.checkpoint_precheck` checks the master
+  plan's eight integrity requirements without reading any outcome value. The dry run passes every mandatory item
+  (565 hours, all in the calm tercile), and 4 commits since the 500-hour reading are listed for review.
+  - **CI slip, fixed (`96c1148`):** two of its tests assumed full git history. GitHub's runner checks out one commit,
+    so the Tests run for `9e7cd41` failed; the user forwarded the email.
+  - The fix was verified in a one-commit clone (689 passed) and on GitHub. Production was never affected.
+- 689 unit tests; integration 41/41 (live drift included); security and role checks OK; GitHub's tests green again
+  from `96c1148`.
 - **Phase 4, E035 — the master plan's one move-size hypothesis (registered `1ff9e12`, code `70ca360`, run once):
   NOT A CANDIDATE; the intraday-calibration line is CLOSED, as registered.** One shared Platt slope plus four block
   intercepts, on E031's own machinery (the incumbent reproduces E031 to the digit):
