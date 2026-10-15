@@ -104,8 +104,11 @@ def changes_since_last_reading(since_commit: str = READING_500H_COMMIT) -> dict:
     try:
         out = subprocess.run(["git", "log", "--oneline", f"{since_commit}..HEAD", "--", *CHECKPOINT_PATH],
                              capture_output=True, text=True, check=True).stdout.strip()
-    except Exception as exc:  # noqa: BLE001
-        return item("FAIL", "changes to the checkpoint path", f"git log failed: {exc}")
+    except Exception as exc:  # noqa: BLE001 -- e.g. a shallow clone (CI checks out one commit) cannot see the history
+        detail = getattr(exc, "stderr", "") or str(exc)
+        return item("FAIL", "changes to the checkpoint path",
+                    f"git history since {since_commit} is not available here ({detail.strip()[:160]}); run the pre-check from a "
+                    "full clone, where every change since the last reading can be listed")
     commits = [l for l in out.splitlines() if l]
     return item("REVIEW" if commits else "PASS", "changes to the checkpoint path since the last reading",
                 f"{len(commits)} commit(s) since {since_commit}: " + ("; ".join(commits) if commits else "none") +

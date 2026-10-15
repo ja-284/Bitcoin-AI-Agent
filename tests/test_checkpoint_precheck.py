@@ -4,6 +4,8 @@ import ast
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from agent.research import checkpoint_precheck as cp
 
 H = timedelta(hours=1)
@@ -34,6 +36,36 @@ def test_it_never_reads_an_outcome_value():
     assert not any("outcome_large" in s or "outcome_return" in s for s in strings if "never" not in s)
     assert "outcome_large" not in cp.COLUMNS and "outcome_return" not in cp.COLUMNS
     assert "conn.read_only = True" in src
+
+
+@pytest.fixture(autouse=True)
+def full_history(monkeypatch):
+    """The git-history item depends on the clone (GitHub's test runner checks out one commit), so the other tests
+    take it as given; its own behaviour is tested below, both ways."""
+    monkeypatch.setattr(cp, "changes_since_last_reading", lambda since_commit=cp.READING_500H_COMMIT:
+                        cp.item("PASS", "changes to the checkpoint path since the last reading", "none (test)"))
+
+
+def test_without_git_history_the_change_review_fails_and_says_why(monkeypatch):
+    import subprocess
+
+    monkeypatch.undo()  # the real function
+
+    def shallow(*a, **kw):
+        raise subprocess.CalledProcessError(128, a[0], stderr="fatal: bad revision 'ed96b2a..HEAD'")
+
+    monkeypatch.setattr(subprocess, "run", shallow)
+    it = cp.changes_since_last_reading()
+    assert it["status"] == "FAIL" and "full clone" in it["detail"] and "bad revision" in it["detail"]
+
+
+def test_with_git_history_every_commit_on_the_path_is_listed_for_review(monkeypatch):
+    import subprocess
+
+    monkeypatch.undo()
+    monkeypatch.setattr(subprocess, "run", lambda *a, **kw: subprocess.CompletedProcess(a[0], 0, stdout="abc1234 A1 code" + chr(10), stderr=""))
+    it = cp.changes_since_last_reading()
+    assert it["status"] == "REVIEW" and "abc1234 A1 code" in it["detail"]
 
 
 def test_a_dry_run_on_a_clean_record_has_no_mandatory_failure():
