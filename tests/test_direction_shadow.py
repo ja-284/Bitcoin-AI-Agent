@@ -108,3 +108,59 @@ def test_the_direction_track_never_imports_the_reporting_layer_or_any_trading_co
         mods = _imports(path)
         assert not any(m.startswith("agent.reporting") for m in mods), path
         assert not any(w in m for m in mods for w in ("order", "trade", "exchange", "broker")), path
+
+
+# A model version is immutable. Any edit must come with a new version name AND a deliberate change of this pin.
+DIRECTION_ARTEFACT_SHA256 = {"direction_1h_v1": "f04d6e322c24dde98e2209b78492e6a2feff6d9fba41dab19dd971f6e6d224d9"}
+
+
+def test_the_frozen_direction_artefact_is_unchanged_and_development_only():
+    import json
+    from datetime import timedelta
+
+    from agent.direction_shadow.model import MODEL_DIR, canonical_sha256
+    from agent.research.periods import HOLDOUT
+
+    for version, expected in DIRECTION_ARTEFACT_SHA256.items():
+        text = (MODEL_DIR / f"{version}.json").read_text(encoding="utf-8")
+        assert canonical_sha256(text) == expected, f"{version} was edited in place -- create a new version instead"
+        d = json.loads(text)
+        last = datetime_from(d["training"]["fit_range"][1])
+        assert last + timedelta(hours=25) <= HOLDOUT.start, "the artefact was fitted on rows too close to the holdout"
+        assert d["features"] == list(df_.INPUTS) and d["one_feature"] == df_.ONE_FEATURE and d["scoring_version"] == "0.2.0"
+        assert d["training"]["numpy_vs_sklearn_max_abs_diff"] <= 1e-12
+
+
+def datetime_from(text: str):
+    from datetime import datetime
+
+    return datetime.fromisoformat(text)
+
+
+def test_the_artefact_loads_with_its_definition_guard_and_refuses_changed_inputs(monkeypatch):
+    import agent.direction_shadow.features as f
+    from agent.direction_shadow.model import DEFAULT_VERSION, load_model
+    from agent.shadow.model import ModelVersionError
+
+    m = load_model(DEFAULT_VERSION)
+    assert m.sha256 == DIRECTION_ARTEFACT_SHA256[DEFAULT_VERSION] and 0.45 < m.base_rate < 0.55
+    real = f.reference_values
+
+    def changed():  # a definition change: every value 1% different
+        return {k: [v * 1.01 for v in vals] for k, vals in real().items()}
+
+    monkeypatch.setattr(f, "reference_values", changed)
+    with pytest.raises(ModelVersionError, match="input definitions changed"):
+        load_model(DEFAULT_VERSION)
+    monkeypatch.setattr(f, "reference_values", lambda: {k: v for k, v in list(real().items())[1:]})
+    with pytest.raises(ModelVersionError, match="no longer produced"):
+        load_model(DEFAULT_VERSION)
+
+
+def test_the_artefact_on_its_own_reference_window_gives_probabilities_near_one_half():
+    from agent.direction_shadow.model import load_model
+
+    bars, extras = _window()
+    values, _, reason = df_.input_row(bars, extras)
+    p_model, p_one, p_base = load_model().predict(values)
+    assert reason is None and all(0.4 < p < 0.6 for p in (p_model, p_one, p_base))  # a faint signal, by construction
