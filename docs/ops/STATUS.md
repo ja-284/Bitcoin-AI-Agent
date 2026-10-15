@@ -233,7 +233,11 @@ unchanged.
 **Next: 2,000 hours, the E012 verdict (≈ 2026-12-14).** At the first working session after 2,000 graded
 prospective hours, run `python -m agent.research.live_checkpoint`:
 
-- First confirm that `research/monitoring/` holds no reading for 2,000 hours yet. The command skips
+- First run the integrity pre-check, `python -m agent.research.checkpoint_precheck` (since 2026-10-15). It covers the
+  master plan's eight requirements and reads no outcome value. It must report no FAIL. Its REVIEW items (changes
+  since the last reading, deviations) are written into the reading's report. A FAIL means repair first; never run
+  the checkpoint as though it were valid.
+- Then confirm that `research/monitoring/` holds no reading for 2,000 hours yet. The command skips
   anything already present, and on 2026-10-11 an empty stray file appeared under the 500-hour name.
 - It reads **exactly the first 2,000** prospective graded hours in time order. Later hours belong to the
   5,000-hour reading.
