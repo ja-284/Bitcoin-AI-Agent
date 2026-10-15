@@ -1,0 +1,52 @@
+{
+ "folds": 27,
+ "single_map_slope": {
+  "mean": 0.966,
+  "sd_across_folds": 0.179
+ },
+ "block_map_slope": {
+  "00-06": {
+   "mean": 1.007,
+   "sd_across_folds": 0.276,
+   "min": 0.375,
+   "max": 1.574,
+   "folds_above_single": 15,
+   "mean_calib_rows": 505
+  },
+  "06-12": {
+   "mean": 0.949,
+   "sd_across_folds": 0.208,
+   "min": 0.582,
+   "max": 1.371,
+   "folds_above_single": 10,
+   "mean_calib_rows": 506
+  },
+  "12-18": {
+   "mean": 0.967,
+   "sd_across_folds": 0.161,
+   "min": 0.666,
+   "max": 1.346,
+   "folds_above_single": 11,
+   "mean_calib_rows": 507
+  },
+  "18-24": {
+   "mean": 0.938,
+   "sd_across_folds": 0.283,
+   "min": 0.001,
+   "max": 1.396,
+   "folds_above_single": 9,
+   "mean_calib_rows": 507
+  }
+ },
+ "block_map_intercept": {
+  "00-06": -0.079,
+  "06-12": 0.07,
+  "12-18": 0.185,
+  "18-24": 0.149
+ },
+ "block_minus_single_slope": {
+  "mean": -0.001,
+  "sd": 0.159,
+  "share_steeper": 0.417
+ }
+}
