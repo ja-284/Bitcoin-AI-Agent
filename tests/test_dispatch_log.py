@@ -82,9 +82,73 @@ def test_nothing_on_the_hourly_path_or_in_a_workflow_uses_it_and_the_job_role_ge
         text = Path(path).read_text(encoding="utf-8")
         assert "dispatch_responses" not in text and "dispatch_log" not in text, path
     assert "dispatch_responses" not in Path("docs/ops/least_privilege_role.sql").read_text(encoding="utf-8")
+    # The one reviewed reader outside the module itself: the weekly report (monitoring, run by hand with the owner
+    # connection; master plan 3C, 2026-10-15). Nothing on the live path, and no workflow, reads the table.
+    readers = {"dispatch_log.py", "weekly_report.py"}
     for module in Path("agent").rglob("*.py"):
-        if module.name != "dispatch_log.py":
+        if module.name not in readers:
             assert "dispatch_log" not in module.read_text(encoding="utf-8").replace("dispatch_log.sql", ""), module
+
+
+def _summary(answers, accepted, silent=(), timed_out=0, errors=0):
+    return {"answers": answers, "accepted_2xx": accepted, "by_status": {"204": accepted}, "timed_out": timed_out,
+            "with_error_text": errors, "slots_without_an_answer": list(silent), "newest": None, "window_hours": 168}
+
+
+def test_the_weekly_report_shows_the_dispatch_answers_and_flags_any_failure():
+    from agent.research.weekly_report import _render_dispatch
+
+    ok = _render_dispatch({"available": True, "summary": _summary(168, 168), "not_accepted": 0, "attention": False})
+    assert "168 kept, 168 accepted" in ok and "ATTENTION" not in ok
+    for bad in (_summary(168, 167), _summary(167, 167, silent=[NOW]), _summary(168, 168, timed_out=1)):
+        d = {"available": True, "summary": bad, "not_accepted": bad["answers"] - bad["accepted_2xx"],
+             "attention": True}
+        line = _render_dispatch(d)
+        assert "ATTENTION" in line and "dispatch_log --hours 168 --list" in line and "401" in line
+    assert "unavailable (PermissionError" in _render_dispatch({"available": False, "reason": "PermissionError: denied"})
+
+
+def test_the_weekly_report_reads_the_dispatch_answers_read_only_and_never_fails(monkeypatch):
+    import agent.database.db as db
+    import agent.research.weekly_report as wr
+
+    calls = {}
+
+    class _Cur:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def execute(self, sql, args):
+            calls["sql"], calls["since"] = sql, args[0]
+
+        def fetchall(self):
+            return [_row(10), _row(11, status=401, detail="Bad credentials"), _row(13), _row(14), _row(15), _row(16)]
+
+    class _Conn:
+        read_only = False
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def cursor(self):
+            calls["read_only"] = self.read_only
+            return _Cur()
+
+    monkeypatch.setattr(db, "get_connection", lambda: _Conn())
+    d = wr.dispatch_answers(NOW)
+    assert calls["read_only"] is True and calls["sql"] == dl.SQL and calls["since"] == NOW - timedelta(hours=168)
+    assert d["available"] and d["not_accepted"] == 1 and d["attention"]
+    assert d["summary"]["slots_without_an_answer"] == [datetime(2026, 10, 14, 12, 12, tzinfo=timezone.utc)]
+
+    monkeypatch.setattr(db, "get_connection", lambda: (_ for _ in ()).throw(PermissionError("permission denied")))
+    d = wr.dispatch_answers(NOW)
+    assert d == {"available": False, "reason": "PermissionError: permission denied"}
 
 
 # ---- the read-only summary --------------------------------------------------------------------------------

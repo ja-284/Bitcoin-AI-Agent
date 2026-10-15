@@ -106,7 +106,9 @@ other or with the versions in the code. **Update both, together, from the comman
    - Rows are kept 90 days.
    - The table is owner-only; the job role and the public API hold nothing on it.
    - It is a separate job from the dispatch, so its failure can never stop one.
-   - Read it with `python -m agent.database.dispatch_log [--hours 48 --list]`.
+   - Read it with `python -m agent.database.dispatch_log [--hours 48 --list]`. Since 2026-10-15 the weekly report's
+     health section shows the week's answers too, flagged **ATTENTION** if any was refused, timed out or left no
+     answer. A refused dispatch alarms by itself only if no backup slot saves the hour.
 
 **Nothing routine needs the user.** Nothing in production depends on a PC being on, on a working session
 happening, or on the weekly audit being run on time.

@@ -563,6 +563,45 @@ def _against_ewma(graded: list[dict], p: np.ndarray, y: np.ndarray, abs_ret: np.
     }
 
 
+def dispatch_answers(now: datetime, hours: float = 168.0) -> dict:
+    """
+    GitHub's answers to the :12 dispatch over the last week (agent/database/dispatch_log.sql, kept 90 days), so a
+    refused, timed-out or unanswered dispatch cannot sit unseen in a table nobody reads (master plan 3C, 2026-10-15).
+    A failed dispatch alarms by itself only if no backup slot saves the hour; a backup that does save it hides the
+    failure everywhere except here. Read-only; reported as unavailable, never fatal, if the table cannot be read.
+    """
+    from agent.database.db import get_connection
+    from agent.database.dispatch_log import SQL, summarise
+
+    try:
+        with get_connection() as conn:
+            conn.read_only = True
+            with conn.cursor() as cur:
+                cur.execute(SQL, (now - timedelta(hours=hours),))
+                rows = cur.fetchall()
+    except Exception as exc:  # noqa: BLE001 -- e.g. permission denied under the job role, which holds nothing on it
+        return {"available": False, "reason": f"{type(exc).__name__}: {str(exc)[:200]}"}
+    s = summarise(rows, now, hours)
+    not_accepted = s["answers"] - s["accepted_2xx"]
+    return {"available": True, "summary": s, "not_accepted": not_accepted,
+            "attention": bool(not_accepted or s["timed_out"] or s["with_error_text"] or s["slots_without_an_answer"])}
+
+
+def _render_dispatch(d: dict | None) -> str:
+    if not d:
+        return "- GitHub's answers to the :12 dispatch (7d): not computed"
+    if not d["available"]:
+        return f"- GitHub's answers to the :12 dispatch (7d): unavailable ({d['reason']})"
+    s = d["summary"]
+    silent = s["slots_without_an_answer"]
+    line = (f"- GitHub's answers to the :12 dispatch (7d): {s['answers']} kept, {s['accepted_2xx']} accepted (by status "
+            f"{s['by_status']}); timed out {s['timed_out']}; slots with no answer kept: {len(silent)}")
+    if d["attention"]:
+        line += (" — **ATTENTION: a dispatch was refused, timed out or left no answer. Read "
+                 "`python -m agent.database.dispatch_log --hours 168 --list` (a 401 means the token is wrong or expired)**")
+    return line
+
+
 def fetch_shadow_errors(since: datetime) -> list[dict]:
     from agent.shadow.db import run_errors_since
 
@@ -630,6 +669,7 @@ def build(now: datetime, with_paper: bool = True) -> dict:
         "health_last_7_days": health(preds, outs, now, max(week_ago, LIVE.start)),
         "health_since_go_live": health(preds, outs, now, LIVE.start),
         "ai_cost_last_7_days": ai_cost(preds, max(week_ago, LIVE.start)),
+        "dispatch_answers_last_7_days": dispatch_answers(now),
         "signal_record": signal_record(preds, outs),
         "watch_list": watch_list(preds, now),
     }
@@ -721,6 +761,7 @@ def render(rep: dict) -> str:
          f"— a partial news failure still produces a number, so it is counted here rather than left invisible",
          "- Outcome coverage (since go-live): " + " · ".join(f"{k}: {v['ok']} ok / {v['unavailable']} unavailable / **{v['overdue']} overdue** of {v['due']} due" for k, v in hall["outcome_coverage"].items()),
          _render_ai_cost(rep.get("ai_cost_last_7_days")),
+         _render_dispatch(rep.get("dispatch_answers_last_7_days")),
          "", "## 2. Live signal record — the scoring under test", "",
          f"Rows (pipeline 0.2.0): {sr['rows_pipeline_0_2_0']} · signal mix {sr['signal_mix']} · scoring versions {sr['scoring_versions']}", "",
          "| horizon | graded n | acted | acted accuracy | naive | edge (BUY − SELL) | 95% interval | buy-and-hold mean |", "|---|---|---|---|---|---|---|---|"]

@@ -5,6 +5,29 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## ops — 2026-10-15 (3B verified; 3C: a dispatch failure can no longer sit unseen)
+
+Nothing in production, the model, the checkpoints or the holdout changed.
+
+- **3B, verified end to end.** The user ran *Alert delivery test* once (2026-10-15 13:36 UTC; run green). healthchecks.io
+  set the check DOWN at 13:36:47 UTC and emailed the user, with the labelled TEST text as "Last Ping Body". So a real
+  missed-hour report reaches the user with its hours in the email.
+- **3C, verified live (read-only).**
+  - Since the recorder started (2026-10-14 08:12), 29 of 29 dispatch runs have their answer kept, all 204. The 18
+    earlier runs predate the table.
+  - The recorder succeeded on 24 of 24 runs. Scheduled copies land 35 min after each answer; `pg_net` deletes at
+    6 h.
+  - `anon`, `authenticated` and `bitcoin_agent` hold no table right and cannot execute either function. RLS is on,
+    with no policy.
+  - The three length CHECKs are live, the columns are exactly the minimal eight, the live redaction strips
+    GitHub tokens and Bearer/Authorization values, and the 90-day deletion is in the function.
+- **The gap closed:** a refused or unanswered dispatch was kept, but nothing showed it unless an hour also went
+  missing. A backup slot that saves the hour hides it.
+  - The weekly report's health section now shows the week's dispatch answers (`weekly_report.dispatch_answers`,
+    read-only, never fatal).
+  - It is flagged **ATTENTION** on any non-2xx answer, time-out, error text or slot without an answer.
+  - The dispatch-log separation test now allows exactly this one reviewed reader. 2 new tests.
+
 ## ops — 2026-10-14 (a manual, labelled delivery test for the missed-hour signal)
 
 Nothing in production changed: `hourly.yml`, the watchdog, the data, the model and the checkpoints are untouched.
