@@ -1,8 +1,8 @@
 {
   "id": "E033",
   "date": "2026-10-15",
-  "git_commit": "registration (this commit), before any code; code and result in later commits",
-  "status": "REGISTERED, not run. Descriptive planning for the prospective direction shadow track (master plan Phase 3, 5A): no hypothesis is tested, nothing is fitted for use, nothing is selected, nothing in the live system changes.",
+  "git_commit": "registration 970a94a (before any code); code and result in the next commit",
+  "status": "DONE (descriptive planning). E032 reproduced exactly; the prospective direction track needs about 4,700-6,400 graded hours for 80% power on model vs base rate, so no verdict is possible by 2026-12-14. Model vs one feature is effectively undecidable prospectively. Nothing fitted for use, nothing chosen, no rule or model changed.",
   "why": "The master plan (Phase 3, 5A) requires an estimate of how much prospective data the direction track needs to detect an effect as small as E032's (Brier about 0.001 better than the base rate) before its checkpoints are set, and forbids promising a definitive answer by 2026-12-14 if the sample cannot support one. E024 and E025 showed this project's checkpoints must be sized by a power study, not by round numbers: the 48h block-bootstrap interval is liberal below about 2,000 hours (E025), and a fixed-size rule can fail a good model by chance (E024).",
   "question": "For a prospective record of N consecutive graded hours, how often would the planned test (the paired Brier difference with a 48h circular block-bootstrap 95% interval) show the frozen eight-input model better than the base rate, better than the one-feature rule, and the one-feature rule better than the base rate; how often would it wrongly do so when there is no effect; and how informative are the calibration measures at that size?",
   "data_touched": "Development data only: E032's walk-forward out-of-sample predictions, rebuilt exactly as E032 built them (build_frame -> load_bars(end=HOLDOUT.start); identical rows, folds, inputs and C), exploration and validation. No holdout candle (allow_holdout stays False; research/HOLDOUT_ACCESS.log must still not exist afterwards), no buffer hour, no live or prospective outcome. The frozen regime terciles (research/monitoring/regime_terciles_v1.json, development-defined) are read for a descriptive split.",
@@ -21,5 +21,143 @@
   "expectation_stated_in_advance": "From E032's whole-period intervals alone (SE about 0.00026 on 13,127 validation hours and 0.00011 on 43,182 exploration hours): about 4,400 (exploration effect) to 5,900 (validation effect) graded hours for 80% power on model vs base rate, i.e. roughly 6 to 8 months of collection, so no definitive answer by 2026-12-14 (the track will then hold about 1,400 hours). Model vs one feature: about 13,000 hours at the exploration effect and about 190,000 at the validation effect, so effectively undecidable prospectively. Below about 2,000 hours the interval is expected to be liberal (E025). Written down so the result is read against what was already computable.",
   "what_this_is_not": "It fits nothing for use, chooses no model and changes no rule. It reuses worn development periods, which is acceptable for estimating variability and would not be for choosing anything. It assumes the prospective effect equals the development effect; if the true prospective effect is smaller (validation wear, a frozen single fit instead of a walk-forward), every 'hours needed' figure is an UNDER-estimate, and that is said wherever it is printed.",
   "command": "python -m agent.research.direction_power --experiment E033",
-  "result": "PENDING: added by a later commit, after this registration is committed"
+  "result": {
+    "run": "2026-10-15 14:27 UTC, 100 s; research/results/E033/direction_power.json and .md",
+    "reproduces_e032": "yes: exploration 43,182 rows, validation 13,127 rows; base-rate, model and one-feature Brier identical to E032's record to 5 decimals",
+    "hours_for_80pct_power_analytic": {
+      "model_vs_base_rate": {
+        "exploration": 4730,
+        "validation": 6421
+      },
+      "one_feature_vs_base_rate": {
+        "exploration": 3755,
+        "validation": 5166
+      },
+      "model_vs_one_feature": {
+        "exploration": 15392,
+        "validation": 187828
+      }
+    },
+    "simulated_power_lower_end_above_0": {
+      "model_vs_base_rate": {
+        "exploration": {
+          "1000": 0.3,
+          "2000": 0.44,
+          "3000": 0.56,
+          "5000": 0.85,
+          "6000": 0.95
+        },
+        "validation": {
+          "1000": 0.22,
+          "2000": 0.3,
+          "3000": 0.56,
+          "5000": 0.78,
+          "6000": 0.95
+        }
+      },
+      "model_vs_one_feature": {
+        "exploration": {
+          "2000": 0.22,
+          "6000": 0.54,
+          "13000": 0.91
+        },
+        "validation": {
+          "2000": 0.0,
+          "6000": 0.0,
+          "13000": 0.0
+        }
+      }
+    },
+    "false_positive_rate_centred_model_vs_base_rate": {
+      "exploration": {
+        "1000": 0.048,
+        "2000": 0.053,
+        "3000": 0.087,
+        "5000": 0.088,
+        "6000": 0.072,
+        "10000": 0.025
+      },
+      "validation": "0.000-0.026 at every size (only 19-76 heavily overlapping windows)",
+      "reading": "above the nominal 2.5% (one-sided) in exploration. Centring removes the period's average effect, not its variation over time, so this mixes the interval's liberalness (E025) with windows whose own local effect is positive"
+    },
+    "no_improvement_rule_SESOI_0.0005_model_vs_base_rate": {
+      "fires_under_the_development_effect": "0.00-0.02 at every size from 1,000 hours (a false 'no improvement' is rare)",
+      "fires_with_no_effect": {
+        "exploration": {
+          "2000": 0.2,
+          "5000": 0.45,
+          "6000": 0.55,
+          "10000": 0.88
+        },
+        "validation": "0.00-0.06 at every size"
+      },
+      "reading": "with no real effect, the most likely result at 5,000-6,500 hours is 'insufficient evidence', not 'no improvement': the rule can only be confirmed negative at the exploration period's lower variance"
+    },
+    "calibration_informativeness_model": {
+      "stated_minus_observed_p05_p95_real": {
+        "exploration": {
+          "2000": [
+            -0.014,
+            0.03
+          ],
+          "5000": [
+            -0.01,
+            0.018
+          ],
+          "6000": [
+            -0.008,
+            0.019
+          ]
+        },
+        "validation": {
+          "2000": [
+            -0.013,
+            0.017
+          ],
+          "5000": [
+            -0.0,
+            0.009
+          ],
+          "6000": [
+            0.002,
+            0.005
+          ]
+        }
+      },
+      "ece_p95_real": {
+        "exploration": {
+          "2000": 0.03,
+          "5000": 0.02,
+          "6000": 0.02
+        },
+        "validation": {
+          "2000": 0.02,
+          "5000": 0.011,
+          "6000": 0.01
+        }
+      },
+      "reading": "a guard of |stated - observed| <= 0.03 and ECE <= 0.03 fails a development-like model in under 5% of windows from 5,000 hours, and can only catch gross miscalibration; no finer calibration criterion is supportable at these sizes"
+    },
+    "regime_context_model_vs_base_rate_mean_gain": {
+      "exploration": {
+        "low": 0.001063,
+        "mid": 0.000734,
+        "high": 0.001017
+      },
+      "validation": {
+        "low": 0.000578,
+        "mid": 0.001661,
+        "high": 0.001104
+      },
+      "reading": "in validation the calm-market (low tercile) gain is about half the average; the prospective record has so far been entirely calm, so if that holds the hours needed could be roughly two to four times larger"
+    }
+  },
+  "conclusions": [
+    "No verdict on direction is possible by 2026-12-14: the track will then hold about 1,350 graded hours, where power is about 0.2-0.4.",
+    "A verdict on model vs base rate needs about 6,500 graded hours for 80% power under the larger (validation) requirement, roughly nine months of collection; a calm market could need several times more.",
+    "Model vs one feature cannot be decided prospectively in any reasonable time (15,000-188,000 hours); it is reported descriptively only.",
+    "The one feature vs the base rate needs about 3,800-5,200 hours.",
+    "Below about 3,000 hours the interval is liberal (E025, and the centred windows here), so no early look may conclude anything.",
+    "These figures assume the development effect; validation wear and a single frozen fit could make the prospective effect smaller, so they are under-estimates."
+  ]
 }
