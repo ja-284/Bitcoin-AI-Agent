@@ -252,7 +252,9 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
 1. The single-missed-hour alarm. **Done 2026-10-14** (alarms, above).
 2. Then keeping GitHub's answers to the dispatch requests (trigger responses). **Done 2026-10-14**
    ("What happens automatically", item 6).
-3. News cost and value, reviewed separately, with no change to the live weights or model.
+3. News cost and value, reviewed separately, with no change to the live weights or model. **Done 2026-10-15,
+   read-only** (`research/NEWS_COST_VALUE_2026-10-15.md`): ≈ $7.66 per 30 days, 74% of the AI cost; it changes 5.5%
+   of signals, mostly to HOLD; its value is unknown until the registered verdict (≈ 2027-02). Nothing changed.
 
 Items 1 and 2 are done and verified live (2026-10-14). Item 3 has not been started. Also waiting on the user:
 - **E031** (the first offline challenger, block-wise calibration) is not a candidate: H_c fails. The experiment

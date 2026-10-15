@@ -5,6 +5,22 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## review — 2026-10-15 (3D: news cost and value, read-only; no production change)
+
+`research/NEWS_COST_VALUE_2026-10-15.md`. The figures come from `python tools/news_cost_value.py` (new,
+read-only, reads no outcome), and its output is in `research/monitoring/news_cost_value_2026-10-15.json`.
+
+- **Cost:** the news call costs $0.0106 a run, ≈ $7.66 per 30 days, which is 74% of the ≈ $10.40 total AI cost.
+  It averages 1,511 tokens in and 1,824 out (the answer echoes each headline).
+- **Reliability:** 18 hours without news ever (17 from the 2026-09-21/22 `max_tokens` defect, 1 provider error on
+  2026-09-29), all marked. 0 feed outages, 0 empty hours. The AI-call latency is not recorded.
+- **Influence:** news changed the stored signal in 33 of 595 hours (5.5%): 19 SELL → HOLD, 13 BUY → HOLD,
+  1 HOLD → BUY. It mostly damps the signal to HOLD.
+- **Value:** unknown. E030's first look (1h ρ +0.046 [−0.052, +0.151]) cannot see effects below ≈ 0.125. The
+  registered verdict is ≈ 2027-02.
+- **No weight, prompt or call changed.** Any change (cutting the echo, or dropping news) would need its own
+  justification and risk assessment.
+
 ## ops — 2026-10-15 (3B verified; 3C: a dispatch failure can no longer sit unseen)
 
 Nothing in production, the model, the checkpoints or the holdout changed.

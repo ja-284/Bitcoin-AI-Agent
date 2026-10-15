@@ -30,7 +30,8 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   own commit:
   1. the single-missed-hour alarm — **done 2026-10-14** (`afdb5ca`);
   2. keeping GitHub's trigger responses — **done 2026-10-14** (`76c7aff`, `68dd8d3`);
-  3. a separate review of news cost and value, with no change to the live weights or model — not started.
+  3. a separate review of news cost and value, with no change to the live weights or model — **done 2026-10-15,
+     read-only** (`research/NEWS_COST_VALUE_2026-10-15.md`; nothing changed).
 - **The governing brief since 2026-10-14 (evening)** is the user's "MASTER PLAN AFTER THE 500-HOUR EVALUATION",
   which supersedes the post-500h plan's open items and answered its four pending decisions (see the 2026-10-14
   evening entry and its PAUSED note). Before it, the user's "Post-500h Research and Improvement Plan" (Phases 0–6)

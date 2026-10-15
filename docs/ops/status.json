@@ -74,7 +74,7 @@
   "operational_queue": [
     "1. the single-missed-hour alarm -- done 2026-10-14 (automation.missed_hour_signal)",
     "2. keeping GitHub's answers to the dispatch requests (trigger responses) -- done 2026-10-14 (automation.dispatch_answers)",
-    "3. news cost and value reviewed separately, with no change to the live weights or model"
+    "3. news cost and value reviewed separately, with no change to the live weights or model -- done 2026-10-15, read-only (research/NEWS_COST_VALUE_2026-10-15.md)"
   ],
   "known_non_critical": [
     "watchdog fires irregularly on GitHub; the heartbeat covers the gap",

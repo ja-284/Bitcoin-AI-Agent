@@ -1,0 +1,129 @@
+{
+ "generated_at": "2026-10-15T13:52:20.148719+00:00",
+ "rows_pipeline_0_2_0": 613,
+ "first": "2026-09-19T20:00:00+00:00",
+ "last": "2026-10-15T12:00:00+00:00",
+ "prices": {
+  "usd_per_mtok": {
+   "claude-haiku-4-5": [
+    1.0,
+    5.0
+   ],
+   "claude-sonnet-5": [
+    2.0,
+    10.0
+   ]
+  },
+  "as_of": "2026-09-23"
+ },
+ "cost_last_7_days": {
+  "runs": 167,
+  "by_step": {
+   "news": {
+    "calls": 167,
+    "mean_cost_usd": 0.010963239520958084,
+    "mean_input_tokens": 1543.0299401197606,
+    "mean_output_tokens": 1884.0419161676646,
+    "projected_30_days_usd": 7.8935324550898205,
+    "models": {
+     "claude-haiku-4-5": 167
+    }
+   },
+   "explanation": {
+    "calls": 167,
+    "mean_cost_usd": 0.0037688862275449095,
+    "mean_input_tokens": 509.47305389221555,
+    "mean_output_tokens": 274.9940119760479,
+    "projected_30_days_usd": 2.713598083832335,
+    "models": {
+     "claude-sonnet-5": 167
+    }
+   }
+  },
+  "projected_30_days_usd_total": 10.607130538922156,
+  "news_share_of_cost": 0.7441722741249418
+ },
+ "cost_last_30_days": {
+  "runs": 523,
+  "by_step": {
+   "news": {
+    "calls": 523,
+    "mean_cost_usd": 0.01063221223709369,
+    "mean_input_tokens": 1511.4665391969406,
+    "mean_output_tokens": 1824.1491395793498,
+    "projected_30_days_usd": 7.655192810707456,
+    "models": {
+     "claude-haiku-4-5": 523
+    }
+   },
+   "explanation": {
+    "calls": 523,
+    "mean_cost_usd": 0.0038054034416826,
+    "mean_input_tokens": 509.4321223709369,
+    "mean_output_tokens": 278.65391969407267,
+    "projected_30_days_usd": 2.739890478011472,
+    "models": {
+     "claude-sonnet-5": 523
+    }
+   }
+  },
+  "projected_30_days_usd_total": 10.39508328871893,
+  "news_share_of_cost": 0.7364243843062914
+ },
+ "cost_cross_check_weekly_report_function_7d": {
+  "mean_cost_per_run_usd": 0.014732125748502994,
+  "projected_30_days_usd": 10.607130538922156,
+  "runs_priced": 167
+ },
+ "reliability": {
+  "news_errors_all_time": {
+   "error": 17,
+   "InternalServerError": 1
+  },
+  "news_errors_last_30_days": {
+   "error": 17,
+   "InternalServerError": 1
+  },
+  "explanation_errors_all_time": 1,
+  "hours_with_a_failed_feed_all_time": 0,
+  "hours_with_zero_news_items_used": 0,
+  "mean_items_used": 44.33115823817292,
+  "items_used_last_30_days_median": 51.0,
+  "ai_call_latency": "not recorded per call; only the whole run's lag after the cutoff (below)",
+  "run_lag_after_cutoff_seconds_last_30_days": {
+   "median": 753.065557,
+   "p95": 761.3214313999999,
+   "max": 3517.59913
+  }
+ },
+ "influence": {
+  "hours_with_news_weight": 595,
+  "signals_changed_by_news": 33,
+  "share_changed": 0.05546218487394958,
+  "changes": {
+   "SELL->HOLD": 19,
+   "BUY->HOLD": 13,
+   "HOLD->BUY": 1
+  },
+  "overall_score_shift": {
+   "mean": 0.006614595076888893,
+   "mean_abs": 0.02927311759500255,
+   "max_abs": 0.1069459458633426
+  },
+  "news_score": {
+   "mean": 0.08596056611050955,
+   "sd": 0.14019914764366986,
+   "share_negative": 0.3042016806722689
+  },
+  "signal_mix_with_news": {
+   "BUY": 216,
+   "SELL": 143,
+   "HOLD": 236
+  },
+  "signal_mix_without_news": {
+   "BUY": 228,
+   "SELL": 162,
+   "HOLD": 205
+  }
+ }
+}
