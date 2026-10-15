@@ -33,7 +33,7 @@ approved operational changes, in their order.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-10-15 16:35 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-10-15 16:25 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**

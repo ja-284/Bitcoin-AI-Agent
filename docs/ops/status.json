@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-15T16:35:00Z",
+  "as_of": "2026-10-15T16:25:00Z",
   "human_readable": "docs/ops/STATUS.md",
   "consistency_test": "tests/test_status_docs.py",
   "mode": "POST-500H MONITORING-ONLY",
@@ -38,7 +38,7 @@
   },
   "prospective": {
     "graded_shadow_hours": 565,
-    "counted_at": "2026-10-15T16:35:00Z",
+    "counted_at": "2026-10-15T16:25:00Z",
     "checkpoints_done": [{"hours": 500, "taken_at": "2026-10-13T19:33:10Z", "reading": "research/monitoring/checkpoint_500h.md", "hours_read": "2026-09-21T17:00 -> 2026-10-12T21:00 UTC", "verdict": null, "readiness_audit": "docs/research/readiness_gate.md revision 3"}],
     "next_checkpoint_hours": 2000,
     "next_checkpoint_expected": "2026-12-14 (late morning UTC, if no hours are lost; each lost hour adds one)",
