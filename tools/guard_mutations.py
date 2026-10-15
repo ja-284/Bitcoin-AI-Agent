@@ -419,18 +419,12 @@ MUTATIONS = [
              "    if False:",
              "the frozen artefact runs on category scores from another scoring version (direction track)"),
     Mutation("direction", "agent/direction_shadow/run.py",
-             """        logger.error("Could not even record the failure (%s) -- failing the step so it is visible", record_exc)
-        return 1""",
-             """        logger.error("Could not even record the failure (%s) -- failing the step so it is visible", record_exc)
-        return 0""",
+             "        return 1",
+             "        return 0",
              "a failure that could not even be recorded passes silently (direction track)"),
     Mutation("direction", "agent/direction_shadow/model.py",
-             """        if problems:
-            raise ModelVersionError(
-                f"input definitions changed""",
-             """        if False:
-            raise ModelVersionError(
-                f"input definitions changed""",
+             "        if problems:",
+             "        if False:",
              "old coefficients run on changed input definitions (direction track)"),
     Mutation("direction", "agent/direction_shadow/features.py",
              "    detail = analyze_window_detailed(bars)",
@@ -445,10 +439,9 @@ MUTATIONS = [
              "    IF false THEN",
              "a stored direction probability or input can be rewritten (direction track)"),
     Mutation("direction", "docs/ops/least_privilege_role.sql",
-             """GRANT UPDATE (outcome_status, outcome_close, outcome_return, outcome_up, outcome_checked_at)
-  ON shadow_direction TO bitcoin_agent;""",
-             "GRANT UPDATE ON shadow_direction TO bitcoin_agent;",
-             "the job role may update any column of a direction row (direction track)"),
+             "GRANT UPDATE (outcome_status, outcome_close, outcome_return, outcome_up, outcome_checked_at)",
+             "GRANT UPDATE (outcome_status, outcome_close, outcome_return, outcome_up, outcome_checked_at, p_model)",
+             "the job role may rewrite a stored direction probability (direction track)"),
     Mutation("direction", ".github/workflows/hourly.yml",
              "        run: python -m agent.direction_shadow.run",
              "        run: python -m agent.direction_shadow.run --raise-errors",
