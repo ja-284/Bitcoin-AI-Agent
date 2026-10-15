@@ -5,6 +5,15 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-15 (master plan Phase 4: E035, not a candidate; the intraday-calibration line is closed)
+
+The master plan's one move-size hypothesis, registered (`1ff9e12`) before its code (`70ca360`) and run once on
+development data. One shared Platt slope plus four six-hour block intercepts, on E031's own machinery.
+- Better offsets (validation 0.057 → 0.008), better Brier (+0.00074 [+0.00011, +0.00132]), better ρ.
+- **But E013's bucket rule fails** at [0.8, 0.9): +0.069 (n 262).
+- By the rule fixed in advance, the intraday-calibration line is closed and no further variant runs.
+- Nothing adopted; `move_size_1h_v1` is untouched.
+
 ## research — 2026-10-15 (master plan Phase 3: the prospective direction shadow track, E033 and E034)
 
 A separate, isolated, pre-registered prospective test of E032's faint 1h direction probability. It never changes

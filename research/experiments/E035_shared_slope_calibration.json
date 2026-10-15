@@ -1,8 +1,8 @@
 {
   "id": "E035",
   "date": "2026-10-15",
-  "git_commit": "(registration commit; the code and the result are added in later commits)",
-  "status": "PRE-REGISTERED, RESEARCH-ONLY, offline move-size challenger: the master plan's (2026-10-14) Phase 4, its one authorised move-size hypothesis. Development data only, walk-forward out-of-sample. HYPOTHESIS-GENERATING, not confirmatory (validation wear, below). One variant fixed in advance; the SECOND and LAST variant on the intraday-calibration line (research/DIAGNOSIS_2026-10-15.md, row 5). Nothing is adopted, deployed or shadowed; move_size_1h_v1 is untouched.",
+  "git_commit": "pre-registration 1ff9e12; code 70ca360; run 2026-10-15 16:19 UTC (56 s); result recorded in the next commit",
+  "status": "DONE -- NOT A CANDIDATE. H_a, H_b, H_d hold; H_c FAILS (E013's bucket rule on validation: [0.8, 0.9) over-stated by +0.069, n = 262). The pre-registered consequence applies: THE INTRADAY-CALIBRATION LINE IS CLOSED (research/DIAGNOSIS_2026-10-15.md row 5); no further variant is run. Research-only, hypothesis-generating. Nothing adopted, deployed or shadowed; move_size_1h_v1 untouched.",
   "why": "E027 found offsetting intraday miscalibration in both development periods (large moves over-stated at night, under-stated in the US session). E031's four separate block Platt maps removed it (worst block offset 0.057 -> 0.012 on validation) but failed E013's bucket rule: the [0.8, 0.9) bucket over-stated by +0.077 and the calibration slope fell 0.976 -> 0.928. The Phase 2 diagnosis (2B, development data, research/results/E031/block_slopes_by_fold.json) looked at why, per fold: the four block maps' SLOPES average the same as the single map's (mean difference -0.001) but are noisy (sd 0.159 across folds, range 0.00-1.57, about 505 calibration rows each), while their INTERCEPTS differ (-0.08 / +0.07 / +0.19 / +0.15). The most plausible explanation is that E031 had too many degrees of freedom: the real intraday effect is a level per block, and fitting four slopes on ~505 rows each only added noise that spread the tails. This tests exactly that explanation, with the smallest change that could address it. The 500-hour prospective reading did NOT motivate it and it does not target that reading's misses (whose six-hour pattern differs from development's).",
   "hypothesis": "If the intraday miscalibration is a LEVEL shift per six-hour block, then one calibration map per fold with a SHARED slope and four block intercepts (5 parameters instead of E031's 8), fitted on the same purged 90-day slice, removes most of E027's offsets out of sample (as E031 did) WITHOUT spreading the confident tail (unlike E031): E013's bucket rule holds, and skill, overall calibration and ranking are not lost.",
   "variant": {
@@ -51,5 +51,105 @@
     "in_every_case": "The live system, move_size_1h_v1, the move-size shadow record and its checkpoints, the direction track, and the holdout are untouched. A failure is a valid research result: the reference model stays, and the limitation is documented."
   },
   "command": "python -m agent.research.shared_slope_calibration --experiment E035",
-  "result": "PENDING: added by a later commit, after this registration is committed"
+  "result": {
+    "rows": 54472,
+    "folds_calibrated": 27,
+    "folds_on_the_fallback": 0,
+    "incumbent_reproduces_E031": "yes, to 10 decimals (rows, Brier, skill, rho, ECE, worst block offset; both periods)",
+    "fitted_across_folds": {
+      "slope": "mean +0.955, sd 0.173, range +0.452 to +1.262",
+      "intercepts_mean": {
+        "00-06": -0.1,
+        "06-12": 0.072,
+        "12-18": 0.203,
+        "18-24": 0.14
+      }
+    },
+    "exploration": {
+      "skill": {
+        "incumbent": 0.1457,
+        "variant": 0.1479
+      },
+      "rho": {
+        "incumbent": 0.44,
+        "variant": 0.445
+      },
+      "ece": {
+        "incumbent": 0.004,
+        "variant": 0.01
+      },
+      "calibration_slope": {
+        "incumbent": 0.989,
+        "variant": 0.969
+      },
+      "worst_block_offset": {
+        "incumbent": 0.047,
+        "variant": 0.007
+      },
+      "incumbent_minus_variant_brier": [
+        0.00055,
+        0.00017,
+        0.00095
+      ],
+      "e013_buckets_ok": {
+        "incumbent": true,
+        "variant": true
+      }
+    },
+    "validation": {
+      "skill": {
+        "incumbent": 0.0983,
+        "variant": 0.1013
+      },
+      "rho": {
+        "incumbent": 0.36,
+        "variant": 0.369
+      },
+      "ece": {
+        "incumbent": 0.014,
+        "variant": 0.012
+      },
+      "calibration_slope": {
+        "incumbent": 0.976,
+        "variant": 0.962
+      },
+      "worst_block_offset": {
+        "incumbent": 0.057,
+        "variant": 0.008
+      },
+      "incumbent_minus_variant_brier": [
+        0.00074,
+        0.00011,
+        0.00132
+      ],
+      "e013_buckets_ok": {
+        "incumbent": true,
+        "variant": false
+      },
+      "bucket_0_8_to_0_9_descriptive_after_the_run": {
+        "incumbent": "+0.028 (n 206)",
+        "variant": "+0.069 (n 262) FAIL",
+        "e031_four_maps": "+0.077 (n 317) FAIL"
+      }
+    },
+    "e031_four_maps_on_the_same_rows_descriptive": {
+      "validation_skill": 0.0989,
+      "validation_worst_block_offset": 0.012,
+      "validation_calibration_slope": 0.928
+    },
+    "verdict": {
+      "H_a_removes_the_offsets": "HOLDS",
+      "H_b_no_skill_loss": "HOLDS",
+      "H_c_calibration": "FAILS",
+      "H_d_ranking": "HOLDS"
+    }
+  },
+  "reading_by_the_pre_registered_consequences": [
+    "H_a HOLDS clearly: the worst block offset falls 0.047 -> 0.007 (exploration) and 0.057 -> 0.008 (validation), slightly better than E031's four maps (0.013 / 0.012).",
+    "H_b HOLDS, and more: the variant is BETTER on Brier in both periods, with intervals excluding zero (validation +0.00074 [+0.00011, +0.00132]; skill +0.0983 -> +0.1013, 2.47x -> 2.55x the free EWMA rule). H_d holds (rho +0.360 -> +0.369).",
+    "H_c FAILS on E013's bucket rule on validation: the [0.8, 0.9) bucket is over-stated by +0.069 (n = 262; E031: +0.077, n = 317; the incumbent +0.028, n = 206). ECE is fine (0.012).",
+    "So the trade-off is the same as E031's, only smaller: better intraday calibration and slightly better skill, at the cost of the confident tail. A shared slope did not remove it (slope 0.976 -> 0.962), so the Phase 2 explanation 'too many degrees of freedom' was at most part of the cause. What the numbers suggest instead (an observation, not tested): raising the US-session block's intercept (+0.20) moves some hours up into the high-probability range, where this family already over-states slightly, and the tail over-statement grows there.",
+    "Consequence, decided in advance (H_c fails): CLOSE THE INTRADAY-CALIBRATION LINE. No further variant (other blocks, penalties, shrinkage of the intercepts, a tail cap) is run; trying one now would be exactly the sequence of small changes on the same data that the master plan forbids. E027's offsets stay a descriptive reference for reading the 2,000-hour slices.",
+    "Nothing changes: move_size_1h_v1, its shadow record and registered checkpoints, the live signal, the direction track and the holdout are untouched. A non-candidate is a valid result: the reference model stays, and the limitation (intraday miscalibration of up to ~0.06 in the US session, offset elsewhere) is documented."
+  ]
 }

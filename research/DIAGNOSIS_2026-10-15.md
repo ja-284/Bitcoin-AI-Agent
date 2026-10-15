@@ -45,3 +45,23 @@ nothing below is. Phase 4's hypothesis was chosen from development evidence. It 
 - It does not say the intraday fix works. That is Phase 4's question.
 - It does not say direction is useful. E032 measured skill, not usefulness.
 - It changes no model, rule, selection, threshold or weight.
+
+## Update, 2026-10-15 (after E035): row 5's explanation was only partly right, and the line is closed
+
+The table above is kept as written. Row 5 named the single next step, and it has been taken: E035 (registered in
+`1ff9e12` before its code; result in `research/results/E035/`).
+- One shared slope plus four block intercepts removed the offsets (worst block 0.057 → 0.008 on validation) and
+  even improved skill (Brier +0.00074 [+0.00011, +0.00132]).
+- But it **failed E013's bucket rule at the same place as E031**: [0.8, 0.9) over-stated by +0.069 (n = 262),
+  against E031's +0.077 and the incumbent's +0.028.
+- So "too many degrees of freedom" was at most part of E031's failure. The shared slope (0.962) did not keep the
+  tail calibrated.
+- What the numbers suggest, as an observation only: the block intercepts themselves, the US session's +0.20
+  above all, lift some hours into the high-probability range, where this family already over-states slightly.
+
+**Row 5's stop rule applies, as registered: the intraday-calibration line is closed.** No further variant is run
+on this data (other blocks, slice lengths, smoothers, shrunk intercepts, a tail cap). E027's offsets stay a
+descriptive reference for the 2,000-hour slices. The documented limitation remains: the reference model's
+probabilities are miscalibrated by time of day, by up to about 0.06 in the US session on validation, offset
+elsewhere.
+

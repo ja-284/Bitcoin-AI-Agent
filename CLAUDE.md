@@ -42,7 +42,7 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - the 2,000-hour checkpoint needs no separate approval.
 
   The four decisions that were waiting were all answered by the master plan (2026-10-14): the news review (done
-  2026-10-15, read-only); one move-size hypothesis after the diagnosis (Phase 4, E035); a prospective direction
+  2026-10-15, read-only); one move-size hypothesis after the diagnosis (Phase 4: E035, done 2026-10-15, not a candidate, so the intraday-calibration line is closed); a prospective direction
   shadow track (**running since 2026-10-15**, E034, `research/DIRECTION_TRACK.md`); the EWMA warm-up (Amendment A1).
 - **The direction shadow track (E034, since 2026-10-15):** `direction_1h_v1` scored hourly into `shadow_direction`
   (its own tables, never touching the live signal or `move_size_1h_v1`). Readings at 1,000 / 3,000 / 6,500 eligible
@@ -598,7 +598,7 @@ first offline challenger, the directional assessment, the holdout routes.**
   - Weekly audit due ≈ 2026-10-20. The 2,000-hour reading (≈ 2026-12-14) runs only after every integrity check
     passes.
 
-**2026-10-15 — resumed at 3C; master plan Phase 1 finished, Phase 2 done, Phase 3 started (the direction shadow track is collecting).**
+**2026-10-15 — resumed at 3C; master plan Phase 1 finished, Phase 2 done, Phase 3 (the direction shadow track is collecting) and Phase 4 (E035, not a candidate) done.**
 - **Resumed exactly at 3C** after re-measuring. The user had run *Alert delivery test*: the "down" email arrived
   (13:36:47 UTC) with the labelled text. The first hourly run after it (14:12) found no gap, its ping arrived at
   14:13:24, and the "up" email followed (36 min 37 s down). **3B verified end to end.**
@@ -637,9 +637,19 @@ first offline challenger, the directional assessment, the holdout routes.**
 - **Nothing** in prediction, scoring, thresholds, features, `move_size_1h_v1`, its shadow record, its checkpoint code
   or rules, `LIVE_EVALUATION.md` or the holdout changed. `research/HOLDOUT_ACCESS.log` does not exist.
 - 674 unit tests; integration 41/41 (live drift included); GitHub's tests green on every push; security and role checks OK.
-- **Next:** master plan Phase 4 (one registered move-size hypothesis: a shared Platt slope plus four six-hour block
-  intercepts, development data only, DIAGNOSIS row 5), with Phase 5 alongside: the weekly audit ≈ 2026-10-20; the
-  direction first look at 1,000 eligible hours (≈ late November); the 2,000-hour move-size reading ≈ 2026-12-14.
+- **Phase 4, E035 — the master plan's one move-size hypothesis (registered `1ff9e12`, code `70ca360`, run once):
+  NOT A CANDIDATE; the intraday-calibration line is CLOSED, as registered.** One shared Platt slope plus four block
+  intercepts, on E031's own machinery (the incumbent reproduces E031 to the digit):
+  - H_a, H_b and H_d hold: the offsets 0.057 → 0.008; validation Brier is even better, +0.00074 [+0.00011, +0.00132];
+    ρ +0.360 → +0.369.
+  - **H_c fails at E031's bucket:** [0.8, 0.9) is over-stated by +0.069 (n 262; E031 +0.077; the incumbent +0.028).
+  - So the diagnosis's "too many degrees of freedom" was only part of the cause (an update is appended to
+    `research/DIAGNOSIS_2026-10-15.md`). No further variant runs.
+- **Next (Phase 5, monitoring; nothing to start):**
+  - the weekly audit ≈ 2026-10-20 (weekly report, integration including drift, dependency audit, the
+    direction track's operational line);
+  - the direction first look at 1,000 eligible hours (≈ late November);
+  - the 2,000-hour move-size reading ≈ 2026-12-14, after the integrity checklist.
 
 ## Research phase — rules and decisions (2026-09-19)
 

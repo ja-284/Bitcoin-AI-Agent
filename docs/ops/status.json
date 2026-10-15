@@ -90,7 +90,9 @@
     "E031_block_calibration": "offline move-size challenger, not a candidate (H_c fails); stopped for reassessment",
     "E032_direction_probability": "offline DIRECTIONAL challenger (the user's clarification): faint 1h P(UP) real, calibrated, year-stable (Brier skill +0.0043 vs base rate) but essentially one reversal feature (H_b fails) and economically negligible",
     "directional_assessment": "research/DIRECTIONAL_ASSESSMENT_2026-10-14.md (+ addendum): direction is a required track; E032 was the one defensible experiment on this data; no further directional experiment on it",
-    "holdout_routes": "research/HOLDOUT_ROUTES.md: the E000 backtest bypass is closed; every route reviewed and tested"
+    "holdout_routes": "research/HOLDOUT_ROUTES.md: the E000 backtest bypass is closed; every route reviewed and tested",
+    "E033_direction_track_power": "2026-10-15, planning: ~4,700-6,400 graded hours for 80% power on model vs base rate; model vs one feature undecidable; no direction verdict by 2026-12-14",
+    "E035_shared_slope_calibration": "2026-10-15, the master plan's one move-size hypothesis: not a candidate (H_c fails at [0.8, 0.9), +0.069); the intraday-calibration line is CLOSED, as registered"
   },
   "decisions_waiting_for_the_user": [
     "(answered 2026-10-14 by the user's master plan: the news cost and value review, read-only -> done 2026-10-15)",

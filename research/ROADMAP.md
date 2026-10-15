@@ -300,8 +300,10 @@ role and the API-log check remain open.
   registered (`research/DIRECTION_TRACK.md` v1.1, readings blind by Amendment 1.1), frozen artefact
   `direction_1h_v1`, isolated storage live, the hourly step pushed 15:23 UTC, the reading code written; 16 direction
   mutation guards caught. **Collecting since the 15:00 UTC hour** (first row 16:13 UTC, every step green).
-- **Next:** Phase 4, one registered move-size hypothesis (E035: shared Platt slope + four block intercepts,
-  development only; the second and last intraday-calibration variant), with Phase 5 alongside.
+- **Phase 4, E035** (registered `1ff9e12`, code `70ca360`): not a candidate. H_c fails at E031's bucket ([0.8, 0.9)
+  +0.069) although the offsets and Brier improved. **The intraday-calibration line is closed**, as registered.
+- **Next:** Phase 5 only. The weekly audit ≈ 2026-10-20, the direction first look at 1,000 eligible hours, and the
+  2,000-hour move-size reading ≈ 2026-12-14.
 
 ## 2026-10-14 (evening) — the master plan after the 500-hour evaluation: Phase 0, 3A, 3B; PAUSED
 
