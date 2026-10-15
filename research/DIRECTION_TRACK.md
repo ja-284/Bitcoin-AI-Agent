@@ -1,4 +1,4 @@
-# Prospective direction shadow track: registered protocol, version 1.0 (2026-10-15)
+# Prospective direction shadow track: registered protocol, version 1.1 (2026-10-15)
 
 **Status: REGISTERED before any collection code exists.** Experiment E034. Master plan Phase 3 (5A and 5B). This file is
 the whole test, fixed in advance. It changes only by a dated, versioned amendment written before the data it
@@ -245,5 +245,27 @@ is whatever that run stores. Nothing earlier exists, and nothing is backfilled.
 
 ## Amendments
 
-None yet. An amendment is dated and versioned (1.1, 1.2, …), says which rows it affects, and is committed
-before those rows exist. One that changes a criterion after any reading is computed is not allowed.
+An amendment is dated and versioned (1.1, 1.2, …), says which rows it affects, and is committed before those rows
+exist. One that changes a criterion after any reading is computed is not allowed.
+
+### Amendment 1.1 (2026-10-15, before any row exists): the readings are blind
+
+**Affects:** every row, since none exists yet. It changes no criterion, size or measure. It only restricts what
+may be looked at before each reading.
+
+**Why:** the move-size 500-hour reading was not blind. Its running record had been reviewed in weekly reports and
+an audit before it was computed (`research/DIAGNOSIS_2026-10-15.md`, row 4). That cannot be undone there, but it can
+be avoided here from the first hour.
+
+**The rule:** until each registered reading (1,000 / 3,000 / 6,500 eligible hours) is computed, every routine report
+shows only **operational** figures for this track:
+- rows written, status counts and unavailable reasons;
+- coverage against the expected hours, and errors;
+- prospective-rule violations;
+- the integrity checks (recomputation from stored inputs, the artefact sha256, the live cross-check flags);
+- graded and pending counts.
+
+**Never an outcome-based figure:** no Brier score, accuracy, hit share, calibration, return, or comparison with the
+base rate or the one feature. The weekly report, the reporting layer and ad hoc queries are all covered. A reading's
+figures appear first in its own write-once file. Each reading is computed, and its figures first seen, at the first
+session after its size is reached, exactly as registered.
