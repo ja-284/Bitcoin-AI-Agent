@@ -56,10 +56,10 @@ other or with the versions in the code. **Update both, together, from the comman
 - The jobs connect to the database as **`bitcoin_agent`** (least privilege: read and append only), since
   2026-09-25 19:12 UTC. The hourly job stamps every row `db_role = bitcoin_agent`, and the watchdog's role
   check has verified it (first 2026-09-26 11:42 UTC). The local `.env` keeps the owner role for maintenance.
-- Readiness gate, revision 3 (2026-10-13): **19 PASS, 3 PARTIAL**, a **RELEASE CANDIDATE, not FINAL**
-  (`docs/research/readiness_gate.md`). The PARTIALs: calibration (not yet confirmed prospectively),
-  observability (a single missed hour can pass with no alarm), and prospective monitoring (only time
-  closes it).
+- Readiness gate, revision 3 with addendum 2 (2026-10-15): **20 PASS, 2 PARTIAL**, a **RELEASE CANDIDATE, not
+  FINAL** (`docs/research/readiness_gate.md`). Observability became PASS on 2026-10-15: the missed-hour email was
+  seen delivered, and the dispatch answers are verified. The PARTIALs: calibration (not yet confirmed
+  prospectively) and prospective monitoring (only time closes it).
 - Research is isolated from production: E026–E029 ran on development data only, and no research module is
   imported by the live or shadow path (tested). None of them changed anything that runs.
 - **Private stats read model (2026-09-27, `docs/api/stats_access.md`): the only thing readable through
@@ -137,9 +137,8 @@ happening, or on the weekly audit being run on time.
     (`.github/workflows/alert_test.yml`, since 2026-10-14). It sends ONE report labelled "DELIVERY TEST …
     NO hour is missing" through the same code and curl line. It has no schedule, needs no database, and
     records no incident.
-    - **User action:** Actions tab → *Alert delivery test* → Run workflow, once. Then confirm the "down"
-      email arrived. The next hourly run's success ping turns the check green again.
-    - Until the email is confirmed, readiness row 18 stays PARTIAL.
+    - **Done 2026-10-15:** the user ran it once, and the "down" email arrived (13:36 UTC) with the labelled
+      text. Readiness row 18 is PASS.
   - A missed hour still shows in the weekly report, `backend_state` health and the stats incident
     history.
 - AI cost follows the news week. The first full measured week (to 2026-10-05) came to ≈ $0.0135 a run,
@@ -256,15 +255,15 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
    read-only** (`research/NEWS_COST_VALUE_2026-10-15.md`): ≈ $7.66 per 30 days, 74% of the AI cost; it changes 5.5%
    of signals, mostly to HOLD; its value is unknown until the registered verdict (≈ 2027-02). Nothing changed.
 
-Items 1 and 2 are done and verified live (2026-10-14). Item 3 has not been started. Also waiting on the user:
-- **E031** (the first offline challenger, block-wise calibration) is not a candidate: H_c fails. The experiment
-  is stopped for reassessment, and no further variant runs without a new registration
-  (`research/experiments/E031_block_calibration.json`).
-- **E032** (the directional challenger, after the user's clarification) finds the faint 1h P(UP) real, calibrated
-  and year-stable. But it is essentially one feature and economically negligible. Is a prospective direction
-  shadow track wanted?
-- **Whether to clip the registered checkpoint's EWMA warm-up** at the holdout's end before the 2,000-hour
-  reading (`research/HOLDOUT_ROUTES.md`).
+All three are done (items 1 and 2 verified live 2026-10-14; item 3 read-only, 2026-10-15). The questions that
+were waiting on the user were answered by the user's master plan (2026-10-14):
+- **E031** (block-wise calibration) is not a candidate: H_c fails. **Answer:** one new move-size hypothesis may be
+  registered after the diagnosis, if the diagnosis justifies it. The diagnosis (`research/DIAGNOSIS_2026-10-15.md`,
+  row 5) names it: one shared slope plus four block intercepts, on development data only, registered first.
+- **E032** (direction) finds the faint 1h P(UP) real, calibrated and year-stable, but one feature and economically
+  negligible. **Answer:** yes, a prospective direction shadow track, isolated and registered before collection
+  (master plan Phase 3).
+- **The checkpoint's EWMA warm-up** must not read the holdout. **Done:** Amendment A1 (protocol 1.1).
 
 - The registered **news first look**: **done 2026-10-14 (E030, `research/results/E030/`)**. It was blind until
   it ran, it used exactly the first 500 usable hours, and it gives no verdict, by registration.

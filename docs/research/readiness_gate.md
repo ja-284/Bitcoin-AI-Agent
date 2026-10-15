@@ -1,5 +1,11 @@
 # Backend readiness gate
 
+> **Current score (2026-10-15, revision 3 addendum 2): 20 PASS, 2 PARTIAL, 0 FAIL, 0 UNKNOWN.** Row 18
+> (observability) is now PASS. The missed-hour alarm's email has been seen delivered, and the dispatch answers are
+> verified and visible. The two PARTIALs are row 8 (calibration, not yet confirmed prospectively) and row 21
+> (prospective monitoring, the calendar). Still a **RELEASE CANDIDATE, not FINAL.** The next two paragraphs are
+> earlier scores, kept as they were written.
+
 > **Current score (2026-10-13, revision 3, the strict readiness audit after the 500-hour first look):
 > 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN.** The three PARTIALs are row 8 (calibration: not yet confirmed
 > prospectively, counted strictly from this revision), row 18 (observability: a single missed hour can
@@ -213,6 +219,36 @@ untouched to the 2,000-hour reading. The registered news first look (descriptive
 - **Quality gate, 2026-10-14:** 615 unit tests with no database; integration 39/39, including the live drift
   check; security and role checks OK; dependencies unchanged; mutation guards 87/87 (both controls held; full run at 68dd8d3, 77 min); GitHub's tests green on
   every push.
+
+### Addendum 2, 2026-10-15: row 18 Observability PARTIAL → PASS (score 20 PASS, 2 PARTIAL)
+
+Revision 3 left row 18 PARTIAL for three reasons. All three are now closed, and each is observed, not inferred.
+
+- **(a) A single missed hour now alarms, and the alarm has been seen arriving.**
+  - On 2026-10-15 the user ran the manual *Alert delivery test* workflow (`029c2d5`). It sends ONE report,
+    labelled as a test, through the same module and curl line as the real signal. The run was green (13:36 UTC).
+  - healthchecks.io set the check DOWN at 13:36:47 UTC and emailed the user. The email carried the labelled text
+    as "Last Ping Body", so a real report reaches the user with its missing hours in the email.
+  - Afterwards: the first hourly run after the test (dispatched 14:12 UTC) succeeded, and its missed-hour step
+    found no gap. Its success ping arrived at 14:13:24 UTC, and healthchecks.io emailed the user that the check was
+    UP again after 36 min 37 s down. So the ping's delivery is confirmed too, not just GitHub's green step (that
+    step is continue-on-error).
+- **(b) GitHub's answers to the dispatch are kept and shown** (`76c7aff`, `68dd8d3`, `21dd13d`).
+  - Since the recorder started, 29 of 29 dispatch runs have their answer kept (all 204), and the recorder
+    succeeded on 24 of 24 runs. Checked read-only on 2026-10-15.
+  - Access: owner-only; RLS on; the length CHECKs and the redaction are live; the 90-day deletion is in force.
+  - Since 21dd13d the weekly report shows the week's answers and flags any refused, timed-out or unanswered
+    dispatch. A failure a backup slot hides can no longer sit unseen.
+- **(c) The two weekly-report defects** were fixed with regression tests (`c05ee3c`, `4ec90ea`).
+
+Also since revision 3, recorded here and changing no row:
+- **Amendment A1** (`f258fa2`, `48e080b`): the free EWMA rule's warm-up no longer reads the sealed holdout.
+- **The news review** (`5cc1220`): no production change.
+
+Holdout readiness is unchanged: still NOT READY, because of the calendar.
+
+**Score: 20 PASS, 2 PARTIAL, 0 FAIL, 0 UNKNOWN** (rows 8 and 21). Still a **RELEASE CANDIDATE, not FINAL**:
+calibration is not confirmed prospectively, and the 2,000- and 5,000-hour verdicts are still ahead.
 
 ## Revision 2 — 2026-09-22 evening: the 22 categories of the master plan, scored
 

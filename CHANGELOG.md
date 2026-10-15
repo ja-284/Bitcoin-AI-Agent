@@ -5,6 +5,18 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## gate — 2026-10-15 (Quality gate 1: readiness row 18 Observability PARTIAL → PASS; 20 PASS, 2 PARTIAL)
+
+`docs/research/readiness_gate.md`, revision 3 addendum 2. Nothing in production, the model, the checkpoints or the
+holdout changed.
+
+- **The missed-hour alarm, seen end to end.** The user's test report produced the "down" email (13:36:47 UTC). The
+  first hourly run after it (14:12 UTC) found no gap, and its success ping arrived at 14:13:24 UTC. healthchecks.io
+  then emailed "up" after 36 min 37 s down, so the ping's delivery is confirmed, not only GitHub's green step.
+- **The dispatch answers** are kept, owner-only and redacted, and the weekly report flags any failure (3C).
+- STATUS and `status.json`: the score, the heartbeat action marked done, no user action open, and the decisions
+  the master plan answered are no longer listed as waiting.
+
 ## review — 2026-10-15 (3D: news cost and value, read-only; no production change)
 
 `research/NEWS_COST_VALUE_2026-10-15.md`. The figures come from `python tools/news_cost_value.py` (new,
