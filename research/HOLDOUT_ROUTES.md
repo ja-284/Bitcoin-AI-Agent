@@ -39,6 +39,7 @@ less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
 | `weekly_report.live_features` | no: from LIVE.start − 400 h, about 2026-09-02 |
 | `weekly_report.ewma_reference_series` | **no, since Amendment A1 (2026-10-14).** The window is clipped at the buffer's first hour (`ewma_fetch_hours`), a window ending inside or before the holdout is refused, and the returned candles are checked. Until A1 it read holdout candles as warm-up (rows above) |
 | live paths (the hourly job, outcome grading, the shadow model) | no: they fetch the latest hours, or the target hours of live predictions |
+| the direction shadow track (`agent/direction_shadow`, E034, since 2026-10-15) | no. Its hourly step fetches the latest 250 closed hours; its grading fetches the target hours of its own rows, all written from 2026-10-15 on; its artefact was fitted through `build_frame`'s default, which stops at the holdout (tested) |
 
 Three mutation guards keep these locks honest (`tools/guard_mutations.py`, area *holdout*: two for the backtest,
 one for Amendment A1's clip).

@@ -99,7 +99,8 @@ REVIEWED_GET_HISTORY = {
                                        "(research/LIVE_EVALUATION.md, 2026-10-14), so it no longer reads the holdout (tested below); "
                                        "until then it reached ~71 holdout hours (weekly) and back to ~2026-07-26 (500-hour reading)",
 }
-LIVE_ONLY_GET_BAR_AT = {"agent/outcome_tracker.py", "agent/shadow/outcomes.py"}  # grade live predictions' target hours
+LIVE_ONLY_GET_BAR_AT = {"agent/outcome_tracker.py", "agent/shadow/outcomes.py",  # grade live predictions' target hours
+                        "agent/direction_shadow/outcomes.py"}  # (2026-10-15, E034) the same, for rows written from 2026-10-15 on
 
 
 def _call_sites(pattern: str) -> set[str]:
