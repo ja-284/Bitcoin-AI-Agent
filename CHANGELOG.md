@@ -5,6 +5,33 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-15 (master plan Phase 3: the prospective direction shadow track, E033 and E034)
+
+A separate, isolated, pre-registered prospective test of E032's faint 1h direction probability. It never changes
+the BUY/HOLD/SELL signal, `move_size_1h_v1`, its shadow record or checkpoints, and it never trades.
+
+- **E033 (planning, development data only):** E032 reproduced exactly. Model vs base rate needs ≈ 4,700 / 6,400
+  graded hours for 80% power; model vs one feature 15,000–188,000 (undecidable). No direction verdict is possible
+  by 2026-12-14.
+- **E034 registered before any code** (`research/DIRECTION_TRACK.md` v1.0, then Amendment 1.1 before any row: the
+  readings are blind). Readings at 1,000 / 3,000 eligible hours (no verdict) and 6,500 (the verdict).
+- **Frozen artefact `direction_1h_v1`** (`agent/direction_shadow/models/`, sha256 `f04d6e32…` pinned): fitted on
+  64,156 development rows to 2025-06-29 22:00 UTC; M = E032's eight-input logistic, F = taker-buy share alone,
+  B = UP share 0.5097. The live inputs are computed by the research code itself (400 development hours reproduce
+  E032's rows to 3e-14).
+- **Storage** (`agent/direction_shadow/schema.sql`, the sixth migration file): `shadow_direction` and
+  `shadow_direction_errors`, immutable / append-only, CHECKs against impossible rows, RLS on, API roles revoked;
+  `bitcoin_agent` gets SELECT, INSERT and outcome-only UPDATE (26 policies). Applied live in one transaction with
+  the grants (2026-10-15 14:56 UTC) and pushed seconds later; role and security checks OK; integration 41/41
+  including the live drift check.
+- **Hourly job:** two new steps after the publish step ("Shadow direction probability", "Grade direction shadow
+  rows"); failures recorded, exit 0.
+- **Collecting since the 15:00 UTC hour** (written 16:13 UTC, every step green, cross-checks matched).
+- Reading code `python -m agent.research.direction_checkpoint` (synthetic tests only); the weekly report gained an
+  operational-only line for the track.
+- Mutation guards: 16 new direction guards, all caught. One first survived (a one-candle-shorter scoring window moves
+  momentum by ≤ 2.6e-7, below the definition guard's 1e-6 tolerance) and was closed with an exact same-machine test.
+
 ## gate — 2026-10-15 (Quality gate 1: readiness row 18 Observability PARTIAL → PASS; 20 PASS, 2 PARTIAL)
 
 `docs/research/readiness_gate.md`, revision 3 addendum 2. Nothing in production, the model, the checkpoints or the

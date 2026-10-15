@@ -289,6 +289,20 @@ role and the API-log check remain open.
   - the checkpoint is not blind;
   - test counts reconciled.
 
+## 2026-10-15 — master plan: Phase 1 finished (3C, 3D, quality gate 1), Phase 2 (diagnosis), Phase 3 (the direction shadow track, collecting)
+
+- **3B verified** (the user's test: "down" email 13:36:47 UTC, "up" email after the 14:12 run's ping).
+- **3C** (`21dd13d`): dispatch answers kept and flagged in the weekly report. **3D** (`5cc1220`): the news review,
+  read-only; nothing changed.
+- **Quality gate 1** (`add581c`): readiness revision 3 addendum 2, **20 PASS, 2 PARTIAL** (observability → PASS).
+- **Phase 2** (`44c07d0`): `research/DIAGNOSIS_2026-10-15.md`, eight weak points with next steps and stop rules.
+- **Phase 3:** E033 sized the direction track (≈ 6,500 graded hours for a verdict; none possible by 2026-12-14). E034
+  registered (`research/DIRECTION_TRACK.md` v1.1, readings blind by Amendment 1.1), frozen artefact
+  `direction_1h_v1`, isolated storage live, the hourly step pushed 15:23 UTC, the reading code written; 16 direction
+  mutation guards caught. **Collecting since the 15:00 UTC hour** (first row 16:13 UTC, every step green).
+- **Next:** Phase 4, one registered move-size hypothesis (E035: shared Platt slope + four block intercepts,
+  development only; the second and last intraday-calibration variant), with Phase 5 alongside.
+
 ## 2026-10-14 (evening) — the master plan after the 500-hour evaluation: Phase 0, 3A, 3B; PAUSED
 
 - **Phase 0:** passed (`d46bb0e` corrected a doc/code mismatch).

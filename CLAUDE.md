@@ -41,13 +41,13 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - no deployment or shadow track without the user's review;
   - the 2,000-hour checkpoint needs no separate approval.
 
-  Waiting for the user:
-  - the E031 reassessment (move-size, not a candidate);
-  - whether a prospective direction shadow track is wanted after E032 (direction is a required track; E032 is
-    measurable, not useful);
-  - the news cost/value review;
-  - ~~whether to clip the checkpoint's EWMA warm-up~~ — answered by the user's master plan (2026-10-14): done as
-    Amendment A1 (protocol 1.1), so the warm-up never reads the holdout.
+  The four decisions that were waiting were all answered by the master plan (2026-10-14): the news review (done
+  2026-10-15, read-only); one move-size hypothesis after the diagnosis (Phase 4, E035); a prospective direction
+  shadow track (**running since 2026-10-15**, E034, `research/DIRECTION_TRACK.md`); the EWMA warm-up (Amendment A1).
+- **The direction shadow track (E034, since 2026-10-15):** `direction_1h_v1` scored hourly into `shadow_direction`
+  (its own tables, never touching the live signal or `move_size_1h_v1`). Readings at 1,000 / 3,000 / 6,500 eligible
+  hours (`python -m agent.research.direction_checkpoint`), the verdict only at 6,500 (≈ late July 2027). **Its readings
+  are blind (Amendment 1.1): look only at operational counts for it until each reading.**
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -598,6 +598,49 @@ first offline challenger, the directional assessment, the holdout routes.**
   - Weekly audit due ≈ 2026-10-20. The 2,000-hour reading (≈ 2026-12-14) runs only after every integrity check
     passes.
 
+**2026-10-15 — resumed at 3C; master plan Phase 1 finished, Phase 2 done, Phase 3 started (the direction shadow track is collecting).**
+- **Resumed exactly at 3C** after re-measuring. The user had run *Alert delivery test*: the "down" email arrived
+  (13:36:47 UTC) with the labelled text. The first hourly run after it (14:12) found no gap, its ping arrived at
+  14:13:24, and the "up" email followed (36 min 37 s down). **3B verified end to end.**
+- **3C (`21dd13d`):** dispatch-answer retention verified live (29/29 kept, owner-only, redaction and bounds live); the
+  weekly report now shows the week's answers and flags any refused, timed-out or unanswered dispatch.
+- **3D (`5cc1220`, read-only):** news costs ≈ $7.66 per 30 days (74% of the AI cost), changes 5.5% of signals (mostly
+  to HOLD); its value is unknown until the registered verdict (≈ 2027-02). Nothing changed.
+- **Quality gate 1 (`add581c`):** readiness revision 3 addendum 2, row 18 observability PARTIAL → PASS: **20 PASS,
+  2 PARTIAL** (calibration not yet confirmed prospectively; prospective monitoring). Still a RELEASE CANDIDATE.
+- **Phase 2 (`44c07d0`, analysis only):** `research/DIAGNOSIS_2026-10-15.md`, eight weak points, each with its single
+  next step and its stop rule. The 500-hour over-statement is not established (+0.031 [−0.013, +0.070]; the raw model
+  is level and Platt adds +0.034; slope ≈ 1, no over-confidence). E031 failed from slope noise; the intraday effect
+  is a level per block. E032 reproduces exactly.
+- **Phase 3, the prospective direction shadow track (E034):**
+  - **E033 (planning, development only; `970a94a` registered, `d00ec1a` result):** model vs base rate needs ≈ 4,700 /
+    6,400 graded hours for 80% power; model vs one feature 15,000–188,000 (undecidable). **No direction conclusion
+    is possible by 2026-12-14.**
+  - **Registered before any code (`e93335e`):** `research/DIRECTION_TRACK.md` v1.0. Readings at 1,000 / 3,000 eligible
+    hours (no verdict) and **6,500 (the verdict)**; IMPROVEMENT / SKILL BUT MISCALIBRATED / NO IMPROVEMENT /
+    INSUFFICIENT EVIDENCE; economics descriptive at 0.11% / 0.085% / 0.02% one way. **Amendment 1.1 (`6a7a938`,
+    before any row): the readings are blind** — routine reports show only operational counts for this track.
+  - **Frozen artefact `direction_1h_v1` (`35fa208`):** 64,156 development rows to 2025-06-29 22:00 UTC; M = E032's
+    eight-input logistic, F = taker-buy share alone, B = UP share 0.5097; sha256 `f04d6e32…` pinned. The live inputs
+    are the research code's own (400 development hours reproduce E032's rows to 3e-14).
+  - **Storage (`e3042b6`), applied live 14:56 UTC in one transaction with the grants, pushed seconds later:**
+    `shadow_direction` + `shadow_direction_errors`, immutable / append-only, CHECKs, RLS, API roles revoked;
+    `bitcoin_agent` SELECT/INSERT + outcome-only UPDATE (26 policies). Role and security checks OK; `migrate` a no-op;
+    integration 41/41 including the live drift check.
+  - **Hourly job (`0a70d26`, pushed 15:23 UTC):** two steps after the publish step; failures recorded, exit 0.
+    - **Collecting since the 15:00 UTC hour of 2026-10-15**, written 16:13 UTC by the dispatched run at `f47e7bd`: every step green (the direction step 4 s, its grading 1 s), status ok, both live cross-checks matched, the entry price kept, the artefact hash right, no errors. `python -m agent.research.direction_checkpoint` live: 1 row, pending, nothing written.
+  - **Reading code (`f47e7bd`):** `python -m agent.research.direction_checkpoint`, tested on synthetic rows only;
+    the weekly report gained an operational-only line for the track.
+  - **Mutation guards: 16 direction guards, all 16 caught (both controls held).** One first SURVIVED ("category scores on a different
+    window"): a one-candle-shorter window moves momentum by ≤ 2.6e-7, below the definition guard's cross-machine 1e-6
+    tolerance; closed with an exact same-machine parity test (`e8f7da8`).
+- **Nothing** in prediction, scoring, thresholds, features, `move_size_1h_v1`, its shadow record, its checkpoint code
+  or rules, `LIVE_EVALUATION.md` or the holdout changed. `research/HOLDOUT_ACCESS.log` does not exist.
+- 674 unit tests; integration 41/41 (live drift included); GitHub's tests green on every push; security and role checks OK.
+- **Next:** master plan Phase 4 (one registered move-size hypothesis: a shared Platt slope plus four six-hour block
+  intercepts, development data only, DIAGNOSIS row 5), with Phase 5 alongside: the weekly audit ≈ 2026-10-20; the
+  direction first look at 1,000 eligible hours (≈ late November); the 2,000-hour move-size reading ≈ 2026-12-14.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
@@ -638,10 +681,12 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 - `python -m agent.reporting latest|runs|run --hour <ISO>|statistics|health|all [--at <ISO>] [--pretty]`: read-only statistics and run history over the record (`docs/api/reporting_v1.md`). Server-enforced read-only connection; prints JSON; writes nothing. `--at` shows the record exactly as it stood at that moment. Never imported by production code.
 - `python -m agent.reporting.incidents record-workflow-run`: records a failed hourly/watchdog run as an incident from the `INCIDENT_*` environment variables the *Reporting snapshot* workflow sets (strictly validated; exit 1 on anything unexpected). Not for manual use.
 - `python -m agent.reporting.publish [--dry-run]`: stores the reporting documents in the two private stats caches (`docs/api/stats_access.md`). It runs automatically in the *Reporting snapshot* workflow after each completed hourly or watchdog run (failures included); `--dry-run` computes and stores nothing.
+- `python -m agent.direction_shadow.run [--no-save]` / `python -m agent.direction_shadow.outcomes` — the direction shadow track's hourly step and grading (E034; run by the hourly job after the publish step; failures go to `shadow_direction_errors`, exit 0).
+- `python -m agent.research.direction_checkpoint` — the direction track's registered readings (`research/DIRECTION_TRACK.md`). Before a reading is due it prints only operational counts (Amendment 1.1: blind) and writes nothing; at 1,000 / 3,000 / 6,500 eligible hours it writes `research/monitoring/direction_checkpoint_<N>h.md/.json` once.
 - `python -m agent.research.holdout_eval --dry-run` — proves the Phase 12 script on the validation period. **`--unseal` opens the sealed holdout once and forever — only on the user's explicit go-ahead.**
 - `python -m pytest tests/` — run the tests (no network or database needed).
 - `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` — tests against real Postgres in a scratch schema it creates and drops (skipped by default): idempotency, the public-API lockdown layer by layer, the least-privilege role (`docs/ops/least_privilege_role.sql`, run as a throwaway role), and the **drift check** — the live database must match what the repository builds. **Run it at every weekly audit** (it is too heavy for the 3-hourly watchdog: it creates and drops a schema), and after any change made in the Supabase dashboard.
-- `python -m agent.migrate` — **the only way to change the schema**: applies every schema file listed in `agent/migrate.py` (five since 2026-10-14: `agent/database/schema.sql`, `agent/shadow`, `agent/api`, `agent/reporting`, `agent/database/dispatch_log.sql`) in one transaction, then prints the schema version and the public-API posture. Safe to re-run. For a migration that raises `SCHEMA_VERSION`, run it against the database **before** deploying the code (the job accepts a database ahead of it, never behind). The hourly job never runs schema DDL.
+- `python -m agent.migrate` — **the only way to change the schema**: applies every schema file listed in `agent/migrate.py` (six since 2026-10-15: `agent/database/schema.sql`, `agent/shadow`, `agent/api`, `agent/reporting`, `agent/database/dispatch_log.sql`, `agent/direction_shadow`) in one transaction, then prints the schema version and the public-API posture. Safe to re-run. For a migration that raises `SCHEMA_VERSION`, run it against the database **before** deploying the code (the job accepts a database ahead of it, never behind). The hourly job never runs schema DDL.
 - `python -m agent.database.security` — exit 1 if any table is reachable through Supabase's public API (the watchdog runs it every 3h).
 - `python -m agent.database.dispatch_log [--hours 48 --list]` — GitHub's answers to the :12 dispatch, kept 90 days by the `dispatch-response-log` pg_cron job (`docs/ops/external_trigger.md`). Read-only; owner connection.
 - `python -m agent.database.role_check [--connected]` — the least-privilege role against `docs/ops/least_privilege_role.sql`; `--connected` also requires this connection to BE `bitcoin_agent` (the watchdog runs it).

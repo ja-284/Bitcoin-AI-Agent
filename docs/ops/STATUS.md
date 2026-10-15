@@ -21,6 +21,11 @@ pre-500h plan, `research/INTERIM_PLAN_PRE_500H.md`) carry on unchanged towards t
 each with tests and its own commit (the last section of this file). None of them touches prediction,
 scoring, the model or the checkpoints.
 
+**New since 2026-10-15, by the user's master plan (2026-10-14, Phase 3):** a separate prospective **direction
+shadow track** (E034, `research/DIRECTION_TRACK.md`) collects its own pre-registered predictions in its own tables.
+It never touches the live signal, `move_size_1h_v1` or its checkpoints, and its readings are blind (Amendment 1.1:
+routine reports show only operational counts for it until each reading).
+
 This is a freeze **for the current prospective evaluation**, not a permanent one. Other work happens only
 for: (1) a real production problem, (2) a security, data-integrity or reliability problem, (3) a scheduled
 audit that is due, (4) genuinely new evidence from the live system, (5) a registered checkpoint, (6) the
@@ -74,7 +79,8 @@ other or with the versions in the code. **Update both, together, from the comman
    GitHub's own slots at :07/:22/:37/:52 are the backup and exit early once the hour is saved.
 2. Each run: fetch candles (Binance; CoinGecko fallback, marked synthetic) → news → scoring → save the
    prediction → grade older outcomes → self-check the hour was saved → shadow probability → grade shadow
-   rows → publish `backend_state` → **ping the heartbeat**.
+   rows → publish `backend_state` → direction shadow probabilities → grade direction rows (since 2026-10-15,
+   E034; a failure is recorded in `shadow_direction_errors` and exits 0) → **ping the heartbeat**.
 3. A failed news or explanation call degrades the hour **visibly** (news weight 0, error recorded). It never
    fabricates a value. Missing price data fails the run loudly.
 4. **Alarms:**
@@ -245,6 +251,15 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
 - Afterwards a dated readiness assessment is added to the gate, again.
 
 **Then 5,000 hours:** the E013 verdict (≈ spring 2027).
+
+**The direction shadow track (E034, separate; `research/DIRECTION_TRACK.md` v1.1).** Collecting since the 15:00 UTC hour of 2026-10-15 (written 16:13 UTC by the dispatched run at f47e7bd: every step green, both live cross-checks matched).
+- Readings at **1,000** eligible hours (≈ late November 2026, first look, no verdict), **3,000** (≈ late February
+  2027, no verdict) and **6,500** (≈ late July 2027, the verdict). E033 sized them: no direction conclusion is
+  possible by 2026-12-14.
+- Command: `python -m agent.research.direction_checkpoint`. It prints only operational counts until a reading is
+  due, then writes `research/monitoring/direction_checkpoint_<N>h.md/.json` once.
+- **Blind (Amendment 1.1):** until each reading, look only at operational figures for this track (rows, statuses,
+  coverage, errors, the prospective rule, integrity flags, graded/pending counts), never an outcome-based one.
 
 ## After the readiness audit, in order (the user's decisions, 2026-10-11)
 

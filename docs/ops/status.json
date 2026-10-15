@@ -50,7 +50,8 @@
     "after_checkpoint": "a dated readiness assessment appended to the gate, then a plain report; never an automatic 'finished'",
     "news_first_look": "done 2026-10-14 (E030; research/results/E030/): first 500 usable hours, blind until run, no verdict by registration; 1h rho +0.046 [-0.052, +0.151], 6h +0.001, 24h -0.096 -- every interval includes zero; not evidence of no effect (detectable only |rho| >= 0.125 at this size)",
     "news_verdict_expected": "2027-02 (3,140 usable hours, E025)",
-    "news_verdict_usable_hours": 3140
+    "news_verdict_usable_hours": 3140,
+    "direction_track": {"experiment": "E034", "protocol": "research/DIRECTION_TRACK.md v1.1", "model_version": "direction_1h_v1", "artefact_sha256": "f04d6e322c24dde98e2209b78492e6a2feff6d9fba41dab19dd971f6e6d224d9", "tables": ["shadow_direction", "shadow_direction_errors"], "collecting_since": "the 15:00 UTC hour of 2026-10-15 (written 16:13 UTC by the dispatched run at f47e7bd: every step green, both live cross-checks matched)", "readings_eligible_hours": [1000, 3000, 6500], "verdict_at": 6500, "sized_by": "E033", "readings_expected": {"1000": "late November 2026", "3000": "late February 2027", "6500": "late July 2027"}, "command": "python -m agent.research.direction_checkpoint", "blind": "Amendment 1.1: only operational counts for this track until each reading", "touches_live_signal_or_move_size": false}
   },
   "automation": {
     "primary_trigger": "Supabase pg_cron -> GitHub workflow_dispatch at :12 UTC",

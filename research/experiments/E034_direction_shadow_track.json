@@ -1,8 +1,8 @@
 {
   "id": "E034",
   "date": "2026-10-15",
-  "git_commit": "registration (this commit), before any collection code; the artefact, storage, hourly step and reading code follow in separate commits",
-  "status": "REGISTERED. A PROSPECTIVE shadow track (master plan Phase 3): E032's frozen 1h direction probability, scored every hour into its own table, judged only on hours that did not exist when it was fitted. No collection yet. Separate from the move-size track; never changes the BUY/HOLD/SELL signal; never trades.",
+  "git_commit": "registration e93335e (before any collection code); Amendment 1.1 6a7a938; artefact 35fa208; storage e3042b6; hourly step 0a70d26; reading code f47e7bd",
+  "status": "REGISTERED. A PROSPECTIVE shadow track (master plan Phase 3): E032's frozen 1h direction probability, scored every hour into its own table, judged only on hours that did not exist when it was fitted. COLLECTING since the 15:00 UTC hour of 2026-10-15 (first row written 16:13 UTC by f47e7bd). Separate from the move-size track; never changes the BUY/HOLD/SELL signal; never trades.",
   "why": "E032 found a faint, calibrated, year-stable 1h probability of UP on development data (Brier skill +0.0038 / +0.0043 vs a leak-free base rate), but about 30 experiments had seen those periods, so it is hypothesis-generating only. The user's master plan (2026-10-14) authorises a separate prospective test, registered before collection, as the only clean confirmation available without the holdout.",
   "hypothesis": "On prospective hours, the frozen eight-input logistic's 1h P(UP) has a lower Brier score than the frozen development base rate, with a 95% 48h block-bootstrap interval excluding zero, while staying roughly calibrated (|mean stated - observed| <= 0.03 and ECE <= 0.03).",
   "protocol": "research/DIRECTION_TRACK.md, version 1.1 (Amendment 1.1, 2026-10-15, before any row: the readings are blind, so routine reports show only operational figures until each reading): the target, the timing and prospective rule, the frozen artefact direction_1h_v1 (M eight inputs, F taker_buy_share_1h alone, B the development UP share), isolated storage, the registered measures, readings at 1,000 / 3,000 eligible hours (no verdict) and 6,500 (the verdict), the criteria (IMPROVEMENT / SKILL BUT MISCALIBRATED / NO IMPROVEMENT / INSUFFICIENT EVIDENCE), the pre-decided consequences, and descriptive economics at registered costs.",
@@ -15,5 +15,5 @@
     "economically_useful": "only if IMPROVEMENT and long/flat's net mean per traded hour at the standard 0.11% one-way cost has an interval above zero and beats buy-and-hold"
   },
   "validation_wear": "The development periods are worn (E022's rule); this record is the clean test. It must not be declared successful because E032 found a positive effect.",
-  "result": "PENDING: collection has not started. First reading at 1,000 eligible hours (about late November 2026); verdict at 6,500 (about late July 2027)."
+  "result": "PENDING: collecting since 2026-10-15 15:00 UTC. First reading at 1,000 eligible hours (about late November 2026); verdict at 6,500 (about late July 2027). Blind until each reading (Amendment 1.1)."
 }
