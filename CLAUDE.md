@@ -662,6 +662,57 @@ first offline challenger, the directional assessment, the holdout routes.**
   - the direction first look at 1,000 eligible hours (≈ late November);
   - the 2,000-hour move-size reading ≈ 2026-12-14, after the integrity checklist.
 
+**2026-10-16 — the user's "MASTER PLAN ADDENDUM — PROCESS CORRECTIONS AND MONITORING HARDENING" (items 1–8).**
+It supplements the master plan; Phase 5 (monitoring) continues afterwards. No model, rule, threshold or registered
+experiment changed.
+- **1, state verified (read-only):**
+  - `main` = GitHub at `7c15c87`; no Python process running.
+  - The "stopped background command" `bkphh3vlx` was a Monitor that only waited for a scratch file and printed it.
+    It was killed at expiry, touched no repository file or database, and left nothing partial.
+  - Counts: 585 of 2,000 graded hours; the direction track had 21 rows, 0 errors; no missing hour since 2026-10-14;
+    0 overdue outcomes; last 40 GitHub runs green. Nothing differed from the report.
+- **2 (`098222b`):** CLAUDE.md's current-stage summary now says 20 PASS / 2 PARTIAL (it still said 19 / 3).
+  - The 500-hour gap (stated 0.335 vs observed 0.304) is now worded everywhere active as a **descriptive** +0.031
+    whose interval [−0.013, +0.070] includes zero, not an established over-statement.
+  - Readiness gate addendum 3 (wording only).
+- **3 (`941f099`): `tools/gate.py`, the one fail-safe way to commit and push** (`docs/ops/QUALITY_GATE.md`).
+  - It stops at the first failing step, prints NOT RUN for the rest and returns the real exit code.
+  - `ship` commits only after a passed gate, with exactly the tested tree. `push` checks that the push landed.
+  - Proven in a throwaway clone with a fake remote: a failing test gave exit 1 with no commit and no push.
+  - Every later commit today went through it, and it stopped one (item 5).
+- **4 (`3aeb108`): the 2,000-hour pre-check now fails closed.**
+  - Real gaps fixed: rule 3 only said REVIEW; a crash was a traceback; exit 0 meant both "ready" and "not reached";
+    rule 2 ignored input definitions; rule 6 ignored the pass thresholds.
+  - Every commit on the checkpoint's path since the last reading now needs an evidenced review in
+    `research/CHECKPOINT_PATH_REVIEWS.json`. The four existing commits were reviewed by a function-source
+    comparison: only A1 (`48e080b`) changed anything the checkpoint uses, and `live_checkpoint.py` is unchanged
+    since `ed96b2a`.
+  - Exit codes: 0 READY, 3 not reached, 1 FAIL.
+  - 35 tests, 23 mutation guards (23/23 caught).
+- **5 (`38311b4`, `03e6604`): the direction track's own alert** (`agent/direction_shadow/health.py`):
+  - a separate healthchecks.io check (secret `DIRECTION_HEARTBEAT_URL`) and the protected append-only
+    `shadow_direction_health` (UNIQUE per event, applied live 13:50 UTC in one transaction, pushed 13:57 after
+    integration 43/43);
+  - success ping when the latest hour is valid; nothing for a late but recoverable hour; one /fail per incident for
+    a lost hour; recovery recorded.
+  - **A mutation survived** (the UNIQUE constraint): the text test also matched a SQL comment. The gate stopped the
+    push; the test now strips comments; 13/13 caught.
+  - Live: the 14:12 run's new step is green; state healthy, 0 events, 0 errors.
+  - **The alert is inert until the user adds the check and its secret and runs the manual *Direction alert delivery
+    test*** (`open_user_actions.md` item 7). The delivery is therefore NOT yet verified.
+- **6 (`1a7ad2e`): `python -m agent.research.direction_integrity`**, blind (counts only). Live: 9 of 9 PASS on 22 rows.
+  - The version and artefact are as registered, and the fit used development data only.
+  - The timestamps are aligned and every row is prospective.
+  - The probabilities reproduce (5.0e-16).
+  - 21 of 21 gradings, and every input, match the exchange's candles.
+  - 0 hours skipped; no reading file.
+  - **This is operational validation only.** 22 hours say nothing about predictive skill.
+- **7 (`d9b14f3`): `research/COST_ASSUMPTIONS_2026-10-16.md`**, read-only; E034's grid unchanged.
+  - Verified: Binance Regular User 0.100% / 0.100% (0.075% with BNB); Kraken Pro Level 1 0.40% / 0.80%.
+  - Unverified: Coinbase Advanced (HTTP 403) and OKX.
+  - One order-book snapshot: spread 1 tick (about 0.00001%), slippage under 0.01% up to 100,000 USDT.
+- **8:** the final verification is recorded below.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:

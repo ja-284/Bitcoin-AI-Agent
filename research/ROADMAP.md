@@ -289,6 +289,20 @@ role and the API-log check remain open.
   - the checkpoint is not blind;
   - test counts reconciled.
 
+## 2026-10-16 — master plan addendum: process corrections and monitoring hardening
+
+- The state was verified. The stopped background command was a harmless read-only Monitor.
+- The active docs were corrected: 20 / 2, and the 500-hour gap is descriptive.
+- `tools/gate.py` makes the commit-and-push workflow fail safe.
+- The pre-check fails closed, with 23 mutation guards.
+- The direction track has its own alert. Delivery waits on the user's healthchecks.io check and secret.
+- The direction experiment's integrity was verified blind: 9 of 9.
+- The cost assumptions were checked against primary sources.
+- Final verification: CLAUDE.md, 2026-10-16 entry.
+- **Next:** Phase 5 only. The user's alert setup (item 7), the weekly audit ≈ 2026-10-20, the direction first look
+  at 1,000 eligible hours, and the 2,000-hour reading ≈ 2026-12-14 after `python -m agent.research.checkpoint_precheck`
+  exits 0.
+
 ## 2026-10-15 — master plan: Phase 1 finished (3C, 3D, quality gate 1), Phase 2 (diagnosis), Phase 3 (the direction shadow track, collecting)
 
 - **3B verified** (the user's test: "down" email 13:36:47 UTC, "up" email after the 14:12 run's ping).

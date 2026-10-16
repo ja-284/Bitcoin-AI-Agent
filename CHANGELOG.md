@@ -5,6 +5,20 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## process — 2026-10-16 (master plan addendum: process corrections and monitoring hardening)
+
+No model, rule, threshold or registered experiment changed.
+- `tools/gate.py` (`docs/ops/QUALITY_GATE.md`): the one fail-safe way to test, commit and push.
+- The 2,000-hour pre-check fails closed. `research/CHECKPOINT_PATH_REVIEWS.json` holds the evidenced reviews.
+  Exit codes: 0 READY, 3 not reached, 1 FAIL.
+- The direction track's own alert (`agent/direction_shadow/health.py`, table `shadow_direction_health`). It needs the
+  user's healthchecks.io check and secret (`open_user_actions.md` item 7).
+- `agent/research/direction_integrity.py`: the live direction experiment's integrity, verified blind.
+- `research/COST_ASSUMPTIONS_2026-10-16.md`: fees, spread and slippage checked against primary sources.
+- Docs: the current readiness summary (20 PASS / 2 PARTIAL); the 500-hour gap worded as descriptive and not
+  established.
+- Mutation guards: 104 → 150 registered.
+
 ## research — 2026-10-15 (master plan Phase 4: E035, not a candidate; the intraday-calibration line is closed)
 
 The master plan's one move-size hypothesis, registered (`1ff9e12`) before its code (`70ca360`) and run once on
