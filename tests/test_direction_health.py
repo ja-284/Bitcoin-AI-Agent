@@ -143,8 +143,10 @@ def test_the_expected_hour_is_the_one_the_direction_step_scores(hour_index):
 
 
 def test_the_health_record_is_append_only_and_records_each_event_once_as_written():
-    """Text-level; the behaviour is proven on real Postgres in tests/integration."""
-    sql = " ".join(Path("agent/direction_shadow/schema.sql").read_text(encoding="utf-8").split())
+    """Text-level, on the SQL with its comments removed: on 2026-10-16 the UNIQUE mutation survived because the
+    phrase also appears in a comment. The behaviour is proven on real Postgres in tests/integration."""
+    code = chr(10).join(line.split("--", 1)[0] for line in Path("agent/direction_shadow/schema.sql").read_text(encoding="utf-8").splitlines())
+    sql = " ".join(code.split())
     assert "CREATE TRIGGER shadow_direction_health_append_only BEFORE UPDATE OR DELETE ON shadow_direction_health" in sql
     assert "UNIQUE (kind, hour)" in sql and "CHECK (kind IN ('hour_lost', 'recovered'))" in sql
     assert "ARRAY['shadow_direction', 'shadow_direction_errors', 'shadow_direction_health']" in sql

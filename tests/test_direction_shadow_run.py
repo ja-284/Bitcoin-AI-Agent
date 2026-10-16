@@ -151,7 +151,8 @@ def test_the_schema_makes_rows_immutable_and_errors_append_only():
     """Text-level (the triggers are proven on real Postgres in tests/integration): the guards are present as written."""
     from pathlib import Path
 
-    sql = " ".join(Path("agent/direction_shadow/schema.sql").read_text(encoding="utf-8").split())
+    code = chr(10).join(line.split("--", 1)[0] for line in Path("agent/direction_shadow/schema.sql").read_text(encoding="utf-8").splitlines())
+    sql = " ".join(code.split())  # comments removed, so a phrase in a comment can never stand in for the code
     assert "CREATE TRIGGER shadow_direction_guard_update BEFORE UPDATE ON shadow_direction" in sql
     assert "IF (to_jsonb(NEW) - outcome) IS DISTINCT FROM (to_jsonb(OLD) - outcome) THEN" in sql
     assert "IF OLD.outcome_status IS NOT NULL THEN" in sql
