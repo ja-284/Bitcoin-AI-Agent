@@ -89,6 +89,26 @@ END $$;
 DROP TRIGGER IF EXISTS shadow_direction_errors_append_only ON shadow_direction_errors;
 CREATE TRIGGER shadow_direction_errors_append_only BEFORE UPDATE OR DELETE ON shadow_direction_errors FOR EACH ROW EXECUTE FUNCTION shadow_direction_errors_forbid_change();
 
+-- The track's own health record (master plan addendum 2026-10-16, item 5): each hour left permanently without a valid
+-- observation and each recovery, recorded once by agent.direction_shadow.health. UNIQUE (kind, hour) makes a second
+-- recording of the same event impossible, so two overlapping runs cannot alert twice for one hour. Append-only.
+CREATE TABLE IF NOT EXISTS shadow_direction_health (
+    id BIGSERIAL PRIMARY KEY,
+    recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    kind TEXT NOT NULL CHECK (kind IN ('hour_lost', 'recovered')),
+    hour TIMESTAMPTZ NOT NULL,               -- hour_lost: the hour with no valid observation; recovered: the first valid one after
+    detail TEXT NOT NULL CHECK (length(detail) <= 1000),
+    github_run TEXT CHECK (length(github_run) <= 100),
+    code_commit TEXT CHECK (length(code_commit) <= 64),
+    UNIQUE (kind, hour)
+);
+CREATE OR REPLACE FUNCTION shadow_direction_health_forbid_change() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'shadow_direction_health is append-only: % refused (row id %)', TG_OP, COALESCE(OLD.id, -1);
+END $$;
+DROP TRIGGER IF EXISTS shadow_direction_health_append_only ON shadow_direction_health;
+CREATE TRIGGER shadow_direction_health_append_only BEFORE UPDATE OR DELETE ON shadow_direction_health FOR EACH ROW EXECUTE FUNCTION shadow_direction_health_forbid_change();
+
 -- Access lockdown, as in every schema file (reasoning in agent/database/schema.sql): RLS on with no policies for
 -- the API roles, and their privileges revoked. Repeated here as code so this file stays self-contained.
 DO $$
@@ -97,7 +117,7 @@ DECLARE
     r text;
     s text;
 BEGIN
-    FOREACH t IN ARRAY ARRAY['shadow_direction', 'shadow_direction_errors'] LOOP
+    FOREACH t IN ARRAY ARRAY['shadow_direction', 'shadow_direction_errors', 'shadow_direction_health'] LOOP
         EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
         FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
             IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN

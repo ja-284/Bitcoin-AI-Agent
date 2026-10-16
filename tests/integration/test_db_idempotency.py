@@ -929,3 +929,48 @@ def test_the_least_privilege_role_runs_the_direction_track_and_nothing_more(leas
             with pytest.raises(psycopg.Error, match="permission denied|append-only|only the outcome|already has an outcome"):
                 cur.execute(sql)
             conn.rollback()
+
+
+def _health_assessment(hours_lost, expected, recovered):
+    from agent.direction_shadow.health import Assessment
+
+    return Assessment(expected, True, False, hours_lost, hours_lost, recovered)
+
+
+def test_the_direction_health_record_is_append_only_and_records_each_event_once(scratch_db):
+    """Addendum 2026-10-16, item 5, as the OWNER: UNIQUE (kind, hour) dedupes, the trigger refuses any change."""
+    import psycopg
+
+    import agent.direction_shadow.health as dh
+
+    db, _ = scratch_db
+    t = datetime(2026, 2, 5, 3, tzinfo=timezone.utc)
+    a = _health_assessment([t], t + 2 * HOUR, True)
+    assert dh.record(a) == (1, True)
+    assert dh.record(a) == (0, False), "a second recording of the same events must insert nothing"
+    rows, events = dh.read_state()
+    assert [(e["kind"], e["hour"]) for e in events] == [("hour_lost", t), ("recovered", t + 2 * HOUR)]
+    for sql, msg in (("UPDATE shadow_direction_health SET detail = 'x'", "append-only"),
+                     ("DELETE FROM shadow_direction_health", "append-only"),
+                     ("INSERT INTO shadow_direction_health (kind, hour, detail) VALUES ('fine', now(), 'x')", "violates check")):
+        with db.get_connection() as conn, conn.cursor() as cur:
+            with pytest.raises(psycopg.Error, match=msg):
+                cur.execute(sql)
+            conn.rollback()
+
+
+def test_the_least_privilege_role_records_direction_health_and_nothing_more(least_privileged):
+    """The job's role reads the track and appends health events; it cannot rewrite or delete them."""
+    import psycopg
+
+    import agent.direction_shadow.health as dh
+
+    db, _, _, as_probe = least_privileged
+    t = datetime(2026, 2, 6, 3, tzinfo=timezone.utc)
+    assert dh.record(_health_assessment([t], t + 2 * HOUR, True)) == (1, True)
+    assert [e["kind"] for e in dh.read_state()[1]] == ["hour_lost", "recovered"]
+    for sql in ("UPDATE shadow_direction_health SET detail = 'x'", "DELETE FROM shadow_direction_health"):
+        with as_probe() as conn, conn.cursor() as cur:
+            with pytest.raises(psycopg.Error, match="permission denied|append-only"):
+                cur.execute(sql)
+            conn.rollback()

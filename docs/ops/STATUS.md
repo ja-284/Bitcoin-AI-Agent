@@ -98,6 +98,15 @@ other or with the versions in the code. **Update both, together, from the comman
      the hours in the check's log. The success ping seconds later emails "up" again. Each gap is reported
      once, and a late run is never reported, because an hour is missing only once a later hour is saved
      (nothing is backfilled). A complete GitHub outage is still caught by the heartbeat's silence alarm.
+   - **The direction track's own alert** (since 2026-10-16; `agent/direction_shadow/health.py`), on a SEPARATE
+     healthchecks.io check, never the main one:
+     - a success ping when the latest closed hour has a valid direction observation;
+     - nothing for a late hour that a later run can still record before its deadline (`as_of` + 2 h);
+     - ONE "down" email per incident when an hour is lost for good. Each lost hour and each recovery is recorded
+       once in `shadow_direction_health` (append-only, unique per hour);
+     - "up" again on recovery. The check's silence alarm covers no runs at all.
+     - **Inert until the user adds the check and its secret** (`open_user_actions.md` item 7). The record is
+       written either way. Read the state with `python -m agent.direction_shadow.health --status`.
 5. **After each completed hourly or watchdog run**, the separate *Reporting snapshot* workflow:
    - first records a FAILED run as an incident (`python -m agent.reporting.incidents`, since 2026-10-05);
    - then refreshes the private stats read model (`python -m agent.reporting.publish`).

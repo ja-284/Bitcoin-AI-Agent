@@ -273,6 +273,23 @@ website in Lovable, do these three steps, all described with exact clicks and SQ
 Give Lovable only the project URL and the publishable (anon) key, never the service_role key, the
 database URL or any password. This is a private statistics page, **not the trading application**.
 
+## 7. A second healthchecks.io check for the direction track — OPEN (2026-10-16), about 5 minutes
+
+The direction track (E034) now has its own alert, separate from the main heartbeat (master plan addendum 2026-10-16,
+item 5). The code is deployed and records every lost hour and recovery in the database already; only the email needs
+you, because creating checks and adding secrets are account steps that are yours to do.
+
+1. On healthchecks.io, in the same project as `bitcoin_hourly_run`, add a check named `bitcoin_direction_track`
+   with **period 1 hour** and **grace 1 hour** (so a late but recovered hour never alarms, and two hours with no valid
+   direction observation do). Copy its ping URL.
+2. On GitHub: repository Settings → Secrets and variables → Actions → New repository secret, name
+   `DIRECTION_HEARTBEAT_URL`, value the URL. Do not paste it into chat.
+3. Actions tab → *Direction alert delivery test* → Run workflow, once. You should get a "down" email for
+   `bitcoin_direction_track` whose log says "DELIVERY TEST ... NO direction hour is lost". The next hourly run's
+   success ping sends the "up" email.
+
+Until then the direction alert is inert (it records, but nothing reaches you), and the report says so.
+
 ## Not on this list, deliberately
 
 - **Anything involving real money, orders, wallets or exchanges.** The project is analysis-only. The

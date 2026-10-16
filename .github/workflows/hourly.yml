@@ -40,6 +40,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
       HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
+      DIRECTION_HEARTBEAT_URL: ${{ secrets.DIRECTION_HEARTBEAT_URL }}  # the direction track's own check (2026-10-16)
 
     steps:
       # For the missed-hour signal near the end: a row this run saves is created after this moment.
@@ -92,6 +93,20 @@ jobs:
 
       - name: Grade direction shadow rows
         run: python -m agent.direction_shadow.outcomes
+
+      # The DIRECTION track's own alert (master plan addendum 2026-10-16), on its OWN healthchecks.io check, separate
+      # from the main heartbeat below. A success ping when the latest closed hour has a valid direction observation;
+      # ONE /fail per incident when an hour is lost for good (each lost hour and each recovery recorded once in
+      # shadow_direction_health); nothing for a late but still recoverable hour. If no run gets here, the check's own
+      # silence alarm fires. The assessment and its record run even without the secret; only the pings need it. It
+      # runs after a failed step too (the hour may still have been recorded) and can never change the job's result.
+      - name: Heartbeat direction track (its own check)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: |
+          python -m agent.direction_shadow.health --actions-file direction-actions.txt --fail-body-file direction-fail.txt
+          if [ -n "$DIRECTION_HEARTBEAT_URL" ] && grep -qx fail direction-actions.txt; then curl -fsS -m 10 --retry 3 --data-binary @direction-fail.txt "${DIRECTION_HEARTBEAT_URL%/}/fail" > /dev/null; fi
+          if [ -n "$DIRECTION_HEARTBEAT_URL" ] && grep -qx success direction-actions.txt; then curl -fsS -m 10 --retry 3 "$DIRECTION_HEARTBEAT_URL" > /dev/null; fi
 
       # A SINGLE missed hour (2026-10-07: no run at all for one hour, and the pings either side were
       # 87 min apart, inside the 90 min allowance, so nothing alarmed). Nothing is ever backfilled, so an

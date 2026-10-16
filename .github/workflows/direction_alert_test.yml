@@ -1,0 +1,42 @@
+# A MANUAL, one-shot check of the DIRECTION TRACK alert's delivery chain (master plan addendum 2026-10-16, item 5):
+# this runner -> agent.direction_shadow.health -> curl -> the direction track's OWN healthchecks.io check (/fail) -> your
+# email. It sends ONE report, clearly labelled "DELIVERY TEST ... NO direction hour is lost", through the same module and
+# the same curl shape as the real alert in hourly.yml, so no real direction hour ever has to be lost to prove the alarm.
+#
+# It is separate from "Alert delivery test" (the main model's heartbeat) and holds only the direction check's secret.
+# It runs only when started by hand (Actions tab -> "Direction alert delivery test" -> Run workflow). It has no schedule,
+# needs no database and no AI key, writes nothing anywhere, and changes no production data. The direction check goes
+# "down" with the test text in its log; the next real hourly run's direction success ping turns it green again.
+# The Reporting snapshot workflow does not follow this workflow, so no incident is recorded.
+
+name: Direction alert delivery test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  send-one-test-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DIRECTION_HEARTBEAT_URL: ${{ secrets.DIRECTION_HEARTBEAT_URL }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5, pinned 2026-09-26
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # No continue-on-error: if the report cannot be sent, this run must show as failed.
+      - name: Send one labelled test report to the direction check's /fail
+        run: |
+          test -n "$DIRECTION_HEARTBEAT_URL" || { echo "::error::the DIRECTION_HEARTBEAT_URL secret is not set"; exit 1; }
+          python -m agent.direction_shadow.health --delivery-test-body test-report.txt
+          curl -fsS -m 10 --retry 3 --data-binary @test-report.txt "${DIRECTION_HEARTBEAT_URL%/}/fail" > /dev/null

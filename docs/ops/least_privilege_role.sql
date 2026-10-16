@@ -88,6 +88,10 @@ CREATE POLICY backend_grade  ON shadow_direction        FOR UPDATE TO bitcoin_ag
   USING (outcome_status IS NULL) WITH CHECK (true);
 CREATE POLICY backend_read   ON shadow_direction_errors FOR SELECT TO bitcoin_agent USING (true);
 CREATE POLICY backend_insert ON shadow_direction_errors FOR INSERT TO bitcoin_agent WITH CHECK (true);
+-- (2026-10-16) the direction track's own health record (agent.direction_shadow.health): append only
+GRANT SELECT, INSERT ON shadow_direction_health TO bitcoin_agent;
+CREATE POLICY backend_read   ON shadow_direction_health FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON shadow_direction_health FOR INSERT TO bitcoin_agent WITH CHECK (true);
 
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;
