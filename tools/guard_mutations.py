@@ -462,6 +462,27 @@ MUTATIONS = [
              "            \"live_scores_mismatches\": sum(1 for r in mine if r[\"live_scores_match\"] is False),",
              "            \"live_scores_mismatches\": sum(1 for r in mine if r[\"live_scores_match\"] is False), \"up_share\": 0,",
              "an outcome-based figure leaks into the blind operational view (direction track)"),
+    # ---- the quality gate: a failure must stop the commit-and-push workflow (addendum 2026-10-16, item 3)
+    Mutation("quality-gate", "tools/gate.py",
+             "            break  # the first failure stops the gate",
+             "            pass  # the first failure stops the gate",
+             "the gate keeps running steps after a failure (quality gate)"),
+    Mutation("quality-gate", "tools/gate.py",
+             "    if not gate.ok:  # never commit after a failed gate",
+             "    if False:  # never commit after a failed gate",
+             "ship commits after a failed gate (quality gate)"),
+    Mutation("quality-gate", "tools/gate.py",
+             "    if not gate.ok:  # never push after a failed gate",
+             "    if False:  # never push after a failed gate",
+             "push proceeds after a failed gate (quality gate)"),
+    Mutation("quality-gate", "tools/gate.py",
+             "    if r.returncode != 0:",
+             "    if False:",
+             "a git push that failed is reported as pushed (quality gate)"),
+    Mutation("quality-gate", "tools/gate.py",
+             '        return bool(self.results) and all(r.status == "PASSED" and r.code == 0 for r in self.results)',
+             '        return all(r.status == "PASSED" and r.code == 0 for r in self.results)',
+             "an empty gate counts as passed (quality gate)"),
 ]
 
 
