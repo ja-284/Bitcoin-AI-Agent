@@ -1,0 +1,31 @@
+{
+  "what": "Every commit after the last registered move-size reading that touches the checkpoint's code path (agent/research/checkpoint_precheck.CHECKPOINT_PATH) must be reviewed here before the next reading. The pre-check (rule 3) FAILS on any commit on the path without an entry. An entry records the evidence, not an opinion: which checkpoint functions changed, and whether the change is a registered amendment or provably outside the checkpoint's computation.",
+  "since_reading": {"hours": 500, "commit": "ed96b2a"},
+  "allowed_verdicts": ["registered amendment", "outside the checkpoint's computation"],
+  "reviews": {
+    "f258fa21c9ad17564cac47c6a9bcc4dd1bd6bc82": {
+      "subject": "Register Amendment A1 to research/LIVE_EVALUATION.md (protocol 1 -> 1.1)",
+      "verdict": "registered amendment",
+      "evidence": "Text only, in research/LIVE_EVALUATION.md: Amendment A1, registered before its code (48e080b). It clips the free EWMA rule's warm-up at the buffer's first hour so no reading reads the sealed holdout; no criterion, size, metric or selection rule changes.",
+      "reviewed_on": "2026-10-16"
+    },
+    "48e080b2acb9c80f934d073593bfd18cb95869ff": {
+      "subject": "Amendment A1 code: the free EWMA rule's warm-up is clipped at the buffer's first hour",
+      "verdict": "registered amendment",
+      "evidence": "The only commit since ed96b2a that changes a function the checkpoint uses: weekly_report.ewma_reference_series changed and ewma_fetch_hours was added (function-source comparison at ed96b2a, 48e080b~1, 48e080b, 21dd13d, f47e7bd and HEAD, 2026-10-16). It implements Amendment A1 exactly; the effect on the EWMA reference at judged hours is bounded at about 3e-10 (tests/test_holdout_routes.py). _against_ewma, fetch_shadow_rows and every function of live_checkpoint.py are byte-identical to ed96b2a.",
+      "reviewed_on": "2026-10-16"
+    },
+    "21dd13d1e33ec40c31652a63b92baf9937003f79": {
+      "subject": "Master plan 3C: dispatch-answer retention verified live; a refused or unanswered dispatch now shows in the weekly report",
+      "verdict": "outside the checkpoint's computation",
+      "evidence": "weekly_report.py gained dispatch_answers and _render_dispatch, one build() key and one render() line. The functions the checkpoint uses (ewma_reference_series, ewma_fetch_hours, _against_ewma, fetch_shadow_rows) are identical before and after this commit (function-source comparison, 2026-10-16).",
+      "reviewed_on": "2026-10-16"
+    },
+    "f47e7bd9f287b0deb06df578254ed655188ea99c": {
+      "subject": "E034 step 5: the registered reading code, and an operational-only weekly line",
+      "verdict": "outside the checkpoint's computation",
+      "evidence": "weekly_report.py gained direction_track and _render_direction (the direction track's operational line), one build() key and one render() line. The functions the checkpoint uses are identical before and after this commit (function-source comparison, 2026-10-16).",
+      "reviewed_on": "2026-10-16"
+    }
+  }
+}
