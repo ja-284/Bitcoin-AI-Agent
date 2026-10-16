@@ -3,8 +3,9 @@
 > **Current score (2026-10-15, revision 3 addendum 2): 20 PASS, 2 PARTIAL, 0 FAIL, 0 UNKNOWN.** Row 18
 > (observability) is now PASS. The missed-hour alarm's email has been seen delivered, and the dispatch answers are
 > verified and visible. The two PARTIALs are row 8 (calibration, not yet confirmed prospectively) and row 21
-> (prospective monitoring, the calendar). Still a **RELEASE CANDIDATE, not FINAL.** The next two paragraphs are
-> earlier scores, kept as they were written.
+> (prospective monitoring, the calendar). Still a **RELEASE CANDIDATE, not FINAL.** A wording clarification
+> follows as addendum 3 (2026-10-16): no score changes. The next two paragraphs are earlier scores, kept as they
+> were written.
 
 > **Current score (2026-10-13, revision 3, the strict readiness audit after the 500-hour first look):
 > 19 PASS, 3 PARTIAL, 0 FAIL, 0 UNKNOWN.** The three PARTIALs are row 8 (calibration: not yet confirmed
@@ -219,6 +220,18 @@ untouched to the 2,000-hour reading. The registered news first look (descriptive
 - **Quality gate, 2026-10-14:** 615 unit tests with no database; integration 39/39, including the live drift
   check; security and role checks OK; dependencies unchanged; mutation guards 87/87 (both controls held; full run at 68dd8d3, 77 min); GitHub's tests green on
   every push.
+
+### Addendum 3, 2026-10-16: a wording clarification for row 8 (no score change)
+
+Revision 3's row 8 and its "Not proven" list describe the 500-hour gap as "about 0.03 over-stated". That figure
+is **descriptive**: the stated mean 0.334 against the observed share 0.304. The registered 500-hour reading reports
+those two means but no interval for their difference. The Phase 2 diagnosis computed one afterwards, with the
+reading's own bootstrap settings (48 h blocks, 500 resamples, seed 17): **+0.031 [−0.013, +0.070]**, which includes
+zero (`research/monitoring/diagnosis_500h_2026-10-15.json`). So no systematic over-statement is established.
+
+Row 8 stays **PARTIAL** for the reason revision 3 gives: prospective evidence does not yet *confirm* calibration.
+That is not a finding of miscalibration. The calibration verdict remains the registered 5,000-hour E013 reading.
+Revision 3's text is kept as written.
 
 ### Addendum 2, 2026-10-15: row 18 Observability PARTIAL → PASS (score 20 PASS, 2 PARTIAL)
 

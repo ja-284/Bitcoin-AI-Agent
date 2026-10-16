@@ -187,21 +187,26 @@ happening, or on the weekly audit being run on time.
   - Full account: audit §18.2.
 - **Watch item — the calm market (drift flag "outcomes" in the weekly report since 2026-09-26).** The live
   market is calmer than in development (large moves in ~34% of hours vs ~47% on validation). The pipeline
-  is ruled out. The model may be over-stating slightly in this calm market. It is judged **only** at the
-  registered checkpoints and never tuned. Context from development data, none of which changes a rule:
+  is ruled out. Descriptively, the model's stated probabilities have run a little above the observed rate in
+  this calm market, but that gap is **not established** (its interval includes zero, below). It is judged
+  **only** at the registered checkpoints and never tuned. Context from development data, none of which changes
+  a rule:
   - **E026:** the model family was calibrated in calm markets historically, so a *persistent* live
     over-statement would be a genuine deviation.
   - **E027:** it over-states at night and under-states in the US session.
   - **E029:** its calibration naturally wanders in multi-week runs about three to four times a year, so a
-    few weeks of over-statement is not by itself a deviation.
+    few weeks of apparent over-statement is not by itself a deviation.
   - **2026-10-05 weekly report (descriptive):** the market stays calm (large moves in 32% of live hours).
     Two inputs, `tr_mean_14_rel` and `trades_rel_168h`, now sit below the development 1st percentile in
     about 12% of live hours, so the model is partly working in calmer conditions than anything it was
     built on. On 328 graded hours it is still ahead of the free EWMA rule (Brier 0.1972 vs 0.2134).
     Recorded, never tuned on; read at the registered checkpoints.
   - **The 500-hour first look (2026-10-13, registered, no verdict):** all 500 hours were calm. The model
-    stated 0.335 on average where large moves happened in 0.304 of hours, about 0.03 too high. Its ECE was
-    0.059, ordinary at that size (E024). It was still ahead of the free EWMA rule (Brier 0.1927 vs
+    stated 0.335 on average where large moves happened in 0.304 of hours. That is a **descriptive** gap of
+    +0.031. Its 48h block-bootstrap interval is [−0.013, +0.070], computed afterwards by the Phase 2 diagnosis
+    with the reading's own settings (`research/DIAGNOSIS_2026-10-15.md`); the registered reading reports the two
+    means without an interval. The interval includes zero, so **no systematic over-statement is established**.
+    Its ECE was 0.059, ordinary at that size (E024). It was still ahead of the free EWMA rule (Brier 0.1927 vs
     0.2091). This remains a watch item for the 2,000- and 5,000-hour readings.
 
 ## Emergency-only — when the user should act

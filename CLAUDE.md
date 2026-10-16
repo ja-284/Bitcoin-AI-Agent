@@ -14,7 +14,9 @@ The system leans on solid, deterministic math (indicators, formulas) for anythin
 
 The registered 500-hour first look was taken on 2026-10-13 (`research/monitoring/checkpoint_500h.md`; no
 verdict, by registration). The strict readiness audit after it is revision 3 of
-`docs/research/readiness_gate.md`: **19 PASS, 3 PARTIAL, a RELEASE CANDIDATE, not FINAL.**
+`docs/research/readiness_gate.md`, with addendum 2 (2026-10-15): **20 PASS, 2 PARTIAL, a RELEASE CANDIDATE, not
+FINAL.** The PARTIALs: row 8, calibration (prospective evidence does not yet confirm it; no miscalibration is
+established either), and row 21, prospective monitoring (the calendar).
 **Operational truth lives in `docs/ops/STATUS.md` + `status.json`** (one dated snapshot; every figure
 names the command that is its source; `tests/test_status_docs.py` keeps the two and the code's versions
 in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.

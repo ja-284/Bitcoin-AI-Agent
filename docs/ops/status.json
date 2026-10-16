@@ -70,7 +70,7 @@
     "next_checkpoint": "first session after 2,000 graded prospective hours (the E012 verdict)"
   },
   "watch_items": [
-    "calm live market (drift flag 'outcomes'): possible over-statement, judged only at the registered checkpoints, never tuned -- context E026, E027, E029. 500-hour first look: all hours calm; stated 0.335 vs observed 0.304; ECE 0.059 (ordinary at that size, E024); ahead of the free EWMA rule"
+    "calm live market (drift flag 'outcomes'): a descriptive gap between stated and observed, NOT established, judged only at the registered checkpoints, never tuned -- context E026, E027, E029. 500-hour first look: all hours calm; stated 0.335 vs observed 0.304, a descriptive +0.031 whose interval [-0.013, +0.070] (Phase 2 diagnosis, the reading's own bootstrap settings) includes zero; ECE 0.059 (ordinary at that size, E024); ahead of the free EWMA rule"
   ],
   "operational_queue": [
     "1. the single-missed-hour alarm -- done 2026-10-14 (automation.missed_hour_signal)",
