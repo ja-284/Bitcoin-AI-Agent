@@ -629,6 +629,27 @@ MUTATIONS = [
              'GRANT SELECT, INSERT ON shadow_direction_health TO bitcoin_agent;',
              'GRANT SELECT, INSERT, UPDATE ON shadow_direction_health TO bitcoin_agent;',
              'the job role may rewrite the direction health record (direction alert)'),
+    # ---- the direction experiment's integrity check (addendum 2026-10-16, item 6)
+    Mutation("direction-integrity", 'agent/research/direction_integrity.py',
+             '    out.append(("version", not bad and model.sha256 == REGISTERED_SHA256,',
+             '    out.append(("version", True,',
+             'a row from another model or version passes the integrity check (direction integrity)'),
+    Mutation("direction-integrity", 'agent/research/direction_integrity.py',
+             '                                     and r["fetched_at"] < r["as_of"] + 2 * HOUR and r["created_at"] < r["as_of"] + 2 * HOUR)]',
+             '                                     and r["fetched_at"] < r["as_of"] + 2 * HOUR)]',
+             'a row stored after its outcome was known passes the integrity check (direction integrity)'),
+    Mutation("direction-integrity", 'agent/research/direction_integrity.py',
+             '    out.append(("preserved as predicted", refused == 0 and worst <= 1e-12,',
+             '    out.append(("preserved as predicted", refused == 0,',
+             'a stored probability that no longer reproduces passes (direction integrity)'),
+    Mutation("direction-integrity", 'agent/research/direction_integrity.py',
+             '    out.append(("graded correctly", not arith and candle_bad == 0, detail))',
+             '    out.append(("graded correctly", candle_bad == 0, detail))',
+             'an inconsistent grading passes (direction integrity)'),
+    Mutation("direction-integrity", 'agent/research/direction_integrity.py',
+             '    unrecorded = [h for h in missing if h + 2 * HOUR <= now and h not in set(state["lost"])]',
+             '    unrecorded = []',
+             'a silently skipped hour passes (direction integrity)'),
 ]
 
 
