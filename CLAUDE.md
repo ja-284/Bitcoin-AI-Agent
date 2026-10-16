@@ -711,7 +711,18 @@ experiment changed.
   - Verified: Binance Regular User 0.100% / 0.100% (0.075% with BNB); Kraken Pro Level 1 0.40% / 0.80%.
   - Unverified: Coinbase Advanced (HTTP 403) and OKX.
   - One order-book snapshot: spread 1 tick (about 0.00001%), slippage under 0.01% up to 100,000 USDT.
-- **8:** the final verification is recorded below.
+- **8, final verification at `4441b6c`:**
+  - **The complete mutation suite in one execution: 150 of 150 caught, both controls held, every file restored byte
+    for byte.** It ran in a clean clone (121 min, exit 0). The 150 are the 104 earlier guards plus 5 quality gate,
+    23 pre-check, 13 direction alert and 5 direction integrity.
+    - An earlier full run, on `3aeb108`, was stopped at 66 of 132 (all caught) because this one superseded it.
+  - Unit tests all passed, and integration 43/43 including the live drift check (806 tests collected).
+  - Security OK (13 tables); the role is exact (28 policies); 0 vulnerable packages of 43.
+  - The pre-check exits 3, as it should (587 of 2,000).
+  - GitHub CI is green on all 7 pushes of the day.
+  - Live: the 14:12 and 15:12 runs were green including the new direction-health step; the direction track is
+    healthy, 0 errors, 0 lost hours.
+  - **Still open, the user's step:** the direction check, its secret and the delivery test (item 7).
 
 ## Research phase — rules and decisions (2026-09-19)
 
