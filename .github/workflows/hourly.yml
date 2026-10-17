@@ -108,6 +108,19 @@ jobs:
           if [ -n "$DIRECTION_HEARTBEAT_URL" ] && grep -qx fail direction-actions.txt; then curl -fsS -m 10 --retry 3 --data-binary @direction-fail.txt "${DIRECTION_HEARTBEAT_URL%/}/fail" > /dev/null; fi
           if [ -n "$DIRECTION_HEARTBEAT_URL" ] && grep -qx success direction-actions.txt; then curl -fsS -m 10 --retry 3 "$DIRECTION_HEARTBEAT_URL" > /dev/null; fi
 
+      # FAILED AI CALLS (the user's approval, 2026-10-17, after the Anthropic key rotation). A failed AI call never fails
+      # the job: the hour is saved without a news score and/or explanation, so an expired or invalid key would otherwise
+      # hide behind a green heartbeat. Every run -- backup slots too -- looks at the NEWEST saved hour; if its news step or
+      # explanation failed, it sends the report (error types only) as a failure signal and holds back the success ping
+      # below, so the check stays down -- one "down" email -- until an hour is saved with working AI calls, whose run
+      # pings "up" again. Like every heartbeat step it cannot change the job's result.
+      - name: Heartbeat AI-failure signal
+        if: ${{ !cancelled() && env.HEARTBEAT_URL != '' }}
+        continue-on-error: true
+        run: |
+          python -m agent.healthcheck --ai-failure-body-file ai-failure.txt
+          if [ -s ai-failure.txt ]; then echo "AI_FAILING=1" >> "$GITHUB_ENV"; curl -fsS -m 10 --retry 3 --data-binary @ai-failure.txt "${HEARTBEAT_URL%/}/fail" > /dev/null; fi
+
       # A SINGLE missed hour (2026-10-07: no run at all for one hour, and the pings either side were
       # 87 min apart, inside the 90 min allowance, so nothing alarmed). Nothing is ever backfilled, so an
       # hour is missing for good once a later hour is saved -- and only the run that saved that later
@@ -128,8 +141,10 @@ jobs:
       # outside GitHub entirely, so it also catches GitHub itself being down.
       # continue-on-error: a ping that cannot be delivered must not turn a good hour red. If pings
       # stop arriving, the heartbeat service raises the alarm itself -- that is its whole job.
+      # Held back while the newest saved hour's AI calls failed (AI_FAILING, set by the step above), so that
+      # check stays down instead of flipping straight back to "up".
       - name: Heartbeat ping
-        if: env.HEARTBEAT_URL != ''
+        if: env.HEARTBEAT_URL != '' && env.AI_FAILING != '1'
         continue-on-error: true
         run: curl -fsS -m 10 --retry 3 "$HEARTBEAT_URL" > /dev/null
 

@@ -98,6 +98,16 @@ other or with the versions in the code. **Update both, together, from the comman
      the hours in the check's log. The success ping seconds later emails "up" again. Each gap is reported
      once, and a late run is never reported, because an hour is missing only once a later hour is saved
      (nothing is backfilled). A complete GitHub outage is still caught by the heartbeat's silence alarm.
+   - **Failed AI calls** (since 2026-10-17, the user's approval after the Anthropic key rotation;
+     `python -m agent.healthcheck --ai-failure-body-file`). Every run, backup slots included, looks at the newest
+     saved hour.
+     - If that hour's news step or explanation failed, it sends the heartbeat check a failure signal naming the
+       error types, with a key hint for authentication or permission errors.
+     - It then holds back the success ping, so healthchecks.io emails "down" once and the check stays down until
+       an hour is saved with working AI calls ("up" again).
+     - It never fails a job. Its delivery path (`/fail` with a body) is the missed-hour signal's, proven
+       2026-10-15. The failing case has been tested but not yet seen live.
+     - While the check is down for this reason, a GitHub outage raises no second email. The check is already red.
    - **The direction track's own alert** (since 2026-10-16; `agent/direction_shadow/health.py`), on a SEPARATE
      healthchecks.io check, never the main one:
      - a success ping when the latest closed hour has a valid direction observation;

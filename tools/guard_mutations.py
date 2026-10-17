@@ -688,6 +688,27 @@ MUTATIONS = [
              '    bars = _parse(snapshots.read_snapshot_rows("spot", requested_end).decode("utf-8"))',
              '    bars = _parse(snapshots.read_snapshot_rows("spot", requested_end).decode("utf-8")) or _parse(download_snapshot().read_text())',
              "load_bars falls back to downloading a new snapshot again (data boundary)"),
+    # ---- the AI-failure alarm (the user's approval, 2026-10-17, after the Anthropic key rotation)
+    Mutation("ai-alarm", "agent/healthcheck.py",
+             '    news_failed, explanation_failed = "news_error" in run_meta, "explanation_error" in run_meta',
+             '    news_failed, explanation_failed = "news_error" in run_meta, False',
+             "a failed explanation no longer raises the AI-failure alarm (ai alarm)"),
+    Mutation("ai-alarm", "agent/healthcheck.py",
+             '        report = ai_failure(*state) if state else ""',
+             '        report = ""',
+             "the AI-failure report is never written, whatever failed (ai alarm)"),
+    Mutation("ai-alarm", "agent/healthcheck.py",
+             '    auth = (run_meta.get("news_error_type") in AI_AUTH_ERROR_TYPES',
+             '    auth = (False',
+             "an authentication failure of the news step is no longer named as a key problem (ai alarm)"),
+    Mutation("ai-alarm", ".github/workflows/hourly.yml",
+             "        if: env.HEARTBEAT_URL != '' && env.AI_FAILING != '1'",
+             "        if: env.HEARTBEAT_URL != ''",
+             "the success ping clears the AI-failure alarm at once (ai alarm)"),
+    Mutation("ai-alarm", ".github/workflows/hourly.yml",
+             'if [ -s ai-failure.txt ]; then echo "AI_FAILING=1"',
+             'if [ -e ai-failure.txt ]; then echo "AI_FAILING=1"',
+             "the AI-failure signal fires on every run, even when nothing failed (ai alarm)"),
 ]
 
 

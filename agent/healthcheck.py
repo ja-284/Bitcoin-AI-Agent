@@ -16,6 +16,12 @@ hourly run red while the live record was in fact healthy.
 
 The third form is the hourly job's alarm for a SINGLE missed hour (added 2026-10-14). It never
 fails: it reports, and the workflow sends the report to the heartbeat service (see new_gap()).
+
+    python -m agent.healthcheck --ai-failure-body-file ai-failure.txt
+
+The fourth form is the hourly job's alarm for FAILED AI CALLS (the user's approval, 2026-10-17, after the
+Anthropic key rotation). It never fails either: it writes a report when the newest saved hour's news step or
+explanation failed, and the workflow sends it and holds back the success ping (see ai_failure()).
 """
 
 import argparse
@@ -100,6 +106,47 @@ def gap_message(missing: list[datetime], saved: datetime) -> str:
             f"succeeded. Look at GitHub Actions for that period.")
 
 
+AI_AUTH_ERROR_TYPES = ("AuthenticationError", "PermissionDeniedError")  # the news step keeps the Anthropic error's type
+AI_AUTH_MARKERS = ("authentication_error", "permission_error")            # what Anthropic's 401 / 403 answers say
+
+
+def newest_prediction_ai_state() -> tuple[datetime, dict] | None:
+    """(as_of, run_meta) of the newest saved prediction; None when there is none. Read-only."""
+    from agent.database.db import get_connection
+
+    with get_connection() as conn, conn.cursor() as cur:
+        cur.execute("SELECT as_of, run_meta FROM predictions ORDER BY as_of DESC LIMIT 1")
+        row = cur.fetchone()
+    return (row[0], row[1] or {}) if row else None
+
+
+def ai_failure(as_of: datetime, run_meta: dict) -> str:
+    """
+    The report of the AI-failure signal, or "" when the newest saved hour's AI calls worked.
+
+    A failed AI call never fails the hourly job: the orchestrator saves the hour without a news score
+    (news weight 0) and/or without an explanation, and records news_error / explanation_error in run_meta.
+    So an expired or invalid Anthropic key would leave every hour degraded behind a green heartbeat. This
+    names only the error TYPES and whether it looks like an authentication failure -- never the error text,
+    the key or a URL.
+    """
+    news_failed, explanation_failed = "news_error" in run_meta, "explanation_error" in run_meta
+    if not (news_failed or explanation_failed):
+        return ""
+    parts = []
+    if news_failed:
+        parts.append(f"the news step failed ({run_meta.get('news_error_type') or 'error type not recorded'})")
+    if explanation_failed:
+        parts.append("the explanation failed")
+    auth = (run_meta.get("news_error_type") in AI_AUTH_ERROR_TYPES
+            or any(m in str(run_meta.get("explanation_error", "")) for m in AI_AUTH_MARKERS))
+    hint = (" It looks like an authentication or permission failure: the Anthropic API key (GitHub secret "
+            "ANTHROPIC_API_KEY) is probably invalid or expired." if auth else "")
+    return (f"Bitcoin-AI-Agent: AI calls FAILED for the newest saved hour ({as_of:%Y-%m-%d %H:%M} UTC): {'; '.join(parts)}. "
+            f"The hour was saved, but without a news score (news weight 0) and/or without an explanation.{hint} "
+            f"This check stays down until an hour is saved with working AI calls.")
+
+
 def delivery_test_message(now: datetime) -> str:
     """
     The body of the ONE labelled test the manual "Alert delivery test" workflow sends (2026-10-14): it checks the
@@ -127,13 +174,27 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--new-gap-since", type=_utc, help="this job's start (UTC): report hours missing before the hour it saved")
     parser.add_argument("--gap-body-file", type=Path, help="with --new-gap-since: always written; holds the report, or nothing")
     parser.add_argument("--delivery-test-body", type=Path, help="write the labelled TEST report (manual alert delivery test only)")
+    parser.add_argument("--ai-failure-body-file", type=Path,
+                        help="always written: the AI-failure report for the newest saved hour, or nothing when its AI calls worked")
     args = parser.parse_args(argv)
     if args.delivery_test_body is not None:
         args.delivery_test_body.write_text(delivery_test_message(datetime.now(tz=timezone.utc)) + "\n", encoding="utf-8")
         print("DELIVERY TEST report written (no hour is missing; this is a test)")
         return 0
+    if args.ai_failure_body_file is not None:
+        # Reports, never fails: the hour is saved either way, and the report is what reaches the owner.
+        state = newest_prediction_ai_state()
+        report = ai_failure(*state) if state else ""
+        args.ai_failure_body_file.write_text(report + ("\n" if report else ""), encoding="utf-8")  # empty: nothing to send
+        if state is None:
+            print("OK: no prediction saved yet, so no AI call to judge")
+        elif report:
+            print("AI FAILING: " + report)
+        else:
+            print(f"OK: the AI calls worked for {state[0].isoformat()}, the newest saved hour")
+        return 0
     if args.max_age_hours is None and args.shadow_errors_max is None and args.new_gap_since is None:
-        parser.error("give --max-age-hours, --shadow-errors-max, --new-gap-since or --delivery-test-body")
+        parser.error("give --max-age-hours, --shadow-errors-max, --new-gap-since, --ai-failure-body-file or --delivery-test-body")
 
     failed = False
     if args.max_age_hours is not None:

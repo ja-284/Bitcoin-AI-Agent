@@ -5,6 +5,23 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## operations — 2026-10-17 (the Anthropic key rotated; an alarm for failed AI calls)
+
+- **The Anthropic API key `bitcoin-agent` (expiring 2026-10-19) was replaced by the user.** The audit found one
+  runtime consumer: the hourly job, through the repository Actions secret `ANTHROPIC_API_KEY`. The local `.env` is
+  optional.
+  - The secret was updated at about 18:19 UTC.
+  - The natural runs at 19:12 and 20:12 UTC wrote the 18:00 and 19:00 hours with both AI calls working: news
+    model, explanation and token counts present, no errors.
+  - No secret value was read and no run was triggered by hand.
+- **The audit's finding:** a failed AI call degrades the hour, but no alarm fired. Fixed, with the user's approval and
+  nothing else changed:
+  - the step *Heartbeat AI-failure signal* (`python -m agent.healthcheck --ai-failure-body-file`) sends the heartbeat
+    `/fail` with the error types when the newest saved hour's news step or explanation failed;
+  - it holds back the success ping, so the check stays down until an hour is saved with working AI calls.
+- **Tests:** `tests/test_ai_failure_signal.py`. Mutation guards: 161 → 166 (area *ai-alarm*).
+- No prediction, scoring, model, threshold or research code changed.
+
 ## research — 2026-10-17 (safe signal research, Phases 6 and 7: final report and decision; the batch is closed)
 
 `research/SAFE_SIGNAL_RESEARCH_REPORT_2026-10-17.md` is a report only. No code, data, model, registered criterion or

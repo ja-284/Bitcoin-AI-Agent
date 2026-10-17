@@ -20,8 +20,8 @@ Reviewed 2026-09-22 by reading every failure handler in the live path (`agent/`,
 | data older than the staleness rule | raises rather than being scored | job fails loudly |
 | **one news feed down** | the other feeds are still collected and scored | `run_meta.news.sources_failed`; **contract `news.sources_failed` / `sources_used` / `sources_total`; weekly report §1** |
 | all news feeds down | zero items → news category **weight 0** | `news.available = false`, `completeness_score` drops |
-| the news AI call fails or is truncated | news left out entirely, never guessed at | `run_meta.news_error` + `news_error_type`, `ai_model_news` NULL, weight 0 |
-| the explanation fails or is truncated | the analysis is saved without it; the decision never depended on it | `run_meta.explanation_error`, `explanation_status` |
+| the news AI call fails or is truncated | news left out entirely, never guessed at | `run_meta.news_error` + `news_error_type`, `ai_model_news` NULL, weight 0; **the AI-failure alarm since 2026-10-17** (below the table, and `docs/ops/STATUS.md` → Alarms) |
+| the explanation fails or is truncated | the analysis is saved without it; the decision never depended on it | `run_meta.explanation_error`, `explanation_status`; **the AI-failure alarm since 2026-10-17** |
 | an AI answer arrives without token figures | recorded as `usage_unavailable`, **never as zero**; the run's cost is left out of the average and counted | `run_meta.ai_usage`; weekly report §1 ("without figures") (added 2026-09-23) |
 | a database write fails | the run fails; the next hour recomputes from scratch | job fails; writes are idempotent so a retry cannot duplicate |
 | the same hour runs twice | early exit **before** the AI calls | no duplicate row (`ON CONFLICT DO NOTHING`, proven on real Postgres) |
@@ -33,6 +33,28 @@ Reviewed 2026-09-22 by reading every failure handler in the live path (`agent/`,
 | a **view or function** is added to `public`, or the standing default grant to the public API returns | nothing in the hourly job changes | the same security check, extended 2026-09-23 evening: views readable by the API (they ignore RLS), functions callable at `/rest/v1/rpc`, default grants for new objects — each fails the watchdog |
 | the database is on an older schema than the code (a restore, or a rebuild from old files) | the run stops before writing anything | `assert_schema_current`; the job fails loudly naming both versions |
 | **GitHub itself stops running anything** | **nothing happens, and nothing complains** | **NOT DETECTABLE — see below** |
+
+## The AI-failure alarm (since 2026-10-17)
+
+Found during the Anthropic key rotation: a failed news or explanation call degrades the hour visibly in the record,
+but **no alarm** fired. The job stays green and the heartbeat keeps pinging. So an expired key would have left every
+hour without news or an explanation, seen only in the weekly report.
+
+Since 2026-10-17 (the user's approval; only this change) it works like this:
+- **Every run checks.** The step *Heartbeat AI-failure signal* runs `python -m agent.healthcheck --ai-failure-body-file`
+  on every run, backup slots included. It looks at the newest saved hour.
+- **Report.** If that hour's news step or explanation failed, it sends the heartbeat check `/fail`. The body names the
+  error *types* only, never the error text, the key or a URL, with a key hint for authentication or permission errors.
+- **One email per incident.** It sets `AI_FAILING`, which holds back the success ping, so healthchecks.io emails
+  "down" once and the check stays down. The first run that saves an hour with working AI calls pings "up" again.
+- **It never fails a job.** Like every heartbeat step it is `continue-on-error`. If the check itself cannot run, the
+  ping goes out as before.
+- **Proof so far:**
+  - Tested in `tests/test_ai_failure_signal.py`, with five mutation guards (area *ai-alarm*).
+  - Its delivery path is the missed-hour signal's `/fail`, proven by the user on 2026-10-15.
+  - The clean case runs every hour. A real failure has not been seen live.
+- **The trade-off:** while the check is down for this reason, a GitHub outage raises no second email. The check is
+  already red.
 
 ## The one real gap
 

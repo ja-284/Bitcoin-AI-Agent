@@ -807,6 +807,26 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
     - the direction readings: 47 eligible hours now; ≈ 2026-11-26, 2027-02-17 and 2027-07-13;
     - the news verdict: about 649 of 3,140 usable hours; ≈ 2027-02-03.
 
+**2026-10-17 (evening) — the Anthropic API key rotated; an alarm for failed AI calls (the user's approval; only that).**
+- **The audit** (read-only, no secret value read):
+  - the one runtime consumer is the hourly job, through the repository Actions secret `ANTHROPIC_API_KEY`;
+  - there are no organization or environment secrets, and Supabase Vault holds only `github_dispatch_token`;
+  - the local `.env` is optional, for local runs only.
+- **The rotation:** the user created a new key and updated the secret at about 18:19 UTC. The natural runs at 19:12
+  and 20:12 UTC wrote the 18:00 and 19:00 hours with both AI calls working: models, token counts, no errors. The old
+  key may be deleted after the user's Console check (the new key in use; the old key's last use before 18:19 UTC).
+- **The audit's finding:** a failed AI call never fails the job, so an expired key would have hidden behind a green
+  heartbeat.
+- **The fix:**
+  - The step *Heartbeat AI-failure signal* runs `python -m agent.healthcheck --ai-failure-body-file`. It sends the
+    heartbeat `/fail` with the error types (and a key hint) when the newest saved hour's news step or explanation
+    failed.
+  - It also sets `AI_FAILING`, which holds back the success ping. The check stays down until an hour is saved with
+    working AI calls: one "down" email per incident.
+- **Checks:** `tests/test_ai_failure_signal.py`; mutation guards 166 (5 new, area *ai-alarm*). STATUS,
+  `status.json`, `observability.md` and CHANGELOG are updated.
+- **Not seen live yet:** the failing case. The clean case runs every hour.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
@@ -840,7 +860,7 @@ All commands from the project folder, using the virtual environment (`.venv\Scri
 
 - `python run.py` — one full analysis, saved to the database (exits early if this hour is already saved). `--no-save` to skip saving.
 - `python -m agent.outcome_tracker` — grade past predictions that are old enough.
-- `python -m agent.healthcheck --max-age-hours 2` — exit 1 if the newest prediction is stale (used by the workflows).
+- `python -m agent.healthcheck --max-age-hours 2` — exit 1 if the newest prediction is stale (used by the workflows). `--ai-failure-body-file FILE` (since 2026-10-17) writes the AI-failure report for the newest saved hour (empty when its AI calls worked); the hourly job's *Heartbeat AI-failure signal* step sends it and holds back the success ping. It never fails.
 - `python -m agent.backtest.runner --days 30` — technical-only backtest; CSV lands in `backtests/`. Since 2026-10-14 it refuses, before fetching, any window whose candles (warm-up included) touch the sealed holdout (`research/HOLDOUT_ROUTES.md`); until then it bypassed the guard (E000).
 - `python -m agent.research.weekly_report` — the Phase 13 weekly live report (reads the database, small Binance fetch for the paper record; `--no-paper` skips that). Output in `research/monitoring/`. Never writes to live tables.
 - `python -m agent.research.live_checkpoint` — the registered prospective checkpoints (`research/LIVE_EVALUATION.md`). Before 500 graded prospective hours it only prints the count and writes nothing; at 500 / 2,000 / 5,000 it reads exactly the first N hours, writes `research/monitoring/checkpoint_<N>h.md/.json` once and never rewrites them. Between checkpoints it only says the last reading exists, so the running count comes from `python -m agent.reporting health` → `checkpoint_progress` (the same selection function).
