@@ -56,7 +56,10 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - Phase 2 is DONE: E036 (MS-A) and E037 (D1, D2) are registered and not run.
   - Phase 3 is DONE: both references reproduced bit for bit.
   - Phase 4 is DONE: MS-A NOT_SUPPORTED, D1 INCONCLUSIVE, D2 NOT_SUPPORTED. No follow-up variants.
-  - Phase 6 (the report) and Phase 7 (the decision gate) need the user's go-ahead.
+  - Phases 6 and 7 are DONE and the batch is CLOSED (`research/SAFE_SIGNAL_RESEARCH_REPORT_2026-10-17.md`).
+    - No further work on these candidates, and no substitutes.
+    - No change to the live or frozen models, and no new experiment.
+    - The work is back to monitoring and the registered checkpoints.
   - It never touches the live system, the frozen models, the registered checkpoints or the holdout.
   - All research data is read through `agent/research/snapshots.py`: registered files only, never downloaded.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
@@ -787,7 +790,22 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
   - **E037, D2: NOT_SUPPORTED, by the calibration rule.** `up_streak_6` gives +0.00158 on exploration but −0.000155
     on validation, and makes the model over-confident there (slope 0.65). The line is closed.
   - Holm-adjusted p is 0.918 for D1 and D2. Nothing adopted; nothing live, frozen or registered changed.
-- **Next, only on the user's go-ahead:** Phase 6 (the honest documented report), then Phase 7's decision gate.
+- **Phases 6 and 7 DONE: the batch is CLOSED** (`research/SAFE_SIGNAL_RESEARCH_REPORT_2026-10-17.md`).
+  - **Consistency check:** read-only, 37 checks covering Git order, the registrations, code vs records, saved results
+    vs docs, the reproductions and the data path. 0 failures, and no material problem.
+  - **One wording correction:** 29 of the 36 earlier experiments examined the development years, not "about 35";
+    31 with this batch.
+  - **Decision:**
+    - no further work on MS-A, D1 or D2, and no substitutes;
+    - no change to the live model or to either frozen model;
+    - no new model, shadow track or data source;
+    - E006 and E011's set B are not to be used as evidence;
+    - the holdout stays sealed for evaluation, which is not "untouched".
+  - **What continues unchanged** (verified 2026-10-17):
+    - the weekly audit, due ≈ 2026-10-20;
+    - the 2,000-hour move-size reading (612 of 2,000; ≈ 2026-12-14/15) and the 5,000-hour reading (≈ 2027-04-21);
+    - the direction readings: 47 eligible hours now; ≈ 2026-11-26, 2027-02-17 and 2027-07-13;
+    - the news verdict: about 649 of 3,140 usable hours; ≈ 2027-02-03.
 
 ## Research phase — rules and decisions (2026-09-19)
 

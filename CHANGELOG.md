@@ -5,6 +5,23 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-17 (safe signal research, Phases 6 and 7: final report and decision; the batch is closed)
+
+`research/SAFE_SIGNAL_RESEARCH_REPORT_2026-10-17.md` is a report only. No code, data, model, registered criterion or
+live system changed.
+- **Before writing it:** a read-only consistency check of 37 items covering Git order, the registrations, code vs
+  records, saved results vs docs, the reproductions and the data path. 0 failures.
+- **The report states exactly:**
+  - the holdout's status: rows were loaded into memory before 2026-10-17; no outcome was scored and no value reached
+    a development feature; manual viewing cannot be ruled out;
+  - that E006 and E011's set B are void;
+  - the exact scope of the reproduction;
+  - each verdict and its meaning;
+  - the repeated use of the development years. The count is corrected to 29 earlier experiments, 31 with this batch,
+    not "about 35".
+- **Decision:** no further work on MS-A, D1 or D2; no change to the live or frozen models; no new model, track or data
+  source. The registered prospective tracks and the monitoring schedule continue unchanged.
+
 ## research — 2026-10-17 (safe signal research, Phase 4: the three registered comparisons, run once)
 
 Code `909e00a` was committed before the run, which started at 10:08 UTC and took 2.3 minutes. Development data only,
