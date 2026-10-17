@@ -26,6 +26,14 @@ No model, rule, threshold, feature definition, registered experiment or live pat
   to about three months early. E006 and E011's set B are affected (dated corrections follow separately).
 - Tests: `tests/test_snapshots.py` (synthetic files only) and new route tests in `tests/test_holdout_routes.py`.
   Mutation guards: 150 → 159 (area *data-boundary*).
+- **Second change, the same day: `load_bars()` (the spot candles).** It had the same two gaps.
+  - It took the newest snapshot, downloading one when none existed.
+  - It parsed the whole file, the holdout's period included, before cutting it.
+
+  Now it reads only the registered snapshot ("spot", 68,868 development candles) through the same reader, and
+  reading stops at the holdout's first candle. With `allow_holdout=True` the access is logged before a byte past
+  it is read. The candles served are byte-for-byte the same development rows as before. Mutation guards:
+  159 → 161.
 
 ## process — 2026-10-16 (master plan addendum: process corrections and monitoring hardening)
 

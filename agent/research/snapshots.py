@@ -1,7 +1,8 @@
 """
 The governed reader for the stored research snapshots under data/ (master plan "Safe signal research", Phase 1,
-2026-10-17). Before it, each side-data loader (trade counts, funding, premium, macro, on-chain, difficulty) read its
-WHOLE dated file -- the sealed holdout's period included -- into memory, and quietly downloaded a fresh file whenever
+2026-10-17): the spot candles (read by history.load_bars) and the side data. Before it, each side-data loader (trade
+counts, funding, premium, macro, on-chain, difficulty) and load_bars itself read the WHOLE dated file -- the sealed
+holdout's period included -- into memory, and quietly downloaded a fresh file (load_bars: took the newest) whenever
 none was found. Nothing of the holdout was ever scored that way (every feature is cut to a candle grid that stops at
 the holdout), but prohibited rows did enter the research pipeline, and a missing file would have been replaced by a
 different version without anyone deciding it.
@@ -56,6 +57,10 @@ class Snapshot:
 # Registered 2026-10-17 from a structural scan that decoded only each row's timestamp (counts, order and hashes; no
 # value). Every file is strictly increasing in time, so the development rows are exactly the file's leading rows.
 REGISTERED: dict[str, Snapshot] = {
+    # the spot candles, read by history.load_bars() (registered here since 2026-10-17, the second change of Phase 1)
+    "spot": Snapshot("btcusdt_1h_2026-09-19.csv", "as_of", timedelta(hours=1), 68868,
+                     "8a87f7d4d2fea636c43479439c0ee7d99afd474ec6be805283892ab48fd35d63", 5737087,
+                     "79ebeba66324dd788fa2f08b203b947f8bcc2c032cff0bc85dbe550c0c4320e9"),
     "klines_extra": Snapshot("klines_extra_btcusdt_1h_2026-09-20.csv", "as_of", timedelta(hours=1), 68868,
                              "04f0a2a0eed976cb5a683be8af8f79aee66a6681a9ee156448ff33c30dac7fa8", 4349306,
                              "2ffa82b08affa136f1b666bb51d00e78d82355bd5e30f9b299ff62235a39ee86"),

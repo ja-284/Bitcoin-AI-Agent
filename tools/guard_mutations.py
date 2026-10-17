@@ -681,6 +681,13 @@ MUTATIONS = [
     Mutation("data-boundary", "agent/research/history.py",
              '_HOLDOUT_OPENED_FOR = ""', '_HOLDOUT_OPENED_FOR = "opened at import"',
              "every process starts with the holdout opened for side data (data boundary)"),
+    Mutation("data-boundary", "agent/research/history.py",
+             "            requested_end = HOLDOUT.start", "            pass",
+             "load_bars no longer cuts a request at the holdout's start (data boundary)"),
+    Mutation("data-boundary", "agent/research/history.py",
+             '    bars = _parse(snapshots.read_snapshot_rows("spot", requested_end).decode("utf-8"))',
+             '    bars = _parse(snapshots.read_snapshot_rows("spot", requested_end).decode("utf-8")) or _parse(download_snapshot().read_text())',
+             "load_bars falls back to downloading a new snapshot again (data boundary)"),
 ]
 
 

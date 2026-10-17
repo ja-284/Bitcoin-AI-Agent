@@ -25,7 +25,7 @@ The holdout is **2025-07-01 00:00 → 2026-08-19 23:00 UTC** (`agent/research/pe
 | 2026-10-13 | the 500-hour checkpoint's free EWMA rule's warm-up (it grows with the live span) | back to ~2026-07-26 | only the 500 live hours |
 | 2026-09-19 | the dated snapshot `data/btcusdt_1h_2026-09-19.csv` stores the whole period on disk | all of it | nothing (storage only) |
 | 2026-09-20 → 2026-10-17 | **the side-data loaders** (trade counts and taker volume, funding, premium, macro, on-chain, difficulty): every research run that computed one of these groups read the WHOLE dated file into memory, holdout rows included. Found by the 2026-10-17 inventory; closed the same day (row `snapshots.py` below) | every holdout-period row of the files used (counts: the 2026-10-17 entry below) | nothing: every feature is cut to a candle grid built from `load_bars(end=HOLDOUT.start)`, and each one reads only rows visible at its own cutoff |
-| until closed separately | `load_bars()` itself parses the whole spot snapshot into memory, then keeps the rows before the holdout | all of it, in memory | nothing |
+| 2026-09-19 → 2026-10-17 | `load_bars()` itself parsed the whole spot snapshot into memory, then kept the rows before the holdout (and took the newest snapshot, downloading one when none existed). Closed 2026-10-17: it now reads through the same governed reader | all of it, in memory | nothing |
 
 The EWMA rule has a 24-hour half-life. At the live hours where its values are used, every holdout candle weighs
 less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
@@ -34,8 +34,8 @@ less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
 
 | route | can it reach the holdout? |
 |---|---|
-| `research/history.load_bars()` | **The one governed route.** It truncates at the holdout unless `allow_holdout=True` with a written reason, and that is logged to `research/HOLDOUT_ACCESS.log`. Only `holdout_eval.py --unseal` passes it, and the test proves no other call does |
-| the snapshot file itself | only `history.py` may name it (tested), so no other code can read it directly |
+| `research/history.load_bars()` | **The one governed route.** It truncates at the holdout unless `allow_holdout=True` with a written reason, and that is logged to `research/HOLDOUT_ACCESS.log`. Only `holdout_eval.py --unseal` passes it, and the test proves no other call does. Since 2026-10-17 it reads the registered spot snapshot only (`snapshots.py`, "spot"): reading stops at the holdout's first candle, the access is logged BEFORE a byte past it is read, nothing is downloaded and no newer file is taken |
+| the snapshot file itself | only the registry (`snapshots.py`) and the hand-run downloader's file naming (`history.py`) may name it (tested), so no other code can read it directly |
 | `agent/backtest/runner.py` | **was the bypass; closed 2026-10-14.** It now refuses, before fetching anything, any window whose candles (warm-up included) touch the holdout, and it checks what came back as a second lock. There is no override. It would have refused E000's window, and the test reproduces E000's 233 candles exactly |
 | `research/parity.py` | no: live hours only, from about 2026-09-08 |
 | `weekly_report.live_features` | no: from LIVE.start − 400 h, about 2026-09-02 |
@@ -46,14 +46,15 @@ less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
 | `feature_test.compute_group_features`, the one research route to side data | It asks for side data up to the candles' own information cutoff (the close of the latest candle), so candles that stop at the holdout get side data that stops there too (tested) |
 | the side snapshot files themselves | only `snapshots.py` names them, and no other file in `agent/` parses a CSV (both tested) |
 
-Twelve mutation guards keep these locks honest (`tools/guard_mutations.py`). Area *holdout*: two for the backtest
-and one for Amendment A1's clip. Area *data-boundary*: nine for the side-data reader.
+Fourteen mutation guards keep these locks honest (`tools/guard_mutations.py`). Area *holdout*: two for the backtest
+and one for Amendment A1's clip. Area *data-boundary*: nine for the side-data reader and two for `load_bars`.
 
-**The side snapshots on 2026-10-17** (scan of the timestamp column only; no value decoded). Every file is strictly
-increasing in time. The development rows are those visible at or before 2025-07-01 00:00 UTC:
+**The registered snapshots on 2026-10-17** (scan of the timestamp column only; no value decoded). Every file is
+strictly increasing in time. The development rows are those visible at or before 2025-07-01 00:00 UTC:
 
 | snapshot | rows | development rows | rows past the cutoff | rule: a row stamped T is known from |
 |---|---|---|---|---|
+| `btcusdt_1h_2026-09-19.csv` (spot, `load_bars`) | 79,567 | 68,868 | 10,699 | T + 1 h |
 | `klines_extra_btcusdt_1h_2026-09-20.csv` | 79,588 | 68,868 | 10,720 | T + 1 h |
 | `funding_btcusdt_2026-09-20.csv` | 7,702 | 6,362 | 1,340 | T |
 | `premium_btcusdt_1h_2026-09-20.csv` | 59,093 | 48,380 | 10,713 | T + 1 h |

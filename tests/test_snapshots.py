@@ -236,12 +236,26 @@ def test_candles_reaching_into_the_holdout_get_no_side_data_unless_it_was_opened
     assert len(feature_test.compute_group_features("microstructure", _bars(CUT - 40 * H, 40))) == 40
 
 
+def test_the_spot_candles_stop_at_the_holdouts_first_candle_and_are_never_downloaded_or_substituted(isolated):
+    lines = [f"{(CUT - (48 - i) * H).isoformat()},100,102,99,{100.5 + 0.5 * (i % 3)},{1 + i % 4}" for i in range(48)]
+    _register(isolated, "spot", "btcusdt_1h_2026-09-19.csv", "as_of,open,high,low,close,volume", lines + [f"{CUT.isoformat()},SEALED,SEALED,SEALED,SEALED,SEALED"],
+              48, "as_of", H, tail=SEALED_TAIL)
+    bars, quality, path = history.load_bars()
+    assert len(bars) == 48 and bars[-1].as_of == CUT - H and path == isolated / "btcusdt_1h_2026-09-19.csv"
+    assert len(history.load_bars(end=HOLDOUT.end)[0]) == 48  # asking for more is cut at the holdout, and still reads no further
+    path.unlink()
+    (isolated / "btcusdt_1h_2026-10-17.csv").write_bytes(("as_of,open,high,low,close,volume\r\n" + "\r\n".join(lines) + "\r\n").encode())
+    with pytest.raises(snapshots.SnapshotError, match="is missing"):
+        history.load_bars()
+
+
 def test_the_registered_rules_are_each_modules_own_point_in_time_rules():
     assert REAL_REGISTRY["macro"].visible_after == timedelta(hours=macro.AVAILABLE_AT_UTC_HOUR)
     assert REAL_REGISTRY["onchain"].visible_after == onchain.KNOWN_AFTER
     assert REAL_REGISTRY["klines_extra"].visible_after == REAL_REGISTRY["premium"].visible_after == H  # a candle closes 1 h after it opens
+    assert REAL_REGISTRY["spot"].visible_after == H
     assert REAL_REGISTRY["funding"].visible_after == REAL_REGISTRY["difficulty"].visible_after == timedelta(0)  # known when stamped
-    assert set(REAL_REGISTRY) == {"klines_extra", "funding", "premium", "onchain", "difficulty", "macro"}
+    assert set(REAL_REGISTRY) == {"spot", "klines_extra", "funding", "premium", "onchain", "difficulty", "macro"}
     assert [n for n, s in REAL_REGISTRY.items() if s.refused] == ["macro"]
     assert snapshots.DEVELOPMENT_CUTOFF == HOLDOUT.start
 

@@ -116,10 +116,11 @@ def _call_sites(pattern: str) -> set[str]:
 def test_every_direct_fetch_of_a_past_window_is_reviewed():
     assert _call_sites(r"\.get_history\(") == set(REVIEWED_GET_HISTORY)
     assert _call_sites(r"\.get_bar_at\(") == LIVE_ONLY_GET_BAR_AT
-    # The stored snapshot (data/btcusdt_1h_2026-09-19.csv) holds the WHOLE holdout period on disk; only the guarded
-    # loader may name it, so no new code can read the holdout's candles straight from the file. (The side snapshots
-    # klines_extra_btcusdt_1h_* and premium_btcusdt_1h_* are named by their own registry, tested below.)
-    assert _call_sites(r"(?<!extra_)(?<!premium_)btcusdt_1h_") == {"agent/research/history.py"}
+    # The stored snapshot (data/btcusdt_1h_2026-09-19.csv) holds the WHOLE holdout period on disk. Only the registry
+    # (snapshots.py) and the hand-run downloader's file naming (history.py) may name it, so no new code can read the
+    # holdout's candles straight from the file. (The side snapshots klines_extra_btcusdt_1h_* and premium_btcusdt_1h_*
+    # are tested below.)
+    assert _call_sites(r"(?<!extra_)(?<!premium_)btcusdt_1h_") == {"agent/research/history.py", "agent/research/snapshots.py"}
 
 
 # ---- Safe signal research, Phase 1 (2026-10-17): the side-data snapshots have ONE governed reader ----
@@ -151,12 +152,13 @@ def test_side_data_is_read_only_through_the_governed_reader():
     assert _call_sites(r"read_csv\(") == {"agent/research/snapshots.py"}  # no other file parses a CSV
     # every side loader is called from exactly one research route, which passes the candles' own information cutoff
     assert _callers(SIDE_LOADERS) == {"agent/research/feature_test.py": SIDE_LOADERS}
+    # the reader itself is called only by the loaders: the side data's four modules, and load_bars for the spot candles
     assert _callers({"read_snapshot_rows", "read_snapshot_frame"}) == {
-        "agent/research/snapshots.py": {"read_snapshot_rows"}, "agent/research/microstructure.py": {"read_snapshot_frame"},
-        "agent/research/derivatives.py": {"read_snapshot_frame"}, "agent/research/macro.py": {"read_snapshot_frame"},
-        "agent/research/onchain.py": {"read_snapshot_frame"}}
-    # nothing downloads a replacement. (The spot candles' loader still can; closed separately -- see history.py.)
-    assert _callers(DOWNLOADERS) == {"agent/research/history.py": {"download_snapshot"}}
+        "agent/research/snapshots.py": {"read_snapshot_rows"}, "agent/research/history.py": {"read_snapshot_rows"},
+        "agent/research/microstructure.py": {"read_snapshot_frame"}, "agent/research/derivatives.py": {"read_snapshot_frame"},
+        "agent/research/macro.py": {"read_snapshot_frame"}, "agent/research/onchain.py": {"read_snapshot_frame"}}
+    # nothing downloads a replacement: every downloader is run by hand only (the spot loader stopped too, 2026-10-17)
+    assert _callers(DOWNLOADERS) == {}
 
 
 def test_only_the_registry_names_the_side_snapshot_files():

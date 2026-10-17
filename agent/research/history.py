@@ -5,12 +5,16 @@ Downloads, validates, caches and serves the full hourly history for research.
   snapshot they used, so a re-run months later can use the same bytes.
 - Every load is validated (see data_providers/quality.py): impossible data raises, gaps
   are reported and never filled.
+- load_bars() reads only the registered snapshot, through the governed reader in
+  agent/research/snapshots.py: it never downloads (download_snapshot() is run by hand only,
+  and a new file is used only after it is registered in a reviewed commit).
 - The sealed holdout is protected here: load_bars() refuses candles at or after
   HOLDOUT.start unless allow_holdout=True, and every allowed access is appended to
   research/HOLDOUT_ACCESS.log so it can never happen quietly.
 """
 
 import csv
+import io
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,25 +67,19 @@ def download_snapshot(end: datetime | None = None) -> Path:
     return path
 
 
-def latest_snapshot() -> Path | None:
-    files = sorted(DATA_DIR.glob("btcusdt_1h_*.csv"))
-    return files[-1] if files else None
-
-
-def _read_snapshot(path: Path) -> list[PriceBar]:
-    with path.open(newline="", encoding="utf-8") as f:
-        return [
-            PriceBar(
-                as_of=datetime.fromisoformat(row["as_of"]),
-                open=float(row["open"]),
-                high=float(row["high"]),
-                low=float(row["low"]),
-                close=float(row["close"]),
-                volume=float(row["volume"]),
-                source="binance",
-            )
-            for row in csv.DictReader(f)
-        ]
+def _parse(text: str) -> list[PriceBar]:
+    return [
+        PriceBar(
+            as_of=datetime.fromisoformat(row["as_of"]),
+            open=float(row["open"]),
+            high=float(row["high"]),
+            low=float(row["low"]),
+            close=float(row["close"]),
+            volume=float(row["volume"]),
+            source="binance",
+        )
+        for row in csv.DictReader(io.StringIO(text, newline=""))
+    ]
 
 
 def load_bars(
@@ -89,20 +87,16 @@ def load_bars(
     end: datetime | None = None,
     allow_holdout: bool = False,
     reason: str = "",
-    snapshot: Path | None = None,
 ) -> tuple[list[PriceBar], BarQualityReport, Path]:
     """
-    Candles with start <= as_of < end from the newest snapshot (downloading one if none
-    exists). Holdout candles are refused unless allow_holdout=True with a reason, which
-    is logged to research/HOLDOUT_ACCESS.log.
+    Candles with start <= as_of < end from the REGISTERED snapshot ("spot" in agent/research/snapshots.py), through
+    the governed reader: never downloaded, never another or newer file (since 2026-10-17; until then it took the
+    newest file, downloaded one when none existed, and parsed the whole file before cutting it). Without
+    allow_holdout, `end` is cut to HOLDOUT.start and reading stops at the holdout's first candle. allow_holdout=True
+    needs a written reason, which is logged to research/HOLDOUT_ACCESS.log before a byte past the cutoff is read.
     """
-    path = snapshot or latest_snapshot() or download_snapshot()
-    bars = _read_snapshot(path)
+    from agent.research import snapshots  # here, not at the top: snapshots imports this module
 
-    requested_end = end or bars[-1].as_of
-    if requested_end > HOLDOUT.start and not allow_holdout:
-        logger.warning("Requested range reaches the sealed holdout; truncating at %s", HOLDOUT.start.isoformat())
-        requested_end = HOLDOUT.start
     if allow_holdout:
         if not reason:
             raise HoldoutAccessError("allow_holdout=True requires a written reason")
@@ -112,8 +106,16 @@ def load_bars(
         logger.warning("HOLDOUT ACCESS: %s", reason)
         global _HOLDOUT_OPENED_FOR
         _HOLDOUT_OPENED_FOR = reason
+        requested_end = end or datetime(2100, 1, 1, tzinfo=timezone.utc)
+    else:
+        requested_end = end or HOLDOUT.start
+        if requested_end > HOLDOUT.start:
+            logger.warning("Requested range reaches the sealed holdout; truncating at %s", HOLDOUT.start.isoformat())
+            requested_end = HOLDOUT.start
 
+    # An hourly candle opened at as_of is known from as_of + 1 h, so "visible by requested_end" is "as_of < requested_end".
+    bars = _parse(snapshots.read_snapshot_rows("spot", requested_end).decode("utf-8"))
     selected = [b for b in bars if (start is None or b.as_of >= start) and b.as_of < requested_end]
     if not selected:
         raise ValueError("no candles in the requested range")
-    return selected, validate_bars(selected), path
+    return selected, validate_bars(selected), snapshots.DATA_DIR / snapshots.REGISTERED["spot"].file
