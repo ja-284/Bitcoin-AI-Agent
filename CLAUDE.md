@@ -50,6 +50,13 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   (its own tables, never touching the live signal or `move_size_1h_v1`). Readings at 1,000 / 3,000 / 6,500 eligible
   hours (`python -m agent.research.direction_checkpoint`), the verdict only at 6,500 (≈ late July 2027). **Its readings
   are blind (Amendment 1.1): look only at operational counts for it until each reading.**
+- **Since 2026-10-17, a separate offline research track:** the user's "SAFE SIGNAL RESEARCH" master plan (Phases 1–8;
+  see the 2026-10-17 (later) entry).
+  - Phase 1, the data boundary, is DONE (`research/DATA_BOUNDARY_2026-10-17.md`).
+  - Phase 2 registers exactly three comparisons on development data: MS-A, D-1 and D-2. It is registration only;
+    Phase 3 needs the user's go-ahead.
+  - It never touches the live system, the frozen models, the registered checkpoints or the holdout.
+  - All research data is read through `agent/research/snapshots.py`: registered files only, never downloaded.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -732,6 +739,32 @@ experiment changed.
   delivery test", and a test reads the name from the workflow file.
 - **Session check, 07:06 UTC:** 603 of 2,000 graded hours; no missing hour since 2026-10-14; 0 errors on either track;
   0 overdue; no incident; the last 60 GitHub runs green; the direction track 39 rows, 0 lost hours.
+
+**2026-10-17 (later) — the user's "MASTER PLAN: SAFE SIGNAL RESEARCH, DATA INTEGRITY, AND EVIDENCE-DRIVEN MODEL
+IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE; Phase 2 (registration only) next.**
+- **Phase 1, the historical data boundary** (report: `research/DATA_BOUNDARY_2026-10-17.md`).
+  - **Before:** the six side loaders and `load_bars` read their whole files, holdout rows included, into memory.
+    They took the newest file of a kind and downloaded one when none existed. No holdout hour was ever scored.
+  - **Now:** `agent/research/snapshots.py` is the one reader, for registered files only.
+    - Each file is pinned by its name, its development rows' count and sha256, and the whole file's sha256.
+    - Rows are cut by visibility at 2025-07-01 00:00 UTC, and reading stops at the first row past it.
+    - Rows past it are served only after `load_bars(allow_holdout=True, reason=...)` opened the holdout.
+    - Nothing is downloaded.
+  - **Commits:** `ec4db68` (side data) and `59aa794` (`load_bars`, which the plan had not listed; the user agreed).
+  - **Checks:**
+    - unit tests 788 passed, integration 43/43 twice;
+    - mutation guards: 9/9, then 11/11 on area *data-boundary* (161 in total);
+    - security and role checks OK; CI green on every push.
+- **Found by the scan: the macro snapshot is not daily.** It holds quarterly or monthly bars, stamped at their start
+  and holding their end-of-period close, so values were used up to ~3 months early.
+  - E006 is VOID and E011's set B is void; the dollar/yield watch item is withdrawn.
+  - Dated corrections were added and nothing was rewritten (`beb6c6b`). The weekly report's watch line changed, with
+    a written review in `research/CHECKPOINT_PATH_REVIEWS.json`; the functions the reading uses are unchanged.
+  - The snapshot is refused. The user's decision: no new macro snapshot now.
+- **The pre-check:** exit 3 (606 of 2,000), every mandatory item PASS. Nothing in prediction, scoring, the frozen
+  models, the live paths, the checkpoints or the holdout changed; `research/HOLDOUT_ACCESS.log` does not exist.
+- **Next (the user's instruction):** Phase 2 registers MS-A, D-1 and D-2 before any code for them, and stops for
+  the user's review. Phase 3 (reproducing E013 and E032) needs the user's go-ahead.
 
 ## Research phase — rules and decisions (2026-09-19)
 

@@ -26,6 +26,12 @@
       "verdict": "outside the checkpoint's computation",
       "evidence": "weekly_report.py gained direction_track and _render_direction (the direction track's operational line), one build() key and one render() line. The functions the checkpoint uses are identical before and after this commit (function-source comparison, 2026-10-16).",
       "reviewed_on": "2026-10-16"
+    },
+    "beb6c6bc1fa655b3d6221eec7ec2dc06e11aba65": {
+      "subject": "The macro snapshot's defect: dated corrections (E006 void, E011 set B void; watch item withdrawn)",
+      "verdict": "outside the checkpoint's computation",
+      "evidence": "In weekly_report.py only watch_list (the E006 dollar/yield item moves from tests_waiting to tests_withdrawn) and render (the watch-list sentence) changed. ewma_reference_series, ewma_fetch_hours, _against_ewma and fetch_shadow_rows are identical before and after this commit (AST function-source comparison of beb6c6b~1 and beb6c6b, 2026-10-17). No other file on the checkpoint's path changed; the side-data and load_bars changes of the same day (ec4db68, 59aa794) touch no file on it.",
+      "reviewed_on": "2026-10-17"
     }
   }
 }
