@@ -5,6 +5,20 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-17 (safe signal research, Phase 4: the three registered comparisons, run once)
+
+Code `909e00a` was committed before the run, which started at 10:08 UTC and took 2.3 minutes. Development data only,
+identical rows for every model, every rule as registered. Nothing adopted; no follow-up variant.
+- **E036, MS-A: NOT_SUPPORTED.** The liquidity pair makes validation slightly worse: d −0.000240 [−0.000424,
+  −0.000068], against a +0.0025 bar. The line is closed.
+- **E037, D1: INCONCLUSIVE.** The category scores add a little on 2017–23 (+0.000475, 7 of 8 years). On 2024–25 the
+  gain is +0.000113 [−0.000169, +0.000401]: it includes both zero and the bar.
+- **E037, D2: NOT_SUPPORTED by the calibration rule.** `up_streak_6` is strong on 2017–23 (+0.00158) but not on
+  2024–25 (−0.000155 [−0.000872, +0.000490]), where it makes the model over-confident (slope 0.65; E013's bucket
+  rule fails). The line is closed.
+- Holm-adjusted p is 0.918 for D1 and D2. Every result is hypothesis-generating (about 35 earlier experiments).
+  Results: `research/results/E036/ms_a.*`, `research/results/E037/d1_d2.*`.
+
 ## research — 2026-10-17 (safe signal research, Phase 3: the references reproduce bit for bit)
 
 `python -m agent.research.signal_batch reproduce` (code `37ccab3`) ran through the governed readers. Every number was

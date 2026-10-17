@@ -55,7 +55,8 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - Phase 1, the data boundary, is DONE (`research/DATA_BOUNDARY_2026-10-17.md`).
   - Phase 2 is DONE: E036 (MS-A) and E037 (D1, D2) are registered and not run.
   - Phase 3 is DONE: both references reproduced bit for bit.
-  - Phase 4 (running the three comparisons) needs the user's go-ahead.
+  - Phase 4 is DONE: MS-A NOT_SUPPORTED, D1 INCONCLUSIVE, D2 NOT_SUPPORTED. No follow-up variants.
+  - Phase 6 (the report) and Phase 7 (the decision gate) need the user's go-ahead.
   - It never touches the live system, the frozen models, the registered checkpoints or the holdout.
   - All research data is read through `agent/research/snapshots.py`: registered files only, never downloaded.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
@@ -777,7 +778,16 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
   - E018's full model and E019's EWMA rule: 51 values compared.
   - E032, re-run by its own code: 153 values compared.
   - Results are in `research/results/E036/` and `E037/`. No candidate was named, fitted or scored.
-- **Next, only on the user's go-ahead: Phase 4,** the three registered comparisons, exactly as written in E036/E037.
+- **Phase 4 DONE (the user's go-ahead).** Code `909e00a`, committed before the run; one run, 2.3 min; development data
+  only; identical rows.
+  - **E036, MS-A: NOT_SUPPORTED.** The liquidity pair is slightly worse on validation: d −0.000240 [−0.000424,
+    −0.000068], against a +0.0025 bar. The line is closed.
+  - **E037, D1: INCONCLUSIVE.** The category scores give +0.000475 on exploration but +0.000113 [−0.000169, +0.000401]
+    on validation.
+  - **E037, D2: NOT_SUPPORTED, by the calibration rule.** `up_streak_6` gives +0.00158 on exploration but −0.000155
+    on validation, and makes the model over-confident there (slope 0.65). The line is closed.
+  - Holm-adjusted p is 0.918 for D1 and D2. Nothing adopted; nothing live, frozen or registered changed.
+- **Next, only on the user's go-ahead:** Phase 6 (the honest documented report), then Phase 7's decision gate.
 
 ## Research phase — rules and decisions (2026-09-19)
 
