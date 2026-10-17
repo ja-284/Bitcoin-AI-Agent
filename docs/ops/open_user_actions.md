@@ -273,7 +273,7 @@ website in Lovable, do these three steps, all described with exact clicks and SQ
 Give Lovable only the project URL and the publishable (anon) key, never the service_role key, the
 database URL or any password. This is a private statistics page, **not the trading application**.
 
-## 7. A second healthchecks.io check for the direction track — OPEN (2026-10-16), about 5 minutes
+## 7. A second healthchecks.io check for the direction track — DONE and VERIFIED 2026-10-16
 
 The direction track (E034) now has its own alert, separate from the main heartbeat (master plan addendum 2026-10-16,
 item 5). The code is deployed and records every lost hour and recovery in the database already; only the email needs
@@ -288,7 +288,10 @@ you, because creating checks and adding secrets are account steps that are yours
    `bitcoin_direction_track` whose log says "DELIVERY TEST ... NO direction hour is lost". The next hourly run's
    success ping sends the "up" email.
 
-Until then the direction alert is inert (it records, but nothing reaches you), and the report says so.
+**Done by the user on 2026-10-16.** The labelled test turned `bitcoin_direction_track` DOWN at 16:51:41 UTC, and the
+email carried the test text. The hourly run started at 16:53:02 UTC (GitHub's :52 backup slot) sent the real success
+ping at 16:53:47 UTC, the second of the "up" email. So both the test path and the normal path are proven.
+(The first test text named the wrong workflow, "Alert delivery test"; corrected 2026-10-17 and now pinned by a test.)
 
 ## Not on this list, deliberately
 

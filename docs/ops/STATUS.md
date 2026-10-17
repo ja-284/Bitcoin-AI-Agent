@@ -105,8 +105,9 @@ other or with the versions in the code. **Update both, together, from the comman
      - ONE "down" email per incident when an hour is lost for good. Each lost hour and each recovery is recorded
        once in `shadow_direction_health` (append-only, unique per hour);
      - "up" again on recovery. The check's silence alarm covers no runs at all.
-     - **Inert until the user adds the check and its secret** (`open_user_actions.md` item 7). The record is
-       written either way. Read the state with `python -m agent.direction_shadow.health --status`.
+     - **Verified end to end on 2026-10-16** (`open_user_actions.md` item 7): the labelled test's "down" email at
+       16:51:41 UTC, then the hourly run's real success ping at 16:53:47 UTC sent "up". Read the state with
+       `python -m agent.direction_shadow.health --status`.
 5. **After each completed hourly or watchdog run**, the separate *Reporting snapshot* workflow:
    - first records a FAILED run as an incident (`python -m agent.reporting.incidents`, since 2026-10-05);
    - then refreshes the private stats read model (`python -m agent.reporting.publish`).

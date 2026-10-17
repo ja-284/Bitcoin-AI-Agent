@@ -100,7 +100,7 @@
     "(answered 2026-10-14 by the user's master plan: a prospective direction shadow track, isolated and registered first -> master plan Phase 3)",
     "(answered 2026-10-14 by the user's master plan: the EWMA warm-up must not read the holdout -> Amendment A1, done)"
   ],
-  "user_actions_required": ["add a healthchecks.io check bitcoin_direction_track (period 1 h, grace 1 h) and the GitHub secret DIRECTION_HEARTBEAT_URL, then run the manual Direction alert delivery test once (docs/ops/open_user_actions.md item 7)"],
+  "user_actions_required": [],
   "calendar": [
     {"date": "2026-12-13", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-10-14); any commit resets it"},
     {"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}

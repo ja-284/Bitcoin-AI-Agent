@@ -724,6 +724,15 @@ experiment changed.
     healthy, 0 errors, 0 lost hours.
   - **Still open, the user's step:** the direction check, its secret and the delivery test (item 7).
 
+**2026-10-17 — the direction alert verified end to end; Phase 5 monitoring continues.**
+- **The user's delivery test (2026-10-16):** `bitcoin_direction_track` went DOWN at 16:51:41 UTC with the labelled
+  text. The hourly run started at 16:53:02 UTC (the :52 backup slot) sent the real success ping at 16:53:47 UTC, the
+  second of the "up" email (GitHub's step record). Both paths are proven; no user action is open.
+- **Corrected:** the test text named the main model's "Alert delivery test" workflow. It now names "Direction alert
+  delivery test", and a test reads the name from the workflow file.
+- **Session check, 07:06 UTC:** 603 of 2,000 graded hours; no missing hour since 2026-10-14; 0 errors on either track;
+  0 overdue; no incident; the last 60 GitHub runs green; the direction track 39 rows, 0 lost hours.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:

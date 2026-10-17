@@ -113,7 +113,7 @@ def delivery_test_message(now: datetime) -> str:
     example = fail_message(Assessment(datetime(2026, 10, 16, 15, tzinfo=timezone.utc), True, False,
                                       [datetime(2026, 10, 16, 13, tzinfo=timezone.utc)], [datetime(2026, 10, 16, 13, tzinfo=timezone.utc)], True))
     return (f"Bitcoin-AI-Agent DELIVERY TEST of the DIRECTION TRACK alert, sent {now:%Y-%m-%d %H:%M} UTC by the manual "
-            f"'Alert delivery test' workflow. NO direction hour is lost and nothing failed. The next real hourly run turns this "
+            f"'Direction alert delivery test' workflow. NO direction hour is lost and nothing failed. The next real hourly run turns this "
             f"check green again. A real report looks like this: \"{example}\"")
 
 

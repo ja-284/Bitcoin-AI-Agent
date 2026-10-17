@@ -47,3 +47,10 @@ def test_the_test_report_says_it_is_a_test_and_nothing_is_lost(tmp_path, capsys,
     assert text.startswith("Bitcoin-AI-Agent DELIVERY TEST of the DIRECTION TRACK") and "NO direction hour is lost" in text
     assert "http" not in text.lower() and "this is a test" in capsys.readouterr().out
     assert "DELIVERY TEST" not in dh.fail_message(dh.assess([], [], datetime(2026, 10, 16, tzinfo=timezone.utc)))
+
+
+def test_the_test_report_names_the_workflow_that_really_sends_it():
+    """Found by the user's first delivery test (2026-10-16): the text named the main model's 'Alert delivery test'."""
+    name = re.search(r"^name:\s*(.+)$", CODE, re.M).group(1).strip()
+    msg = dh.delivery_test_message(datetime(2026, 10, 16, 16, 51, tzinfo=timezone.utc))
+    assert name == "Direction alert delivery test" and f"by the manual '{name}' workflow" in msg
