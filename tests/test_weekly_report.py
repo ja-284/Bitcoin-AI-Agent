@@ -164,6 +164,9 @@ def test_watch_list_thresholds():
     assert wl["news_hours"]["have"] == 50 and wl["news_hours"]["ready"] is False
     assert wl["live_months"]["ready"] is False
     assert watch_list(rows, T0 + timedelta(days=200))["live_months"]["ready"] is True
+    # E006 is void (2026-10-17): its dollar/yield item no longer waits for a re-test, and the report says why
+    assert wl["live_months"]["tests_waiting"] == ["funding_last 24h contrarian (E005)"]
+    assert "E006" in wl["live_months"]["tests_withdrawn"][0]
 
 
 def test_hours_whose_news_scoring_failed_do_not_count_towards_the_news_evaluation():

@@ -41,6 +41,8 @@ at 1–6h). It is real, consistent across periods, and economically useless at r
 - the news score (E030, verdict ≈ 2027-02);
 - the two live watch-list items, funding at 24h contrarian (E005) and dollar/yield at 168h (E006). Their
   confirmatory re-tests are already registered for ≥ 6 live months (≈ 2027-03).
+  *Correction 2026-10-17: the dollar/yield item is withdrawn. E006 is void, because its macro snapshot held
+  quarterly/monthly bars read as daily ones. Only the funding item remains.*
 
 ## What would justify a new directional experiment
 
@@ -68,7 +70,7 @@ All four of the following would be needed. None is met today.
 **Do not run more directional experiments now.** No novel, defensible directional hypothesis is supported by the
 record, and the only clean data are months away. Keep what is already registered:
 - the news verdict at 3,140 usable hours;
-- the funding and dollar/yield re-tests at six live months.
+- the funding and dollar/yield re-tests at six live months *(dollar/yield withdrawn 2026-10-17: E006 is void)*.
 
 Keep the BUY/HOLD/SELL signal labelled *no demonstrated predictive value* in every report and in the contract.
 Revisit only if a genuinely new free data source with a stated mechanism appears.

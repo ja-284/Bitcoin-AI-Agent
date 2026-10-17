@@ -21,7 +21,7 @@ trustworthy historical timestamp is classed UNAVAILABLE/UNSAFE for research.
 |---|---|---|---|---|---|
 | Binance USDⓈ-M funding (`fapi`) | settled funding rate every 8h | 2019-09-10 → | known at settlement time (+1 ms in the feed, normalised) | none for research | SAFE |
 | Binance premium index klines | hourly premium index OHLC | 2019-12-24 → | closed candle at open + 1h | perp only | SAFE |
-| Yahoo Finance daily (S&P, Nasdaq, DXY, gold, oil, 10y) | daily OHLC | years | **visible from 22:00 UTC on the trading date** (a margin after US close); weekends/holidays carry forward with `macro_staleness_h` recorded | Yahoo revises rarely; delisting risk | SAFE with the 22:00 rule |
+| Yahoo Finance daily (S&P, Nasdaq, DXY, gold, oil, 10y) | daily OHLC | years | **visible from 22:00 UTC on the trading date** (a margin after US close); weekends/holidays carry forward with `macro_staleness_h` recorded | Yahoo revises rarely; delisting risk | SAFE with the 22:00 rule *only for genuinely daily bars.* **Correction 2026-10-17:** the stored snapshot `macro_2026-09-20.csv` is NOT daily: `range=max` returned quarterly or monthly bars, stamped at their start and holding their end-of-period close. It is UNSAFE as stored and is refused by `agent/research/snapshots.py` (E006 void) |
 | blockchain.info charts (hash rate, tx count, active addresses, fees) | daily values | 2009 → | day D **known from D+1 06:00 UTC** | estimated tx volume marked UNSAFE (revised) | SAFE with the D+1 rule |
 | mempool.space difficulty adjustments | adjustment time, height, factor | 2009 → | known at the triggering block's time | — | SAFE |
 | Open interest, liquidations, order-book depth/spread, social | — | no free, timestamped history | — | — | UNAVAILABLE |

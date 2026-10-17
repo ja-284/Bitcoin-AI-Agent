@@ -2,6 +2,11 @@
 
 **Verdict: no pass at any horizon, in any layout (0 of 15 runs). No tripwire fired.**
 
+> **Correction 2026-10-17:** set B's dollar and yield inputs (`dxy_ret_5d`, `tnx_chg_5d`) came from the defective macro
+> snapshot (E006's `correction_2026_10_17`). They were five-quarter changes, each visible up to about three months
+> early. The set-B runs are therefore void as a test of their registered inputs. Set A and `A_minus_volpct` (candle
+> data only) are unaffected. The report below is kept as written.
+
 The model: L2 logistic regression, C = 0.1 fixed in advance, standardised on each fold's
 training rows only, refitted on each of the 28 (set A) / 19 (set B) quarterly folds with a
 purge of H hours + 24h embargo (E010-verified bench). Three horizons, two pre-registered

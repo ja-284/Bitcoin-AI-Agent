@@ -1,5 +1,12 @@
 # E006 — feature group: macro
 
+> **Correction 2026-10-17: every figure below is VOID.** The stored snapshot (`data/macro_2026-09-20.csv`) holds
+> quarterly bars (S&P, Nasdaq, dollar, 10-year yield) and roughly monthly bars (gold, oil). Each bar is stamped at its
+> start and holds its end-of-period close. Read as daily closes visible at D 22:00 UTC, each value was used up to about
+> three months before it existed, and "1d" / "5d" were one- and five-bar changes. The dollar/yield watch-list item is
+> withdrawn. Details: `research/experiments/E006_macro_features.json` → `correction_2026_10_17`. The report below is
+> kept exactly as it was written.
+
 pipeline 0.2.0 / scoring 0.1.0 · 68619 hours · fit-free · magnitude floor |ρ| ≥ 0.1
 
 Availability (share of hours with a value): spx_ret_1d: 1.00, spx_ret_5d: 1.00, ndq_ret_1d: 1.00, ndq_ret_5d: 1.00, dxy_ret_1d: 1.00, dxy_ret_5d: 1.00, gold_ret_1d: 1.00, gold_ret_5d: 1.00, oil_ret_1d: 1.00, oil_ret_5d: 1.00, tnx_chg_1d: 1.00, tnx_chg_5d: 1.00, macro_staleness_h: 1.00

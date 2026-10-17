@@ -670,7 +670,9 @@ def watch_list(pred_rows: list[dict], now: datetime) -> dict:
         "news_hours": {"have": with_news, "need": NEWS_HOURS_FOR_8_6, "ready": with_news >= NEWS_HOURS_FOR_8_6,
                        "verdict_at": NEWS_HOURS_FOR_VERDICT, "verdict_ready": with_news >= NEWS_HOURS_FOR_VERDICT},
         "live_months": {"have": round(months, 2), "need": MONTHS_FOR_WATCHLIST, "ready": months >= MONTHS_FOR_WATCHLIST,
-                        "tests_waiting": ["funding_last 24h contrarian (E005)", "dxy_ret_5d / tnx_chg_5d 168h negative (E006)"]},
+                        "tests_waiting": ["funding_last 24h contrarian (E005)"],
+                        # withdrawn 2026-10-17: E006 is void (its macro snapshot held quarterly/monthly bars read as daily)
+                        "tests_withdrawn": ["dxy_ret_5d / tnx_chg_5d 168h negative (E006): void, see E006's correction_2026_10_17"]},
     }
 
 
@@ -920,7 +922,7 @@ def render(rep: dict) -> str:
           f"- News evaluation (roadmap 8.6): {wl['news_hours']['have']} live hours with a usable news score — first look (no verdict) at "
          f"{wl['news_hours']['need']}: {'READY' if wl['news_hours']['ready'] else 'waiting'}; registered verdict point {wl['news_hours'].get('verdict_at', NEWS_HOURS_FOR_VERDICT):,} "
          f"(E025: below it the test cannot detect an effect of plausible size): {'READY' if wl['news_hours'].get('verdict_ready') else 'waiting'}",
-          f"- Confirmatory re-tests on live data (funding 24h; dollar/yield 168h): {wl['live_months']['have']} of {wl['live_months']['need']} months — {'READY' if wl['live_months']['ready'] else 'waiting'}",
+          f"- Confirmatory re-test on live data (funding 24h; the dollar/yield item was withdrawn on 2026-10-17, E006 being void): {wl['live_months']['have']} of {wl['live_months']['need']} months — {'READY' if wl['live_months']['ready'] else 'waiting'}",
           "", "Reminders: GitHub token `supabase-dispatch` expires 2027-09-20; scheduled workflows on a public repo pause after 60 days without a commit."]
     return "\n".join(L)
 

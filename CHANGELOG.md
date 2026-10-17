@@ -5,6 +5,17 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research records — 2026-10-17 (the macro snapshot's defect: dated corrections)
+
+- E006 is VOID and E011's set B is void as a test of its registered inputs. Both records gained a dated
+  `correction_2026_10_17`; nothing earlier was rewritten. The experiment index, both result summaries, ROADMAP, the
+  directional assessment, the 2026-10-08 audit, `docs/research/data_sources.md` and CLAUDE.md carry the same dated
+  note.
+- The weekly report no longer lists the dollar/yield item as a re-test waiting. It names it as withdrawn and why.
+  `weekly_report.py` is on the 2,000-hour reading's path, so the change has a written review in
+  `research/CHECKPOINT_PATH_REVIEWS.json`. The functions the reading uses are unchanged.
+- The user's decision (2026-10-17): no new macro snapshot now.
+
 ## research data — 2026-10-17 (safe signal research, Phase 1: one governed reader for the side snapshots)
 
 No model, rule, threshold, feature definition, registered experiment or live path changed.
