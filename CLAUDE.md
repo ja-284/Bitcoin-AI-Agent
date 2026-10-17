@@ -53,8 +53,8 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
 - **Since 2026-10-17, a separate offline research track:** the user's "SAFE SIGNAL RESEARCH" master plan (Phases 1–8;
   see the 2026-10-17 (later) entry).
   - Phase 1, the data boundary, is DONE (`research/DATA_BOUNDARY_2026-10-17.md`).
-  - Phase 2 registers exactly three comparisons on development data: MS-A, D-1 and D-2. It is registration only;
-    Phase 3 needs the user's go-ahead.
+  - Phase 2 is DONE: E036 (MS-A) and E037 (D1, D2) are registered and not run. Phase 3 (reproducing E013/E018 and
+    E032) needs the user's go-ahead.
   - It never touches the live system, the frozen models, the registered checkpoints or the holdout.
   - All research data is read through `agent/research/snapshots.py`: registered files only, never downloaded.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
@@ -763,8 +763,15 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
   - The snapshot is refused. The user's decision: no new macro snapshot now.
 - **The pre-check:** exit 3 (606 of 2,000), every mandatory item PASS. Nothing in prediction, scoring, the frozen
   models, the live paths, the checkpoints or the holdout changed; `research/HOLDOUT_ACCESS.log` does not exist.
-- **Next (the user's instruction):** Phase 2 registers MS-A, D-1 and D-2 before any code for them, and stops for
-  the user's review. Phase 3 (reproducing E013 and E032) needs the user's go-ahead.
+- **Phase 2 DONE (registration only, nothing run):** E036 (MS-A, move-size) and E037 (D1 and D2, direction) are
+  registered in `research/experiments/` before any code for them.
+  - Each fixes the inputs, data fingerprints, walk-forward, identical rows and baselines (E019's EWMA rule for
+    move-size; F and B for direction).
+  - Each fixes the paired 48 h bootstrap (2,000 resamples, seed 31), with Holm over D1/D2.
+  - Each fixes the 1.10× practical bar, the calibration rules and the 6-of-8 year rule.
+  - Each fixes SUPPORTED / NOT_SUPPORTED / INCONCLUSIVE, the tripwires and the stop rules.
+- **Next, only on the user's go-ahead: Phase 3.** E013/E018 and E032 must reproduce to 1e-9 before any candidate is
+  fitted.
 
 ## Research phase — rules and decisions (2026-09-19)
 

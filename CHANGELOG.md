@@ -5,6 +5,21 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-17 (safe signal research, Phase 2: the batch registered, nothing run)
+
+The three comparisons of the batch are registered before any code for them exists. Development data only; nothing
+fitted or run.
+- **E036, MS-A (move-size):** `amihud_rel_168` and `trade_size_rel_24` added to the nine reference inputs.
+- **E037 (direction):** D1 removes the four category scores from E032's model; D2 adds `up_streak_6`.
+- Each record fixes in advance:
+  - the target, inputs, data files and their fingerprints, windows and walk-forward;
+  - the baselines on identical rows (including E019's EWMA rule);
+  - the paired Brier bootstrap (48 h, 2,000, seed 31) and Holm within each track;
+  - the practical bar (1.10× skill, copied from E019/E020/E032), the calibration rules and the year rule;
+  - SUPPORTED / NOT_SUPPORTED / INCONCLUSIVE, the tripwires, the stop rules and the expected result.
+- The Phase 3 gate: E013/E018 and E032 must reproduce to 1e-9 before any candidate runs.
+- E018's removals are cited, not re-run.
+
 ## research records — 2026-10-17 (the macro snapshot's defect: dated corrections)
 
 - E006 is VOID and E011's set B is void as a test of its registered inputs. Both records gained a dated
