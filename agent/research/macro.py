@@ -24,6 +24,7 @@ import pandas as pd
 import requests
 
 from agent.research.history import DATA_DIR
+from agent.research.snapshots import DEVELOPMENT_CUTOFF, read_snapshot_frame
 
 logger = logging.getLogger(__name__)
 
@@ -61,15 +62,13 @@ def download_macro() -> Path:
     return path
 
 
-def _latest() -> Path | None:
-    files = sorted(DATA_DIR.glob("macro_*.csv"))
-    return files[-1] if files else None
-
-
-def load_macro(path: Path | None = None) -> pd.DataFrame:
-    """Daily closes, index = trading date (naive), one column per series; NaN on days a market was closed."""
-    path = path or _latest() or download_macro()
-    df = pd.read_csv(path, index_col="trading_date", parse_dates=True, float_precision="round_trip")
+def load_macro(until: datetime = DEVELOPMENT_CUTOFF) -> pd.DataFrame:
+    """
+    Daily closes, index = trading date (naive), one column per series; NaN on days a market was closed. Only the
+    registered snapshot's bars visible at or before `until`, through the governed reader (agent/research/snapshots.py).
+    The snapshot of 2026-09-20 is REFUSED there: its bars are quarterly or monthly, not daily (found 2026-10-17).
+    """
+    df = read_snapshot_frame("macro", until, index_col="trading_date", parse_dates=True)
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:
         raise ValueError("macro history must be strictly increasing by trading date")
     return df

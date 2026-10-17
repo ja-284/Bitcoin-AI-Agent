@@ -25,6 +25,7 @@ import pandas as pd
 import requests
 
 from agent.research.history import DATA_DIR
+from agent.research.snapshots import DEVELOPMENT_CUTOFF, read_snapshot_frame
 
 logger = logging.getLogger(__name__)
 
@@ -76,23 +77,18 @@ def download_difficulty() -> Path:
     return path
 
 
-def _latest(prefix: str) -> Path | None:
-    files = sorted(DATA_DIR.glob(f"{prefix}_*.csv"))
-    return files[-1] if files else None
-
-
-def load_onchain(path: Path | None = None) -> pd.DataFrame:
-    path = path or _latest("onchain") or download_onchain()
-    df = pd.read_csv(path, index_col="day", parse_dates=True, float_precision="round_trip")
+def load_onchain(until: datetime = DEVELOPMENT_CUTOFF) -> pd.DataFrame:
+    """The registered snapshot's days known at or before `until` (D + 30 h), via agent/research/snapshots.py."""
+    df = read_snapshot_frame("onchain", until, index_col="day", parse_dates=True)
     df.index = pd.DatetimeIndex(df.index, tz="UTC") if df.index.tz is None else df.index.tz_convert("UTC")
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:
         raise ValueError("on-chain history must be strictly increasing by day")
     return df
 
 
-def load_difficulty(path: Path | None = None) -> pd.DataFrame:
-    path = path or _latest("difficulty_adjustments") or download_difficulty()
-    df = pd.read_csv(path, float_precision="round_trip")
+def load_difficulty(until: datetime = DEVELOPMENT_CUTOFF) -> pd.DataFrame:
+    """The registered snapshot's adjustments made at or before `until`, via agent/research/snapshots.py."""
+    df = read_snapshot_frame("difficulty", until)
     df.index = pd.to_datetime(df["adjusted_at"], utc=True, format="ISO8601")
     df = df.drop(columns=["adjusted_at"])
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:

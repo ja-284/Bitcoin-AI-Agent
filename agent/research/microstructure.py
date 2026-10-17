@@ -22,6 +22,7 @@ import requests
 from agent.data_providers.binance import BASE_URLS, HOUR_MS, MAX_PER_REQUEST, SYMBOL
 from agent.research.history import DATA_DIR
 from agent.research.periods import DATA_START
+from agent.research.snapshots import DEVELOPMENT_CUTOFF, read_snapshot_frame
 
 logger = logging.getLogger(__name__)
 
@@ -62,14 +63,13 @@ def download_klines_extra(end: datetime | None = None) -> Path:
     return path
 
 
-def _latest() -> Path | None:
-    files = sorted(DATA_DIR.glob(f"klines_extra_{SYMBOL.lower()}_1h_*.csv"))
-    return files[-1] if files else None
-
-
-def load_klines_extra(path: Path | None = None) -> pd.DataFrame:
-    path = path or _latest() or download_klines_extra()
-    df = pd.read_csv(path, float_precision="round_trip")
+def load_klines_extra(until: datetime = DEVELOPMENT_CUTOFF) -> pd.DataFrame:
+    """
+    The registered snapshot's rows visible at or before `until`, through the governed reader
+    (agent/research/snapshots.py): never downloaded, never another file, never past the last development
+    cutoff without the logged holdout route.
+    """
+    df = read_snapshot_frame("klines_extra", until)
     df.index = pd.to_datetime(df["as_of"], utc=True, format="ISO8601")
     df = df.drop(columns=["as_of"])
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:

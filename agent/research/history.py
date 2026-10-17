@@ -31,6 +31,15 @@ class HoldoutAccessError(RuntimeError):
     pass
 
 
+# The logged reason, set only by load_bars(allow_holdout=True, reason=...) in this process. The side-data reader
+# (agent/research/snapshots.py) serves rows past the holdout's start only when it is set.
+_HOLDOUT_OPENED_FOR = ""
+
+
+def holdout_opened() -> bool:
+    return bool(_HOLDOUT_OPENED_FOR)
+
+
 def snapshot_path(snapshot_date: str) -> Path:
     return DATA_DIR / f"btcusdt_1h_{snapshot_date}.csv"
 
@@ -101,6 +110,8 @@ def load_bars(
         with HOLDOUT_LOG.open("a", encoding="utf-8") as f:
             f.write(f"{datetime.now(tz=timezone.utc).isoformat()}\t{reason}\n")
         logger.warning("HOLDOUT ACCESS: %s", reason)
+        global _HOLDOUT_OPENED_FOR
+        _HOLDOUT_OPENED_FOR = reason
 
     selected = [b for b in bars if (start is None or b.as_of >= start) and b.as_of < requested_end]
     if not selected:

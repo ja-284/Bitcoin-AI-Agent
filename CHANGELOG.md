@@ -5,6 +5,28 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research data — 2026-10-17 (safe signal research, Phase 1: one governed reader for the side snapshots)
+
+No model, rule, threshold, feature definition, registered experiment or live path changed.
+- `agent/research/snapshots.py` is now the only reader of the six side snapshots (trade counts and taker volume,
+  funding, premium, on-chain, difficulty, macro).
+  - It serves registered files only: a fixed name, the count and sha256 of the development rows, and the whole
+    file's size and sha256.
+  - Rows are cut at the last development cutoff (2025-07-01 00:00 UTC) by when they became visible, using each
+    dataset's own point-in-time rule, and reading stops at the first row past it.
+  - Rows past the cutoff are served only after `load_bars(allow_holdout=True, reason=...)` opened the holdout in
+    the same process.
+  - A missing, changed, out-of-order or unregistered file is refused. Nothing is downloaded, and no other file is
+    substituted.
+- Before this change, each loader read its whole file (the holdout's period included) and downloaded a new file
+  when none existed. No holdout hour was ever scored: every feature is cut to a candle grid that stops at the
+  holdout. `research/HOLDOUT_ROUTES.md` records it.
+- **The macro snapshot is refused.** Its rows are quarterly or monthly bars, not daily closes; each is stamped at
+  its start and holds its end-of-period close. Read as daily bars visible at D 22:00 UTC, each value was seen up
+  to about three months early. E006 and E011's set B are affected (dated corrections follow separately).
+- Tests: `tests/test_snapshots.py` (synthetic files only) and new route tests in `tests/test_holdout_routes.py`.
+  Mutation guards: 150 → 159 (area *data-boundary*).
+
 ## process — 2026-10-16 (master plan addendum: process corrections and monitoring hardening)
 
 No model, rule, threshold or registered experiment changed.

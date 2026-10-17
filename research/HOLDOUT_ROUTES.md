@@ -24,6 +24,8 @@ The holdout is **2025-07-01 00:00 → 2026-08-19 23:00 UTC** (`agent/research/pe
 | since 2026-09-22 | the weekly report's free EWMA rule's warm-up | about 71 candles, from ~2026-08-17 01:00 | only live hours |
 | 2026-10-13 | the 500-hour checkpoint's free EWMA rule's warm-up (it grows with the live span) | back to ~2026-07-26 | only the 500 live hours |
 | 2026-09-19 | the dated snapshot `data/btcusdt_1h_2026-09-19.csv` stores the whole period on disk | all of it | nothing (storage only) |
+| 2026-09-20 → 2026-10-17 | **the side-data loaders** (trade counts and taker volume, funding, premium, macro, on-chain, difficulty): every research run that computed one of these groups read the WHOLE dated file into memory, holdout rows included. Found by the 2026-10-17 inventory; closed the same day (row `snapshots.py` below) | every holdout-period row of the files used (counts: the 2026-10-17 entry below) | nothing: every feature is cut to a candle grid built from `load_bars(end=HOLDOUT.start)`, and each one reads only rows visible at its own cutoff |
+| until closed separately | `load_bars()` itself parses the whole spot snapshot into memory, then keeps the rows before the holdout | all of it, in memory | nothing |
 
 The EWMA rule has a 24-hour half-life. At the live hours where its values are used, every holdout candle weighs
 less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
@@ -40,9 +42,33 @@ less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
 | `weekly_report.ewma_reference_series` | **no, since Amendment A1 (2026-10-14).** The window is clipped at the buffer's first hour (`ewma_fetch_hours`), a window ending inside or before the holdout is refused, and the returned candles are checked. Until A1 it read holdout candles as warm-up (rows above) |
 | live paths (the hourly job, outcome grading, the shadow model) | no: they fetch the latest hours, or the target hours of live predictions |
 | the direction shadow track (`agent/direction_shadow`, E034, since 2026-10-15) | no. Its hourly step fetches the latest 250 closed hours; its grading fetches the target hours of its own rows, all written from 2026-10-15 on; its artefact was fitted through `build_frame`'s default, which stops at the holdout (tested) |
+| `agent/research/snapshots.py`, the side snapshots' reader (since 2026-10-17) | **Only through the logged route.** It is the one reader of the six side snapshots (the loaders in `microstructure.py`, `derivatives.py`, `macro.py` and `onchain.py` call it). It serves registered files only: a fixed name, the count and sha256 of the development rows, and the whole file's size and sha256. Rows are cut by when they became visible, at the last development cutoff (2025-07-01 00:00 UTC, the close of the last development candle), and reading stops at the first row past it. Rows past it are served only after `load_bars(allow_holdout=True, reason=...)` opened the holdout in the same process; the whole file's sha256 is then checked. A missing, changed, out-of-order or unregistered file is refused, and nothing is downloaded. The macro snapshot is refused outright: its bars are not daily |
+| `feature_test.compute_group_features`, the one research route to side data | It asks for side data up to the candles' own information cutoff (the close of the latest candle), so candles that stop at the holdout get side data that stops there too (tested) |
+| the side snapshot files themselves | only `snapshots.py` names them, and no other file in `agent/` parses a CSV (both tested) |
 
-Three mutation guards keep these locks honest (`tools/guard_mutations.py`, area *holdout*: two for the backtest,
-one for Amendment A1's clip).
+Twelve mutation guards keep these locks honest (`tools/guard_mutations.py`). Area *holdout*: two for the backtest
+and one for Amendment A1's clip. Area *data-boundary*: nine for the side-data reader.
+
+**The side snapshots on 2026-10-17** (scan of the timestamp column only; no value decoded). Every file is strictly
+increasing in time. The development rows are those visible at or before 2025-07-01 00:00 UTC:
+
+| snapshot | rows | development rows | rows past the cutoff | rule: a row stamped T is known from |
+|---|---|---|---|---|
+| `klines_extra_btcusdt_1h_2026-09-20.csv` | 79,588 | 68,868 | 10,720 | T + 1 h |
+| `funding_btcusdt_2026-09-20.csv` | 7,702 | 6,362 | 1,340 | T |
+| `premium_btcusdt_1h_2026-09-20.csv` | 59,093 | 48,380 | 10,713 | T + 1 h |
+| `onchain_2026-09-20.csv` | 6,462 | 6,022 | 440 | T + 30 h |
+| `difficulty_adjustments_2026-09-20.csv` | 466 | 434 | 32 | T |
+| `macro_2026-09-20.csv` (refused) | 504 | 488 | 16 | T + 22 h, as the code assumed for daily bars |
+
+**What the evidence establishes, and what it does not.**
+- **Established, from the code and its tests:** no holdout-period side value entered a development feature value.
+  - Every route computed side features on a grid built from `load_bars(end=HOLDOUT.start)`.
+  - Every feature reads only rows visible at its own cutoff. The garbled-future tests of each module show it, and
+    `tests/test_snapshots.py` shows it again: on synthetic files, the cut leaves every development feature value
+    unchanged.
+- **Not established:** whether a holdout-period side value was ever shown in an interactive session. No record says
+  either way. The download code logged only counts and date ranges.
 
 ## Still open, for the user (nothing changed without a decision)
 

@@ -37,6 +37,7 @@ from agent.research.periods import HOLDOUT, period_of
 from agent.research.shape import SHAPE_FEATURES, shape_features
 from agent.research.regimes import trend_regime
 from agent.research.replay import replay_cached
+from agent.research.snapshots import information_cutoff
 from agent.scoring.scorer import SCORING_VERSION
 from agent.version import PIPELINE_VERSION
 
@@ -57,23 +58,28 @@ GROUPS = {
 
 
 def compute_group_features(group: str, bars) -> pd.DataFrame:
-    """Every group's features on the same complete hourly grid, indexed by reference hour."""
+    """
+    Every group's features on the same complete hourly grid, indexed by reference hour. Side data comes only through
+    the governed reader (agent/research/snapshots.py), cut at the candles' own information cutoff: candles that stop
+    at the holdout get side data that stops there too.
+    """
     if group in ("volatility", "regime", "calendar"):
         return all_features(bars)
+    until = information_cutoff(bars)
     if group == "derivatives":
         grid = bars_to_frame(bars).index
-        return derivatives_features(grid, load_funding(), load_premium())
+        return derivatives_features(grid, load_funding(until), load_premium(until))
     if group == "macro":
         grid = bars_to_frame(bars).index
-        return macro_features(grid, load_macro())
+        return macro_features(grid, load_macro(until))
     if group == "onchain":
         grid = bars_to_frame(bars).index
-        return onchain_features(grid, load_onchain(), load_difficulty())
+        return onchain_features(grid, load_onchain(until), load_difficulty(until))
     if group == "microstructure":
         grid = bars_to_frame(bars).index
-        return microstructure_features(grid, load_klines_extra())
+        return microstructure_features(grid, load_klines_extra(until))
     if group == "shape":
-        return shape_features(bars_to_frame(bars), load_klines_extra())
+        return shape_features(bars_to_frame(bars), load_klines_extra(until))
     raise ValueError(group)
 
 

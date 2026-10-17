@@ -117,8 +117,62 @@ def test_every_direct_fetch_of_a_past_window_is_reviewed():
     assert _call_sites(r"\.get_history\(") == set(REVIEWED_GET_HISTORY)
     assert _call_sites(r"\.get_bar_at\(") == LIVE_ONLY_GET_BAR_AT
     # The stored snapshot (data/btcusdt_1h_2026-09-19.csv) holds the WHOLE holdout period on disk; only the guarded
-    # loader may name it, so no new code can read the holdout's candles straight from the file.
-    assert _call_sites(r"btcusdt_1h_") == {"agent/research/history.py"}
+    # loader may name it, so no new code can read the holdout's candles straight from the file. (The side snapshots
+    # klines_extra_btcusdt_1h_* and premium_btcusdt_1h_* are named by their own registry, tested below.)
+    assert _call_sites(r"(?<!extra_)(?<!premium_)btcusdt_1h_") == {"agent/research/history.py"}
+
+
+# ---- Safe signal research, Phase 1 (2026-10-17): the side-data snapshots have ONE governed reader ----
+# Until 2026-10-17 each side loader read its whole dated file, the holdout's period included, and downloaded a new file
+# when none was found. Now only agent/research/snapshots.py reads them: registered files only, cut at the last
+# development cutoff unless the holdout was opened through the logged route, never a download.
+SIDE_LOADERS = {"load_klines_extra", "load_funding", "load_premium", "load_macro", "load_onchain", "load_difficulty"}
+DOWNLOADERS = {"download_klines_extra", "download_funding", "download_premium", "download_macro", "download_onchain",
+               "download_difficulty", "download_snapshot"}
+GOVERNED = SIDE_LOADERS | {"load_bars", "read_snapshot_rows", "read_snapshot_frame", "compute_group_features", "build_frame"}
+
+
+def _callers(names: set[str]) -> dict[str, set[str]]:
+    """file -> the names it CALLS (a call, not a definition or a mention) from `names`, over agent/ and run.py."""
+    import ast
+
+    out: dict[str, set[str]] = {}
+    for f in [*Path("agent").rglob("*.py"), Path("run.py")]:
+        for node in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.Call):
+                fn = node.func
+                name = fn.id if isinstance(fn, ast.Name) else fn.attr if isinstance(fn, ast.Attribute) else None
+                if name in names:
+                    out.setdefault(f.as_posix(), set()).add(name)
+    return out
+
+
+def test_side_data_is_read_only_through_the_governed_reader():
+    assert _call_sites(r"read_csv\(") == {"agent/research/snapshots.py"}  # no other file parses a CSV
+    # every side loader is called from exactly one research route, which passes the candles' own information cutoff
+    assert _callers(SIDE_LOADERS) == {"agent/research/feature_test.py": SIDE_LOADERS}
+    assert _callers({"read_snapshot_rows", "read_snapshot_frame"}) == {
+        "agent/research/snapshots.py": {"read_snapshot_rows"}, "agent/research/microstructure.py": {"read_snapshot_frame"},
+        "agent/research/derivatives.py": {"read_snapshot_frame"}, "agent/research/macro.py": {"read_snapshot_frame"},
+        "agent/research/onchain.py": {"read_snapshot_frame"}}
+    # nothing downloads a replacement. (The spot candles' loader still can; closed separately -- see history.py.)
+    assert _callers(DOWNLOADERS) == {"agent/research/history.py": {"download_snapshot"}}
+
+
+def test_only_the_registry_names_the_side_snapshot_files():
+    named = _call_sites(r"(klines_extra|premium)_btcusdt_1h_20|funding_btcusdt_20|onchain_20|difficulty_adjustments_20|macro_20")
+    assert named == {"agent/research/snapshots.py"}
+
+
+def test_live_code_never_reads_a_research_snapshot():
+    """The hourly job, both shadow tracks, the reporting layer and every module a workflow runs: none calls a governed
+    research loader, so the boundary change cannot touch the live record or a prospective track."""
+    live = {f for f in _callers(GOVERNED) if not f.startswith(("agent/research/", "agent/backtest/"))}
+    assert live == set(), live
+    targets = set()
+    for wf in Path(".github/workflows").glob("*.yml"):
+        targets |= set(re.findall(r"python -m (agent[\w.]*)", wf.read_text(encoding="utf-8")))
+    assert targets and all(not t.startswith("agent.research") for t in targets), targets
 
 
 def _calls_allowing_the_holdout() -> set[str]:
@@ -138,6 +192,9 @@ def test_the_only_holdout_route_is_the_logged_one_and_nothing_has_used_it():
     allowing = _calls_allowing_the_holdout()
     assert allowing == {"agent/research/holdout_eval.py"}, allowing
     assert not Path("research/HOLDOUT_ACCESS.log").exists(), "the holdout has been opened -- that must be the user's decision"
+    import agent.research.history as history
+
+    assert not history.holdout_opened(), "a process starts with the holdout closed; only load_bars(allow_holdout=True) opens it"
 
 
 # ---- Amendment A1 (research/LIVE_EVALUATION.md, 2026-10-14): the free EWMA rule's warm-up never reads the holdout ----

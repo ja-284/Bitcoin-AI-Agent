@@ -42,12 +42,17 @@ def test_loader_truncates_at_the_holdout_by_default(tmp_path):
 
 def test_holdout_access_requires_a_reason_and_is_logged(tmp_path, monkeypatch):
     monkeypatch.setattr(history, "HOLDOUT_LOG", tmp_path / "HOLDOUT_ACCESS.log")
+    monkeypatch.setattr(history, "_HOLDOUT_OPENED_FOR", "")  # restored afterwards: the opening must not outlive this test
     snap = _fake_snapshot(tmp_path)
     with pytest.raises(history.HoldoutAccessError):
         history.load_bars(snapshot=snap, allow_holdout=True)
+    assert not history.holdout_opened()
+    history.load_bars(snapshot=snap)
+    assert not history.holdout_opened(), "only the logged route opens the holdout"
     bars, _, _ = history.load_bars(snapshot=snap, allow_holdout=True, reason="unit test only")
     assert bars[-1].as_of >= HOLDOUT.start
     assert "unit test only" in (tmp_path / "HOLDOUT_ACCESS.log").read_text(encoding="utf-8")
+    assert history.holdout_opened()  # the side-data reader may now serve the holdout's rows (agent/research/snapshots.py)
 
 
 def _rows(closes, sma=None):

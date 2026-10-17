@@ -69,9 +69,9 @@ def test_every_research_loader_reads_exactly():
     """Any CSV loader in agent/research must be bit-exact, by using round_trip or the csv module."""
     import inspect
 
-    from agent.research import derivatives, macro, microstructure, onchain, replay
+    from agent.research import derivatives, macro, microstructure, onchain, replay, snapshots
 
-    for module in (derivatives, macro, microstructure, onchain):
+    for module in (derivatives, macro, microstructure, onchain, snapshots):
         source = inspect.getsource(module)
         for line in source.splitlines():
             if "read_csv(" in line:
