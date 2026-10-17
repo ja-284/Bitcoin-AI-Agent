@@ -53,8 +53,9 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
 - **Since 2026-10-17, a separate offline research track:** the user's "SAFE SIGNAL RESEARCH" master plan (Phases 1–8;
   see the 2026-10-17 (later) entry).
   - Phase 1, the data boundary, is DONE (`research/DATA_BOUNDARY_2026-10-17.md`).
-  - Phase 2 is DONE: E036 (MS-A) and E037 (D1, D2) are registered and not run. Phase 3 (reproducing E013/E018 and
-    E032) needs the user's go-ahead.
+  - Phase 2 is DONE: E036 (MS-A) and E037 (D1, D2) are registered and not run.
+  - Phase 3 is DONE: both references reproduced bit for bit.
+  - Phase 4 (running the three comparisons) needs the user's go-ahead.
   - It never touches the live system, the frozen models, the registered checkpoints or the holdout.
   - All research data is read through `agent/research/snapshots.py`: registered files only, never downloaded.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
@@ -770,8 +771,13 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
   - Each fixes the paired 48 h bootstrap (2,000 resamples, seed 31), with Holm over D1/D2.
   - Each fixes the 1.10× practical bar, the calibration rules and the 6-of-8 year rule.
   - Each fixes SUPPORTED / NOT_SUPPORTED / INCONCLUSIVE, the tripwires and the stop rules.
-- **Next, only on the user's go-ahead: Phase 3.** E013/E018 and E032 must reproduce to 1e-9 before any candidate is
-  fitted.
+- **Phase 3 DONE, gate PASSED (the user's go-ahead, 2026-10-17).** `python -m agent.research.signal_batch reproduce`
+  (code `37ccab3`, 42 s) ran on the governed readers. Both references reproduced bit for bit; the largest difference
+  is 0.0.
+  - E018's full model and E019's EWMA rule: 51 values compared.
+  - E032, re-run by its own code: 153 values compared.
+  - Results are in `research/results/E036/` and `E037/`. No candidate was named, fitted or scored.
+- **Next, only on the user's go-ahead: Phase 4,** the three registered comparisons, exactly as written in E036/E037.
 
 ## Research phase — rules and decisions (2026-09-19)
 

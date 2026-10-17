@@ -5,6 +5,16 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-17 (safe signal research, Phase 3: the references reproduce bit for bit)
+
+`python -m agent.research.signal_batch reproduce` (code `37ccab3`) ran through the governed readers. Every number was
+compared with the committed result files, at 1e-9 for floats and exactly for counts and labels.
+- **E018's full model and E019's EWMA rule:** 51 values, largest difference 0.0.
+- **E032, re-run by its own unchanged code:** 153 values, largest difference 0.0.
+
+The gate both records fixed is passed. It also shows that the registered spot and trade-count snapshots and the replay
+cache give exactly the values those experiments used. No candidate was named, fitted or scored.
+
 ## research — 2026-10-17 (safe signal research, Phase 2: the batch registered, nothing run)
 
 The three comparisons of the batch are registered before any code for them exists. Development data only; nothing

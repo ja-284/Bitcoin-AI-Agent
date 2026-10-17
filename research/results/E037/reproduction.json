@@ -1,0 +1,8 @@
+{
+  "experiment": "E037",
+  "generated_at": "2026-10-17T09:56:40.216658+00:00",
+  "track": "direction (E037's gate)",
+  "reproduces": true,
+  "differences": [],
+  "reproduction_files": "research/results/E037/reproduction_E032"
+}

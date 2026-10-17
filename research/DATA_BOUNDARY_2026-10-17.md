@@ -103,6 +103,12 @@ What the new tests cover (`tests/test_snapshots.py`, synthetic files only; route
     would have picked these. Whether another file ever existed is not recorded. Phase 3's reproduction of E013 and
     E032 checks it on real data.
 
+*Added 2026-10-17, after Phase 3: the second "not established" point is now answered for the files the batch uses.
+Through the governed readers, E018/E019 (spot candles, trade counts, the replay cache) and E032 (the same plus taker
+volume) reproduced bit for bit: 51 and 153 values compared, largest difference 0.0 (`research/results/E036/`,
+`research/results/E037/`). So the registered spot and trade-count files, and the replay cache, gave exactly the values
+those experiments used. The funding, premium and on-chain files were not exercised by Phase 3.*
+
 ## 6. Remaining limitations
 
 - **Revision risk.** The fingerprints prove the files are unchanged since registration, not that each value is the one
