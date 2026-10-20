@@ -74,10 +74,11 @@ MUTATIONS = [
              "if last_fit_hour + spec.purge >= fold.test_start:",
              "if last_fit_hour >= fold.test_start:",
              "the purge gap between training and test rows is no longer enforced"),
+    # Re-pointed 2026-10-20 (weekly audit, F1): 59aa794 moved this condition into load_bars' non-holdout branch.
     Mutation("validation", "agent/research/history.py",
-             "if requested_end > HOLDOUT.start and not allow_holdout:",
-             "if False:",
-             "the sealed holdout is no longer truncated -- it would be read silently"),
+             "        if requested_end > HOLDOUT.start:",
+             "        if False:",
+             "the sealed holdout is no longer truncated -- the request would go on to the governed reader past the cutoff"),
     # ---- data quality and history
     Mutation("data", "agent/indicators/engine.py",
              "while cut > 0 and bars[cut].as_of - bars[cut - 1].as_of == HOUR:",
