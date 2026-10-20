@@ -17,6 +17,10 @@ python tools/gate.py push   [the same options]
   1. the unit tests, with a deliberately unreachable `DATABASE_URL`, as CI runs them;
   2. with `--integration`, the real-Postgres integration tests in a scratch schema they create and drop;
   3. with `--mutations TEXT` or `--all-mutations`, the mutation guards (`tools/guard_mutations.py`).
+- The unit tests include `tests/test_guard_anchors.py` (since 2026-10-20): every mutation guard must still find the
+  code it breaks, exactly once. A rewrite that leaves a guard pointing at nothing therefore fails the next commit,
+  not the next full mutation run (weekly audit 2026-10-20, F1). The mutation runner leaves this one file out of its
+  own runs.
 - The first failing step stops the gate. Later steps are printed **NOT RUN**, and the exit code is 1. "PASSED" is
   printed only when every step ran and returned 0.
 - `ship` refuses if anything outside the given paths is modified or untracked, so the tree that was tested is the

@@ -720,11 +720,33 @@ NULL_MUTATION = Mutation("control", "agent/orchestrator.py",
                          "comment-only change (must survive)")
 
 
+def stale_anchors(mutations: list[Mutation], root: Path | None = None) -> list[tuple[Mutation, int]]:
+    """
+    Every mutation whose target text does not occur exactly once in its file, with the count: 0 means the code it
+    breaks is gone (the guard would test nothing), 2 or more that it is ambiguous. Read as bytes, exactly as the run
+    reads them. Checked before any run starts, and on every commit by tests/test_guard_anchors.py: on 2026-10-17 a
+    rewrite of load_bars left one guard pointing at nothing, unnoticed until the next full run (weekly audit, F1).
+    """
+    out = []
+    for m in mutations:
+        path = (root or ROOT) / m.file
+        n = path.read_bytes().decode("utf-8").count(m.old) if path.is_file() else 0
+        if n != 1:
+            out.append((m, n))
+    return out
+
+
+# The anchor check is left out of mutation runs: every mutation removes its own anchor, so that test would "catch"
+# all of them and say nothing about the guards (control 2 would fail if it were included).
+ANCHOR_TEST = "tests/test_guard_anchors.py"
+
+
 def run_suite() -> tuple[bool, str]:
     """True when the suite FAILED (the mutation was caught)."""
     env = {**os.environ, "DATABASE_URL": "postgresql://nobody:nobody@127.0.0.1:1/none", "PYTHONDONTWRITEBYTECODE": "1"}
     env.pop("BITCOIN_AGENT_DB_TESTS", None)
-    proc = subprocess.run([sys.executable, "-m", "pytest", "tests/", "-x", "-q", "-p", "no:warnings", "-p", "no:cacheprovider"],
+    proc = subprocess.run([sys.executable, "-m", "pytest", "tests/", f"--ignore={ANCHOR_TEST}", "-x", "-q", "-p", "no:warnings",
+                           "-p", "no:cacheprovider"],
                           cwd=ROOT, env=env, capture_output=True, text=True)
     lines = [l for l in proc.stdout.splitlines() if l.strip()]
     failed_test = next((l.split(" ")[1] for l in lines if l.startswith("FAILED ")), "")
@@ -754,12 +776,12 @@ def main() -> int:
     if dirty.strip():
         print("refusing to run: these files have uncommitted changes and could not be restored safely:\n" + dirty)
         return 2
-    originals = {f: (ROOT / f).read_bytes() for f in files}
-    for m in MUTATIONS + [NULL_MUTATION]:  # every mutation must match exactly once, or it is testing nothing
-        n = originals[m.file].decode("utf-8").count(m.old)
-        if n != 1:
+    stale = stale_anchors(MUTATIONS + [NULL_MUTATION])  # every mutation must match exactly once, or it is testing nothing
+    if stale:
+        for m, n in stale:  # all of them, not just the first
             print(f"mutation does not apply cleanly ({n} matches): {m.file}: {m.what}")
-            return 2
+        return 2
+    originals = {f: (ROOT / f).read_bytes() for f in files}
 
     # Controls, so that "caught" means something. (1) Without any mutation the suite must PASS --
     # otherwise every mutation would look caught. (2) A mutation that changes only a comment must

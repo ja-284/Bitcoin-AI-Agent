@@ -5,6 +5,23 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## tooling — 2026-10-20 (weekly audit F1: a stale mutation guard repaired; anchors checked on every commit)
+
+- **F1:** the guard "the sealed holdout is no longer truncated" (2026-09-23) still pointed at the condition
+  `if requested_end > HOLDOUT.start and not allow_holdout:`. `59aa794` (2026-10-17) had moved it into `load_bars`'
+  non-holdout branch, so the full mutation run refused to start.
+  - `f05606b` re-points the guard to that condition and corrects its description: with the condition off, the governed
+    reader would refuse the request, not read it silently.
+  - It is caught by `tests/test_research_guards.py::test_loader_truncates_at_the_holdout_by_default`; both controls
+    held.
+- **So it cannot happen again unseen:**
+  - `stale_anchors()` in `tools/guard_mutations.py` lists every guard whose target text is not in its file exactly
+    once. The runner now names all of them before it starts, not just the first.
+  - `tests/test_guard_anchors.py` runs that check with the unit tests, so it runs on every gate commit and in CI, in
+    well under a second. It is proven to fail on a deliberately broken real anchor.
+  - Mutation runs leave this one test file out, because every mutation removes its own anchor.
+- Test tooling only: no prediction, scoring, model, threshold, checkpoint or research code changed. Still 166 guards.
+
 ## operations — 2026-10-17 (the Anthropic key rotated; an alarm for failed AI calls)
 
 - **The Anthropic API key `bitcoin-agent` (expiring 2026-10-19) was replaced by the user.** The audit found one
