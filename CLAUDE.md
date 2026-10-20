@@ -827,6 +827,44 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
   `status.json`, `observability.md` and CHANGELOG are updated.
 - **Not seen live yet:** the failing case. The clean case runs every hour.
 
+**2026-10-20 — the weekly audit (the user's "WEEKLY AUDIT — 20 OCTOBER 2026" brief; observational, no change).**
+- **Due and not a duplicate:** the last one was 2026-10-13. Period 2026-10-13 19:38 → 2026-10-20 13:16 UTC; the
+  report's cutoff is 12:59:10 UTC (`research/monitoring/weekly_2026-10-20.md/.json`).
+- **Operational:**
+  - 167 of 167 hours in 7 days; 161 hours saved in the period, no duplicates, all by `bitcoin_agent`, all Binance;
+    0 overdue outcomes; no new incident or missing hour (11 in total, the newest 2026-10-07).
+  - GitHub, 751 runs in the period: hourly 317/317, reporting 345/345, watchdog 28/28, alert tests 2/2, Tests 58/59.
+    The one failure is the known 2026-10-15 CI slip (run 38771258140 at `9e7cd41`, fixed by `96c1148`).
+  - Dispatch answers 149/149 accepted (204; kept since 2026-10-14 08:12).
+  - AI: 66 hours since the key rotation, 0 news or explanation errors. On 8 sampled runs at `663efc7` the AI-failure
+    step succeeded and the success ping ran, which it cannot do with `AI_FAILING` set. The failing path is still
+    unseen live. Cost ≈ $0.0143 a run ≈ $10.29 per 30 days (list-price estimate; last week $10.59).
+  - Database 34 MB.
+- **Integrity:**
+  - parity 732/732 and shadow inputs 682 × 9 (max 2.2e-14);
+  - the 2,000-hour pre-check exit 3, every mandatory item PASS;
+  - direction integrity 9/9, counts only (blind);
+  - the six registered snapshots' development rows verified through `snapshots.py`, macro refused;
+  - no change since `72f948a` to the research records, results, `snapshots.py` or `history.py`; the 500-hour files
+    are unchanged; `research/HOLDOUT_ACCESS.log` is absent.
+- **Checks:** unit 807 passed (43 skipped), integration 43/43 including the drift check, 0 vulnerable packages of
+  43, security and role checks OK. No secret-shaped string in tracked files except test placeholders (names
+  only, no value printed).
+- **Finding (MEDIUM, mine):** the registered gate `check --integration --all-mutations` FAILED at the mutation step.
+  - The guard "the sealed holdout is no longer truncated" (`tools/guard_mutations.py`, from `593f31a`) no longer
+    matches `agent/research/history.py`, because `59aa794` rewrote `load_bars`.
+  - My own gate runs since then used `--only` subsets, which check only the selected anchors, and no test checks
+    that every anchor applies.
+  - The protection is still guarded by the data-boundary guard "load_bars no longer cuts a request at the holdout's
+    start".
+  - **Not fixed: a code change awaits the user's approval.**
+- **Docs:** STATUS and `status.json` snapshot at 682 of 2,000 (13:16 UTC); the GitHub 60-day date is now
+  ≈ 2026-12-19.
+- **Dates at one graded hour per hour:**
+  - 2,000 h ≈ 2026-12-14 and 5,000 h ≈ 2027-04-18 (≈ 04-20 at the all-time loss rate);
+  - direction 1,000 / 3,000 / 6,500 ≈ 2026-11-26 / 2027-02-17 / 2027-07-13;
+  - news verdict ≈ 2027-01-29 (≈ 02-03 at the all-time usable rate).
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:

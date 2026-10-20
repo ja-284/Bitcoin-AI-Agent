@@ -33,22 +33,22 @@ approved operational changes, in their order.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-10-16 14:17 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-10-20 13:16 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**
 
 | figure | value at the snapshot | source of truth (run it for the current value) |
 |---|---|---|
-| graded prospective shadow hours | **587 of 2000** | `python -m agent.reporting health` → `checkpoint_progress`, which applies the registered checkpoint's own selection function (`prospective_graded`). Since the 500-hour reading exists, `python -m agent.research.live_checkpoint` only says so until 2,000 is reached |
+| graded prospective shadow hours | **682 of 2000** | `python -m agent.reporting health` → `checkpoint_progress`, which applies the registered checkpoint's own selection function (`prospective_graded`). Since the 500-hour reading exists, `python -m agent.research.live_checkpoint` only says so until 2,000 is reached |
 | 500-hour first look | **taken 2026-10-13 19:33 UTC**, no verdict (by registration); read in the readiness gate's revision 3 | `research/monitoring/checkpoint_500h.md` (written once by the command; never rewritten) |
-| next checkpoint expected | **≈ 2026-12-14, late morning UTC**: the 2,000-hour E012 verdict (an estimate: 1,413 more hours at one per hour, if none are lost; each lost hour adds one) | derived from the count above |
-| newest prediction | the 13:00 UTC hour, 0.3 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
-| published backend state | refreshed 14:13 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
-| private stats read model | refreshed 14:14 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
+| next checkpoint expected | **≈ 2026-12-14, late morning UTC**: the 2,000-hour E012 verdict (an estimate: 1,318 more hours at one per hour, if none are lost; each lost hour adds one) | derived from the count above |
+| newest prediction | the 12:00 UTC hour, 0.3 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
+| published backend state | refreshed 13:13 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
+| private stats read model | refreshed 13:14 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
 | sealed holdout | **sealed** for evaluation (`research/HOLDOUT_ACCESS.log` does not exist): never scored, nothing learned from it. **Not "untouched"**: raw candles of its last weeks were fetched as warm-up inputs, and the whole period is stored on disk (`research/AUDIT_2026-10-08.md` §18.2) | the file's absence |
 | run history, outcomes, running statistics, health (read-only, on demand) | see the reporting layer | `python -m agent.reporting all --pretty` ([`docs/api/reporting_v1.md`](../api/reporting_v1.md)) |
-| direction shadow track (E034) | **collecting since the 15:00 UTC hour of 2026-10-15**: 23 rows, 22 eligible graded, 0 errors, 0 lost hours, next reading at 1,000. Operational counts only, its readings are blind (Amendment 1.1). Integrity: `python -m agent.research.direction_integrity` 9 of 9 PASS (2026-10-16) | `python -m agent.research.direction_checkpoint` (prints counts; writes a reading only when due) |
+| direction shadow track (E034) | **collecting since the 15:00 UTC hour of 2026-10-15**: 118 rows, 117 eligible graded, 0 errors, 0 lost hours, next reading at 1,000. Operational counts only, its readings are blind (Amendment 1.1). Integrity: `python -m agent.research.direction_integrity` 9 of 9 PASS (2026-10-20, weekly audit) | `python -m agent.research.direction_checkpoint` (prints counts; writes a reading only when due) |
 | everything else that moves (parity, cost, drift flags, the free-rule comparison) | see the latest weekly report | `python -m agent.research.weekly_report` → `research/monitoring/weekly_<date>.md` |
 
 ## Production state (changes only by a versioned, committed decision)
@@ -144,9 +144,14 @@ happening, or on the weekly audit being run on time.
 
 - **Every session:** the hourly-health loop. It covers every hour saved, roles, sources, errors, shadow
   rows and outcomes, heartbeat and watchdog runs, cost, and the snapshot above.
-- **Weekly audit, last done 2026-10-13** (at the 500-hour checkpoint session: report
-  `research/monitoring/weekly_2026-10-13.md`, integration 36/36, 0 known vulnerabilities), **next due
-  ≈ 2026-10-20**: `python -m agent.research.weekly_report`,
+- **Weekly audit, last done 2026-10-20** (report `research/monitoring/weekly_2026-10-20.md`, cutoff 12:59 UTC;
+  integration 43/43 including the drift check; 0 known vulnerabilities of 43; direction integrity 9 of 9;
+  security and role checks OK). **Its gate (`tools/gate.py check --integration --all-mutations`) FAILED at the
+  mutation step:** one guard's anchor in `tools/guard_mutations.py` ("the sealed holdout is no longer truncated")
+  no longer matches `agent/research/history.py` since `59aa794` (2026-10-17), so the full mutation suite cannot
+  start. The protection itself is still guarded ("load_bars no longer cuts a request at the holdout's start").
+  The fix is a code change, so it waits for the user's approval. **Next due ≈ 2026-10-27**:
+  `python -m agent.research.weekly_report`,
   `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` (drift check), and
   `python tools/dependency_audit.py`.
 - **The 2,000-hour checkpoint** (below), at the first session after 2,000 graded hours.
@@ -238,7 +243,7 @@ happening, or on the weekly audit being run on time.
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
 | a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~28 MB of 500 MB). |
 | a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
-| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-13; any commit resets the clock. |
+| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-19 (60 days after the 2026-10-20 weekly-audit commit); any commit resets the clock. |
 
 **Calendar:** renew the GitHub token `supabase-dispatch` before **2027-09-20**
 (`docs/ops/open_user_actions.md` item 3).
