@@ -16,6 +16,9 @@ received 19:13 UTC 2026-09-25) · 2 least-privilege role: **DONE, verified live 
 3 token renewal: calendar, **before 2027-09-20** · 4 news cost: decided, keep, monitored · 5 API logs:
 done; *Exposed schemas*: **done 2026-09-24, only `public` and `graphql_public`**.
 
+**Added 2026-10-20:** 7 direction check: **DONE, verified 2026-10-16** · 8 Anthropic key renewal: procedure written;
+**the new key's expiry date is still to be given by the user** for the calendar.
+
 ---
 
 ## 1. Heartbeat alarm (healthchecks.io) — DONE and VERIFIED 2026-09-25
@@ -292,6 +295,33 @@ you, because creating checks and adding secrets are account steps that are yours
 email carried the test text. The hourly run started at 16:53:02 UTC (GitHub's :52 backup slot) sent the real success
 ping at 16:53:47 UTC, the second of the "up" email. So both the test path and the normal path are proven.
 (The first test text named the wrong workflow, "Alert delivery test"; corrected 2026-10-17 and now pinned by a test.)
+
+## 8. Renew the Anthropic API key before it expires — a calendar item, its date is the user's to give
+
+**What it is.** The hourly job's two AI calls (the news score and the explanation) use the repository Actions secret
+`ANTHROPIC_API_KEY`. That is the only runtime consumer (audit of 2026-10-17). A local `.env` copy is optional, for
+local runs only. The key was last replaced by the user on 2026-10-17, at about 18:19 UTC; the old one expired
+2026-10-19. **The new key's expiry date is not recorded here yet.** Only the user can see it, in the Anthropic
+Console. Once the user gives the date (the date only, never the key), it goes into `docs/ops/status.json`'s calendar.
+
+**Why it matters.** An expired key does not stop the hourly record. The hours are still saved, without a news score
+(news weight 0) and without an explanation, each visibly marked. Since 2026-10-17 the *Heartbeat AI-failure signal*
+emails "down" from the first such hour, with a key hint for an authentication error.
+
+**What to do, when the time comes** (the 2026-10-17 rotation, written down):
+1. In the Anthropic Console, create a new key. Do not paste it anywhere except the next step.
+2. On GitHub: repository Settings → Secrets and variables → Actions → `ANTHROPIC_API_KEY` → Update, with the new key.
+3. Wait for the next hourly run (dispatched at :12 UTC). Nothing needs to be triggered by hand.
+4. Check that the hour was saved with both AI calls working:
+   - the heartbeat stays "up", with no AI-failure email;
+   - `python -m agent.reporting latest` shows, under `body.run`: `status` "ok", `news.available` true with
+     `error_type` null, and `explanation_available` true.
+5. Then delete the old key in the Console. Its "last used" time should be before step 2.
+6. If the local `.env` holds a copy, replace it there as well. It is used only for local runs.
+
+**How you will notice if it slips.** The AI-failure email ("AI calls FAILED … authentication"), and in the weekly
+report rows without an explanation and hours without news. Nothing is lost except those hours' news scores and
+explanations, which are never backfilled.
 
 ## Not on this list, deliberately
 
