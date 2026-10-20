@@ -177,10 +177,22 @@ offsets (E027), not against zero, and multi-week calibration drift is ordinary f
 - Per window (last 24 h, last 7 days, all time): runs, missing hours (the weekly report's expected-hours
   rule), fallback-price runs, runs without news, partial news failures, runs without an explanation, and
   the median and maximum timings.
+  - *Clarified 2026-10-20:* `runs` counts **saved hours**, one prediction row per hour. It does not count GitHub
+    workflow runs: backup slots that exit early, failed runs and re-runs are not in it.
+  - A window is the rows with `as_of` at or after its start (`at` − 24 h, `at` − 7 days). The weekly report's
+    "Last 7 days" line counts expected hours from the first whole hour after its own start instead. So at
+    nearly the same moment the two can differ by an hour: on 2026-10-20 this view said 166 at 13:04 UTC, and
+    the 12:59 UTC report said 167 of 167. Neither had a missing hour.
 - The list of missing hours. They are never backfilled; the go-live weekend's are permanent.
 - Outcomes: overdue by horizon, outcomes recorded before their candle closed (must be 0), and rows for
   unregistered horizons (must be 0).
 - Shadow: rows, hours without a shadow row, and errors (step and type only).
+  - *Clarified 2026-10-20:* "hours without a shadow row" counts hours that **have a live prediction** but no
+    shadow row, from the first shadow hour on. An hour with no prediction at all is counted under missing
+    hours, not here.
+  - The weekly report and the checkpoint pre-check count every expected hour without a shadow row. Their figure
+    is therefore larger by exactly those hours: on 2026-10-20, 9 there = the 7 here + the 2 hours with no
+    prediction since 2026-09-21 (2026-10-05 19:00 and 2026-10-07 14:00).
 - The published snapshot's age and the schema version.
 - `external`: heartbeat, watchdog and job wall time, each `observable_here: false`, with where to look.
 - Checkpoint progress.

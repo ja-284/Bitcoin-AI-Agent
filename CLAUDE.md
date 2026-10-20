@@ -840,6 +840,14 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
     step succeeded and the success ping ran, which it cannot do with `AI_FAILING` set. The failing path is still
     unseen live. Cost ≈ $0.0143 a run ≈ $10.29 per 30 days (list-price estimate; last week $10.59).
   - Database 34 MB.
+  - *Clarified 2026-10-20 (post-audit plan, Phase 2B): the counts above use different windows, and none is wrong.*
+    - "167 of 167" is the report's 7-day line: expected hours 2026-10-13 13:00 → 2026-10-20 11:00.
+    - "161 hours" are the hours saved between the two reports: `as_of` 2026-10-13 19:00 → 2026-10-20 11:00,
+      counted at about 13:08 UTC. The 12:00 hour was saved at 13:13, inside the stated period, so the period held
+      162 by its end.
+    - The GitHub run counts were also taken at about 13:07 UTC.
+    - The reporting layer's `last_7d.runs` (166 at 13:04) counts saved hours with `as_of` at or after `at` − 7 days.
+    - All of them have 0 missing hours. Definitions: `docs/api/reporting_v1.md` §H.
 - **Integrity:**
   - parity 732/732 and shadow inputs 682 × 9 (max 2.2e-14);
   - the 2,000-hour pre-check exit 3, every mandatory item PASS;
