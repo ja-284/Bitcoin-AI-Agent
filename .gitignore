@@ -8,6 +8,12 @@ backtests/
 .pytest_cache/
 data/
 
+# Database backups (agent/database/backup.py) are written OUTSIDE the repository and the tool refuses any folder inside
+# it. These patterns are a second line of defence: an encrypted backup or its manifest must never be committed.
+*.tar.gz.gpg
+*.gpg.partial
+bitcoin-agent-db_*.manifest.json
+
 # Per-hour out-of-sample prediction dumps (2-4 MB each) are regenerable from the commands
 # recorded in research/experiments/*.json and research/ROADMAP.md; the summaries are committed.
 research/results/**/*_oos_predictions.csv

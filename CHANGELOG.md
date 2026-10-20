@@ -5,6 +5,27 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## operations — 2026-10-20 (encrypted database backups: the tool; the user's plan "protect live evidence", Phase 1)
+
+- **Why:** Supabase's Free plan keeps no backups, and the database holds the only copy of the prospective record.
+- **`agent/database/backup.py`** (`create` / `check` / `verify` / `restore`; `docs/ops/BACKUP.md`):
+  - one read-only `REPEATABLE READ` snapshot of every table in `public`, using `COPY`, plus the sequences and a catalog
+    of the live structure;
+  - packed in memory and piped into `gpg --encrypt` to the owner's public key, so no plaintext touches the disk;
+  - a manifest beside it holding counts and SHA-256 hashes only.
+- **The user's decisions:** a GPG key pair the user holds; this PC plus OneDrive; the existing maintenance connection,
+  so no new role or credential.
+- **Never** written inside the repository (refused, and in `.gitignore`), never run or imported by the live system or
+  any workflow (tested).
+- **`restore`** only fills a NEW, empty database: it refuses production's URL and any table with rows, re-hashes after
+  loading, and rolls back on any mismatch or refused row.
+- **Tests:**
+  - `tests/test_backup.py`, 18 tests;
+  - `tests/integration/test_backup_restore.py`, 4 tests on synthetic rows in scratch schemas: encrypt, check, verify,
+    restore exact, refused into rows, damaged backups roll back;
+  - mutation guards 166 → 173 (area *backup*).
+- No prediction, scoring, model, checkpoint, schema, role or workflow changed.
+
 ## tooling — 2026-10-20 (weekly audit F1: a stale mutation guard repaired; anchors checked on every commit)
 
 - **F1:** the guard "the sealed holdout is no longer truncated" (2026-09-23) still pointed at the condition
