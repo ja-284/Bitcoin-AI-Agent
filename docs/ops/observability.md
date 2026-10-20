@@ -56,6 +56,36 @@ Since 2026-10-17 (the user's approval; only this change) it works like this:
 - **The trade-off:** while the check is down for this reason, a GitHub outage raises no second email. The check is
   already red.
 
+## Which alarm paths fail safe (reviewed 2026-10-20, post-audit plan Phase 2A)
+
+A green GitHub step does not prove that healthchecks.io received anything. Every heartbeat step is
+`continue-on-error`, so a failed `curl` still shows green. The question is therefore what happens when a delivery is
+lost. Read from `.github/workflows/hourly.yml` and `agent/healthcheck.py`; nothing was triggered to test it.
+
+| signal | if its delivery is lost | fails safe? |
+|---|---|---|
+| the success ping | the check hears silence and emails "down" after 1 h 30 min | **yes** |
+| `/fail` from a failed run | the success ping is skipped as well, because it runs only when every earlier step succeeded (GitHub's implicit `success()`), so the silence alarm follows | **yes**, about 90 min later |
+| the missed-hour `/fail` | the success ping right after it still arrives, so no email goes out | **no**. The hour stays in the record (weekly report, `backend_state`, stats incident history), and a single missed hour needs no action |
+| the AI-failure `/fail` | `AI_FAILING` is written before the `/fail` is sent, so the ping is held back anyway and the silence alarm follows while the failure lasts | **yes**, while it lasts. A failure that clears within the hour and loses its `/fail` leaves only the record. If the check itself crashes, that run pings as before, and the next run looks again |
+| the direction track's own check | the same design on its own check | the same as above |
+| the watchdog | it has no heartbeat. If GitHub stops scheduling it, nothing alarms | **no**. Seen only in the weekly audit's run count. GitHub emails before it disables schedules after 60 days without a commit, and weekly audit commits reset that clock |
+
+**The one material blind spot is the external chain itself:** the healthchecks.io account, its two checks and their
+email integration.
+- If any of these broke, every heartbeat-based alarm would go quiet together, and nothing in the repository could
+  tell. A ping to a deleted check also shows green on GitHub.
+- It was last proven end to end on 2026-10-15 (main check) and 2026-10-16 (direction check), by the user's
+  labelled delivery tests.
+- GitHub's own failure emails and the record are unaffected.
+
+**Smallest mitigation, proposed and not adopted:** at each weekly audit the user spends a minute on the
+healthchecks.io dashboard and checks three things: both checks "up", the last ping within the hour, and recent
+notifications marked delivered.
+- It needs no code, no service and no alert change.
+- Anything heavier would change production alert behaviour, so it needs the user's approval first. Examples:
+  recording each `curl` result in the run, failing the job on an undelivered ping, or a second alert service.
+
 ## The one real gap
 
 Every alarm above lives inside GitHub. If GitHub stops running the workflow — which it already
