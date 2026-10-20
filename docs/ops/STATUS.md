@@ -150,7 +150,13 @@ happening, or on the weekly audit being run on time.
   mutation step:** one guard's anchor in `tools/guard_mutations.py` ("the sealed holdout is no longer truncated")
   no longer matches `agent/research/history.py` since `59aa794` (2026-10-17), so the full mutation suite cannot
   start. The protection itself is still guarded ("load_bars no longer cuts a request at the holdout's start").
-  The fix is a code change, so it waits for the user's approval. **Next due ≈ 2026-10-27**:
+  **Repaired the same day, on the user's post-audit plan:**
+  - `f05606b` re-points the guard;
+  - `368df96` makes every commit check that each guard still finds its target (`tests/test_guard_anchors.py`);
+  - the complete suite then caught **166 of 166** in a disposable clone (135.6 min, both controls held), with the
+    repository and data files unchanged.
+
+  **Next due ≈ 2026-10-27**:
   `python -m agent.research.weekly_report`,
   `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` (drift check), and
   `python tools/dependency_audit.py`.

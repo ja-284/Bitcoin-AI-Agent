@@ -62,6 +62,12 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
     - The work is back to monitoring and the registered checkpoints.
   - It never touches the live system, the frozen models, the registered checkpoints or the holdout.
   - All research data is read through `agent/research/snapshots.py`: registered files only, never downloaded.
+- **2026-10-20:** the weekly audit, then the user's "POST-AUDIT IMPROVEMENT PLAN" (see the dated entries). F1, a stale
+  mutation guard, is repaired, and every commit now checks guard anchors. The full mutation suite caught 166 of 166.
+  The evidence assessment is `research/EVIDENCE_ASSESSMENT_2026-10-20.md`. **Done; back to monitoring.**
+  - Open for the user: the new Anthropic key's expiry date (for the calendar).
+  - Also open: the proposals in that assessment (P1–P6) and in `docs/ops/observability.md`. None is adopted; start
+    none without the user.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -872,6 +878,43 @@ IMPROVEMENT" (Phases 1–8), after the read-only signal inventory. Phase 1 DONE;
   - 2,000 h ≈ 2026-12-14 and 5,000 h ≈ 2027-04-18 (≈ 04-20 at the all-time loss rate);
   - direction 1,000 / 3,000 / 6,500 ≈ 2026-11-26 / 2027-02-17 / 2027-07-13;
   - news verdict ≈ 2027-01-29 (≈ 02-03 at the all-time usable rate).
+
+**2026-10-20 (later) — the user's "POST-AUDIT IMPROVEMENT PLAN" (Phases 1–6): F1 repaired, monitoring and counts
+reviewed, an evidence assessment; back to monitoring.** Test tooling and documentation only. Nothing under `agent/`,
+`research/` (except the new assessment), `.github/`, the data, the models, the checkpoints or the holdout changed.
+- **Phase 1:**
+  - `f05606b` re-points the stale guard to `load_bars`' current truncation condition. Its description is corrected:
+    the governed reader would refuse the request, not read it silently. It is caught by
+    `test_loader_truncates_at_the_holdout_by_default`.
+  - `368df96`: `stale_anchors()` plus `tests/test_guard_anchors.py` check, on every commit, that every guard finds
+    its target. The check is proven to fail on a deliberately broken real anchor. Mutation runs leave that one
+    test out (control 2 proves it).
+  - **The complete suite in a disposable clone at `368df96`: 166 registered, 166 executed, 166 caught; 0 survived,
+    skipped or invalid; both controls held; 135.6 min.**
+    - One guard (#3, the true-range shift) was caught by a collection error. That error is the frozen direction
+      artefact's own definition check (`ModelVersionError`): genuine.
+    - Afterwards the repository was unchanged, the 7 data files' metadata identical, and the holdout log absent.
+- **Phase 2 (docs only):**
+  - `f94417e`: the count definitions. 167 / 161 / 166 are different windows. `reporting_v1.md` §H now says that
+    `runs` means saved hours, and that "hours without a shadow row" excludes hours with no prediction (9 = 7 + 2,
+    checked).
+  - `95052ad`: the alarm paths' fail-safety in `observability.md`. The one material blind spot is the external
+    healthchecks.io chain itself. A one-minute dashboard look per weekly audit is **proposed, not adopted**.
+  - `d6531d7`: the Anthropic key renewal procedure (`open_user_actions.md` item 8). **The new key's expiry date is
+    asked of the user**, not guessed.
+  - Cost records suffice for weekly review. Spend is bounded by design at about $0.10 per saved hour (token
+    limits) against about $0.014 typical.
+- **Phase 3 (read-only):**
+  - the pre-check exits 3 with every mandatory item PASS, and none of today's commits is on the checkpoint path;
+  - direction integrity 9/9 on 121 rows (counts only);
+  - security and role checks OK; the snapshots verified;
+  - no research record, result or registration changed.
+- **Phase 4:** `research/EVIDENCE_ASSESSMENT_2026-10-20.md` covers six areas, each with registered criteria and
+  statuses, and no score. New in it:
+  - **no backup or restore procedure exists for the database**, which holds the only copy of the prospective
+    record;
+  - six proposals for later pre-registration (P1–P6), none adopted.
+- **Back to monitoring:** weekly audit ≈ 2026-10-27; direction first look ≈ 2026-11-26; 2,000 h ≈ 2026-12-14.
 
 ## Research phase — rules and decisions (2026-09-19)
 

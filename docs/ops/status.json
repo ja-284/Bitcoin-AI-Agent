@@ -67,7 +67,7 @@
   },
   "scheduled_checks": {
     "every_session": "hourly-health loop and the snapshot in STATUS.md",
-    "next_weekly_audit": "2026-10-27 (last done 2026-10-20: weekly report, integration 43/43 with the drift check, 0 known vulnerabilities, direction integrity 9/9; its gate FAILED at the mutation step -- one stale guard anchor since 59aa794, the fix awaits the user's approval)",
+    "next_weekly_audit": "2026-10-27 (last done 2026-10-20: weekly report, integration 43/43 with the drift check, 0 known vulnerabilities, direction integrity 9/9; its gate FAILED at the mutation step on one stale guard anchor since 59aa794; repaired the same day on the user's post-audit plan -- f05606b re-points the guard, 368df96 checks every anchor on each commit, full suite 166 of 166 caught in a clean clone)",
     "next_checkpoint": "first session after 2,000 graded prospective hours (the E012 verdict)"
   },
   "watch_items": [
