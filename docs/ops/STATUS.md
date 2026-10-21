@@ -160,7 +160,27 @@ happening, or on the weekly audit being run on time.
   `python -m agent.research.weekly_report`,
   `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` (drift check), and
   `python tools/dependency_audit.py`.
+  - Since 2026-10-21 the audit also reads the **calendar** below for anything due within four weeks, and raises it
+    with the user.
+  - The backup round-trip tests are paused (opt-in only), so the integration suite runs no GPG command.
 - **The 2,000-hour checkpoint** (below), at the first session after 2,000 graded hours.
+
+## Unresolved operational risk: no database backup (recorded 2026-10-21)
+
+**No verified, recoverable backup of the database exists.** The Supabase project holds the **only copy** of the
+prospective record:
+- the live BUY/HOLD/SELL record and its outcomes;
+- the move-size shadow record behind the 2,000- and 5,000-hour readings;
+- the blind direction track;
+- the news scores.
+
+Supabase's Free plan keeps no backups. Losing the project (deletion, account loss, a provider incident) would lose all
+of it **permanently**: none of it can be re-collected, and every registered reading would lose its data.
+- **History:** an encrypted backup tool was built and tested on synthetic data on 2026-10-20 (`1820d8a`,
+  `docs/ops/BACKUP.md`). The owner's GPG key could not be created (a `keyboxd` error on Windows), and the user then
+  **paused the backup work** (2026-10-21).
+- **Current state:** the tool is inactive. It has never touched real data, and nothing runs it.
+- **This is an open risk, not a completed safety measure.** Revisiting it is the user's separate decision.
 
 ## Known, non-critical — nothing to do
 
@@ -247,12 +267,21 @@ happening, or on the weekly audit being run on time.
 | healthchecks.io "DOWN" email, and it stays down > 3 hours | no successful run for hours | Look at GitHub → Actions. If runs fail with *permission denied*, roll back the database switch: copy the `DATABASE_URL` line from your local `.env` into the GitHub secret `DATABASE_URL`. Otherwise wait for the next session. |
 | GitHub "run failed" emails for several hours in a row | a persistent failure (a source down, a secret, a code defect) | Nothing is lost while it fails; the hour simply isn't recorded. Leave it for the next session unless it lasts > 1 day. |
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
-| a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage is ~28 MB of 500 MB). |
+| a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage was 34 MB of 500 MB on 2026-10-20). **There is no backup** (see "Unresolved operational risk"), so never delete or reset the project, and act the same day. |
+| a healthchecks.io email saying "AI calls FAILED … authentication" | the Anthropic key is invalid or has expired (it expires 2027-01-31) | Renew it: `docs/ops/open_user_actions.md` item 8. The hours are still saved, without news scores or explanations. |
 | a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
 | a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-19 (60 days after the 2026-10-20 weekly-audit commit); any commit resets the clock. |
 
-**Calendar:** renew the GitHub token `supabase-dispatch` before **2027-09-20**
-(`docs/ops/open_user_actions.md` item 3).
+**Calendar** (the weekly audit reads it; anything due within four weeks is raised with the user):
+- **2027-01-17**: renew the **Anthropic API key**, which **expires 2027-01-31** (the user, 2026-10-20). This is two
+  weeks ahead. The steps are in `docs/ops/open_user_actions.md` item 8. An expired key does not stop the record: news
+  and explanations fail, visibly marked, and the AI-failure alarm emails.
+- **2027-09-20**: renew the GitHub token `supabase-dispatch` before it expires (`docs/ops/open_user_actions.md`
+  item 3).
+
+**Heartbeat dashboard:** the user looked at healthchecks.io on 2026-10-20 and saw no visible issue. That is a manual
+look, not a proof. It does not show that every alarm email would be delivered in every failure. The last proofs of
+delivery are the user's labelled tests of 2026-10-15 (main check) and 2026-10-16 (direction check).
 
 ## The registered checkpoints (unchanged)
 

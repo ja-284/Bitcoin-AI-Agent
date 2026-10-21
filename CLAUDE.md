@@ -65,7 +65,11 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
 - **2026-10-20:** the weekly audit, then the user's "POST-AUDIT IMPROVEMENT PLAN" (see the dated entries). F1, a stale
   mutation guard, is repaired, and every commit now checks guard anchors. The full mutation suite caught 166 of 166.
   The evidence assessment is `research/EVIDENCE_ASSESSMENT_2026-10-20.md`. **Done; back to monitoring.**
-  - Open for the user: the new Anthropic key's expiry date (for the calendar).
+  - The Anthropic key expires **2027-01-31**, with a calendar reminder on **2027-01-17** (STATUS calendar, read at
+    every weekly audit).
+  - **No database backup exists** (an unresolved risk in STATUS). The backup tool (`1820d8a`, `docs/ops/BACKUP.md`)
+    is PAUSED and inactive by the user's decision (2026-10-21) after the GPG key setup failed. Run no GPG command and
+    build no alternative unless the user reopens it.
   - Also open: the proposals in that assessment (P1–P6) and in `docs/ops/observability.md`. None is adopted; start
     none without the user.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a

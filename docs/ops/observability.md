@@ -79,6 +79,9 @@ email integration.
   labelled delivery tests.
 - GitHub's own failure emails and the record are unaffected.
 
+*2026-10-20:* the user looked at the dashboard and saw no visible issue. That is a manual look at one moment, not a
+proof that every alarm email would be delivered in every failure.
+
 **Smallest mitigation, proposed and not adopted:** at each weekly audit the user spends a minute on the
 healthchecks.io dashboard and checks three things: both checks "up", the last ping within the hour, and recent
 notifications marked delivered.

@@ -1,5 +1,22 @@
 # Database backups: protecting the prospective record (since 2026-10-20)
 
+> **STATUS (2026-10-21): PAUSED BY THE USER. NO VERIFIED, RECOVERABLE BACKUP OF THE DATABASE EXISTS.**
+>
+> **What happened:**
+> - The tool below was built and tested on synthetic data on 2026-10-20 (`1820d8a`).
+> - The user's attempt to create the owner's GPG key on Windows failed with a `keyboxd` configuration error.
+> - The user then stopped the backup setup. This is an explicit change in scope, not a request to find another method.
+>
+> **Where things stand:**
+> - The tool has **never been run on real data**. Nothing schedules, imports or runs it.
+> - Its GPG round-trip integration tests are switched off by default (`BITCOIN_AGENT_BACKUP_TESTS=1` to opt in), so the
+>   weekly integration suite runs no GPG command.
+> - Everything below is a design, kept for a possible later decision. It is **not** an active safety measure.
+>
+> **The unresolved risk:** the Supabase database still holds the **only copy** of the prospective record, and Supabase's
+> Free plan keeps no backups. Losing that project would lose the live record, the move-size shadow record, the blind
+> direction track and the news scores permanently. None of it can be re-collected. Recorded in `docs/ops/STATUS.md`.
+
 ## Why this exists
 
 The Supabase database holds the only copy of the prospective evidence, and none of it can be re-collected:

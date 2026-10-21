@@ -24,7 +24,13 @@ import pytest
 import agent.reporting.incidents  # noqa: E402,F401  (bound at collection, as in test_db_idempotency)
 from tests.integration.test_db_idempotency import _direction_row, _prediction
 
-pytestmark = pytest.mark.skipif(os.getenv("BITCOIN_AGENT_DB_TESTS") != "1", reason="needs a database; set BITCOIN_AGENT_DB_TESTS=1")
+pytestmark = [
+    pytest.mark.skipif(os.getenv("BITCOIN_AGENT_DB_TESTS") != "1", reason="needs a database; set BITCOIN_AGENT_DB_TESTS=1"),
+    # PAUSED 2026-10-21 by the user: no more GPG commands while the backup work is paused (docs/ops/BACKUP.md). These
+    # tests generate a throwaway GPG key, so they no longer run with the weekly integration suite; opt in explicitly.
+    pytest.mark.skipif(os.getenv("BITCOIN_AGENT_BACKUP_TESTS") != "1",
+                       reason="backup work paused by the user (2026-10-21); set BITCOIN_AGENT_BACKUP_TESTS=1 to run"),
+]
 
 SRC, DST = "backup_src_test", "backup_dst_test"
 HOUR = timedelta(hours=1)

@@ -17,7 +17,11 @@ received 19:13 UTC 2026-09-25) · 2 least-privilege role: **DONE, verified live 
 done; *Exposed schemas*: **done 2026-09-24, only `public` and `graphql_public`**.
 
 **Added 2026-10-20:** 7 direction check: **DONE, verified 2026-10-16** · 8 Anthropic key renewal: procedure written;
-**the new key's expiry date is still to be given by the user** for the calendar.
+the key **expires 2027-01-31** (the user, 2026-10-20), and the calendar reminder is **2027-01-17**.
+
+**Added 2026-10-21:** the database backup (`docs/ops/BACKUP.md`) is **PAUSED by the user** after the GPG key setup
+failed (a `keyboxd` error). **No backup exists.** There is nothing for the user to do unless they decide to revisit it.
+Any partial GnuPG folder the attempt left in the user profile is the user's own; nothing in the project uses it.
 
 ---
 
@@ -301,8 +305,9 @@ ping at 16:53:47 UTC, the second of the "up" email. So both the test path and th
 **What it is.** The hourly job's two AI calls (the news score and the explanation) use the repository Actions secret
 `ANTHROPIC_API_KEY`. That is the only runtime consumer (audit of 2026-10-17). A local `.env` copy is optional, for
 local runs only. The key was last replaced by the user on 2026-10-17, at about 18:19 UTC; the old one expired
-2026-10-19. **The new key's expiry date is not recorded here yet.** Only the user can see it, in the Anthropic
-Console. Once the user gives the date (the date only, never the key), it goes into `docs/ops/status.json`'s calendar.
+2026-10-19. **The new key expires 2027-01-31** (given by the user on 2026-10-20; read from the Anthropic Console, the
+key itself never shared). **Reminder: 2027-01-17**, two weeks ahead, in the calendar of `docs/ops/STATUS.md` and
+`status.json`, which the weekly audit reads.
 
 **Why it matters.** An expired key does not stop the hourly record. The hours are still saved, without a news score
 (news weight 0) and without an explanation, each visibly marked. Since 2026-10-17 the *Heartbeat AI-failure signal*

@@ -5,6 +5,23 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## operations — 2026-10-21 (the backup work PAUSED by the user; key expiry recorded)
+
+- **Backup paused.** The owner's GPG key could not be created on Windows (a `keyboxd` configuration error), and the
+  user stopped the backup setup. That is an explicit change of scope.
+  - **No verified, recoverable backup exists.** It is recorded as an unresolved operational risk in STATUS and
+    `status.json`, not as a safety measure.
+  - The tool (`1820d8a`) is marked PAUSED and inactive in its docstring and in `docs/ops/BACKUP.md`. It has never
+    touched real data, and nothing runs it.
+- **The one correction:** the GPG round-trip integration tests are now opt-in (`BITCOIN_AGENT_BACKUP_TESTS=1`), so the
+  weekly integration suite runs no GPG command.
+- **The Anthropic key expires 2027-01-31.** The calendar reminder is on 2027-01-17, and the weekly audit now raises
+  calendar items due within four weeks. Emergency table: what the AI-failure email means.
+- **Recorded:** the user's look at healthchecks.io on 2026-10-20 found no visible issue. It is not claimed as proof of
+  delivery.
+- Documentation and one test marker only. Nothing in prediction, scoring, the models, the checkpoints, the schema, the
+  roles or the workflows changed.
+
 ## operations — 2026-10-20 (encrypted database backups: the tool; the user's plan "protect live evidence", Phase 1)
 
 - **Why:** Supabase's Free plan keeps no backups, and the database holds the only copy of the prospective record.

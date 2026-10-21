@@ -1,6 +1,10 @@
 """
 Encrypted, verifiable backups of the record (2026-10-20, the user's "protect live evidence" plan).
 
+STATUS: PAUSED and INACTIVE since 2026-10-21, by the user's decision. The owner's GPG key could not be created (a keyboxd
+error on Windows), and the user stopped the setup. This tool has NEVER been run on real data, nothing schedules or
+imports it, and NO verified backup of the database exists (docs/ops/BACKUP.md). It is tested only on synthetic rows.
+
     python -m agent.database.backup create --recipient FPR --out DIR [--copy-to DIR ...]
     python -m agent.database.backup check FILE      # no secret needed: the encrypted file against its manifest
     python -m agent.database.backup verify FILE     # decrypts in memory (gpg asks YOU for the passphrase), recomputes
