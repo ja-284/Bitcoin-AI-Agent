@@ -94,10 +94,11 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - Written only by the separate *Reporting snapshot* workflow, after each completed hourly or watchdog
     run: it records failed runs as incidents, then publishes. Neither the hourly workflow nor the
     watchdog is changed.
-  - Readable ONLY with SELECT by a signed-in Supabase Auth user carrying the owner-set claim
-    `app_metadata.reporting_viewer = true`. `anon` reads nothing, and the security check fails on any
-    widening.
-  - No website and no viewer account exist yet (owner's steps: `open_user_actions.md` item 6).
+  - Readable ONLY with SELECT, and since 2026-10-21 ONLY by the Bitcoin AI Control Center's dedicated account
+    (`9e021560-…`) in a two-factor (aal2) session, policy `control_center_read`. The old
+    `app_metadata.reporting_viewer` flag grants nothing. `anon` reads nothing, and the security check fails on any
+    widening, a second permissive policy included.
+  - The dashboard is a separate Lovable project, still on fictional data. Connecting it is a separate approval.
 - The dated **Status** log below is history. Where an older entry says something is open or "not set up",
   the newer entries (and STATUS.md) win.
 
@@ -959,6 +960,51 @@ then its revision ("skip backup setup and proceed").**
     closed lines, and copying published models.
 - **Nothing** in prediction, scoring, the frozen models, the direction track, the news evaluation, the checkpoints, the
   schema, the roles or the workflows changed.
+
+**2026-10-21 (evening) — the reporting tables narrowed to the Bitcoin AI Control Center's one account, two-factor
+only (the user's approval, after a read-only audit and the exact SQL).**
+- **The change, through `python -m agent.migrate`:** on `reporting_snapshot`, `reporting_runs` and
+  `reporting_incidents`, the read policy `stats_viewer_read` (any account with `app_metadata.reporting_viewer`) is
+  replaced by `control_center_read`:
+
+  ```sql
+  FOR SELECT TO authenticated
+  USING (auth.uid() = '9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuid AND (auth.jwt() ->> 'aal') = 'aal2')
+  ```
+
+  - That id is the dedicated dashboard account, created by the user 2026-10-21. Its TOTP factor is verified, and a
+    real session reached aal2.
+  - The grant is unchanged. The writer role's policies and grants are unchanged.
+  - No account was created, changed or deleted. The old viewer account keeps its now-meaningless flag.
+- **Rollout, as approved:**
+  1. pre-checks: unit and integration tests with the drift check, the security and role checks, and a baseline
+     probe in which the old account read and the new one got 0 rows;
+  2. `b0f4015`: the security check learns the new rule and accepts the old one alone, so the watchdog never
+     mismatched;
+  3. `3c53c55`: the new rule and the strict check, committed locally;
+  4. `migrate` live (≈ 16:59 UTC), then pushed through the gate with integration (drift passes) and the policy
+     guards.
+- **The security check now also refuses:**
+  - a second API-reaching policy on these tables, because PostgreSQL ORs permissive policies (even an exact copy is
+    refused);
+  - any role beyond anon, authenticated and service_role that the API's `authenticator` could switch into.
+  - An absent policy passes as closed, so the emergency deny-all raises no alarm.
+- **The live authorization probe** (approved; read-only; rolled back; claims set inside the transaction, no
+  sign-in, no token; counts only):
+  - the account at aal2 reads 1 / 764 / 17 rows;
+  - the account at aal1, the old viewer (with its flag, at aal1 and aal2) and another account get 0;
+  - anonymous is denied;
+  - every protected table is denied to the reader;
+  - no website role holds any write privilege.
+- **The live rules equal the repository:** the condition stored in Postgres equals the security check's and
+  `schema.sql`'s, and the drift check passed after the migration.
+- **Afterwards:**
+  - the 17:12 UTC hourly run (`b0f4015`) saved the 16:00 hour as `bitcoin_agent` with both shadow rows and 0 errors;
+  - the Reporting snapshot workflow (`3c53c55`) published at 17:14;
+  - CI green on both commits.
+- **Still separate, needing approval:** connecting the dashboard (URL + publishable key only, never Lovable's own
+  Supabase integration), and the real browser test (password → 0 rows; authenticator code → data). The emergency
+  deny-all SQL and revocation are in `docs/api/stats_access.md` §2.
 
 ## Research phase — rules and decisions (2026-09-19)
 

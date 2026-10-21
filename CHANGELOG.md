@@ -31,6 +31,11 @@ analysis can always tell which version produced a row.
   STATUS, `status.json`, `open_user_actions.md` item 6 (superseded).
 - **Not changed:** the writer role's (`bitcoin_agent`) policies and grants, the publisher, the hourly workflow, the
   prediction system, the models and the research tracks. No account was created, changed or deleted.
+- **Verified live after `migrate`** (≈ 16:59 UTC):
+  - the stored condition equals the check's and `schema.sql`'s, and the drift check passed;
+  - in the approved, rolled-back probe, the account at aal2 reads 1 / 764 / 17 rows; aal1, the old viewer (its flag,
+    aal1 and aal2) and another account get 0; anonymous and every protected table are denied; no write privileges;
+  - the 17:12 UTC hourly run and the 17:14 publish succeeded.
 
 ## research — 2026-10-21 (direction-first review: architecture, outside evidence, ranked roadmap; read-only)
 
