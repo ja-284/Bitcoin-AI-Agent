@@ -75,7 +75,13 @@ def test_the_only_read_surface_is_two_cache_tables_for_signed_in_viewers():
     """
     assert security.VIEWER_READ_TABLES == ("reporting_snapshot", "reporting_runs", "reporting_incidents")
     assert (security.VIEWER_ROLE, security.VIEWER_PRIVILEGE) == ("authenticated", "SELECT")
-    assert security.VIEWER_CONDITION == "auth.jwt->'app_metadata'->>'reporting_viewer'='true'"
+    # 2026-10-21 (the user's approval): one named dashboard account, in a two-factor (aal2) session, nothing else
+    assert security.DASHBOARD_USER_ID == "9e021560-dd06-40f1-80ad-d58d44d9a3f6"
+    assert security.VIEWER_CONDITION == "auth.uid='9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuidandauth.jwt->>'aal'='aal2'"
+    # the rollout's transition: the old flag rule is accepted alone until the live migration, never alongside
+    assert security.ACCEPTED_VIEWER_CONDITIONS == (security.VIEWER_CONDITION,
+                                                   "auth.jwt->'app_metadata'->>'reporting_viewer'='true'")
+    assert security.API_SWITCHABLE_ROLES == {"anon", "authenticated", "service_role"}
     assert not set(security.VIEWER_READ_TABLES) & {"predictions", "prediction_outcomes", "shadow_move_size",
                                                      "shadow_run_errors", "backend_state", "schema_meta"}
 
@@ -89,7 +95,7 @@ def test_the_reporting_schema_file_opens_exactly_the_designed_surface():
     assert len(policies) == 1, policies
     name, command, role, condition = policies[0]
     assert (command, role) == ("SELECT", "authenticated")
-    assert security._normalised(condition) == security.VIEWER_CONDITION
+    assert security._normalised(condition) in security.ACCEPTED_VIEWER_CONDITIONS
     grants = re.findall(r"GRANT (.+?) ON TABLE %I TO ([\w, ]+)'", sql)  # the WHOLE grantee list, not its first name
     assert grants == [("SELECT", "authenticated")], grants
     code = re.sub(r"--[^\n]*", "", sql)  # the comments explain user_metadata; the SQL must never use it
@@ -154,21 +160,45 @@ def test_a_policy_scoped_to_a_private_backend_role_is_not_an_exposure():
     assert security.judge({"predictions": _t(policies=[_pol("backend_writes", ["bitcoin_agent"], "ALL")])}) == []
 
 
-QUAL = "(((auth.jwt() -> 'app_metadata'::text) ->> 'reporting_viewer'::text) = 'true'::text)"
+# How Postgres prints the designed condition (pg_policies.qual), and the old flag rule it replaces.
+QUAL = ("((auth.uid() = '9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuid) AND "
+        "((auth.jwt() ->> 'aal'::text) = 'aal2'::text))")
+LEGACY_QUAL = "(((auth.jwt() -> 'app_metadata'::text) ->> 'reporting_viewer'::text) = 'true'::text)"
 
 
 def _viewer(**kw):
-    pol = {"name": "stats_viewer_read", "roles": ["authenticated"], "command": "SELECT",
+    pol = {"name": "control_center_read", "roles": ["authenticated"], "command": "SELECT",
            "permissive": "PERMISSIVE", "qual": QUAL, "with_check": None}
     pol.update(kw)
     return pol
 
 
-def test_the_viewer_tables_pass_exactly_as_designed():
-    tables = {t: _t(grants={"anon": [], "authenticated": ["SELECT"]}, policies=[_viewer()])
+@pytest.mark.parametrize("qual", [QUAL, LEGACY_QUAL], ids=["dashboard-account-aal2", "transition-legacy-flag"])
+def test_the_viewer_tables_pass_exactly_as_designed(qual):
+    tables = {t: _t(grants={"anon": [], "authenticated": ["SELECT"]}, policies=[_viewer(qual=qual)])
               for t in security.VIEWER_READ_TABLES}
     tables["predictions"] = _t()
     assert security.judge(tables) == []
+
+
+@pytest.mark.parametrize("second", [_viewer(name="exact_copy"), _viewer(name="old_rule", qual=LEGACY_QUAL),
+                                    _viewer(name="anyone", qual="true")], ids=["exact-copy", "old-rule", "wide-open"])
+def test_a_second_policy_reaching_the_api_is_reported_because_permissive_policies_combine_with_or(second):
+    """Two permissive policies admit whoever EITHER admits: even an exact copy of the designed one is refused."""
+    problems = security.judge({"reporting_runs": _t(grants={"authenticated": ["SELECT"]}, policies=[_viewer(), second])})
+    assert any(p.startswith("reporting_runs: 2 policies reach the public API") and "OR" in p for p in problems), problems
+
+
+def test_backend_policies_beside_the_designed_one_are_not_counted_as_api_policies():
+    pols = [_viewer(), _pol("backend_read", ["bitcoin_agent"], "SELECT"), _pol("backend_insert", ["bitcoin_agent"], "INSERT")]
+    assert security.judge({"reporting_runs": _t(grants={"authenticated": ["SELECT"]}, policies=pols)}) == []
+
+
+def test_the_api_login_role_may_switch_into_supabases_three_roles_only():
+    assert security.judge_api_roles(["anon", "authenticated", "service_role"]) == []
+    assert security.judge_api_roles([]) == []
+    (problem,) = security.judge_api_roles(["anon", "authenticated", "service_role", "bitcoin_agent"])
+    assert "bitcoin_agent" in problem and "authenticator" in problem
 
 
 def test_anon_may_never_read_the_viewer_tables():
@@ -183,14 +213,20 @@ def test_a_viewer_may_never_write_and_no_other_table_opens():
     assert "backend_state: `authenticated` holds SELECT" in problems
 
 
+WIDER = "lets through more than the designed condition"
+
+
 @pytest.mark.parametrize("change, fragment", [
-    ({"qual": "true"}, "lets through more than the viewer claim"),
-    ({"qual": "(COALESCE(((auth.jwt() -> 'app_metadata'::text) ->> 'reporting_viewer'::text), 'true'::text) = 'true'::text)"},
-     "lets through more than the viewer claim"),
-    ({"qual": "(((auth.jwt() -> 'user_metadata'::text) ->> 'reporting_viewer'::text) = 'true'::text)"},
-     "lets through more than the viewer claim"),
-    ({"qual": QUAL[:-1] + " OR true)"}, "lets through more than the viewer claim"),
-    ({"qual": None}, "lets through more than the viewer claim"),
+    ({"qual": "true"}, WIDER),
+    ({"qual": "(COALESCE(((auth.jwt() -> 'app_metadata'::text) ->> 'reporting_viewer'::text), 'true'::text) = 'true'::text)"}, WIDER),
+    ({"qual": "(((auth.jwt() -> 'user_metadata'::text) ->> 'reporting_viewer'::text) = 'true'::text)"}, WIDER),
+    ({"qual": QUAL[:-1] + " OR true)"}, WIDER),
+    ({"qual": None}, WIDER),
+    ({"qual": QUAL.replace("9e021560-dd06-40f1-80ad-d58d44d9a3f6", "00000000-0000-4000-8000-0000000000aa")}, WIDER),
+    ({"qual": QUAL.replace("'aal2'", "'aal1'")}, WIDER),
+    ({"qual": "(auth.uid() = '9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuid)"}, WIDER),          # no aal2: password only
+    ({"qual": "((auth.jwt() ->> 'aal'::text) = 'aal2'::text)"}, WIDER),                         # any account with MFA
+    ({"qual": QUAL.replace(" AND ", " OR ")}, WIDER),
     ({"roles": ["anon"]}, "only `authenticated` viewers"),
     ({"roles": ["authenticated", "anon"]}, "only `authenticated` viewers"),
     ({"roles": ["public"]}, "only `authenticated` viewers"),
@@ -201,7 +237,7 @@ def test_a_viewer_may_never_write_and_no_other_table_opens():
 ])
 def test_any_widened_viewer_policy_is_reported(change, fragment):
     (problem,) = security.judge({"reporting_snapshot": _t(grants={"authenticated": ["SELECT"]}, policies=[_viewer(**change)])})
-    assert problem.startswith("reporting_snapshot: policy `stats_viewer_read` ") and fragment in problem, problem
+    assert problem.startswith("reporting_snapshot: policy `control_center_read` ") and fragment in problem, problem
 
 
 def test_posture_reads_in_a_constant_number_of_queries(monkeypatch):
@@ -221,6 +257,8 @@ def test_posture_reads_in_a_constant_number_of_queries(monkeypatch):
                                for p in security.PRIVILEGES]
             elif "pg_policies" in sql:
                 self.result = []
+            elif "pg_auth_members" in sql:
+                self.result = [("anon",), ("authenticated",), ("service_role",)]  # Supabase's standard three
             else:
                 self.result = [("a", True), ("b", True), ("c", True)]
 
@@ -246,7 +284,7 @@ def test_posture_reads_in_a_constant_number_of_queries(monkeypatch):
     import agent.database.db as db
     monkeypatch.setattr(db, "get_connection", lambda: Conn())
     result = security.posture()
-    assert len(queries) == 7  # tables, policies, table list, views, functions, default grants, notes
+    assert len(queries) == 8  # tables, policies, table list, views, functions, default grants, notes, API roles
     assert result["ok"] and set(result["tables"]) == {"a", "b", "c"}
     assert result["api_roles_present"] == ["anon", "authenticated"]
 

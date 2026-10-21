@@ -51,17 +51,29 @@ LOCKDOWN_MARKER = "Access lockdown"
 
 # The ONE deliberate read surface (2026-09-27): the private stats read model (docs/api/stats_access.md).
 # Exactly these three reporting tables, readable ONLY by a signed-in Supabase Auth user (`authenticated`,
-# never `anon`) whose token carries app_metadata.reporting_viewer = true -- a claim only the project owner
-# can set -- and only with SELECT. Everything about that surface is checked, not just its existence: a
-# second role, a second privilege, a second policy, or a policy whose condition is anything but the
-# viewer claim is reported, so the opening cannot widen quietly. Every other table stays fully closed.
+# never `anon`), and only with SELECT. Since 2026-10-21 (the user's approval) the reader is ONE named account,
+# the Bitcoin AI Control Center's dedicated dashboard account, and only in a session that passed two-factor
+# sign-in (aal2). Everything about that surface is checked, not just its existence: a second role, a second
+# privilege, a second policy, or a policy whose condition is anything but the designed one is reported, so the
+# opening cannot widen quietly. Every other table stays fully closed.
 VIEWER_READ_TABLES = ("reporting_snapshot", "reporting_runs", "reporting_incidents")
 VIEWER_ROLE = "authenticated"
 VIEWER_PRIVILEGE = "SELECT"
-# The policy condition, normalised by _normalised(): `(auth.jwt() -> 'app_metadata' ->> 'reporting_viewer') = 'true'`.
-# An exact comparison on purpose: a condition that differs in any way (an OR, a COALESCE default, the
-# user-editable user_metadata instead of app_metadata) fails CLOSED -- reported, never assumed equivalent.
-VIEWER_CONDITION = "auth.jwt->'app_metadata'->>'reporting_viewer'='true'"
+DASHBOARD_USER_ID = "9e021560-dd06-40f1-80ad-d58d44d9a3f6"  # Supabase Auth user id (an identifier, not a secret)
+# The policy condition, normalised by _normalised():
+#   auth.uid() = '<DASHBOARD_USER_ID>'::uuid AND (auth.jwt() ->> 'aal') = 'aal2'
+# An exact comparison on purpose: a condition that differs in any way (an OR, a COALESCE default, another account,
+# aal1, a user-editable claim) fails CLOSED -- reported, never assumed equivalent.
+VIEWER_CONDITION = f"auth.uid='{DASHBOARD_USER_ID}'::uuidandauth.jwt->>'aal'='aal2'"
+# TRANSITION ONLY (2026-10-21): the old owner-set flag rule (app_metadata.reporting_viewer = true), accepted until
+# the migration replaces it on the live database, so the watchdog never sees a mismatch during the rollout. The
+# next commit removes it. Either rule alone is accepted, never both: see the one-policy rule in judge().
+LEGACY_VIEWER_CONDITION = "auth.jwt->'app_metadata'->>'reporting_viewer'='true'"
+ACCEPTED_VIEWER_CONDITIONS = (VIEWER_CONDITION, LEGACY_VIEWER_CONDITION)
+# The roles Supabase's API login role (`authenticator`) may switch into. A token's `role` claim chooses among
+# them, so a membership beyond these (for example the backend's own bitcoin_agent, whose policies read
+# everything) would be a path around the policies above.
+API_SWITCHABLE_ROLES = {"anon", "authenticated", "service_role"}
 
 
 def _created_tables(sql: str) -> set[str]:
@@ -100,6 +112,13 @@ def judge(tables: dict[str, dict]) -> list[str]:
             extra = [p for p in granted if p not in allowed]
             if extra:
                 problems.append(f"{name}: `{role}` holds {', '.join(extra)}")
+        # PostgreSQL ORs permissive policies together: a second one admits whoever EITHER admits, so even an exact
+        # copy of the designed policy next to a looser one would widen the surface. One API-reaching policy, at most.
+        reaching = [p for p in t["policies"] if set(p["roles"]) & PUBLIC_REACHING]
+        if viewer_table and len(reaching) > 1:
+            problems.append(f"{name}: {len(reaching)} policies reach the public API "
+                            f"({', '.join(sorted(p['name'] for p in reaching))}); PostgreSQL combines permissive "
+                            "policies with OR, so exactly one designed policy may exist")
         for pol in t["policies"]:
             # Only a policy that reaches the public API is an exposure. A policy scoped to a
             # private backend role (the least-privilege role in docs/ops/open_user_actions.md
@@ -129,10 +148,17 @@ def viewer_policy_problem(pol: dict) -> str | None:
         return f"allows {pol['command']}, only SELECT is intended"
     if pol.get("permissive", "PERMISSIVE") != "PERMISSIVE" or pol.get("with_check") is not None:
         return "is not a plain read policy"
-    if _normalised(pol.get("qual")) != VIEWER_CONDITION:
-        return (f"lets through more than the viewer claim (condition: {pol.get('qual')!r}); "
-                "only app_metadata.reporting_viewer = true may read")
+    if _normalised(pol.get("qual")) not in ACCEPTED_VIEWER_CONDITIONS:
+        return (f"lets through more than the designed condition (condition: {pol.get('qual')!r}); only the dashboard "
+                f"account {DASHBOARD_USER_ID}, signed in with two factors (aal2), may read")
     return None
+
+
+def judge_api_roles(switchable: list[str]) -> list[str]:
+    """The roles the API's `authenticator` may switch into must be exactly Supabase's three (or fewer)."""
+    extra = sorted(set(switchable) - API_SWITCHABLE_ROLES)
+    return [f"the API login role `authenticator` may switch into {', '.join(extra)}: a token naming that role would "
+            "bypass the API roles' policies"] if extra else []
 
 
 _DEFAULT_KINDS = {"r": "table or view", "S": "sequence", "f": "function", "T": "type", "n": "schema"}
@@ -250,6 +276,10 @@ def posture(schema: str = "public") -> dict:
                  f"this project's role cannot revoke them; they are reachable only if `{s}` is listed under "
                  "Project Settings -> API -> Exposed schemas (default: public, graphql_public)"
                  for s, objs in cur.fetchall()]
+        # The roles the API's login role may become (2026-10-21): none beyond Supabase's own three.
+        cur.execute("""SELECT r.rolname FROM pg_auth_members m JOIN pg_roles r ON r.oid = m.roleid
+                       JOIN pg_roles u ON u.oid = m.member WHERE u.rolname = 'authenticator'""")
+        switchable = [r[0] for r in cur.fetchall()]
     present: list[str] = []
     for name, _rls, role, priv, granted in rows:
         held = tables[name]["api_privileges"].setdefault(role, [])
@@ -261,9 +291,10 @@ def posture(schema: str = "public") -> dict:
         if table in tables:
             tables[table]["policies"].append({"name": pname, "roles": list(roles), "command": cmd,
                                               "permissive": permissive, "qual": qual, "with_check": with_check})
-    problems = judge(tables) + judge_objects(views, functions, default_grants)
+    problems = judge(tables) + judge_objects(views, functions, default_grants) + judge_api_roles(switchable)
     return {"ok": not problems, "problems": problems, "tables": tables, "views": views, "functions": functions,
-            "default_grants": default_grants, "notes": notes, "api_roles_present": present}
+            "default_grants": default_grants, "notes": notes, "api_roles_present": present,
+            "api_switchable_roles": sorted(switchable)}
 
 
 def main() -> int:
@@ -282,7 +313,8 @@ def main() -> int:
     if result["ok"]:
         viewer = ", ".join(t for t in VIEWER_READ_TABLES if t in result["tables"]) or "no table yet"
         print(f"OK: all {len(result['tables'])} tables have RLS on; the public API roles hold nothing except SELECT "
-              f"for signed-in stats viewers on {viewer}; no view, callable function or default grant exposes anything")
+              f"for the dashboard reader on {viewer}; no view, callable function, default grant or extra API role "
+              "exposes anything")
         return 0
     print("EXPOSED:")
     for p in result["problems"]:

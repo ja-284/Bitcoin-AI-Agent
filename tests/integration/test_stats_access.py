@@ -164,7 +164,7 @@ def test_the_detector_accepts_exactly_the_design_and_reports_every_widening(stat
     assert result["functions"] == [] and result["views"] == {}, "nothing callable or view-shaped is exposed"
     for table in CACHES:
         (pol,) = [p for p in result["tables"][table]["policies"] if p["roles"] == ["authenticated"]]
-        assert security._normalised(pol["qual"]) == security.VIEWER_CONDITION, pol["qual"]  # the real deparse
+        assert security._normalised(pol["qual"]) in security.ACCEPTED_VIEWER_CONDITIONS, pol["qual"]  # the real deparse
     widenings = {
         "GRANT SELECT ON reporting_runs TO anon": "reporting_runs: `anon` holds SELECT",
         "GRANT INSERT ON reporting_snapshot TO authenticated": "reporting_snapshot: `authenticated` holds INSERT",
