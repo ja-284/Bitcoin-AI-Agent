@@ -5,6 +5,20 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## research — 2026-10-21 (direction-first review: architecture, outside evidence, ranked roadmap; read-only)
+
+`research/DIRECTION_RESEARCH_REVIEW_2026-10-21.md` is a report only.
+- **Excluded:** no experiment, fit, comparison or registration; the blind direction track and the sealed holdout were
+  not read; no new figure was computed.
+- **Contents:**
+  - the BUY/HOLD/SELL and direction-model architecture as the code implements it;
+  - every directional idea already tested, with its status;
+  - nine outside sources with their evidence levels and what could be verified (publisher pages refused automated
+    access, and one working paper could only be confirmed as a record);
+  - a ranked roadmap with ten assessment points per candidate;
+  - the rejected and postponed ideas, and a long-term strategy.
+- **Recommendation:** wait for the registered readings; start nothing new without the user.
+
 ## operations — 2026-10-21 (the backup work PAUSED by the user; key expiry recorded)
 
 - **Backup paused.** The owner's GPG key could not be created on Windows (a `keyboxd` configuration error), and the

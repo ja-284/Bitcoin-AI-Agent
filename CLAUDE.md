@@ -70,6 +70,9 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - **No database backup exists** (an unresolved risk in STATUS). The backup tool (`1820d8a`, `docs/ops/BACKUP.md`)
     is PAUSED and inactive by the user's decision (2026-10-21) after the GPG key setup failed. Run no GPG command and
     build no alternative unless the user reopens it.
+  - **Direction is now the primary long-term research goal** (the user, 2026-10-20/21). Move size and news continue
+    unchanged. The read-only review and ranked roadmap are in `research/DIRECTION_RESEARCH_REVIEW_2026-10-21.md`. Its
+    recommendation: wait for the registered readings, and start nothing new without the user.
   - Also open: the proposals in that assessment (P1–P6) and in `docs/ops/observability.md`. None is adopted; start
     none without the user.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
@@ -919,6 +922,43 @@ reviewed, an evidence assessment; back to monitoring.** Test tooling and documen
     record;
   - six proposals for later pre-registration (P1–P6), none adopted.
 - **Back to monitoring:** weekly audit ≈ 2026-10-27; direction first look ≈ 2026-11-26; 2,000 h ≈ 2026-12-14.
+
+**2026-10-20 (evening) → 2026-10-21 — the user's "Protect live evidence and prepare direction-first research" plan,
+then its revision ("skip backup setup and proceed").**
+- **Backup:**
+  - **The tool** (`1820d8a`): encrypted, read-only snapshot backups, `agent/database/backup.py`. Tests: 18 unit, 4
+    integration on synthetic scratch schemas. 7 guards, all caught; mutation guards now 173. CI green.
+  - **The user's decisions:** a GPG key pair the user holds; this PC plus OneDrive; the existing maintenance connection.
+  - **Then paused:** the user's GPG key setup failed (`keyboxd` error), and **the user paused the backup work**
+    (2026-10-21). This is an explicit change of scope: no alternative method, and no GPG command.
+  - **`faeed70`:**
+    - the tool and `docs/ops/BACKUP.md` are marked PAUSED and inactive, never run on real data;
+    - the GPG round-trip tests are opt-in (`BITCOIN_AGENT_BACKUP_TESTS=1`), so the weekly integration suite runs
+      no GPG command;
+    - **"no verified backup exists" is recorded as an unresolved operational risk** in STATUS and `status.json`.
+- **Housekeeping (`faeed70`):**
+  - the Anthropic key expires **2027-01-31**, with a reminder on **2027-01-17** in the calendar, which the weekly audit
+    now reads for items due within four weeks;
+  - the user's healthchecks.io look of 2026-10-20 is recorded, without being claimed as proof of delivery.
+- **Direction-first review** (`research/DIRECTION_RESEARCH_REVIEW_2026-10-21.md`, read-only; no experiment, fit or
+  registration; the blind track and the holdout not read):
+  - **Architecture:** BUY/HOLD/SELL is a hand-set five-category score (±0.15) with no horizon, probability or cost. Its
+    momentum enters as continuation, while the measured 1h structure is reversal. The frozen direction model learned
+    negative momentum and taker-buy coefficients.
+  - **External evidence:** nine sources, with their levels and what could be verified. Hourly direction is weakly
+    efficient. The positive results are daily, cross-sectional, tick-level or futures-based. A 2026 preprint finds
+    the same reversal after taker flow, below costs.
+  - **Ranked roadmap:**
+    1. wait for the registered readings;
+    2. a decision-layer redesign, on paper and registered, after the 2,000-hour reading;
+    3. the funding re-test, as registered (≈ 2027-03);
+    4. prospective collection of new order-flow data, if the user decides;
+    5. a daily target, deferred;
+    6. recalibration, only if the verdict asks for it.
+  - **Rejected:** complex models now, another broad offline search (the development data is too worn), re-running
+    closed lines, and copying published models.
+- **Nothing** in prediction, scoring, the frozen models, the direction track, the news evaluation, the checkpoints, the
+  schema, the roles or the workflows changed.
 
 ## Research phase — rules and decisions (2026-09-19)
 
