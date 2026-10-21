@@ -20,6 +20,15 @@
 > other table stays closed. `python -m agent.database.security` checks this exact shape (role, privilege,
 > single policy and its condition) and fails on any widening. It was proven on real Postgres acting as
 > the API roles.
+>
+> **2026-10-21: the reader narrowed to one account with two factors.** The policy `control_center_read` admits only
+> the Bitcoin AI Control Center's dedicated account (`auth.uid()` = its user id) **and** only in a session at
+> `aal2`. The old flag rule `stats_viewer_read` is dropped.
+> - The security check now also refuses a second API-reaching policy on these tables, because permissive policies
+>   combine with OR.
+> - It also refuses any role beyond `anon`, `authenticated` and `service_role` that the API's login role
+>   `authenticator` could switch into.
+> - Emergency deny-all and revocation: `docs/api/stats_access.md` §2.
 
 Scope: a research-only backend that runs on GitHub Actions, writes to Supabase Postgres, and
 calls Binance (public), RSS feeds (public), CoinGecko (free key), and the Anthropic API.

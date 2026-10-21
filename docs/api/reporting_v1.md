@@ -243,7 +243,8 @@ run *completes*, also stores these documents for the private stats website (sect
 - a separate "Reporting snapshot" workflow, triggered when an hourly run completes, stores these
   documents unchanged in two derived-cache tables (`reporting_snapshot`, `reporting_runs`);
 - only a signed-in Supabase Auth user carrying the owner-set claim `app_metadata.reporting_viewer =
-  true` may read them, and only with SELECT;
+  true` may read them, and only with SELECT. *(Since 2026-10-21: only the one dedicated dashboard account, in a
+  two-factor (aal2) session; the flag grants nothing. See `docs/api/stats_access.md` §2.)*
 - `anon` gets nothing, and the security check fails on anything wider.
 
 It deviates from the recommendation below in one way, deliberately: the publish step is **not** a step

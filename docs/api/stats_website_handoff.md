@@ -18,8 +18,8 @@ boundary and its proofs: `docs/api/stats_access.md`.
 | backend | the project's Supabase database, through Supabase's normal client (`supabase-js`) |
 | the website receives | the Supabase **project URL** and the **publishable (anon) key**. Both are designed to be public, and on their own they read nothing here. |
 | never give the website | the `service_role` key, the database URL / password, the `bitcoin_agent` password, the Anthropic key, any GitHub token |
-| sign-in | Supabase Auth, email + password (`signInWithPassword`). One account, created by the owner; sign-ups switched off. |
-| what makes the account a viewer | the owner-set flag `app_metadata.reporting_viewer = true` (`docs/api/stats_access.md` §2). Without it a signed-in account sees **zero rows**; that is correct, not a bug. |
+| sign-in | Supabase Auth: email + password (`signInWithPassword`), **then the authenticator-app code**. The code step is `supabase.auth.mfa.challenge` / `verify`, and its result is an **aal2** session. One account, created by the owner; sign-ups switched off. |
+| what makes the account the reader (since 2026-10-21) | being **the one dedicated dashboard account** (its user id is in the policy) **and** a session at **aal2** (`docs/api/stats_access.md` §2). After the password alone (aal1) every table returns **zero rows**. That is correct, not a bug: ask for the code. Any other account always sees zero rows. The old `reporting_viewer` flag no longer grants anything. |
 | what the account can do | `SELECT` on three tables. Nothing else: no writes, no functions, no other table. |
 
 ## 2. The three tables
@@ -159,7 +159,7 @@ The data changes once an hour, so never poll more often than every few minutes.
 | situation | what it means | show |
 |---|---|---|
 | sign-in fails | wrong credentials or no account | the sign-in error |
-| signed in, but every table returns 0 rows | the account lacks the viewer flag (`docs/api/stats_access.md` §2) | "This account is not set up as a viewer", not "no data" |
+| signed in, but every table returns 0 rows | the session is at aal1 (no authenticator code yet), or it is not the dashboard account (`docs/api/stats_access.md` §2) | first ask for the authenticator code; if it still returns 0 rows at aal2, "This account is not the dashboard account" — never "no data" |
 | a request errors or times out | network or Supabase issue | "Could not load", with a retry; never an empty chart |
 | unknown `reporting_contract_version` | the backend's shape changed | refuse to render that data and say so |
 | a field is `null` | not available (e.g. no shadow row that hour) | "not available", never 0 |
@@ -212,10 +212,13 @@ The 168 h outcome of a run is pending for a week; that is normal.
 
 ## 10. What only the owner can do (needed before the website can show data)
 
-The steps are in `docs/api/stats_access.md` §2 and `docs/ops/open_user_actions.md` item 6:
-1. Create the one Supabase Auth user.
-2. Turn off sign-ups.
-3. Run the one SQL statement that sets `app_metadata.reporting_viewer = true`.
-4. Give Lovable only the project URL and the publishable key.
+The steps are in `docs/api/stats_access.md` §2. Steps 1–3 were done on 2026-10-21:
+1. ~~Create the one Supabase Auth user.~~ Done: the dedicated dashboard account.
+2. ~~Turn off sign-ups~~ and enable authenticator-app (TOTP) two-factor sign-in. Done; the account's factor is
+   verified.
+3. ~~Name that account in the read policy, with aal2.~~ Done with `python -m agent.migrate`. No metadata flag is
+   needed any more.
+4. **Still separate, needing the owner's approval:** give the dashboard only the project URL and the publishable
+   key. Do not use Lovable's own Supabase integration, which would get management access.
 
 No password, key or token belongs in a chat, in Lovable's prompts, or in the repository.

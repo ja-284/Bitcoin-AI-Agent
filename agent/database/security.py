@@ -65,11 +65,10 @@ DASHBOARD_USER_ID = "9e021560-dd06-40f1-80ad-d58d44d9a3f6"  # Supabase Auth user
 # An exact comparison on purpose: a condition that differs in any way (an OR, a COALESCE default, another account,
 # aal1, a user-editable claim) fails CLOSED -- reported, never assumed equivalent.
 VIEWER_CONDITION = f"auth.uid='{DASHBOARD_USER_ID}'::uuidandauth.jwt->>'aal'='aal2'"
-# TRANSITION ONLY (2026-10-21): the old owner-set flag rule (app_metadata.reporting_viewer = true), accepted until
-# the migration replaces it on the live database, so the watchdog never sees a mismatch during the rollout. The
-# next commit removes it. Either rule alone is accepted, never both: see the one-policy rule in judge().
-LEGACY_VIEWER_CONDITION = "auth.jwt->'app_metadata'->>'reporting_viewer'='true'"
-ACCEPTED_VIEWER_CONDITIONS = (VIEWER_CONDITION, LEGACY_VIEWER_CONDITION)
+# Exactly one accepted condition. During the 2026-10-21 rollout the old owner-set flag rule
+# (app_metadata.reporting_viewer = true) was briefly accepted too (b0f4015), so the watchdog saw no mismatch while
+# the live migration ran; it is not accepted any more, and a policy using it is reported.
+ACCEPTED_VIEWER_CONDITIONS = (VIEWER_CONDITION,)
 # The roles Supabase's API login role (`authenticator`) may switch into. A token's `role` claim chooses among
 # them, so a membership beyond these (for example the backend's own bitcoin_agent, whose policies read
 # everything) would be a path around the policies above.

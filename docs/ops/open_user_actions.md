@@ -264,9 +264,15 @@ rather than assumed safe.
 **Also expect** the security advisor to show *"RLS enabled, no policy"* on each table from now on.
 That is informational and is the intended state: deny everything until a policy is added on purpose.
 
-## 6. The private stats website: account and claim, ONLY when the website is being built (not now)
+## 6. The private stats website: account and claim — SUPERSEDED 2026-10-21
 
-**Nothing to do today.** The backend side is built (2026-09-27, extended 2026-10-05,
+**Superseded.** The flag described below no longer grants anything. Since 2026-10-21 the reporting tables are
+readable only by the Bitcoin AI Control Center's dedicated account, in a two-factor (aal2) session
+(`docs/api/stats_access.md` §2). The owner created that account and enrolled its authenticator app on 2026-10-21,
+and the policy names it. Connecting the dashboard to real data (URL + publishable key only) is a separate step that
+needs the owner's approval. The text below is kept as it was written.
+
+The backend side is built (2026-09-27, extended 2026-10-05,
 `docs/api/stats_access.md`): three read-only reporting tables (statistics, run history, incidents) refreshed
 after every completed hourly run, readable only by a signed-in account that carries an owner-set flag. The
 frontend handoff for Lovable is `docs/api/stats_website_handoff.md`. Until you create that account, nobody can read them, you included. When you build the

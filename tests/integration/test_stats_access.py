@@ -3,14 +3,14 @@ The private stats read model against a REAL Postgres (Supabase), in a scratch sc
 test. Each probe acts exactly as Supabase's API does for a website request: it switches to the `anon` or
 `authenticated` role and sets the signed token's claims (`request.jwt.claims`, what auth.jwt() reads).
 
-Proven here:
-  - a signed-in viewer whose token carries app_metadata.reporting_viewer = true reads both cache tables;
-  - an anonymous request (the public project key alone) is refused;
-  - a signed-in user WITHOUT that owner-set claim -- including one who puts it in their own user_metadata --
-    sees nothing;
-  - even the viewer cannot write, delete or truncate anything, cannot read the production record, and cannot
+Proven here (the reader since 2026-10-21: ONE dedicated dashboard account, in a two-factor session):
+  - that account, at aal2, reads the three reporting tables;
+  - the same account at aal1 (password only), any other account, and the old owner-set flag
+    (app_metadata.reporting_viewer, even at aal2) see nothing; an anonymous request is refused;
+  - even the reader cannot write, delete or truncate anything, cannot read the production record, and cannot
     create anything;
-  - the live security check accepts exactly this design and reports every way of widening it.
+  - the security check accepts exactly this design and reports every way of widening it, including a second
+    permissive policy (PostgreSQL combines them with OR).
 
     BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q
 """
@@ -25,7 +25,9 @@ pytestmark = pytest.mark.skipif(os.getenv("BITCOIN_AGENT_DB_TESTS") != "1", reas
 
 SCHEMA = "stats_access_test"
 HOUR = timedelta(hours=1)
-VIEWER = {"sub": "00000000-0000-4000-8000-000000000001", "role": "authenticated", "app_metadata": {"reporting_viewer": True}}
+DASHBOARD = "9e021560-dd06-40f1-80ad-d58d44d9a3f6"  # agent/database/security.DASHBOARD_USER_ID (checked below)
+OTHER = "00000000-0000-4000-8000-000000000001"
+VIEWER = {"sub": DASHBOARD, "role": "authenticated", "aal": "aal2"}
 CACHES = ("reporting_snapshot", "reporting_runs", "reporting_incidents")
 RECORD = ("predictions", "prediction_outcomes", "shadow_move_size", "shadow_run_errors", "backend_state", "schema_meta")
 
@@ -133,14 +135,22 @@ def test_an_anonymous_request_is_refused(stats_db):
         assert _refused(_as(stats_db, "anon", f"SELECT count(*) FROM {table}", {"role": "anon"})), table
 
 
+def test_the_tests_name_the_same_account_as_the_security_check():
+    from agent.database import security
+
+    assert DASHBOARD == security.DASHBOARD_USER_ID
+
+
 @pytest.mark.parametrize("claims", [
     None,                                                                  # signed in, but no claims at all
-    {"sub": VIEWER["sub"], "role": "authenticated"},                       # an ordinary account
-    {**VIEWER, "app_metadata": {"reporting_viewer": False}},
-    {**VIEWER, "app_metadata": {"reporting_viewer": "yes"}},
-    {**VIEWER, "app_metadata": {}, "user_metadata": {"reporting_viewer": True}},  # users CAN edit user_metadata
-], ids=["no-claims", "ordinary-account", "claim-false", "claim-not-true", "self-set-user-metadata"])
-def test_a_signed_in_user_without_the_owner_set_claim_sees_nothing(stats_db, claims):
+    {**VIEWER, "aal": "aal1"},                                             # the right account, password only
+    {"sub": DASHBOARD, "role": "authenticated"},                           # the right account, no aal claim
+    {**VIEWER, "sub": OTHER},                                              # another account, even with two factors
+    {"sub": OTHER, "role": "authenticated", "aal": "aal2", "app_metadata": {"reporting_viewer": True}},  # the old flag
+    {"sub": OTHER, "role": "authenticated", "aal": "aal2", "user_metadata": {"reporting_viewer": True}},
+    {"role": "authenticated", "aal": "aal2"},                              # no account at all
+], ids=["no-claims", "aal1", "no-aal", "other-account-aal2", "old-flag-aal2", "self-set-user-metadata", "no-sub"])
+def test_anyone_but_the_dashboard_account_at_aal2_sees_nothing(stats_db, claims):
     for table in CACHES:
         assert _as(stats_db, "authenticated", f"SELECT count(*) FROM {table}", claims) == [(0,)], (table, claims)
 
@@ -164,13 +174,17 @@ def test_the_detector_accepts_exactly_the_design_and_reports_every_widening(stat
     assert result["functions"] == [] and result["views"] == {}, "nothing callable or view-shaped is exposed"
     for table in CACHES:
         (pol,) = [p for p in result["tables"][table]["policies"] if p["roles"] == ["authenticated"]]
-        assert security._normalised(pol["qual"]) in security.ACCEPTED_VIEWER_CONDITIONS, pol["qual"]  # the real deparse
+        assert pol["name"] == "control_center_read"
+        assert security._normalised(pol["qual"]) == security.VIEWER_CONDITION, pol["qual"]  # the real deparse
     widenings = {
         "GRANT SELECT ON reporting_runs TO anon": "reporting_runs: `anon` holds SELECT",
         "GRANT INSERT ON reporting_snapshot TO authenticated": "reporting_snapshot: `authenticated` holds INSERT",
         "CREATE POLICY wide_open ON reporting_runs FOR SELECT TO authenticated USING (true)": "policy `wide_open` lets through more",
-        ("ALTER POLICY stats_viewer_read ON reporting_snapshot USING "
-         "((auth.jwt() -> 'user_metadata' ->> 'reporting_viewer') = 'true')"): "policy `stats_viewer_read` lets through more",
+        ("ALTER POLICY control_center_read ON reporting_snapshot USING "
+         f"(auth.uid() = '{DASHBOARD}'::uuid)"): "policy `control_center_read` lets through more",  # aal2 dropped
+        # an exact copy of the designed policy: harmless alone, but a second permissive policy is never accepted
+        (f"CREATE POLICY exact_copy ON reporting_incidents FOR SELECT TO authenticated USING "
+         f"(auth.uid() = '{DASHBOARD}'::uuid AND (auth.jwt() ->> 'aal') = 'aal2')"): "reporting_incidents: 2 policies reach",
         "GRANT SELECT ON predictions TO authenticated": "predictions: `authenticated` holds SELECT",
     }
     from agent.migrate import migrate
@@ -185,6 +199,7 @@ def test_the_detector_accepts_exactly_the_design_and_reports_every_widening(stat
             cur.execute("REVOKE INSERT ON reporting_snapshot FROM authenticated")
             cur.execute("REVOKE SELECT ON predictions FROM authenticated")
             cur.execute("DROP POLICY IF EXISTS wide_open ON reporting_runs")
+            cur.execute("DROP POLICY IF EXISTS exact_copy ON reporting_incidents")
             conn.commit()
             migrate()  # the schema files restore the designed policy
             assert security.posture(SCHEMA)["ok"], (sql, security.posture(SCHEMA)["problems"])

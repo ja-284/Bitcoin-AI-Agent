@@ -69,10 +69,15 @@ other or with the versions in the code. **Update both, together, from the comman
 - Research is isolated from production: E026–E029 ran on development data only, and no research module is
   imported by the live or shadow path (tested). None of them changed anything that runs.
 - **Private stats read model (2026-09-27, `docs/api/stats_access.md`): the only thing readable through
-  Supabase's API.** Three reporting tables (snapshot, run history, incidents; the last since 2026-10-05),
-  SELECT only, for one signed-in viewer with an owner-set claim. No viewer account exists yet, and the
-  website is a separate side project (frontend handoff: `docs/api/stats_website_handoff.md`). `anon`
-  reads nothing. It is not the trading application, and nothing in the prediction system reads these tables.
+  Supabase's API.** Three reporting tables (snapshot, run history, incidents; the last since 2026-10-05), SELECT
+  only.
+  - **Since 2026-10-21 they are readable ONLY by the Bitcoin AI Control Center's dedicated account, in a two-factor
+    (aal2) session** (policy `control_center_read`). The old flag rule is gone.
+  - The dashboard is a separate Lovable project. It is not yet connected to these tables; that is a separate,
+    approved step.
+  - `anon` reads nothing. It is not the trading application, and nothing in the prediction system reads these
+    tables.
+  - Emergency deny-all: `docs/api/stats_access.md` §2.
 
 ## What happens automatically (no one needs to do anything)
 

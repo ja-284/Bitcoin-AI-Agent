@@ -74,33 +74,41 @@ END $$;
 --   * SELECT only, on these three tables only;
 --   * to `authenticated` only -- a Supabase Auth user who has signed in; `anon` (anyone holding the
 --     public project key) gets nothing;
---   * and only when the signed token carries app_metadata.reporting_viewer = true. app_metadata can be
---     set by the project owner alone (users can edit user_metadata, never app_metadata), so creating an
---     account -- even if sign-ups were left open -- grants nothing.
+--   * and only for ONE named account, the Bitcoin AI Control Center's dedicated dashboard account, in a
+--     session that passed two-factor sign-in (aal2). Since 2026-10-21, on the user's approval; until then any
+--     account carrying the owner-set flag app_metadata.reporting_viewer = true could read (that rule,
+--     `stats_viewer_read`, is dropped here). A password-only session, any other account and the old flag all
+--     see zero rows.
 -- `python -m agent.database.security` (the watchdog, every few hours) fails if anything here widens: a
--- second role, a second privilege, another policy, or a different condition. Guarded so the file still
--- runs on a plain Postgres, where the Supabase roles and auth.jwt() do not exist.
+-- second role, a second privilege, a second API-reaching policy (permissive policies combine with OR), or a
+-- different condition. Guarded so the file still runs on a plain Postgres, where the Supabase roles and
+-- auth.jwt() / auth.uid() do not exist.
+-- Emergency deny-all (docs/api/stats_access.md): DROP POLICY control_center_read on the three tables; the
+-- security check accepts the absence (closed), and `python -m agent.migrate` restores the policy.
 DO $$
 DECLARE
     t text;
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') AND to_regprocedure('auth.jwt()') IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated')
+       AND to_regprocedure('auth.jwt()') IS NOT NULL AND to_regprocedure('auth.uid()') IS NOT NULL THEN
         FOREACH t IN ARRAY ARRAY['reporting_snapshot', 'reporting_runs', 'reporting_incidents'] LOOP
             EXECUTE format('GRANT SELECT ON TABLE %I TO authenticated', t);
             EXECUTE format('DROP POLICY IF EXISTS stats_viewer_read ON %I', t);
-            EXECUTE format($p$CREATE POLICY stats_viewer_read ON %I FOR SELECT TO authenticated
-                             USING ((auth.jwt() -> 'app_metadata' ->> 'reporting_viewer') = 'true')$p$, t);
+            EXECUTE format('DROP POLICY IF EXISTS control_center_read ON %I', t);
+            EXECUTE format($p$CREATE POLICY control_center_read ON %I FOR SELECT TO authenticated
+                             USING (auth.uid() = '9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuid
+                                    AND (auth.jwt() ->> 'aal') = 'aal2')$p$, t);
         END LOOP;
     END IF;
 END $$;
 
 COMMENT ON TABLE reporting_snapshot IS
     'Private stats read model (docs/api/stats_access.md): derived cache of agent/reporting, written only by '
-    'agent.reporting.publish, readable only by a signed-in viewer with app_metadata.reporting_viewer = true. '
+    'agent.reporting.publish, readable only by the dedicated dashboard account in a two-factor (aal2) session. '
     'Read by nothing in the prediction system. NOT the trading application.';
 COMMENT ON TABLE reporting_runs IS
     'Private stats read model: one derived row per run hour (agent.reporting.views.run_view). Written only by '
-    'agent.reporting.publish; readable only by a signed-in stats viewer; read by nothing in the prediction system.';
+    'agent.reporting.publish; readable only by the dedicated dashboard account (aal2); read by nothing in the prediction system.';
 COMMENT ON TABLE reporting_incidents IS
     'Private stats read model: append-only operational incidents (failed hourly/watchdog runs, failed or stale stats '
-    'publishes), written only by agent.reporting.incidents / publish; readable only by a signed-in stats viewer.';
+    'publishes), written only by agent.reporting.incidents / publish; readable only by the dedicated dashboard account (aal2).';

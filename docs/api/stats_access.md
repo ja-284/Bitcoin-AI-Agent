@@ -8,7 +8,9 @@
 **Status:**
 - The backend side is built and live since 2026-09-27.
 - Incident history and the predicted-vs-actual, trends and overview fields were added 2026-10-05.
-- **No website exists yet.** Building it in Lovable is a separate project.
+- **Since 2026-10-21 the reader is the Bitcoin AI Control Center's dedicated account, in a two-factor session
+  (§2).** The dashboard is a separate Lovable project. Until it is separately approved, it shows only fictional
+  demo data and is not connected to these tables.
 - **The frontend handoff is `docs/api/stats_website_handoff.md`.** This document is the security boundary
   behind it.
 
@@ -22,9 +24,9 @@ authoritative production records ---- read-only ----> agent/reporting (computes 
                                                             v
               reporting_snapshot + reporting_runs + reporting_incidents   (the reporting tables)
                                                             |
-                                   SELECT only, signed-in viewer with the owner-set claim
+                  SELECT only, the one dashboard account, two-factor session (aal2)
                                                             v
-                                            Lovable stats website  ->  you
+                                     Bitcoin AI Control Center (Lovable)  ->  you
 ```
 
 Nothing flows back up. Nothing in the prediction system reads the reporting tables.
@@ -66,43 +68,75 @@ reads.
 **No sealed-holdout data exists in any of them:** the record starts 2026-09-19, and the publisher refuses
 to publish any hour dated inside the holdout (2025-07-01 → 2026-08-19).
 
-## 2. Who may read: authentication
+## 2. Who may read: authentication (since 2026-10-21: one named account, two-factor)
 
 Three conditions, all required:
 
-1. **Signed in.** The website uses Supabase Auth. An anonymous request (holding only the public
-   project key) acts as the `anon` role, which holds **no** privilege on these tables and is refused.
-2. **Signed in as the viewer.** The signed-in user's token must carry
-   **`app_metadata.reporting_viewer = true`**. Only the project owner can set `app_metadata`: a user can
-   edit their own `user_metadata`, never `app_metadata`. So an account created by anyone else, even if
-   sign-ups were left open, sees **zero rows**. Putting the flag in `user_metadata` does not work either,
-   and a test proves it.
-3. **Reading only.** The database grants `authenticated` SELECT on these three tables and nothing else,
-   and each table has one policy: `FOR SELECT TO authenticated USING ((auth.jwt() -> 'app_metadata' ->>
-   'reporting_viewer') = 'true')`.
-
-What the website's code holds: the Supabase **project URL** and its **publishable (anon) key**. Both
-are designed to be public, and with this setup they reveal nothing on their own. **Never** put the
-`service_role` key, the database URL, or the `bitcoin_agent` password into the website or into Lovable.
-
-### The one-time setup, when the website is being built (the owner's steps, not now)
-
-1. Supabase → Authentication → Users → **Add user**: your email and a strong password.
-2. Supabase → Authentication → sign-in settings → **turn off "Allow new users to sign up"**. This is
-   defence in depth: new accounts would see nothing anyway.
-3. Supabase → SQL Editor, run once with your own email:
+1. **Signed in.** The dashboard (the Bitcoin AI Control Center, a separate Lovable project) uses Supabase Auth.
+   An anonymous request, holding only the public project key, acts as the `anon` role. That role holds **no**
+   privilege on these tables and is refused.
+2. **Signed in as THE dashboard account, with two factors.** Each table has exactly one policy for the API:
 
    ```sql
-   update auth.users
-      set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"reporting_viewer": true}'::jsonb
-    where email = 'YOUR-EMAIL-HERE';
+   CREATE POLICY control_center_read ON <table> FOR SELECT TO authenticated
+     USING (auth.uid() = '9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuid
+            AND (auth.jwt() ->> 'aal') = 'aal2');
    ```
 
-   Then sign out and in again: a token carries the claims it was issued with.
-4. In Lovable, connect the Supabase project (URL + publishable key only).
+   - The first condition names the one dedicated dashboard account by its Supabase Auth user id.
+   - The second requires a session that passed the authenticator-app (TOTP) step. Supabase sets `aal2` in the
+     signed token only then.
+   - Both are needed. So these all see **zero rows**:
+     - a password-only session (aal1);
+     - every other account;
+     - the old owner-set flag `app_metadata.reporting_viewer`, which was the rule from 2026-09-27 to 2026-10-21 and
+       is no longer read by anything.
+3. **Reading only.** The database grants `authenticated` SELECT on these three tables and nothing else.
 
-**To revoke:** remove the flag (`raw_app_meta_data - 'reporting_viewer'`), or delete the user. It takes
-effect when the current token expires, at most the token lifetime (one hour by default).
+`python -m agent.database.security` (the watchdog) reports any widening:
+- a second API-reaching policy. PostgreSQL combines permissive policies with OR, so even an exact copy next to
+  another is refused;
+- any other condition, role or privilege;
+- a view or a callable function;
+- a role beyond `anon`, `authenticated` and `service_role` that the API's login role could switch into.
+
+What the website's code holds: the Supabase **project URL** and its **publishable (anon) key**, and nothing
+else. Both are designed to be public, and with this setup they reveal nothing on their own.
+- **Never** put the `service_role` key, the database URL, or the `bitcoin_agent` password into the website or into
+  Lovable.
+- **Never** connect the production project through Lovable's own Supabase integration. That gives Lovable
+  management access (migrations, reading data), which would bypass all of this.
+
+### How it was set up (2026-10-21)
+
+1. The owner created the dedicated account in Supabase → Authentication → Users, with sign-ups switched off.
+2. The account enrolled an authenticator app. Its factor is verified, and a session reached aal2.
+3. The policy above was applied with `python -m agent.migrate` from `agent/reporting/schema.sql`.
+
+**To revoke or change the reader:** change the user id in `agent/reporting/schema.sql` and in
+`agent/database/security.DASHBOARD_USER_ID` (a test requires them to agree), then apply with `python -m agent.migrate`.
+- A policy is evaluated on every query, so this takes effect at once. It does not wait for a token to expire.
+- Faster, per account, in the Supabase dashboard: sign out the account's sessions, or remove its authenticator
+  factor, after which aal2 is impossible.
+
+**Emergency deny-all, the preferred emergency step.** Do not restore the old flag rule.
+
+```sql
+BEGIN;
+DROP POLICY IF EXISTS control_center_read ON public.reporting_snapshot;
+DROP POLICY IF EXISTS control_center_read ON public.reporting_runs;
+DROP POLICY IF EXISTS control_center_read ON public.reporting_incidents;
+COMMIT;
+```
+
+- **Effect:** every website user sees zero rows.
+- **The security check stays green.** An absent policy is closed, not exposed (tested).
+- The publisher and the prediction system are unaffected: they use `bitcoin_agent`'s own policies.
+- **The weekly drift check reports the missing policy** until it is restored with `python -m agent.migrate`, or the
+  removal is committed. That keeps the emergency state from being forgotten.
+- **Stricter variant:** also `REVOKE SELECT ON public.reporting_snapshot, public.reporting_runs,
+  public.reporting_incidents FROM authenticated;`, which gives "permission denied" instead of zero rows.
+  `migrate` restores the grant too.
 
 ## 3. How the website reads
 
@@ -152,10 +186,10 @@ It holds no AI key and no heartbeat URL, so it cannot call a model and cannot fa
 | guarantee | enforced by | proven by |
 |---|---|---|
 | Anonymous requests read nothing | no privilege for `anon` on any table | `tests/integration/test_stats_access.py` (real Postgres, acting as `anon`); security check; mutation |
-| Only the owner-flagged account reads, and only these three tables | SELECT grant to `authenticated` on three tables + one claim policy each | integration: the viewer reads; five non-viewer tokens, including a self-set `user_metadata` flag, see 0 rows |
-| No write, delete, truncate or create; no access to the record | no other privilege; RLS on every table; no CREATE on `public` | integration: every write, create and record-read attempt as the viewer refused; a read-only check of the live `public` schema |
+| Only the dashboard account in a two-factor session reads, and only these three tables (since 2026-10-21) | SELECT grant to `authenticated` on three tables + one policy each: exact user id AND aal2 | integration: that account at aal2 reads; seven other tokens (aal1, no aal claim, another account, the old flag, a self-set `user_metadata` flag, no account, no claims) see 0 rows. Live, read-only and rolled back: the real accounts' ids give the same answers |
+| No write, delete, truncate or create; no access to the record | no other privilege; RLS on every table; no CREATE on `public` | integration: every write, create and record-read attempt as the reader refused; a read-only check of the live `public` schema |
 | An incident can never be edited or erased | append-only trigger, applied to every role including the owner; the job role holds INSERT only | integration (UPDATE and DELETE refused even as the owner); static test; mutations |
-| The surface cannot widen quietly | `python -m agent.database.security` (watchdog): exactly these tables, `authenticated` only, SELECT only, exactly the claim condition, no view, no callable function | unit tests (12 widening variants), integration (5 live-style widenings reported), mutations |
+| The surface cannot widen quietly | `python -m agent.database.security` (watchdog): exactly these tables, `authenticated` only, SELECT only, exactly the one condition, at most ONE API-reaching policy per table (permissive policies OR together), no view, no callable function, no extra role for the API login role | unit tests (17 widening variants, three second-policy cases, the API roles), integration (6 live-style widenings reported, an exact second copy included), mutations |
 | The writers write only the reporting tables | their SQL; the job role's grants (checked by the watchdog's role check) | `tests/test_reporting_separation.py`; integration: the job role publishes and records, and is refused DELETE, TRUNCATE, DROP, RLS-off, incident edits and record writes; mutations |
 | Recorded events are trustworthy | strict validation of every event field; event data never in a shell line | `tests/test_reporting_incidents.py` (12 hostile inputs refused); separation test; mutations |
 | The website and reporting cannot reach the prediction system | nothing in `agent/` (outside the reporting package), `run.py`, `tools/` or any other workflow imports or runs the reporting layer or names its tables; separate concurrency groups | `tests/test_reporting_separation.py`; mutations |

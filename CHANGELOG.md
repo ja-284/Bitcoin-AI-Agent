@@ -5,6 +5,33 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## security — 2026-10-21 (the reporting tables: one dashboard account, two-factor only; the user's approval)
+
+- **The change:** in `agent/reporting/schema.sql`, the read policy `stats_viewer_read` (any account with the owner-set
+  flag `app_metadata.reporting_viewer`) is replaced on the three reporting tables by `control_center_read`:
+  `auth.uid() = '9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuid AND (auth.jwt() ->> 'aal') = 'aal2'`.
+  - That id is the Bitcoin AI Control Center's dedicated account; aal2 is a session that passed the authenticator
+    step.
+  - It is applied with `python -m agent.migrate`. The grant is unchanged (SELECT for `authenticated`).
+- **Security check** (`agent/database/security.py`):
+  - it expects exactly that condition (`DASHBOARD_USER_ID`);
+  - it now also refuses a second API-reaching policy on these tables, because PostgreSQL ORs permissive policies;
+  - it refuses any role beyond anon, authenticated and service_role that the API's login role may switch into.
+  - An absent policy passes as closed, so the emergency deny-all raises no alarm.
+- **Rollout:**
+  1. `b0f4015` taught the check the new rule, accepting the old one alone during the transition;
+  2. this commit removes that acceptance.
+- **Tests:**
+  - unit: the exact condition and policy name in the schema file; 17 widening variants, three second-policy cases,
+    the API roles, the old flag now reported, no policy passing as closed;
+  - integration: the account at aal2 reads; aal1, no aal, another account, the old flag, a `user_metadata` flag,
+    no account and no claims all see 0 rows; anon is refused; 6 widenings reported, an exact second copy included.
+  - Mutation guards: 4 new (the OR rule, the API roles, the account half, the aal2 half), 2 retargeted.
+- **Docs:** `stats_access.md` §2 (with the emergency deny-all SQL), the handoff, `security.md`, `reporting_v1.md`,
+  STATUS, `status.json`, `open_user_actions.md` item 6 (superseded).
+- **Not changed:** the writer role's (`bitcoin_agent`) policies and grants, the publisher, the hourly workflow, the
+  prediction system, the models and the research tracks. No account was created, changed or deleted.
+
 ## research — 2026-10-21 (direction-first review: architecture, outside evidence, ranked roadmap; read-only)
 
 `research/DIRECTION_RESEARCH_REVIEW_2026-10-21.md` is a report only.

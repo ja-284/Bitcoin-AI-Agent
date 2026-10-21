@@ -78,9 +78,8 @@ def test_the_only_read_surface_is_two_cache_tables_for_signed_in_viewers():
     # 2026-10-21 (the user's approval): one named dashboard account, in a two-factor (aal2) session, nothing else
     assert security.DASHBOARD_USER_ID == "9e021560-dd06-40f1-80ad-d58d44d9a3f6"
     assert security.VIEWER_CONDITION == "auth.uid='9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuidandauth.jwt->>'aal'='aal2'"
-    # the rollout's transition: the old flag rule is accepted alone until the live migration, never alongside
-    assert security.ACCEPTED_VIEWER_CONDITIONS == (security.VIEWER_CONDITION,
-                                                   "auth.jwt->'app_metadata'->>'reporting_viewer'='true'")
+    # exactly one accepted condition: the old flag rule's brief transition (b0f4015) is over
+    assert security.ACCEPTED_VIEWER_CONDITIONS == (security.VIEWER_CONDITION,)
     assert security.API_SWITCHABLE_ROLES == {"anon", "authenticated", "service_role"}
     assert not set(security.VIEWER_READ_TABLES) & {"predictions", "prediction_outcomes", "shadow_move_size",
                                                      "shadow_run_errors", "backend_state", "schema_meta"}
@@ -94,12 +93,14 @@ def test_the_reporting_schema_file_opens_exactly_the_designed_surface():
     policies = re.findall(r"CREATE POLICY (\w+) ON %I FOR (\w+) TO (\w+)\s+USING \((.*?)\)\$p\$", sql, flags=re.S)
     assert len(policies) == 1, policies
     name, command, role, condition = policies[0]
-    assert (command, role) == ("SELECT", "authenticated")
-    assert security._normalised(condition) in security.ACCEPTED_VIEWER_CONDITIONS
+    assert (name, command, role) == ("control_center_read", "SELECT", "authenticated")
+    assert security._normalised(condition) == security.VIEWER_CONDITION  # the exact account AND aal2, one place each
     grants = re.findall(r"GRANT (.+?) ON TABLE %I TO ([\w, ]+)'", sql)  # the WHOLE grantee list, not its first name
     assert grants == [("SELECT", "authenticated")], grants
-    code = re.sub(r"--[^\n]*", "", sql)  # the comments explain user_metadata; the SQL must never use it
-    assert "TO anon" not in code and "user_metadata" not in code and "app_metadata" in code
+    code = re.sub(r"--[^\n]*", "", sql)  # the comments explain the old flag; the SQL must never use a metadata claim
+    assert "TO anon" not in code and "user_metadata" not in code and "app_metadata" not in code
+    assert code.count(security.DASHBOARD_USER_ID) == 1 and "'aal2'" in code
+    assert "DROP POLICY IF EXISTS stats_viewer_read ON %I" in code  # the old flag rule is removed wherever it exists
     arrays = [tuple(re.findall(r"'(\w+)'", a)) for a in re.findall(r"ARRAY\[('reporting_[^\]]+)\]", sql)]
     assert arrays == [security.VIEWER_READ_TABLES] * 2, arrays  # the lockdown loop and the grant loop name the same tables
 
@@ -173,11 +174,23 @@ def _viewer(**kw):
     return pol
 
 
-@pytest.mark.parametrize("qual", [QUAL, LEGACY_QUAL], ids=["dashboard-account-aal2", "transition-legacy-flag"])
-def test_the_viewer_tables_pass_exactly_as_designed(qual):
-    tables = {t: _t(grants={"anon": [], "authenticated": ["SELECT"]}, policies=[_viewer(qual=qual)])
+def test_the_viewer_tables_pass_exactly_as_designed():
+    tables = {t: _t(grants={"anon": [], "authenticated": ["SELECT"]}, policies=[_viewer()])
               for t in security.VIEWER_READ_TABLES}
     tables["predictions"] = _t()
+    assert security.judge(tables) == []
+
+
+def test_the_old_flag_rule_is_reported_now_that_the_transition_is_over():
+    (problem,) = security.judge({"reporting_runs": _t(grants={"authenticated": ["SELECT"]},
+                                                      policies=[_viewer(name="stats_viewer_read", qual=LEGACY_QUAL)])})
+    assert problem.startswith("reporting_runs: policy `stats_viewer_read` lets through more than the designed"), problem
+
+
+def test_no_policy_at_all_is_closed_and_passes_so_the_emergency_deny_all_raises_no_alarm():
+    """docs/api/stats_access.md: dropping the policy denies every reader; that is closed, not exposed."""
+    tables = {t: _t(grants={"authenticated": ["SELECT"]}, policies=[_pol("backend_read", ["bitcoin_agent"], "SELECT")])
+              for t in security.VIEWER_READ_TABLES}
     assert security.judge(tables) == []
 
 
