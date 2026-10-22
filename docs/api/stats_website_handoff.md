@@ -11,6 +11,10 @@ target, or calls anything else.** The backend side is finished and live (since 2
 fields marked *2026-10-05* since 2026-10-05). Full field reference: `docs/api/reporting_v1.md`. Security
 boundary and its proofs: `docs/api/stats_access.md`.
 
+**The complete data contract for the Lovable build (2026-10-22)** is in `docs/api/dashboard/`: contract v1,
+Supplement S1, TypeScript types, fictional fixtures and an UNTESTED reference JavaScript module. Start with its
+`README.md`. Where this page and that folder differ in detail, the folder applies.
+
 ## 1. Connection and sign-in
 
 | what | value |

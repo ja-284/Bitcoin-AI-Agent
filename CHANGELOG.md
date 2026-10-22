@@ -5,6 +5,20 @@ Two version stamps travel with every prediction (see `agent/version.py`):
 (the formulas, weights and thresholds). They move independently so that later
 analysis can always tell which version produced a row.
 
+## docs — 2026-10-22 (the dashboard data contract preserved; documentation only, the user's approval)
+
+- **New folder `docs/api/dashboard/`:**
+  - `README.md`;
+  - `dashboard_data_contract_v1.md` (contract v1, verbatim, with a preservation header and two marked notes);
+  - `dashboard_contract_v1_supplement_s1.md` (Supplement S1; its code and JSON blocks are inserted byte-for-byte from
+    the files);
+  - `dashboard_contract_v1.ts` (generated TypeScript, not yet compiled);
+  - `dashboard_fixtures_v1.json` (fictional, produced by the real reporting code);
+  - `dashboard_reporting_client.js` (UNTESTED reference material, not production-ready).
+- **Derived from:** `a9abca0`, reporting contract version `"1"`.
+- **Pointer:** `docs/api/stats_website_handoff.md` now points to the folder.
+- **Nothing else changed:** no code, schema, policy, workflow, model or research track.
+
 ## security — 2026-10-21 (the reporting tables: one dashboard account, two-factor only; the user's approval)
 
 - **The change:** in `agent/reporting/schema.sql`, the read policy `stats_viewer_read` (any account with the owner-set

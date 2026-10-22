@@ -1,0 +1,3244 @@
+{
+  "_about": "FICTIONAL fixtures for dashboard data contract v1. Produced by the real reporting code (agent.reporting.publish.build / agent.reporting.views at a9abca0) on invented records dated 2030. No real prediction, outcome, secret or personal data.",
+  "fictional": true,
+  "reporting_contract_version": "1",
+  "source_backend_commit": "a9abca0",
+  "main": {
+    "reporting_snapshot_row": {
+      "id": 1,
+      "reporting_contract_version": "1",
+      "as_known_at": "2030-01-15T08:14:05.123456+00:00",
+      "generated_at": "2030-01-15T08:14:05.123456+00:00",
+      "document": {
+        "reporting_contract_version": "1",
+        "kind": "all",
+        "as_known_at": "2030-01-15T08:14:05.123456+00:00",
+        "generated_at": "2030-01-15T08:14:05.123456+00:00",
+        "read_only": true,
+        "descriptive_only": true,
+        "never_use_for": [
+          "tuning, refitting or recalibrating any model",
+          "choosing features, thresholds, horizons, targets or algorithms",
+          "changing, pre-empting or replacing a registered checkpoint (research/LIVE_EVALUATION.md)",
+          "trading or investment decisions: this system does not trade and is not financial advice"
+        ],
+        "limitations": [
+          "The BUY/HOLD/SELL signal has no demonstrated predictive value (E001, E017).",
+          "The confidence number is a heuristic about agreement and completeness, not a probability.",
+          "Only the move-size probability is calibrated, and only on validation data so far.",
+          "Most of the move-size model's skill is simply knowing how volatile the market is right now, which a plain average of recent hours also captures; its own added value is the smaller part (E019, E021).",
+          "The question itself gets easier and harder with the market: across years, the share of hours with a move over 0.25% has ranged from 34% to 68% (E021).",
+          "Nothing here is a direction forecast: no directional edge was found in the free data (E011).",
+          "This system does not trade, hold funds, or place orders of any kind, and is not investment advice."
+        ],
+        "body": {
+          "overview": {
+            "latest_hour": "2030-01-15T07:00:00+00:00",
+            "latest_signal": {
+              "value": "SELL",
+              "evidence_status": "no_demonstrated_predictive_value",
+              "evidence": "This signal has not been shown to predict anything."
+            },
+            "latest_confidence": {
+              "value": 0.6634,
+              "kind": "heuristic",
+              "is_probability": false,
+              "meaning": "A consistency and completeness estimate, not a probability. It rises when the independent categories agree with each other and when all the data was available. It has been checked against real outcomes and carries no information about whether the signal turns out to be right (E001, E017).",
+              "components": {"agreement": 0.3268, "completeness": 1.0}
+            },
+            "latest_move_size": {
+              "available": true,
+              "separate_from_signal": "research shadow model; it has never influenced the BUY/HOLD/SELL signal",
+              "status": "research_shadow_only",
+              "model_version": "move_size_1h_v1",
+              "horizon_hours": 1,
+              "threshold_pct": 0.25,
+              "probability": {
+                "value": 0.0997,
+                "kind": "calibrated_probability",
+                "is_probability": true,
+                "meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013)."
+              },
+              "prospective": true,
+              "outcome": {"state": "pending", "matures_at": "2030-01-15T09:00:00+00:00"}
+            },
+            "latest_matured_hour": "2030-01-15T06:00:00+00:00",
+            "latest_matured_1h_outcome": {
+              "state": "graded",
+              "matured_at": "2030-01-15T08:00:00+00:00",
+              "checked_at": "2030-01-15T08:12:40+00:00",
+              "return": 0.00017166508777188838,
+              "direction": "UP",
+              "signal_stated_direction": "UP",
+              "signal_vs_actual": "matched"
+            },
+            "latest_matured_move_size": {
+              "available": true,
+              "separate_from_signal": "research shadow model; it has never influenced the BUY/HOLD/SELL signal",
+              "status": "research_shadow_only",
+              "model_version": "move_size_1h_v1",
+              "horizon_hours": 1,
+              "threshold_pct": 0.25,
+              "probability": {
+                "value": 0.4219,
+                "kind": "calibrated_probability",
+                "is_probability": true,
+                "meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013)."
+              },
+              "prospective": true,
+              "outcome": {
+                "state": "graded",
+                "matured_at": "2030-01-15T08:00:00+00:00",
+                "checked_at": "2030-01-15T08:13:10+00:00",
+                "return": 0.00017166508777188838,
+                "direction": "UP",
+                "large_move": false,
+                "absolute_move": 0.00017166508777188838
+              }
+            },
+            "health": "healthy",
+            "current_warning": null,
+            "prospective_progress": {
+              "prospective_graded_hours": 197,
+              "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+              "next_checkpoint_hours": 500,
+              "hours_remaining": 303,
+              "expected_around": "2030-01-27T23:14:05.123456+00:00",
+              "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+              "reached": [],
+              "computed_readings": {},
+              "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+              "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+            }
+          },
+          "latest_run": {
+            "hour": "2030-01-15T07:00:00+00:00",
+            "information_cutoff": "2030-01-15T08:00:00+00:00",
+            "data_fetched_at": "2030-01-15T08:12:31+00:00",
+            "saved_at": "2030-01-15T08:12:56+00:00",
+            "timing": {
+              "start_lag_seconds": 751.0,
+              "analysis_seconds": 25.0,
+              "job_wall_time_seconds": null,
+              "note": "start lag = candle close -> data fetched; analysis = data fetched -> row saved. The whole GitHub job's duration is not stored in the database (see the Actions run)."
+            },
+            "signal": {
+              "value": "SELL",
+              "evidence_status": "no_demonstrated_predictive_value",
+              "evidence": "This signal has not been shown to predict anything."
+            },
+            "overall_score": {
+              "value": -0.3064,
+              "kind": "score",
+              "is_probability": false,
+              "meaning": "The weighted combination of the category scores, from -1 to +1. A score, not a probability and not an expected return."
+            },
+            "confidence": {
+              "value": 0.6634,
+              "kind": "heuristic",
+              "is_probability": false,
+              "meaning": "A consistency and completeness estimate, not a probability. It rises when the independent categories agree with each other and when all the data was available. It has been checked against real outcomes and carries no information about whether the signal turns out to be right (E001, E017).",
+              "components": {"agreement": 0.3268, "completeness": 1.0}
+            },
+            "price": {
+              "value": 9438.6,
+              "kind": "price",
+              "is_probability": false,
+              "meaning": "Bitcoin's closing price at the information cutoff, in US dollars."
+            },
+            "versions": {
+              "pipeline": "0.2.0",
+              "scoring": "0.2.0",
+              "ai_news": "claude-haiku-4-5",
+              "ai_explanation": "claude-sonnet-5",
+              "code_commit": "0000000000000000000000000000000000000000"
+            },
+            "run": {
+              "status": "ok",
+              "problems": [],
+              "price_source": "binance",
+              "fallback_used": false,
+              "price_is_estimated": false,
+              "completeness": 1.0,
+              "news": {"available": true, "items_used": 44, "error_type": null, "sources_failed": []},
+              "explanation_available": true,
+              "database_role": "bitcoin_agent"
+            },
+            "outcomes": {
+              "1h": {"state": "pending", "matures_at": "2030-01-15T09:00:00+00:00"},
+              "6h": {"state": "pending", "matures_at": "2030-01-15T14:00:00+00:00"},
+              "24h": {"state": "pending", "matures_at": "2030-01-16T08:00:00+00:00"},
+              "72h": {"state": "pending", "matures_at": "2030-01-18T08:00:00+00:00"},
+              "168h": {"state": "pending", "matures_at": "2030-01-22T08:00:00+00:00"}
+            },
+            "outcomes_note": "Raw price change after the reference close, as a fraction (0.0044 = +0.44%), and its direction by the registered binary rule (UP if > 0). `signal_vs_actual` compares that with the direction the signal stated (BUY = UP, SELL = DOWN; HOLD states none). Bitcoin drifts on its own: a rise after a BUY is not evidence the signal worked, and no profit is implied.",
+            "move_size": {
+              "available": true,
+              "separate_from_signal": "research shadow model; it has never influenced the BUY/HOLD/SELL signal",
+              "status": "research_shadow_only",
+              "model_version": "move_size_1h_v1",
+              "horizon_hours": 1,
+              "threshold_pct": 0.25,
+              "probability": {
+                "value": 0.0997,
+                "kind": "calibrated_probability",
+                "is_probability": true,
+                "meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013)."
+              },
+              "prospective": true,
+              "outcome": {"state": "pending", "matures_at": "2030-01-15T09:00:00+00:00"}
+            }
+          },
+          "latest_matured_run": {
+            "hour": "2030-01-15T06:00:00+00:00",
+            "information_cutoff": "2030-01-15T07:00:00+00:00",
+            "data_fetched_at": "2030-01-15T07:12:31+00:00",
+            "saved_at": "2030-01-15T07:12:56+00:00",
+            "timing": {
+              "start_lag_seconds": 751.0,
+              "analysis_seconds": 25.0,
+              "job_wall_time_seconds": null,
+              "note": "start lag = candle close -> data fetched; analysis = data fetched -> row saved. The whole GitHub job's duration is not stored in the database (see the Actions run)."
+            },
+            "signal": {"value": "BUY", "evidence_status": "no_demonstrated_predictive_value", "evidence": "This signal has not been shown to predict anything."},
+            "overall_score": {
+              "value": 0.2123,
+              "kind": "score",
+              "is_probability": false,
+              "meaning": "The weighted combination of the category scores, from -1 to +1. A score, not a probability and not an expected return."
+            },
+            "confidence": {
+              "value": 0.8691,
+              "kind": "heuristic",
+              "is_probability": false,
+              "meaning": "A consistency and completeness estimate, not a probability. It rises when the independent categories agree with each other and when all the data was available. It has been checked against real outcomes and carries no information about whether the signal turns out to be right (E001, E017).",
+              "components": {"agreement": 0.7383, "completeness": 1.0}
+            },
+            "price": {
+              "value": 9436.98,
+              "kind": "price",
+              "is_probability": false,
+              "meaning": "Bitcoin's closing price at the information cutoff, in US dollars."
+            },
+            "versions": {
+              "pipeline": "0.2.0",
+              "scoring": "0.2.0",
+              "ai_news": "claude-haiku-4-5",
+              "ai_explanation": "claude-sonnet-5",
+              "code_commit": "0000000000000000000000000000000000000000"
+            },
+            "run": {
+              "status": "ok",
+              "problems": [],
+              "price_source": "binance",
+              "fallback_used": false,
+              "price_is_estimated": false,
+              "completeness": 1.0,
+              "news": {"available": true, "items_used": 51, "error_type": null, "sources_failed": []},
+              "explanation_available": true,
+              "database_role": "bitcoin_agent"
+            },
+            "outcomes": {
+              "1h": {
+                "state": "graded",
+                "matured_at": "2030-01-15T08:00:00+00:00",
+                "checked_at": "2030-01-15T08:12:40+00:00",
+                "return": 0.00017166508777188838,
+                "direction": "UP",
+                "signal_stated_direction": "UP",
+                "signal_vs_actual": "matched"
+              },
+              "6h": {"state": "pending", "matures_at": "2030-01-15T13:00:00+00:00"},
+              "24h": {"state": "pending", "matures_at": "2030-01-16T07:00:00+00:00"},
+              "72h": {"state": "pending", "matures_at": "2030-01-18T07:00:00+00:00"},
+              "168h": {"state": "pending", "matures_at": "2030-01-22T07:00:00+00:00"}
+            },
+            "outcomes_note": "Raw price change after the reference close, as a fraction (0.0044 = +0.44%), and its direction by the registered binary rule (UP if > 0). `signal_vs_actual` compares that with the direction the signal stated (BUY = UP, SELL = DOWN; HOLD states none). Bitcoin drifts on its own: a rise after a BUY is not evidence the signal worked, and no profit is implied.",
+            "move_size": {
+              "available": true,
+              "separate_from_signal": "research shadow model; it has never influenced the BUY/HOLD/SELL signal",
+              "status": "research_shadow_only",
+              "model_version": "move_size_1h_v1",
+              "horizon_hours": 1,
+              "threshold_pct": 0.25,
+              "probability": {
+                "value": 0.4219,
+                "kind": "calibrated_probability",
+                "is_probability": true,
+                "meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013)."
+              },
+              "prospective": true,
+              "outcome": {
+                "state": "graded",
+                "matured_at": "2030-01-15T08:00:00+00:00",
+                "checked_at": "2030-01-15T08:13:10+00:00",
+                "return": 0.00017166508777188838,
+                "direction": "UP",
+                "large_move": false,
+                "absolute_move": 0.00017166508777188838
+              }
+            }
+          },
+          "signal_statistics": {
+            "evidence": {
+              "status": "no_demonstrated_predictive_value",
+              "headline": "This signal has not been shown to predict anything.",
+              "detail": "Tested over 68,619 historical hours at five time horizons against simple baselines, the BUY/HOLD/SELL signal showed no evidence of predictive information at any horizon, under both scoring 0.1.0 and the corrected scoring 0.2.0. It is recorded and measured so that it can be improved; it is not advice and must never be presented as a forecast.",
+              "experiments": ["E001", "E002", "E011", "E017"]
+            },
+            "what_this_is": "How often each signal was followed by a rise, next to how often ALL hours were. A signal that looks different from 'all hours' on a small sample is still no evidence; the signal was tested on 68,619 historical hours and showed none (E001, E017).",
+            "population": {"runs": 199, "pipeline_version": "0.2.0", "excluded_older_pipeline_runs": 0, "scoring_versions": {"0.2.0": 199}},
+            "signal_counts": {"BUY": 66, "HOLD": 65, "SELL": 68},
+            "confidence": {
+              "kind": "heuristic",
+              "is_probability": false,
+              "meaning": "A consistency and completeness estimate, not a probability. It rises when the independent categories agree with each other and when all the data was available. It has been checked against real outcomes and carries no information about whether the signal turns out to be right (E001, E017).",
+              "mean": 0.7993452261306532,
+              "note": "Not a probability, so no calibration or Brier score is computed for it."
+            },
+            "by_horizon": {
+              "1h": {
+                "BUY": {
+                  "graded": 66,
+                  "pending": 0,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 66,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "66 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.4090909090909091,
+                  "share_ci95": null,
+                  "mean_return": -0.0002964856609982153,
+                  "median_return": -0.0007845064683558167
+                },
+                "HOLD": {
+                  "graded": 65,
+                  "pending": 0,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 65,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "65 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.4461538461538462,
+                  "share_ci95": null,
+                  "mean_return": -0.00013703250903713315,
+                  "median_return": -0.00020161888708414288
+                },
+                "SELL": {
+                  "graded": 67,
+                  "pending": 1,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 67,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "67 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.43283582089552236,
+                  "share_ci95": null,
+                  "mean_return": -0.0004732377213346905,
+                  "median_return": -0.00041129558108043973
+                },
+                "ALL": {
+                  "graded": 198,
+                  "pending": 1,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 198,
+                    "level": "early_intervals_optimistic",
+                    "intervals": "shown_but_too_narrow",
+                    "is_verdict": false,
+                    "headline": "198 hours: intervals are shown, but below 2,000 hours they are known to be too narrow (E025). Still descriptive, still not a verdict."
+                  },
+                  "share_followed_by_a_rise": 0.4292929292929293,
+                  "share_ci95": [0.3623390184493556, 0.4989383396373817],
+                  "mean_return": -0.0003039499699127279,
+                  "median_return": -0.0004960796223736907
+                },
+                "acted_direction_agreement": {
+                  "acted_graded": 133,
+                  "sample": {
+                    "n": 133,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "133 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                  "majority_direction_share_all_hours": 0.5707070707070707,
+                  "matched_share": 0.48872180451127817,
+                  "matched_ci95": null
+                }
+              },
+              "6h": {
+                "BUY": {
+                  "graded": 65,
+                  "pending": 1,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 65,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "65 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.46153846153846156,
+                  "share_ci95": null,
+                  "mean_return": -0.0005683435977142834,
+                  "median_return": -0.0006534315946503666
+                },
+                "HOLD": {
+                  "graded": 63,
+                  "pending": 2,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 63,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "63 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.42857142857142855,
+                  "share_ci95": null,
+                  "mean_return": -0.0013772650677863609,
+                  "median_return": -0.0026723026507484704
+                },
+                "SELL": {
+                  "graded": 65,
+                  "pending": 3,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 65,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "65 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.27692307692307694,
+                  "share_ci95": null,
+                  "mean_return": -0.003760420691495169,
+                  "median_return": -0.0034268258588650014
+                },
+                "ALL": {
+                  "graded": 193,
+                  "pending": 6,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 193,
+                    "level": "early_intervals_optimistic",
+                    "intervals": "shown_but_too_narrow",
+                    "is_verdict": false,
+                    "headline": "193 hours: intervals are shown, but below 2,000 hours they are known to be too narrow (E025). Still descriptive, still not a verdict."
+                  },
+                  "share_followed_by_a_rise": 0.38860103626943004,
+                  "share_ci95": [0.3226459357210495, 0.4589043056913348],
+                  "mean_return": -0.001907447554762462,
+                  "median_return": -0.0022876970374748895
+                },
+                "acted_direction_agreement": {
+                  "acted_graded": 130,
+                  "sample": {
+                    "n": 130,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "130 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                  "majority_direction_share_all_hours": 0.6113989637305699,
+                  "matched_share": 0.5923076923076923,
+                  "matched_ci95": null
+                }
+              },
+              "24h": {
+                "BUY": {
+                  "graded": 57,
+                  "pending": 9,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 57,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "57 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.2982456140350877,
+                  "share_ci95": null,
+                  "mean_return": -0.010557492984978066,
+                  "median_return": -0.01095153800151838
+                },
+                "HOLD": {
+                  "graded": 59,
+                  "pending": 6,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 59,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "59 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.288135593220339,
+                  "share_ci95": null,
+                  "mean_return": -0.01057922160857425,
+                  "median_return": -0.01622727755926434
+                },
+                "SELL": {
+                  "graded": 59,
+                  "pending": 9,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 59,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "59 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.3559322033898305,
+                  "share_ci95": null,
+                  "mean_return": -0.010310214471779907,
+                  "median_return": -0.011094549892476269
+                },
+                "ALL": {
+                  "graded": 175,
+                  "pending": 24,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 175,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "175 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.3142857142857143,
+                  "share_ci95": null,
+                  "mean_return": -0.0104814504507694,
+                  "median_return": -0.011967595932826258
+                },
+                "acted_direction_agreement": {
+                  "acted_graded": 116,
+                  "sample": {
+                    "n": 116,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "116 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                  "majority_direction_share_all_hours": 0.6857142857142857,
+                  "matched_share": 0.47413793103448276,
+                  "matched_ci95": null
+                }
+              },
+              "72h": {
+                "BUY": {
+                  "graded": 41,
+                  "pending": 25,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 41,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "41 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.04878048780487805,
+                  "share_ci95": null,
+                  "mean_return": -0.032002444136566076,
+                  "median_return": -0.030354734898128122
+                },
+                "HOLD": {
+                  "graded": 48,
+                  "pending": 17,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 48,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "48 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.125,
+                  "share_ci95": null,
+                  "mean_return": -0.02831154705712025,
+                  "median_return": -0.02419519064977943
+                },
+                "SELL": {
+                  "graded": 38,
+                  "pending": 30,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 38,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "38 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.05263157894736842,
+                  "share_ci95": null,
+                  "mean_return": -0.03213111771786471,
+                  "median_return": -0.026749457132431764
+                },
+                "ALL": {
+                  "graded": 127,
+                  "pending": 72,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 127,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "127 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.07874015748031496,
+                  "share_ci95": null,
+                  "mean_return": -0.03064596017023496,
+                  "median_return": -0.026860424024741092
+                },
+                "acted_direction_agreement": {
+                  "acted_graded": 79,
+                  "sample": {
+                    "n": 79,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "79 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                  "majority_direction_share_all_hours": 0.9212598425196851,
+                  "matched_share": 0.4810126582278481,
+                  "matched_ci95": null
+                }
+              },
+              "168h": {
+                "BUY": {
+                  "graded": 8,
+                  "pending": 58,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 8,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "8 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.0,
+                  "share_ci95": null,
+                  "mean_return": -0.07409800611513417,
+                  "median_return": -0.07216570711307341
+                },
+                "HOLD": {
+                  "graded": 17,
+                  "pending": 48,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 17,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "17 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.0,
+                  "share_ci95": null,
+                  "mean_return": -0.07615039014128185,
+                  "median_return": -0.07766108553337947
+                },
+                "SELL": {
+                  "graded": 7,
+                  "pending": 61,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 7,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "7 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.0,
+                  "share_ci95": null,
+                  "mean_return": -0.07686378071405942,
+                  "median_return": -0.07927092890637377
+                },
+                "ALL": {
+                  "graded": 32,
+                  "pending": 167,
+                  "overdue": 0,
+                  "unavailable": 0,
+                  "sample": {
+                    "n": 32,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "32 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "share_followed_by_a_rise": 0.0,
+                  "share_ci95": null,
+                  "mean_return": -0.07579334832254002,
+                  "median_return": -0.0771697994303141
+                },
+                "acted_direction_agreement": {
+                  "acted_graded": 15,
+                  "sample": {
+                    "n": 15,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "15 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  },
+                  "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                  "majority_direction_share_all_hours": 1.0,
+                  "matched_share": 0.4666666666666667,
+                  "matched_ci95": null
+                }
+              }
+            }
+          },
+          "move_size_statistics": {
+            "what_this_is": "The research shadow model's stated chance of a move larger than the threshold in the next hour, against what happened. Separate from the BUY/HOLD/SELL signal, which it never influences.",
+            "status": {
+              "status": "research_shadow_only",
+              "detail": "This probability runs alongside the live system in its own record and has never influenced the BUY/HOLD/SELL signal. Its calibration was measured on 2024-2025 validation data; its prospective record began on 2026-09-21 and is judged at 500, 2,000 and 5,000 hours. The final sealed holdout has not been opened.",
+              "experiments": ["E012", "E013", "E018", "E019", "E020", "E021"]
+            },
+            "probability_meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013).",
+            "rows": 198,
+            "row_states": {"graded": 197, "pending": 1, "overdue": 0, "outcome_unavailable": 0, "no_probability": 0},
+            "not_prospective": 0,
+            "model_versions": {"move_size_1h_v1": 198},
+            "sample": {
+              "n": 197,
+              "level": "early_intervals_optimistic",
+              "intervals": "shown_but_too_narrow",
+              "is_verdict": false,
+              "headline": "197 hours: intervals are shown, but below 2,000 hours they are known to be too narrow (E025). Still descriptive, still not a verdict."
+            },
+            "checkpoint_progress": {
+              "prospective_graded_hours": 197,
+              "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+              "next_checkpoint_hours": 500,
+              "hours_remaining": 303,
+              "expected_around": "2030-01-27T23:14:05.123456+00:00",
+              "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+              "reached": [],
+              "computed_readings": {},
+              "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+              "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+            },
+            "running_figures": {
+              "n": 197,
+              "large_move_share": 0.3756345177664975,
+              "mean_stated_p": 0.21538223350253807,
+              "brier_rel_gain": -0.1262747920226326,
+              "brier_rel_gain_ci95": [-0.24760975279898761, -0.0396146403505121],
+              "accuracy": 0.6243654822335025,
+              "accuracy_ci95": [0.5549665660758544, 0.6890067940248418],
+              "naive_rate": 0.6243654822335025,
+              "rho": -0.028108815711518725,
+              "rho_ci95": [-0.17009875543059907, 0.07705504655025451],
+              "ece": 0.1602522842639594,
+              "ece_ci95": [0.10201964467005077, 0.23939045685279187],
+              "brier": 0.26414886126903553,
+              "brier_of_the_observed_rate": 0.23453322682882832,
+              "calibration_bins": [
+                {
+                  "from": 0.0,
+                  "to": 0.1,
+                  "n": 19,
+                  "stated": 0.07730526315789472,
+                  "observed": 0.42105263157894735,
+                  "observed_ci95": [0.2314162039203038, 0.6372444853483988],
+                  "enough_rows": false
+                },
+                {
+                  "from": 0.1,
+                  "to": 0.2,
+                  "n": 75,
+                  "stated": 0.160084,
+                  "observed": 0.37333333333333335,
+                  "observed_ci95": [0.2725580313531414, 0.4864524402760493],
+                  "enough_rows": false
+                },
+                {
+                  "from": 0.2,
+                  "to": 0.3,
+                  "n": 74,
+                  "stated": 0.24666216216216216,
+                  "observed": 0.32432432432432434,
+                  "observed_ci95": [0.22863921647459506, 0.43734914964326477],
+                  "enough_rows": false
+                },
+                {
+                  "from": 0.3,
+                  "to": 0.4,
+                  "n": 19,
+                  "stated": 0.33554736842105265,
+                  "observed": 0.47368421052631576,
+                  "observed_ci95": [0.27329505487448547, 0.6829251748817489],
+                  "enough_rows": false
+                },
+                {
+                  "from": 0.4,
+                  "to": 0.5,
+                  "n": 10,
+                  "stated": 0.43268000000000006,
+                  "observed": 0.5,
+                  "observed_ci95": [0.23658959361548731, 0.7634104063845126],
+                  "enough_rows": false
+                }
+              ],
+              "note": "Every prospective graded hour known at this moment. Descriptive; the registered readings are the checkpoint files, and the only verdicts are at 2,000 (E012) and 5,000 (E013) hours."
+            }
+          },
+          "move_size_breakdowns": {
+            "slices": {
+              "hour_block_utc": {
+                "00-06": {
+                  "n": 53,
+                  "large_move_share": 0.3018867924528302,
+                  "mean_stated_p": 0.2054754716981132,
+                  "brier_rel_gain": -0.0007082804729727776,
+                  "ece": 0.09641132075471699,
+                  "sample": {
+                    "n": 53,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "53 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                },
+                "06-12": {
+                  "n": 48,
+                  "large_move_share": 0.4583333333333333,
+                  "mean_stated_p": 0.23619791666666665,
+                  "brier_rel_gain": -0.2191787583216782,
+                  "ece": 0.22213541666666667,
+                  "sample": {
+                    "n": 48,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "48 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                },
+                "12-18": {
+                  "n": 48,
+                  "large_move_share": 0.375,
+                  "mean_stated_p": 0.2029895833333333,
+                  "brier_rel_gain": -0.1669738622222221,
+                  "ece": 0.22028541666666668,
+                  "sample": {
+                    "n": 48,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "48 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                },
+                "18-24": {
+                  "n": 48,
+                  "large_move_share": 0.375,
+                  "mean_stated_p": 0.21789791666666666,
+                  "brier_rel_gain": -0.17356445955555566,
+                  "ece": 0.21951458333333332,
+                  "sample": {
+                    "n": 48,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "48 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                }
+              },
+              "weekday_weekend": {
+                "weekday": {
+                  "n": 149,
+                  "large_move_share": 0.4161073825503356,
+                  "mean_stated_p": 0.21893422818791947,
+                  "brier_rel_gain": -0.18501008183537304,
+                  "ece": 0.19717315436241606,
+                  "sample": {
+                    "n": 149,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "149 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                },
+                "weekend": {
+                  "n": 48,
+                  "large_move_share": 0.25,
+                  "mean_stated_p": 0.20435625000000002,
+                  "brier_rel_gain": -0.015374454444444519,
+                  "ece": 0.11262708333333331,
+                  "sample": {
+                    "n": 48,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "48 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                }
+              },
+              "recent_vs_earlier": {
+                "earlier": {
+                  "n": 29,
+                  "large_move_share": 0.5517241379310345,
+                  "mean_stated_p": 0.22770344827586209,
+                  "brier_rel_gain": -0.4706267742307695,
+                  "ece": 0.3240206896551724,
+                  "sample": {
+                    "n": 29,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "29 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                },
+                "last_168_graded_hours": {
+                  "n": 168,
+                  "large_move_share": 0.34523809523809523,
+                  "mean_stated_p": 0.21325535714285715,
+                  "brier_rel_gain": -0.09251037004388718,
+                  "ece": 0.1319827380952381,
+                  "sample": {
+                    "n": 168,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "168 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                }
+              },
+              "volatility_regime_168h": {
+                "high": {
+                  "n": 64,
+                  "large_move_share": 0.421875,
+                  "mean_stated_p": 0.2343484375,
+                  "brier_rel_gain": -0.1233451505905907,
+                  "ece": 0.1875265625,
+                  "sample": {
+                    "n": 64,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "64 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                },
+                "low": {
+                  "n": 67,
+                  "large_move_share": 0.3880597014925373,
+                  "mean_stated_p": 0.2027,
+                  "brier_rel_gain": -0.17115711698874292,
+                  "ece": 0.18535970149253733,
+                  "sample": {
+                    "n": 67,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "67 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                },
+                "mid": {
+                  "n": 66,
+                  "large_move_share": 0.3181818181818182,
+                  "mean_stated_p": 0.2098651515151515,
+                  "brier_rel_gain": -0.10830942304761892,
+                  "ece": 0.13935909090909093,
+                  "sample": {
+                    "n": 66,
+                    "level": "too_few_to_conclude",
+                    "intervals": "not_computed",
+                    "is_verdict": false,
+                    "headline": "66 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                  }
+                }
+              }
+            },
+            "definitions": {
+              "hour_block_utc": "the reference hour's six-hour UTC block (the registered 2,000-hour slice)",
+              "weekday_weekend": "Saturday/Sunday UTC vs other days (the registered 2,000-hour slice)",
+              "volatility_regime_168h": "realised volatility of the previous 168 h against terciles frozen on development data (research/monitoring/regime_terciles_v1.json; the registered 5,000-hour slice)",
+              "recent_vs_earlier": "the last 168 graded hours against all earlier ones (a display window, not a regime)"
+            },
+            "reading_note": "Descriptive only; never an input to any model or rule. Hour blocks are read against the model family's known development offsets (E027: nights over-stated, the US session under-stated), not against zero, and a few weeks of calibration drift is ordinary for this family (E029)."
+          },
+          "trends": {
+            "what_this_is": "The same figures as the statistics, computed per calendar week (UTC, weeks start on Monday).",
+            "important": "A figure that is higher or lower than in the previous week is a DESCRIPTION, not evidence that the system improved or got worse. At these sample sizes weekly figures move a lot by chance alone (E024), and this model family's calibration naturally wanders for weeks at a time (E029). Only the registered checkpoints judge it.",
+            "move_size_by_week": [
+              {
+                "week_starting": "2030-01-07T00:00:00+00:00",
+                "complete": true,
+                "sample": {
+                  "n": 166,
+                  "level": "too_few_to_conclude",
+                  "intervals": "not_computed",
+                  "is_verdict": false,
+                  "headline": "166 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                },
+                "brier": 0.26211704054216867,
+                "n": 166.0,
+                "large_move_share": 0.37349397590361444,
+                "mean_stated_p": 0.2134439759036145,
+                "brier_rel_gain": -0.12017635998449094,
+                "ece": 0.16004999999999997
+              },
+              {
+                "week_starting": "2030-01-14T00:00:00+00:00",
+                "complete": false,
+                "sample": {
+                  "n": 31,
+                  "level": "too_few_to_conclude",
+                  "intervals": "not_computed",
+                  "is_verdict": false,
+                  "headline": "31 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                },
+                "brier": 0.27502893354838703,
+                "n": 31.0,
+                "large_move_share": 0.3870967741935484,
+                "mean_stated_p": 0.2257612903225806,
+                "brier_rel_gain": -0.15922282956140288,
+                "ece": 0.22726451612903223
+              }
+            ],
+            "move_size_latest_vs_previous_complete_week": {"wording": "not enough complete weeks to compare"},
+            "signal_by_week": [
+              {
+                "week_starting": "2030-01-07T00:00:00+00:00",
+                "complete": true,
+                "runs": 167,
+                "signal_counts": {"BUY": 56, "HOLD": 57, "SELL": 54},
+                "by_horizon": {
+                  "1h": {
+                    "BUY": {
+                      "graded": 56,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 56,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "56 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.39285714285714285,
+                      "share_ci95": null,
+                      "mean_return": -0.0004640399512288828,
+                      "median_return": -0.0007845064683558167
+                    },
+                    "HOLD": {
+                      "graded": 57,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 57,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "57 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.42105263157894735,
+                      "share_ci95": null,
+                      "mean_return": -0.00025968057272394036,
+                      "median_return": -0.0008760528791262878
+                    },
+                    "SELL": {
+                      "graded": 54,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 54,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "54 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.46296296296296297,
+                      "share_ci95": null,
+                      "mean_return": -0.0004496468452439089,
+                      "median_return": -0.00023369697463021533
+                    },
+                    "ALL": {
+                      "graded": 167,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 167,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "167 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.4251497005988024,
+                      "share_ci95": null,
+                      "mean_return": -0.00038963448836678514,
+                      "median_return": -0.0006229999999999292
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 110,
+                      "sample": {
+                        "n": 110,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "110 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 0.5748502994011976,
+                      "matched_share": 0.4636363636363636,
+                      "matched_ci95": null
+                    }
+                  },
+                  "6h": {
+                    "BUY": {
+                      "graded": 56,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 56,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "56 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.44642857142857145,
+                      "share_ci95": null,
+                      "mean_return": -0.0012389603377935484,
+                      "median_return": -0.000976749254929632
+                    },
+                    "HOLD": {
+                      "graded": 57,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 57,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "57 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.40350877192982454,
+                      "share_ci95": null,
+                      "mean_return": -0.0018165989576123993,
+                      "median_return": -0.0032959513702961463
+                    },
+                    "SELL": {
+                      "graded": 54,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 54,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "54 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.2777777777777778,
+                      "share_ci95": null,
+                      "mean_return": -0.0039731250211303805,
+                      "median_return": -0.0029985958175333116
+                    },
+                    "ALL": {
+                      "graded": 167,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 167,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "167 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.3772455089820359,
+                      "share_ci95": null,
+                      "mean_return": -0.002320219584678958,
+                      "median_return": -0.0023806175233570537
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 110,
+                      "sample": {
+                        "n": 110,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "110 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 0.6227544910179641,
+                      "matched_share": 0.5818181818181818,
+                      "matched_ci95": null
+                    }
+                  },
+                  "24h": {
+                    "BUY": {
+                      "graded": 56,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 56,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "56 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.2857142857142857,
+                      "share_ci95": null,
+                      "mean_return": -0.010792238218130459,
+                      "median_return": -0.011431466818616176
+                    },
+                    "HOLD": {
+                      "graded": 57,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 57,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "57 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.2807017543859649,
+                      "share_ci95": null,
+                      "mean_return": -0.01118346539548385,
+                      "median_return": -0.016829452451490257
+                    },
+                    "SELL": {
+                      "graded": 54,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 54,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "54 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.3333333333333333,
+                      "share_ci95": null,
+                      "mean_return": -0.01166661551858212,
+                      "median_return": -0.014685824083896515
+                    },
+                    "ALL": {
+                      "graded": 167,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 167,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "167 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.2994011976047904,
+                      "share_ci95": null,
+                      "mean_return": -0.01120850362731329,
+                      "median_return": -0.01334324667114617
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 110,
+                      "sample": {
+                        "n": 110,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "110 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 0.7005988023952097,
+                      "matched_share": 0.4727272727272727,
+                      "matched_ci95": null
+                    }
+                  },
+                  "72h": {
+                    "BUY": {
+                      "graded": 41,
+                      "pending": 15,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 41,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "41 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.04878048780487805,
+                      "share_ci95": null,
+                      "mean_return": -0.032002444136566076,
+                      "median_return": -0.030354734898128122
+                    },
+                    "HOLD": {
+                      "graded": 48,
+                      "pending": 9,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 48,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "48 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.125,
+                      "share_ci95": null,
+                      "mean_return": -0.02831154705712025,
+                      "median_return": -0.02419519064977943
+                    },
+                    "SELL": {
+                      "graded": 38,
+                      "pending": 16,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 38,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "38 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.05263157894736842,
+                      "share_ci95": null,
+                      "mean_return": -0.03213111771786471,
+                      "median_return": -0.026749457132431764
+                    },
+                    "ALL": {
+                      "graded": 127,
+                      "pending": 40,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 127,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "127 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.07874015748031496,
+                      "share_ci95": null,
+                      "mean_return": -0.03064596017023496,
+                      "median_return": -0.026860424024741092
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 79,
+                      "sample": {
+                        "n": 79,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "79 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 0.9212598425196851,
+                      "matched_share": 0.4810126582278481,
+                      "matched_ci95": null
+                    }
+                  },
+                  "168h": {
+                    "BUY": {
+                      "graded": 8,
+                      "pending": 48,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 8,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "8 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.0,
+                      "share_ci95": null,
+                      "mean_return": -0.07409800611513417,
+                      "median_return": -0.07216570711307341
+                    },
+                    "HOLD": {
+                      "graded": 17,
+                      "pending": 40,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 17,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "17 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.0,
+                      "share_ci95": null,
+                      "mean_return": -0.07615039014128185,
+                      "median_return": -0.07766108553337947
+                    },
+                    "SELL": {
+                      "graded": 7,
+                      "pending": 47,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 7,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "7 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.0,
+                      "share_ci95": null,
+                      "mean_return": -0.07686378071405942,
+                      "median_return": -0.07927092890637377
+                    },
+                    "ALL": {
+                      "graded": 32,
+                      "pending": 135,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 32,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "32 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.0,
+                      "share_ci95": null,
+                      "mean_return": -0.07579334832254002,
+                      "median_return": -0.0771697994303141
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 15,
+                      "sample": {
+                        "n": 15,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "15 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 1.0,
+                      "matched_share": 0.4666666666666667,
+                      "matched_ci95": null
+                    }
+                  }
+                }
+              },
+              {
+                "week_starting": "2030-01-14T00:00:00+00:00",
+                "complete": false,
+                "runs": 32,
+                "signal_counts": {"BUY": 10, "HOLD": 8, "SELL": 14},
+                "by_horizon": {
+                  "1h": {
+                    "BUY": {
+                      "graded": 10,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 10,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "10 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.5,
+                      "share_ci95": null,
+                      "mean_return": 0.0006418183642935227,
+                      "median_return": -0.0004300382588991458
+                    },
+                    "HOLD": {
+                      "graded": 8,
+                      "pending": 0,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 8,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "8 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.625,
+                      "share_ci95": null,
+                      "mean_return": 0.0007368349447313682,
+                      "median_return": 0.001036752402637009
+                    },
+                    "SELL": {
+                      "graded": 13,
+                      "pending": 1,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 13,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "13 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.3076923076923077,
+                      "share_ci95": null,
+                      "mean_return": -0.0005712305912502449,
+                      "median_return": -0.00108649951949491
+                    },
+                    "ALL": {
+                      "graded": 31,
+                      "pending": 1,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 31,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "31 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.45161290322580644,
+                      "share_ci95": null,
+                      "mean_return": 0.00015764082304945128,
+                      "median_return": -0.0003163040249953841
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 23,
+                      "sample": {
+                        "n": 23,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "23 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 0.5483870967741935,
+                      "matched_share": 0.6086956521739131,
+                      "matched_ci95": null
+                    }
+                  },
+                  "6h": {
+                    "BUY": {
+                      "graded": 9,
+                      "pending": 1,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 9,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "9 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.5555555555555556,
+                      "share_ci95": null,
+                      "mean_return": 0.003604382785001143,
+                      "median_return": 0.00014156953423616336
+                    },
+                    "HOLD": {
+                      "graded": 6,
+                      "pending": 2,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 6,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "6 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.6666666666666666,
+                      "share_ci95": null,
+                      "mean_return": 0.0027964068855610056,
+                      "median_return": 0.00446150953414215
+                    },
+                    "SELL": {
+                      "graded": 11,
+                      "pending": 3,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 11,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "11 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.2727272727272727,
+                      "share_ci95": null,
+                      "mean_return": -0.002716235800558676,
+                      "median_return": -0.005132181836902894
+                    },
+                    "ALL": {
+                      "graded": 26,
+                      "pending": 6,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 26,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "26 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.46153846153846156,
+                      "share_ci95": null,
+                      "mean_return": 0.0007438189450858032,
+                      "median_return": -0.00039129669970433545
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 20,
+                      "sample": {
+                        "n": 20,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "20 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 0.5384615384615384,
+                      "matched_share": 0.65,
+                      "matched_ci95": null
+                    }
+                  },
+                  "24h": {
+                    "BUY": {
+                      "graded": 1,
+                      "pending": 9,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 1,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "1 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 1.0,
+                      "share_ci95": null,
+                      "mean_return": 0.0025882400715560028,
+                      "median_return": 0.0025882400715560028
+                    },
+                    "HOLD": {
+                      "graded": 2,
+                      "pending": 6,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 2,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "2 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.5,
+                      "share_ci95": null,
+                      "mean_return": 0.006641726318349361,
+                      "median_return": 0.006641726318349361
+                    },
+                    "SELL": {
+                      "graded": 5,
+                      "pending": 9,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 5,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "5 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.6,
+                      "share_ci95": null,
+                      "mean_return": 0.0043389168336839925,
+                      "median_return": 0.002040701183649185
+                    },
+                    "ALL": {
+                      "graded": 8,
+                      "pending": 24,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 8,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "8 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": 0.625,
+                      "share_ci95": null,
+                      "mean_return": 0.004695784609584336,
+                      "median_return": 0.002314470627602594
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 6,
+                      "sample": {
+                        "n": 6,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "6 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure.",
+                      "majority_direction_share_all_hours": 0.625,
+                      "matched_share": 0.5,
+                      "matched_ci95": null
+                    }
+                  },
+                  "72h": {
+                    "BUY": {
+                      "graded": 0,
+                      "pending": 10,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "HOLD": {
+                      "graded": 0,
+                      "pending": 8,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "SELL": {
+                      "graded": 0,
+                      "pending": 14,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "ALL": {
+                      "graded": 0,
+                      "pending": 32,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+                    }
+                  },
+                  "168h": {
+                    "BUY": {
+                      "graded": 0,
+                      "pending": 10,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "HOLD": {
+                      "graded": 0,
+                      "pending": 8,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "SELL": {
+                      "graded": 0,
+                      "pending": 14,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "ALL": {
+                      "graded": 0,
+                      "pending": 32,
+                      "overdue": 0,
+                      "unavailable": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "share_followed_by_a_rise": null
+                    },
+                    "acted_direction_agreement": {
+                      "acted_graded": 0,
+                      "sample": {
+                        "n": 0,
+                        "level": "too_few_to_conclude",
+                        "intervals": "not_computed",
+                        "is_verdict": false,
+                        "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+                      },
+                      "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "health": {
+            "status": "ok",
+            "headline_status": "healthy",
+            "headline_rule": "attention_required: no fresh prediction, or a failed hourly/watchdog run in the last 24 h; degraded: any other problem in the last 24 h; healthy: none. Judged when this was computed.",
+            "problems": [],
+            "current_warning": null,
+            "last_run": {
+              "hour": "2030-01-15T07:00:00+00:00",
+              "saved_at": "2030-01-15T08:12:56+00:00",
+              "freshness": "newest prediction is for 2030-01-15T07:00:00+00:00 (0.2h since its candle closed)",
+              "database_role": "bitcoin_agent",
+              "code_commit": "0000000000000000000000000000000000000000"
+            },
+            "windows": {
+              "last_24h": {
+                "runs": 23,
+                "missing_hours": 0,
+                "fallback_price_runs": 0,
+                "news_unavailable_runs": 0,
+                "news_partial_runs": 0,
+                "explanation_unavailable_runs": 0,
+                "start_lag_seconds": {"median": 751.0, "max": 751.0},
+                "analysis_seconds": {"median": 25.0, "max": 25.0}
+              },
+              "last_7d": {
+                "runs": 166,
+                "missing_hours": 1,
+                "fallback_price_runs": 0,
+                "news_unavailable_runs": 1,
+                "news_partial_runs": 0,
+                "explanation_unavailable_runs": 0,
+                "start_lag_seconds": {"median": 751.0, "max": 1351.0},
+                "analysis_seconds": {"median": 25.0, "max": 25.0}
+              },
+              "all_time": {
+                "runs": 199,
+                "missing_hours": 1,
+                "fallback_price_runs": 0,
+                "news_unavailable_runs": 1,
+                "news_partial_runs": 0,
+                "explanation_unavailable_runs": 0,
+                "start_lag_seconds": {"median": 751.0, "max": 1351.0},
+                "analysis_seconds": {"median": 25.0, "max": 25.0}
+              }
+            },
+            "missing_hours_all_time": ["2030-01-09T02:00:00+00:00"],
+            "missing_note": "Missing hours are never backfilled; the ones on go-live weekend (2026-09-19/20) are documented and permanent.",
+            "outcomes": {
+              "overdue_by_horizon": {},
+              "graded_before_their_candle_closed": 0,
+              "rows_for_unregistered_horizons": 0,
+              "registered_horizons_hours": [1, 6, 24, 72, 168]
+            },
+            "shadow": {
+              "rows": 198,
+              "hours_without_a_shadow_row": 1,
+              "errors_total": 0,
+              "errors_last_24h": 0,
+              "latest_error": null,
+              "note": "Error messages are kept in the database for diagnosis and deliberately not published here."
+            },
+            "published_state": {"contract_version": "1", "generated_at": "2030-01-15T08:13:03.123456+00:00", "age_hours": 0.02},
+            "schema_version": "4",
+            "external": {
+              "heartbeat": {"observable_here": false, "where": "the healthchecks.io dashboard (it emails when pings stop)"},
+              "watchdog": {
+                "observable_here": "failed runs only",
+                "where": "failed runs are recorded as incidents since 2026-10-05; successful runs are not stored (GitHub -> Actions -> Watchdog)"
+              },
+              "job_wall_time": {"observable_here": false, "where": "GitHub -> Actions -> the hourly run"}
+            },
+            "checkpoint_progress": {
+              "prospective_graded_hours": 197,
+              "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+              "next_checkpoint_hours": 500,
+              "hours_remaining": 303,
+              "expected_around": "2030-01-27T23:14:05.123456+00:00",
+              "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+              "reached": [],
+              "computed_readings": {},
+              "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+              "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+            },
+            "incidents": {
+              "recorded_total": 1,
+              "recorded_last_24h": 0,
+              "recorded_by_kind": {"hourly_run_failed": 1},
+              "capture": {
+                "recorded": [
+                  "a failed hourly run (also when a later backup run filled its hour)",
+                  "a failed watchdog run",
+                  "a failed stats publish (when the database could still be reached)",
+                  "a stats snapshot that was not refreshed for more than 3 hours"
+                ],
+                "derived_from_the_record": [
+                  "a missing hour",
+                  "a run with news unavailable, fallback price data, no explanation or an unavailable category",
+                  "a research shadow error",
+                  "an hour without a shadow row"
+                ],
+                "not_captured": [
+                  "a heartbeat alarm (it lives on healthchecks.io, outside this database)",
+                  "a reporting-workflow run that failed before it could write anything, e.g. no GitHub runner (when publishing resumes after more than 3 hours the gap is recorded; a shorter gap leaves no record, and nothing is lost, because every publish recomputes everything from the record)",
+                  "anything while the database itself is unreachable"
+                ],
+                "recorded_since": "2026-10-05",
+                "note": "Failed runs from before 2026-10-05 were backfilled from GitHub's own run history (source 'github_api_backfill'); GitHub keeps that history for a limited time only."
+              }
+            },
+            "incident_history": [
+              {
+                "at": "2030-01-12T20:12:03+00:00",
+                "kind": "hourly_run_failed",
+                "how_known": "recorded (workflow_event)",
+                "summary": "The 'Hourly Bitcoin analysis' run started at 2030-01-12 20:12 UTC (workflow_dispatch, attempt 1) ended: failure.",
+                "link": "https://github.com/ja-284/Bitcoin-AI-Agent/actions/runs/9000000001"
+              },
+              {
+                "at": "2030-01-12T00:00:00+00:00",
+                "kind": "run_degraded",
+                "how_known": "derived from the record",
+                "summary": "The 2030-01-12 00:00 UTC run was recorded with: the news step failed, so news was left out (weight 0), not counted as neutral.",
+                "link": null
+              },
+              {
+                "at": "2030-01-10T08:00:00+00:00",
+                "kind": "shadow_row_missing",
+                "how_known": "derived from the record",
+                "summary": "No shadow probability was recorded for the 2030-01-10 08:00 UTC hour.",
+                "link": null
+              },
+              {
+                "at": "2030-01-09T02:00:00+00:00",
+                "kind": "missing_hour",
+                "how_known": "derived from the record",
+                "summary": "No prediction was recorded for the 2030-01-09 02:00 UTC hour.",
+                "link": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    "reporting_runs_row_pending": {
+      "hour": "2030-01-15T07:00:00+00:00",
+      "reporting_contract_version": "1",
+      "as_known_at": "2030-01-15T08:14:05.123456+00:00",
+      "run": {
+        "hour": "2030-01-15T07:00:00+00:00",
+        "information_cutoff": "2030-01-15T08:00:00+00:00",
+        "data_fetched_at": "2030-01-15T08:12:31+00:00",
+        "saved_at": "2030-01-15T08:12:56+00:00",
+        "timing": {
+          "start_lag_seconds": 751.0,
+          "analysis_seconds": 25.0,
+          "job_wall_time_seconds": null,
+          "note": "start lag = candle close -> data fetched; analysis = data fetched -> row saved. The whole GitHub job's duration is not stored in the database (see the Actions run)."
+        },
+        "signal": {"value": "SELL", "evidence_status": "no_demonstrated_predictive_value", "evidence": "This signal has not been shown to predict anything."},
+        "overall_score": {
+          "value": -0.3064,
+          "kind": "score",
+          "is_probability": false,
+          "meaning": "The weighted combination of the category scores, from -1 to +1. A score, not a probability and not an expected return."
+        },
+        "confidence": {
+          "value": 0.6634,
+          "kind": "heuristic",
+          "is_probability": false,
+          "meaning": "A consistency and completeness estimate, not a probability. It rises when the independent categories agree with each other and when all the data was available. It has been checked against real outcomes and carries no information about whether the signal turns out to be right (E001, E017).",
+          "components": {"agreement": 0.3268, "completeness": 1.0}
+        },
+        "price": {"value": 9438.6, "kind": "price", "is_probability": false, "meaning": "Bitcoin's closing price at the information cutoff, in US dollars."},
+        "versions": {
+          "pipeline": "0.2.0",
+          "scoring": "0.2.0",
+          "ai_news": "claude-haiku-4-5",
+          "ai_explanation": "claude-sonnet-5",
+          "code_commit": "0000000000000000000000000000000000000000"
+        },
+        "run": {
+          "status": "ok",
+          "problems": [],
+          "price_source": "binance",
+          "fallback_used": false,
+          "price_is_estimated": false,
+          "completeness": 1.0,
+          "news": {"available": true, "items_used": 44, "error_type": null, "sources_failed": []},
+          "explanation_available": true,
+          "database_role": "bitcoin_agent"
+        },
+        "outcomes": {
+          "1h": {"state": "pending", "matures_at": "2030-01-15T09:00:00+00:00"},
+          "6h": {"state": "pending", "matures_at": "2030-01-15T14:00:00+00:00"},
+          "24h": {"state": "pending", "matures_at": "2030-01-16T08:00:00+00:00"},
+          "72h": {"state": "pending", "matures_at": "2030-01-18T08:00:00+00:00"},
+          "168h": {"state": "pending", "matures_at": "2030-01-22T08:00:00+00:00"}
+        },
+        "outcomes_note": "Raw price change after the reference close, as a fraction (0.0044 = +0.44%), and its direction by the registered binary rule (UP if > 0). `signal_vs_actual` compares that with the direction the signal stated (BUY = UP, SELL = DOWN; HOLD states none). Bitcoin drifts on its own: a rise after a BUY is not evidence the signal worked, and no profit is implied.",
+        "move_size": {
+          "available": true,
+          "separate_from_signal": "research shadow model; it has never influenced the BUY/HOLD/SELL signal",
+          "status": "research_shadow_only",
+          "model_version": "move_size_1h_v1",
+          "horizon_hours": 1,
+          "threshold_pct": 0.25,
+          "probability": {
+            "value": 0.0997,
+            "kind": "calibrated_probability",
+            "is_probability": true,
+            "meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013)."
+          },
+          "prospective": true,
+          "outcome": {"state": "pending", "matures_at": "2030-01-15T09:00:00+00:00"}
+        },
+        "explanation": "FICTIONAL FIXTURE TEXT, not a real analysis. In the real system this field holds the AI's plain-language narration, written after the signal was decided; it explains the decision and is not evidence for it.",
+        "categories": [
+          {"name": "trend", "score": 0.199, "weight": 0.3, "is_independent": true, "available": true},
+          {"name": "momentum", "score": 0.562, "weight": 0.25, "is_independent": true, "available": true},
+          {"name": "volume", "score": -0.4925, "weight": 0.15, "is_independent": true, "available": true},
+          {"name": "chart_pattern", "score": -0.357, "weight": 0.1, "is_independent": false, "available": true},
+          {"name": "news", "score": -0.1443, "weight": 0.2, "is_independent": true, "available": true}
+        ]
+      }
+    },
+    "reporting_runs_row_graded": {
+      "hour": "2030-01-07T00:00:00+00:00",
+      "reporting_contract_version": "1",
+      "as_known_at": "2030-01-14T01:14:05.123456+00:00",
+      "run": {
+        "hour": "2030-01-07T00:00:00+00:00",
+        "information_cutoff": "2030-01-07T01:00:00+00:00",
+        "data_fetched_at": "2030-01-07T01:12:31+00:00",
+        "saved_at": "2030-01-07T01:12:56+00:00",
+        "timing": {
+          "start_lag_seconds": 751.0,
+          "analysis_seconds": 25.0,
+          "job_wall_time_seconds": null,
+          "note": "start lag = candle close -> data fetched; analysis = data fetched -> row saved. The whole GitHub job's duration is not stored in the database (see the Actions run)."
+        },
+        "signal": {"value": "BUY", "evidence_status": "no_demonstrated_predictive_value", "evidence": "This signal has not been shown to predict anything."},
+        "overall_score": {
+          "value": 0.1513,
+          "kind": "score",
+          "is_probability": false,
+          "meaning": "The weighted combination of the category scores, from -1 to +1. A score, not a probability and not an expected return."
+        },
+        "confidence": {
+          "value": 0.8737,
+          "kind": "heuristic",
+          "is_probability": false,
+          "meaning": "A consistency and completeness estimate, not a probability. It rises when the independent categories agree with each other and when all the data was available. It has been checked against real outcomes and carries no information about whether the signal turns out to be right (E001, E017).",
+          "components": {"agreement": 0.7474, "completeness": 1.0}
+        },
+        "price": {"value": 10000.0, "kind": "price", "is_probability": false, "meaning": "Bitcoin's closing price at the information cutoff, in US dollars."},
+        "versions": {
+          "pipeline": "0.2.0",
+          "scoring": "0.2.0",
+          "ai_news": "claude-haiku-4-5",
+          "ai_explanation": "claude-sonnet-5",
+          "code_commit": "0000000000000000000000000000000000000000"
+        },
+        "run": {
+          "status": "ok",
+          "problems": [],
+          "price_source": "binance",
+          "fallback_used": false,
+          "price_is_estimated": false,
+          "completeness": 1.0,
+          "news": {"available": true, "items_used": 49, "error_type": null, "sources_failed": []},
+          "explanation_available": true,
+          "database_role": "bitcoin_agent"
+        },
+        "outcomes": {
+          "1h": {
+            "state": "graded",
+            "matured_at": "2030-01-07T02:00:00+00:00",
+            "checked_at": "2030-01-07T02:12:40+00:00",
+            "return": -0.0006229999999999292,
+            "direction": "DOWN",
+            "signal_stated_direction": "UP",
+            "signal_vs_actual": "not_matched"
+          },
+          "6h": {
+            "state": "graded",
+            "matured_at": "2030-01-07T07:00:00+00:00",
+            "checked_at": "2030-01-07T07:12:40+00:00",
+            "return": 0.0019240000000000368,
+            "direction": "UP",
+            "signal_stated_direction": "UP",
+            "signal_vs_actual": "matched"
+          },
+          "24h": {
+            "state": "graded",
+            "matured_at": "2030-01-08T01:00:00+00:00",
+            "checked_at": "2030-01-08T01:12:40+00:00",
+            "return": 0.022342000000000084,
+            "direction": "UP",
+            "signal_stated_direction": "UP",
+            "signal_vs_actual": "matched"
+          },
+          "72h": {
+            "state": "graded",
+            "matured_at": "2030-01-10T01:00:00+00:00",
+            "checked_at": "2030-01-10T01:12:40+00:00",
+            "return": 0.0016439999999999788,
+            "direction": "UP",
+            "signal_stated_direction": "UP",
+            "signal_vs_actual": "matched"
+          },
+          "168h": {
+            "state": "graded",
+            "matured_at": "2030-01-14T01:00:00+00:00",
+            "checked_at": "2030-01-14T01:12:40+00:00",
+            "return": -0.06061700000000003,
+            "direction": "DOWN",
+            "signal_stated_direction": "UP",
+            "signal_vs_actual": "not_matched"
+          }
+        },
+        "outcomes_note": "Raw price change after the reference close, as a fraction (0.0044 = +0.44%), and its direction by the registered binary rule (UP if > 0). `signal_vs_actual` compares that with the direction the signal stated (BUY = UP, SELL = DOWN; HOLD states none). Bitcoin drifts on its own: a rise after a BUY is not evidence the signal worked, and no profit is implied.",
+        "move_size": {
+          "available": true,
+          "separate_from_signal": "research shadow model; it has never influenced the BUY/HOLD/SELL signal",
+          "status": "research_shadow_only",
+          "model_version": "move_size_1h_v1",
+          "horizon_hours": 1,
+          "threshold_pct": 0.25,
+          "probability": {
+            "value": 0.2919,
+            "kind": "calibrated_probability",
+            "is_probability": true,
+            "meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013)."
+          },
+          "prospective": true,
+          "outcome": {
+            "state": "graded",
+            "matured_at": "2030-01-07T02:00:00+00:00",
+            "checked_at": "2030-01-07T02:13:10+00:00",
+            "return": -0.0006229999999999292,
+            "direction": "DOWN",
+            "large_move": false,
+            "absolute_move": 0.0006229999999999292
+          }
+        },
+        "explanation": "FICTIONAL FIXTURE TEXT, not a real analysis. In the real system this field holds the AI's plain-language narration, written after the signal was decided; it explains the decision and is not evidence for it.",
+        "categories": [
+          {"name": "trend", "score": 0.297, "weight": 0.3, "is_independent": true, "available": true},
+          {"name": "momentum", "score": -0.5178, "weight": 0.25, "is_independent": true, "available": true},
+          {"name": "volume", "score": -0.5726, "weight": 0.15, "is_independent": true, "available": true},
+          {"name": "chart_pattern", "score": 0.0348, "weight": 0.1, "is_independent": false, "available": true},
+          {"name": "news", "score": 0.1715, "weight": 0.2, "is_independent": true, "available": true}
+        ]
+      }
+    },
+    "reporting_incidents_row": {
+      "incident_key": "github:9000000001:1",
+      "kind": "hourly_run_failed",
+      "source": "workflow_event",
+      "occurred_at": "2030-01-12T20:12:03+00:00",
+      "workflow": "Hourly Bitcoin analysis",
+      "conclusion": "failure",
+      "run_url": "https://github.com/ja-284/Bitcoin-AI-Agent/actions/runs/9000000001",
+      "detail": "The 'Hourly Bitcoin analysis' run started at 2030-01-12 20:12 UTC (workflow_dispatch, attempt 1) ended: failure.",
+      "recorded_at": "2030-01-12T20:15:44+00:00"
+    }
+  },
+  "edge_cases": [
+    {
+      "id": "E01",
+      "type": "SignalOutcome",
+      "where": "run.outcomes[h]",
+      "description": "OVERDUE: due more than an hour ago, not recorded.",
+      "value": {"state": "overdue", "matures_at": "2030-03-04T02:00:00+00:00"}
+    },
+    {
+      "id": "E02",
+      "type": "MoveSizeOutcome",
+      "where": "run.move_size.outcome",
+      "description": "OVERDUE move-size outcome.",
+      "value": {"state": "overdue", "matures_at": "2030-03-04T02:00:00+00:00"}
+    },
+    {
+      "id": "E03",
+      "type": "Health",
+      "where": "document.body.health",
+      "description": "STALE health: no fresh prediction (status stale -> headline attention_required), outcomes overdue, a shadow error, a recorded publisher incident, and no backend_state (published_state unavailable).",
+      "value": {
+        "status": "stale",
+        "headline_status": "attention_required",
+        "headline_rule": "attention_required: no fresh prediction, or a failed hourly/watchdog run in the last 24 h; degraded: any other problem in the last 24 h; healthy: none. Judged when this was computed.",
+        "problems": [
+          "newest prediction is for 2030-03-04T09:00:00+00:00 (4.5h since its candle closed)",
+          "4 hour(s) missing in the last 24 hours",
+          "1 research shadow error(s) in the last 24 hours (the live record is unaffected)",
+          "17 outcome(s) overdue",
+          "1 recorded incident(s) in the last 24 hours: stats snapshot was stale"
+        ],
+        "current_warning": "newest prediction is for 2030-03-04T09:00:00+00:00 (4.5h since its candle closed)",
+        "last_run": {
+          "hour": "2030-03-04T09:00:00+00:00",
+          "saved_at": "2030-03-04T10:12:56+00:00",
+          "freshness": "newest prediction is for 2030-03-04T09:00:00+00:00 (4.5h since its candle closed)",
+          "database_role": "bitcoin_agent",
+          "code_commit": "0000000000000000000000000000000000000000"
+        },
+        "windows": {
+          "last_24h": {
+            "runs": 10,
+            "missing_hours": 4,
+            "fallback_price_runs": 0,
+            "news_unavailable_runs": 0,
+            "news_partial_runs": 0,
+            "explanation_unavailable_runs": 0,
+            "start_lag_seconds": {"median": 751.0, "max": 751.0},
+            "analysis_seconds": {"median": 25.0, "max": 25.0}
+          },
+          "last_7d": {
+            "runs": 10,
+            "missing_hours": 4,
+            "fallback_price_runs": 0,
+            "news_unavailable_runs": 0,
+            "news_partial_runs": 0,
+            "explanation_unavailable_runs": 0,
+            "start_lag_seconds": {"median": 751.0, "max": 751.0},
+            "analysis_seconds": {"median": 25.0, "max": 25.0}
+          },
+          "all_time": {
+            "runs": 10,
+            "missing_hours": 4,
+            "fallback_price_runs": 0,
+            "news_unavailable_runs": 0,
+            "news_partial_runs": 0,
+            "explanation_unavailable_runs": 0,
+            "start_lag_seconds": {"median": 751.0, "max": 751.0},
+            "analysis_seconds": {"median": 25.0, "max": 25.0}
+          }
+        },
+        "missing_hours_all_time": ["2030-03-04T10:00:00+00:00", "2030-03-04T11:00:00+00:00", "2030-03-04T12:00:00+00:00", "2030-03-04T13:00:00+00:00"],
+        "missing_note": "Missing hours are never backfilled; the ones on go-live weekend (2026-09-19/20) are documented and permanent.",
+        "outcomes": {
+          "overdue_by_horizon": {"1h": 10, "6h": 7},
+          "graded_before_their_candle_closed": 0,
+          "rows_for_unregistered_horizons": 0,
+          "registered_horizons_hours": [1, 6, 24, 72, 168]
+        },
+        "shadow": {
+          "rows": 10,
+          "hours_without_a_shadow_row": 0,
+          "errors_total": 1,
+          "errors_last_24h": 1,
+          "latest_error": {"occurred_at": "2030-03-04T09:12:50+00:00", "step": "fetch", "error_type": "ConnectionError"},
+          "note": "Error messages are kept in the database for diagnosis and deliberately not published here."
+        },
+        "published_state": {"available": false, "reason": "no published snapshot known at this time"},
+        "schema_version": "4",
+        "external": {
+          "heartbeat": {"observable_here": false, "where": "the healthchecks.io dashboard (it emails when pings stop)"},
+          "watchdog": {
+            "observable_here": "failed runs only",
+            "where": "failed runs are recorded as incidents since 2026-10-05; successful runs are not stored (GitHub -> Actions -> Watchdog)"
+          },
+          "job_wall_time": {"observable_here": false, "where": "GitHub -> Actions -> the hourly run"}
+        },
+        "checkpoint_progress": {
+          "prospective_graded_hours": 0,
+          "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+          "next_checkpoint_hours": 500,
+          "hours_remaining": 500,
+          "expected_around": "2030-03-25T10:30:00+00:00",
+          "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+          "reached": [],
+          "computed_readings": {},
+          "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+          "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+        },
+        "incidents": {
+          "recorded_total": 1,
+          "recorded_last_24h": 1,
+          "recorded_by_kind": {"stats_snapshot_was_stale": 1},
+          "capture": {
+            "recorded": [
+              "a failed hourly run (also when a later backup run filled its hour)",
+              "a failed watchdog run",
+              "a failed stats publish (when the database could still be reached)",
+              "a stats snapshot that was not refreshed for more than 3 hours"
+            ],
+            "derived_from_the_record": [
+              "a missing hour",
+              "a run with news unavailable, fallback price data, no explanation or an unavailable category",
+              "a research shadow error",
+              "an hour without a shadow row"
+            ],
+            "not_captured": [
+              "a heartbeat alarm (it lives on healthchecks.io, outside this database)",
+              "a reporting-workflow run that failed before it could write anything, e.g. no GitHub runner (when publishing resumes after more than 3 hours the gap is recorded; a shorter gap leaves no record, and nothing is lost, because every publish recomputes everything from the record)",
+              "anything while the database itself is unreachable"
+            ],
+            "recorded_since": "2026-10-05",
+            "note": "Failed runs from before 2026-10-05 were backfilled from GitHub's own run history (source 'github_api_backfill'); GitHub keeps that history for a limited time only."
+          }
+        },
+        "incident_history": [
+          {
+            "at": "2030-03-04T13:00:00+00:00",
+            "kind": "missing_hour",
+            "how_known": "derived from the record",
+            "summary": "No prediction was recorded for the 2030-03-04 13:00 UTC hour.",
+            "link": null
+          },
+          {
+            "at": "2030-03-04T12:00:00+00:00",
+            "kind": "missing_hour",
+            "how_known": "derived from the record",
+            "summary": "No prediction was recorded for the 2030-03-04 12:00 UTC hour.",
+            "link": null
+          },
+          {
+            "at": "2030-03-04T11:00:00+00:00",
+            "kind": "missing_hour",
+            "how_known": "derived from the record",
+            "summary": "No prediction was recorded for the 2030-03-04 11:00 UTC hour.",
+            "link": null
+          },
+          {
+            "at": "2030-03-04T10:00:00+00:00",
+            "kind": "missing_hour",
+            "how_known": "derived from the record",
+            "summary": "No prediction was recorded for the 2030-03-04 10:00 UTC hour.",
+            "link": null
+          },
+          {
+            "at": "2030-03-04T09:14:00+00:00",
+            "kind": "stats_snapshot_was_stale",
+            "how_known": "recorded (publisher)",
+            "summary": "The stats snapshot was not refreshed between 2030-03-04 09:14 and 2030-03-04 13:02 UTC (3.8 hours).",
+            "link": null
+          },
+          {
+            "at": "2030-03-04T09:12:50+00:00",
+            "kind": "shadow_error",
+            "how_known": "derived from the record",
+            "summary": "The research shadow step failed at 'fetch' (ConnectionError); the live record is unaffected.",
+            "link": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "E04",
+      "type": "SignalOutcome",
+      "where": "run.outcomes[h]",
+      "description": "UNAVAILABLE: the exchange had no candle for the target hour.",
+      "value": {
+        "state": "unavailable",
+        "matured_at": "2030-05-06T02:00:00+00:00",
+        "checked_at": "2030-05-06T02:12:40+00:00",
+        "reason": "the target candle is missing from the exchange's history"
+      }
+    },
+    {
+      "id": "E05",
+      "type": "MoveSizeOutcome",
+      "where": "run.move_size.outcome",
+      "description": "UNAVAILABLE move-size outcome.",
+      "value": {
+        "state": "unavailable",
+        "matured_at": "2030-05-06T02:00:00+00:00",
+        "checked_at": "2030-05-06T02:13:10+00:00",
+        "reason": "the target candle is missing from the exchange's history"
+      }
+    },
+    {
+      "id": "E06",
+      "type": "MoveSize",
+      "where": "run.move_size",
+      "description": "No probability: the shadow row exists but has no probability.",
+      "value": {"available": false, "reason": "model refused an input (non-positive value for a log-transformed feature)"}
+    },
+    {
+      "id": "E07",
+      "type": "MoveSize",
+      "where": "run.move_size",
+      "description": "No shadow row for this hour.",
+      "value": {"available": false, "reason": "no shadow row for this hour"}
+    },
+    {
+      "id": "E08",
+      "type": "SignalOutcome",
+      "where": "run.outcomes[h]",
+      "description": "PENDING outcome.",
+      "value": {"state": "pending", "matures_at": "2030-05-06T06:00:00+00:00"}
+    },
+    {
+      "id": "E09",
+      "type": "Health",
+      "where": "document.body.health",
+      "description": "NO_DATA: no prediction exists at all.",
+      "value": {
+        "status": "no_data",
+        "problems": ["no prediction has been stored"],
+        "external": {
+          "heartbeat": {"observable_here": false, "where": "the healthchecks.io dashboard (it emails when pings stop)"},
+          "watchdog": {
+            "observable_here": "failed runs only",
+            "where": "failed runs are recorded as incidents since 2026-10-05; successful runs are not stored (GitHub -> Actions -> Watchdog)"
+          },
+          "job_wall_time": {"observable_here": false, "where": "GitHub -> Actions -> the hourly run"}
+        }
+      }
+    },
+    {
+      "id": "E10",
+      "type": "Overview",
+      "where": "document.body.overview",
+      "description": "NO_DATA overview.",
+      "value": {
+        "latest_hour": null,
+        "latest_signal": null,
+        "latest_confidence": null,
+        "latest_move_size": null,
+        "latest_matured_hour": null,
+        "latest_matured_1h_outcome": null,
+        "latest_matured_move_size": null,
+        "health": "no_data",
+        "current_warning": null,
+        "prospective_progress": null
+      }
+    },
+    {
+      "id": "E11",
+      "type": "MoveSizeStatistics",
+      "where": "document.body.move_size_statistics",
+      "description": "running_figures ABSENT (no graded hour).",
+      "value": {
+        "what_this_is": "The research shadow model's stated chance of a move larger than the threshold in the next hour, against what happened. Separate from the BUY/HOLD/SELL signal, which it never influences.",
+        "status": {
+          "status": "research_shadow_only",
+          "detail": "This probability runs alongside the live system in its own record and has never influenced the BUY/HOLD/SELL signal. Its calibration was measured on 2024-2025 validation data; its prospective record began on 2026-09-21 and is judged at 500, 2,000 and 5,000 hours. The final sealed holdout has not been opened.",
+          "experiments": ["E012", "E013", "E018", "E019", "E020", "E021"]
+        },
+        "probability_meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013).",
+        "rows": 0,
+        "row_states": {"graded": 0, "pending": 0, "overdue": 0, "outcome_unavailable": 0, "no_probability": 0},
+        "not_prospective": 0,
+        "model_versions": {},
+        "sample": {
+          "n": 0,
+          "level": "too_few_to_conclude",
+          "intervals": "not_computed",
+          "is_verdict": false,
+          "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+        },
+        "checkpoint_progress": {
+          "prospective_graded_hours": 0,
+          "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+          "next_checkpoint_hours": 500,
+          "hours_remaining": 500,
+          "expected_around": "2030-07-22T08:14:05+00:00",
+          "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+          "reached": [],
+          "computed_readings": {},
+          "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+          "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+        }
+      }
+    },
+    {
+      "id": "E12",
+      "type": "MoveSizeBreakdowns",
+      "where": "document.body.move_size_breakdowns",
+      "description": "No graded hour: only `sample`.",
+      "value": {
+        "sample": {
+          "n": 0,
+          "level": "too_few_to_conclude",
+          "intervals": "not_computed",
+          "is_verdict": false,
+          "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+        }
+      }
+    },
+    {
+      "id": "E13",
+      "type": "HorizonEntry",
+      "where": "document.body.signal_statistics.by_horizon[h]",
+      "description": "graded = 0 everywhere: share_ci95 / mean_return / median_return / matched_* / majority_* ABSENT.",
+      "value": {
+        "BUY": {
+          "graded": 0,
+          "pending": 0,
+          "overdue": 0,
+          "unavailable": 0,
+          "sample": {
+            "n": 0,
+            "level": "too_few_to_conclude",
+            "intervals": "not_computed",
+            "is_verdict": false,
+            "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+          },
+          "share_followed_by_a_rise": null
+        },
+        "HOLD": {
+          "graded": 0,
+          "pending": 0,
+          "overdue": 0,
+          "unavailable": 0,
+          "sample": {
+            "n": 0,
+            "level": "too_few_to_conclude",
+            "intervals": "not_computed",
+            "is_verdict": false,
+            "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+          },
+          "share_followed_by_a_rise": null
+        },
+        "SELL": {
+          "graded": 0,
+          "pending": 0,
+          "overdue": 0,
+          "unavailable": 0,
+          "sample": {
+            "n": 0,
+            "level": "too_few_to_conclude",
+            "intervals": "not_computed",
+            "is_verdict": false,
+            "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+          },
+          "share_followed_by_a_rise": null
+        },
+        "ALL": {
+          "graded": 0,
+          "pending": 0,
+          "overdue": 0,
+          "unavailable": 0,
+          "sample": {
+            "n": 0,
+            "level": "too_few_to_conclude",
+            "intervals": "not_computed",
+            "is_verdict": false,
+            "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+          },
+          "share_followed_by_a_rise": null
+        },
+        "acted_direction_agreement": {
+          "acted_graded": 0,
+          "sample": {
+            "n": 0,
+            "level": "too_few_to_conclude",
+            "intervals": "not_computed",
+            "is_verdict": false,
+            "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+          },
+          "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+        }
+      }
+    },
+    {
+      "id": "E14",
+      "type": "RunningFigures",
+      "where": "document.body.move_size_statistics.running_figures",
+      "description": "n < 192: accuracy_ci95 null; brier_rel_gain_ci95 / rho_ci95 / ece_ci95 ABSENT.",
+      "value": {
+        "n": 39,
+        "large_move_share": 0.358974358974359,
+        "mean_stated_p": 0.21068461538461541,
+        "brier_rel_gain": -0.14720099334285708,
+        "accuracy": 0.6666666666666666,
+        "accuracy_ci95": null,
+        "naive_rate": 0.641025641025641,
+        "rho": -0.0896761133603239,
+        "ece": 0.15404871794871794,
+        "brier": 0.2639844494871795,
+        "brier_of_the_observed_rate": 0.23011176857330704,
+        "calibration_bins": [
+          {
+            "from": 0.0,
+            "to": 0.1,
+            "n": 3,
+            "stated": 0.06846666666666666,
+            "observed": 0.6666666666666666,
+            "observed_ci95": [0.2076549551264879, 0.9385096847238394],
+            "enough_rows": false
+          },
+          {
+            "from": 0.1,
+            "to": 0.2,
+            "n": 17,
+            "stated": 0.15141764705882355,
+            "observed": 0.35294117647058826,
+            "observed_ci95": [0.17309486143904904, 0.5870003327878818],
+            "enough_rows": false
+          },
+          {
+            "from": 0.2,
+            "to": 0.3,
+            "n": 13,
+            "stated": 0.2394076923076923,
+            "observed": 0.23076923076923078,
+            "observed_ci95": [0.08179379092465713, 0.5025687399512693],
+            "enough_rows": false
+          },
+          {
+            "from": 0.3,
+            "to": 0.4,
+            "n": 5,
+            "stated": 0.34931999999999996,
+            "observed": 0.4,
+            "observed_ci95": [0.1176182311592533, 0.769280067791163],
+            "enough_rows": false
+          },
+          {"from": 0.5, "to": 0.6, "n": 1, "stated": 0.5783, "observed": 1.0, "observed_ci95": [0.20654329147389294, 1.0], "enough_rows": false}
+        ],
+        "note": "Every prospective graded hour known at this moment. Descriptive; the registered readings are the checkpoint files, and the only verdicts are at 2,000 (E012) and 5,000 (E013) hours."
+      }
+    },
+    {
+      "id": "E15",
+      "type": "WeekComparison",
+      "where": "document.body.trends.move_size_latest_vs_previous_complete_week",
+      "description": "Two complete weeks exist: neutral comparison object.",
+      "value": {
+        "latest_week": "2030-11-18T00:00:00+00:00",
+        "previous_week": "2030-11-11T00:00:00+00:00",
+        "samples": [168.0, 168.0],
+        "brier": {
+          "latest": 0.28131225404761906,
+          "previous": 0.2976863444047619,
+          "difference": -0.016374090357142823,
+          "wording": "lower than the previous week",
+          "is_a_conclusion": false
+        },
+        "ece": {
+          "latest": 0.2113476190476191,
+          "previous": 0.2180345238095238,
+          "difference": -0.0066869047619046995,
+          "wording": "lower than the previous week",
+          "is_a_conclusion": false
+        },
+        "large_move_share": {
+          "latest": 0.3869047619047619,
+          "previous": 0.44047619047619047,
+          "difference": -0.05357142857142855,
+          "wording": "lower than the previous week",
+          "is_a_conclusion": false
+        },
+        "mean_stated_p": {
+          "latest": 0.21975595238095236,
+          "previous": 0.22244166666666665,
+          "difference": -0.0026857142857142913,
+          "wording": "lower than the previous week",
+          "is_a_conclusion": false
+        }
+      }
+    },
+    {
+      "id": "E16",
+      "type": "NeutralChange",
+      "where": "WeekComparison.<metric>",
+      "description": "A side is null: `difference` ABSENT.",
+      "value": {"latest": null, "previous": 0.21, "wording": "not enough data to compare", "is_a_conclusion": false}
+    },
+    {
+      "id": "E17",
+      "type": "CheckpointProgress",
+      "where": "document.body.overview.prospective_progress",
+      "description": "After the 500-hour reading: computed_readings has its repository path.",
+      "value": {
+        "prospective_graded_hours": 1234,
+        "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+        "next_checkpoint_hours": 2000,
+        "hours_remaining": 766,
+        "expected_around": "2030-02-16T06:14:05.123456+00:00",
+        "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+        "reached": [500],
+        "computed_readings": {"500": "research/monitoring/checkpoint_500h.md"},
+        "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+        "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+      }
+    },
+    {
+      "id": "E18",
+      "type": "CheckpointProgress",
+      "where": "document.body.overview.prospective_progress",
+      "description": "FICTIONAL FUTURE STATE after 5,000 hours: no next checkpoint (nulls). The 2,000/5,000 reading files do not exist today.",
+      "value": {
+        "prospective_graded_hours": 5000,
+        "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+        "next_checkpoint_hours": null,
+        "hours_remaining": null,
+        "expected_around": null,
+        "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+        "reached": [500, 2000, 5000],
+        "computed_readings": {
+          "500": "research/monitoring/checkpoint_500h.md",
+          "2000": "research/monitoring/checkpoint_2000h.md",
+          "5000": "research/monitoring/checkpoint_5000h.md"
+        },
+        "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+        "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+      }
+    },
+    {
+      "id": "E19",
+      "type": "ReportingIncidentRow",
+      "where": "public.reporting_incidents",
+      "description": "A PUBLISHER incident: workflow / conclusion / run_url are null.",
+      "value": {
+        "incident_key": "publisher:stale:2030-03-04T09:14:00",
+        "kind": "stats_snapshot_was_stale",
+        "source": "publisher",
+        "occurred_at": "2030-03-04T09:14:00+00:00",
+        "workflow": null,
+        "conclusion": null,
+        "run_url": null,
+        "detail": "The stats snapshot was not refreshed between 2030-03-04 09:14 and 2030-03-04 13:02 UTC (3.8 hours).",
+        "recorded_at": "2030-03-04T13:02:08+00:00"
+      }
+    }
+  ],
+  "no_data_document": {
+    "reporting_contract_version": "1",
+    "kind": "all",
+    "as_known_at": "2030-07-01T12:14:05+00:00",
+    "generated_at": "2030-07-01T12:14:05+00:00",
+    "read_only": true,
+    "descriptive_only": true,
+    "never_use_for": [
+      "tuning, refitting or recalibrating any model",
+      "choosing features, thresholds, horizons, targets or algorithms",
+      "changing, pre-empting or replacing a registered checkpoint (research/LIVE_EVALUATION.md)",
+      "trading or investment decisions: this system does not trade and is not financial advice"
+    ],
+    "limitations": [
+      "The BUY/HOLD/SELL signal has no demonstrated predictive value (E001, E017).",
+      "The confidence number is a heuristic about agreement and completeness, not a probability.",
+      "Only the move-size probability is calibrated, and only on validation data so far.",
+      "Most of the move-size model's skill is simply knowing how volatile the market is right now, which a plain average of recent hours also captures; its own added value is the smaller part (E019, E021).",
+      "The question itself gets easier and harder with the market: across years, the share of hours with a move over 0.25% has ranged from 34% to 68% (E021).",
+      "Nothing here is a direction forecast: no directional edge was found in the free data (E011).",
+      "This system does not trade, hold funds, or place orders of any kind, and is not investment advice."
+    ],
+    "body": {
+      "overview": {
+        "latest_hour": null,
+        "latest_signal": null,
+        "latest_confidence": null,
+        "latest_move_size": null,
+        "latest_matured_hour": null,
+        "latest_matured_1h_outcome": null,
+        "latest_matured_move_size": null,
+        "health": "no_data",
+        "current_warning": null,
+        "prospective_progress": null
+      },
+      "latest_run": null,
+      "latest_matured_run": null,
+      "signal_statistics": {
+        "evidence": {
+          "status": "no_demonstrated_predictive_value",
+          "headline": "This signal has not been shown to predict anything.",
+          "detail": "Tested over 68,619 historical hours at five time horizons against simple baselines, the BUY/HOLD/SELL signal showed no evidence of predictive information at any horizon, under both scoring 0.1.0 and the corrected scoring 0.2.0. It is recorded and measured so that it can be improved; it is not advice and must never be presented as a forecast.",
+          "experiments": ["E001", "E002", "E011", "E017"]
+        },
+        "what_this_is": "How often each signal was followed by a rise, next to how often ALL hours were. A signal that looks different from 'all hours' on a small sample is still no evidence; the signal was tested on 68,619 historical hours and showed none (E001, E017).",
+        "population": {"runs": 0, "pipeline_version": "0.2.0", "excluded_older_pipeline_runs": 0, "scoring_versions": {}},
+        "signal_counts": {"BUY": 0, "HOLD": 0, "SELL": 0},
+        "confidence": {
+          "kind": "heuristic",
+          "is_probability": false,
+          "meaning": "A consistency and completeness estimate, not a probability. It rises when the independent categories agree with each other and when all the data was available. It has been checked against real outcomes and carries no information about whether the signal turns out to be right (E001, E017).",
+          "mean": null,
+          "note": "Not a probability, so no calibration or Brier score is computed for it."
+        },
+        "by_horizon": {
+          "1h": {
+            "BUY": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "HOLD": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "SELL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "ALL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "acted_direction_agreement": {
+              "acted_graded": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+            }
+          },
+          "6h": {
+            "BUY": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "HOLD": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "SELL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "ALL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "acted_direction_agreement": {
+              "acted_graded": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+            }
+          },
+          "24h": {
+            "BUY": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "HOLD": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "SELL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "ALL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "acted_direction_agreement": {
+              "acted_graded": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+            }
+          },
+          "72h": {
+            "BUY": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "HOLD": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "SELL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "ALL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "acted_direction_agreement": {
+              "acted_graded": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+            }
+          },
+          "168h": {
+            "BUY": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "HOLD": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "SELL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "ALL": {
+              "graded": 0,
+              "pending": 0,
+              "overdue": 0,
+              "unavailable": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "share_followed_by_a_rise": null
+            },
+            "acted_direction_agreement": {
+              "acted_graded": 0,
+              "sample": {
+                "n": 0,
+                "level": "too_few_to_conclude",
+                "intervals": "not_computed",
+                "is_verdict": false,
+                "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+              },
+              "note": "How often a BUY was followed by a rise or a SELL by a fall, next to how often guessing the more common direction of all these hours would have been right. A higher first number on a small sample is not evidence; over 68,619 historical hours there was no edge (E001, E017). Not a profit figure."
+            }
+          }
+        }
+      },
+      "move_size_statistics": {
+        "what_this_is": "The research shadow model's stated chance of a move larger than the threshold in the next hour, against what happened. Separate from the BUY/HOLD/SELL signal, which it never influences.",
+        "status": {
+          "status": "research_shadow_only",
+          "detail": "This probability runs alongside the live system in its own record and has never influenced the BUY/HOLD/SELL signal. Its calibration was measured on 2024-2025 validation data; its prospective record began on 2026-09-21 and is judged at 500, 2,000 and 5,000 hours. The final sealed holdout has not been opened.",
+          "experiments": ["E012", "E013", "E018", "E019", "E020", "E021"]
+        },
+        "probability_meaning": "The estimated chance that Bitcoin's price moves more than 0.25% in either direction over the next hour. This says nothing about the DIRECTION of the move. It is calibrated: across validation data, hours given about this chance did move that much about this often (E012, E013).",
+        "rows": 0,
+        "row_states": {"graded": 0, "pending": 0, "overdue": 0, "outcome_unavailable": 0, "no_probability": 0},
+        "not_prospective": 0,
+        "model_versions": {},
+        "sample": {
+          "n": 0,
+          "level": "too_few_to_conclude",
+          "intervals": "not_computed",
+          "is_verdict": false,
+          "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+        },
+        "checkpoint_progress": {
+          "prospective_graded_hours": 0,
+          "selection_rule": "the registered checkpoint's own selection (agent/research/live_checkpoint.prospective_graded): status ok, outcome ok, probability stored before the outcome candle closed",
+          "next_checkpoint_hours": 500,
+          "hours_remaining": 500,
+          "expected_around": "2030-07-22T08:14:05+00:00",
+          "eta_assumption": "one graded hour per hour from now, none lost; the newest hour is graded about an hour after it closes",
+          "reached": [],
+          "computed_readings": {},
+          "what_each_gives": {"500": "first look, no verdict", "2000": "E012 verdict", "5000": "E013 verdict"},
+          "rule": "A checkpoint reads exactly the first N prospective graded hours (research/LIVE_EVALUATION.md rule 8). The running figures in this report cover every graded hour known at the time and are never a checkpoint."
+        }
+      },
+      "move_size_breakdowns": {
+        "sample": {
+          "n": 0,
+          "level": "too_few_to_conclude",
+          "intervals": "not_computed",
+          "is_verdict": false,
+          "headline": "0 hours: far too few to conclude anything. A description of what happened, not evidence of how the system behaves."
+        }
+      },
+      "trends": {
+        "what_this_is": "The same figures as the statistics, computed per calendar week (UTC, weeks start on Monday).",
+        "important": "A figure that is higher or lower than in the previous week is a DESCRIPTION, not evidence that the system improved or got worse. At these sample sizes weekly figures move a lot by chance alone (E024), and this model family's calibration naturally wanders for weeks at a time (E029). Only the registered checkpoints judge it.",
+        "move_size_by_week": [],
+        "move_size_latest_vs_previous_complete_week": {"wording": "not enough complete weeks to compare"},
+        "signal_by_week": []
+      },
+      "health": {
+        "status": "no_data",
+        "problems": ["no prediction has been stored"],
+        "external": {
+          "heartbeat": {"observable_here": false, "where": "the healthchecks.io dashboard (it emails when pings stop)"},
+          "watchdog": {
+            "observable_here": "failed runs only",
+            "where": "failed runs are recorded as incidents since 2026-10-05; successful runs are not stored (GitHub -> Actions -> Watchdog)"
+          },
+          "job_wall_time": {"observable_here": false, "where": "GitHub -> Actions -> the hourly run"}
+        }
+      }
+    }
+  }
+}

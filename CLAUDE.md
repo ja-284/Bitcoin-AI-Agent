@@ -99,6 +99,9 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
     `app_metadata.reporting_viewer` flag grants nothing. `anon` reads nothing, and the security check fails on any
     widening, a second permissive policy included.
   - The dashboard is a separate Lovable project, still on fictional data. Connecting it is a separate approval.
+  - Its data contract (2026-10-22, documentation only) is in `docs/api/dashboard/`: contract v1, Supplement S1,
+    generated TypeScript, fictional fixtures, and a reference JavaScript module that is UNTESTED (never executed or
+    compiled).
 - The dated **Status** log below is history. Where an older entry says something is open or "not set up",
   the newer entries (and STATUS.md) win.
 
@@ -1005,6 +1008,24 @@ only (the user's approval, after a read-only audit and the exact SQL).**
 - **Still separate, needing approval:** connecting the dashboard (URL + publishable key only, never Lovable's own
   Supabase integration), and the real browser test (password → 0 rows; authenticator code → data). The emergency
   deny-all SQL and revocation are in `docs/api/stats_access.md` §2.
+
+**2026-10-22 — the dashboard data contract preserved in the repository (documentation only, the user's approval).**
+- **What:** `docs/api/dashboard/` holds:
+  - contract v1 (kept verbatim; two marked notes);
+  - Supplement S1;
+  - `dashboard_contract_v1.ts`, generated from one schema;
+  - `dashboard_fixtures_v1.json`, fictional, produced by running the real reporting code on invented 2030 records;
+  - `dashboard_reporting_client.js`, **UNTESTED reference material**;
+  - a README and, in a second commit, the Lovable handoff manifest.
+- **Checks (read-only):**
+  - the live `reporting_snapshot` (0 errors), all 787 run rows and all 17 incident rows validate against the schema,
+    with unknown keys counted as errors;
+  - all fixtures validate;
+  - a security scan found no secret, account id, email or protected research data.
+- **Not done:** the TypeScript was not compiled and the JavaScript never run (no tools here); browser behaviour is
+  untested; the generator script is not in the repository.
+- **Nothing** in code, the schema, policies, workflows, models or research tracks changed. The dashboard is still not
+  connected.
 
 ## Research phase — rules and decisions (2026-09-19)
 
