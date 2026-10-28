@@ -33,22 +33,22 @@ approved operational changes, in their order.
 
 ## Snapshot — the only time-dependent figures in this file
 
-**Snapshot taken 2026-10-20 13:16 UTC.** Each figure names the command that is its source of truth. If
+**Snapshot taken 2026-10-28 17:05 UTC.** Each figure names the command that is its source of truth. If
 this snapshot is old, run the command. The command is authoritative, not this file. The same figures are
 in [`status.json`](status.json), and `tests/test_status_docs.py` fails if the two disagree with each
 other or with the versions in the code. **Update both, together, from the commands below.**
 
 | figure | value at the snapshot | source of truth (run it for the current value) |
 |---|---|---|
-| graded prospective shadow hours | **682 of 2000** | `python -m agent.reporting health` → `checkpoint_progress`, which applies the registered checkpoint's own selection function (`prospective_graded`). Since the 500-hour reading exists, `python -m agent.research.live_checkpoint` only says so until 2,000 is reached |
+| graded prospective shadow hours | **877 of 2000** | `python -m agent.reporting health` → `checkpoint_progress`, which applies the registered checkpoint's own selection function (`prospective_graded`). Since the 500-hour reading exists, `python -m agent.research.live_checkpoint` only says so until 2,000 is reached |
 | 500-hour first look | **taken 2026-10-13 19:33 UTC**, no verdict (by registration); read in the readiness gate's revision 3 | `research/monitoring/checkpoint_500h.md` (written once by the command; never rewritten) |
-| next checkpoint expected | **≈ 2026-12-14, late morning UTC**: the 2,000-hour E012 verdict (an estimate: 1,318 more hours at one per hour, if none are lost; each lost hour adds one) | derived from the count above |
-| newest prediction | the 12:00 UTC hour, 0.3 h after its candle closed: **OK** | `python -m agent.healthcheck --max-age-hours 2` |
-| published backend state | refreshed 13:13 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
-| private stats read model | refreshed 13:14 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
+| next checkpoint expected | **≈ 2026-12-14, around midday UTC**: the 2,000-hour E012 verdict (an estimate: 1,123 more hours at one per hour, if none are lost; each lost hour adds one. Measured 2026-10-20 → 10-28: 0.997 graded hours per hour) | derived from the count above |
+| newest prediction | the 15:00 UTC hour, 1.1 h after its candle closed (the 16:00 hour is due at the 17:12 run): **OK** | `python -m agent.healthcheck --max-age-hours 2` |
+| published backend state | refreshed 16:13 UTC, health **ok** | the `backend_state` table (rewritten by every hourly run) |
+| private stats read model | refreshed 16:14 UTC; `headline_status` **healthy** (it looks back 24 h) | `reporting_snapshot.generated_at` ([`docs/api/stats_access.md`](../api/stats_access.md)) |
 | sealed holdout | **sealed** for evaluation (`research/HOLDOUT_ACCESS.log` does not exist): never scored, nothing learned from it. **Not "untouched"**: raw candles of its last weeks were fetched as warm-up inputs, and the whole period is stored on disk (`research/AUDIT_2026-10-08.md` §18.2) | the file's absence |
 | run history, outcomes, running statistics, health (read-only, on demand) | see the reporting layer | `python -m agent.reporting all --pretty` ([`docs/api/reporting_v1.md`](../api/reporting_v1.md)) |
-| direction shadow track (E034) | **collecting since the 15:00 UTC hour of 2026-10-15**: 118 rows, 117 eligible graded, 0 errors, 0 lost hours, next reading at 1,000. Operational counts only, its readings are blind (Amendment 1.1). Integrity: `python -m agent.research.direction_integrity` 9 of 9 PASS (2026-10-20, weekly audit) | `python -m agent.research.direction_checkpoint` (prints counts; writes a reading only when due) |
+| direction shadow track (E034) | **collecting since the 15:00 UTC hour of 2026-10-15**: 313 rows, 312 eligible graded (1 pending), 0 errors, 0 lost hours, next reading at 1,000 (≈ 2026-11-26). Operational counts only, its readings are blind (Amendment 1.1). Integrity: `python -m agent.research.direction_integrity` 9 of 9 PASS (2026-10-28, weekly audit, on 310 rows) | `python -m agent.research.direction_checkpoint` (prints counts; writes a reading only when due) |
 | everything else that moves (parity, cost, drift flags, the free-rule comparison) | see the latest weekly report | `python -m agent.research.weekly_report` → `research/monitoring/weekly_<date>.md` |
 
 ## Production state (changes only by a versioned, committed decision)
@@ -149,19 +149,28 @@ happening, or on the weekly audit being run on time.
 
 - **Every session:** the hourly-health loop. It covers every hour saved, roles, sources, errors, shadow
   rows and outcomes, heartbeat and watchdog runs, cost, and the snapshot above.
-- **Weekly audit, last done 2026-10-20** (report `research/monitoring/weekly_2026-10-20.md`, cutoff 12:59 UTC;
-  integration 43/43 including the drift check; 0 known vulnerabilities of 43; direction integrity 9 of 9;
-  security and role checks OK). **Its gate (`tools/gate.py check --integration --all-mutations`) FAILED at the
-  mutation step:** one guard's anchor in `tools/guard_mutations.py` ("the sealed holdout is no longer truncated")
-  no longer matches `agent/research/history.py` since `59aa794` (2026-10-17), so the full mutation suite cannot
-  start. The protection itself is still guarded ("load_bars no longer cuts a request at the holdout's start").
-  **Repaired the same day, on the user's post-audit plan:**
-  - `f05606b` re-points the guard;
-  - `368df96` makes every commit check that each guard still finds its target (`tests/test_guard_anchors.py`);
-  - the complete suite then caught **166 of 166** in a disposable clone (135.6 min, both controls held), with the
-    repository and data files unchanged.
+- **Weekly audit, last done 2026-10-28** (report `research/monitoring/weekly_2026-10-28.md`, cutoff 13:53 UTC;
+  period 2026-10-20 13:16 → 2026-10-28 13:54 UTC). Every check passed except the dependency audit:
+  - 193 of 193 hours saved in the window (reference hours 10-20 12:00 → 10-28 12:00), all by `bitcoin_agent`, all
+    Binance. There were 0 duplicates, 0 overdue outcomes, 0 errors on any track and 0 new incidents.
+  - Parity 925 of 925. The stored probabilities reproduce (874 rows, 6.1e-16). Direction integrity 9 of 9
+    (310 rows, counts only).
+  - Integration: 46 passed and 4 skipped (the paused backup tests), drift check included.
+  - Security and role checks OK; the six registered snapshots verified.
+  - The 2,000-hour pre-check exits 3, with every mandatory item PASS.
+  - **The complete mutation suite caught 176 of 176**, with both controls held, in a disposable clone (2 h 43 min).
+    The repository and data files were unchanged, and the clone was deleted.
+  - **The dependency audit FAILED on `certifi==2026.7.22` in the local environment.**
+    - The advisory is GHSA-6q48-6c7w-9gw2, rated CRITICAL by the advisory itself (CVSS 4.0 AV:N/AC:H/AT:P). It was
+      published 2026-10-20 19:35 UTC, after the previous audit.
+    - The local `.venv` was updated the same day to `certifi==2026.10.23`, and only that package changed.
+      `pip check` is clean, and the audit then found 0 vulnerable of 43.
+    - **Production's installed version is UNVERIFIED.** `certifi` is a transitive dependency, resolved fresh on
+      every GitHub run, and the run logs that would show it need a signed-in account (the API answered HTTP 403).
+  - All 874 graded move-size hours were in the calm (low) volatility tercile.
+  - No holdout value was read, parsed or evaluated, and the holdout was not opened (no access log).
 
-  **Next due ≈ 2026-10-27**:
+  **Next due ≈ 2026-11-04**:
   `python -m agent.research.weekly_report`,
   `BITCOIN_AGENT_DB_TESTS=1 python -m pytest tests/integration -q` (drift check), and
   `python tools/dependency_audit.py`.
@@ -186,6 +195,8 @@ of it **permanently**: none of it can be re-collected, and every registered read
   **paused the backup work** (2026-10-21).
 - **Current state:** the tool is inactive. It has never touched real data, and nothing runs it.
 - **This is an open risk, not a completed safety measure.** Revisiting it is the user's separate decision.
+- **Re-confirmed unresolved at the weekly audit of 2026-10-28.** By then the only copy held 929 live hours, 875
+  move-size rows, 310 blind direction rows and 907 hours with a usable news score.
 
 ## Known, non-critical — nothing to do
 
@@ -272,10 +283,10 @@ of it **permanently**: none of it can be re-collected, and every registered read
 | healthchecks.io "DOWN" email, and it stays down > 3 hours | no successful run for hours | Look at GitHub → Actions. If runs fail with *permission denied*, roll back the database switch: copy the `DATABASE_URL` line from your local `.env` into the GitHub secret `DATABASE_URL`. Otherwise wait for the next session. |
 | GitHub "run failed" emails for several hours in a row | a persistent failure (a source down, a secret, a code defect) | Nothing is lost while it fails; the hour simply isn't recorded. Leave it for the next session unless it lasts > 1 day. |
 | an Anthropic "credit balance" or billing email | the AI calls will start failing | Top up the Anthropic account. The runs keep saving predictions meanwhile, marked "news unavailable". |
-| a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage was 34 MB of 500 MB on 2026-10-20). **There is no backup** (see "Unresolved operational risk"), so never delete or reset the project, and act the same day. |
+| a Supabase email about pausing or limits | the free project is at risk | Open the dashboard and follow its instructions (hourly writes should prevent pausing; storage was 39.1 MB of 500 MB on 2026-10-28). **There is no backup** (see "Unresolved operational risk"), so never delete or reset the project, and act the same day. |
 | a healthchecks.io email saying "AI calls FAILED … authentication" | the Anthropic key is invalid or has expired (it expires 2027-01-31) | Renew it: `docs/ops/open_user_actions.md` item 8. The hours are still saved, without news scores or explanations. |
 | a GitHub "Reporting snapshot" failed email | the private stats snapshot has not refreshed for over 3 hours | Nothing is lost and the live system is unaffected (the stats website would show older data). Leave it for the next session. |
-| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-19 (60 days after the 2026-10-20 weekly-audit commit); any commit resets the clock. |
+| a GitHub email that scheduled workflows were disabled | 60 days without repository activity | Click "enable" in the Actions tab. Not expected before ≈ 2026-12-27 (60 days after the 2026-10-28 weekly-audit commit); any commit resets the clock. |
 
 **Calendar** (the weekly audit reads it; anything due within four weeks is raised with the user):
 - **2027-01-17**: renew the **Anthropic API key**, which **expires 2027-01-31** (the user, 2026-10-20). This is two
@@ -286,7 +297,9 @@ of it **permanently**: none of it can be re-collected, and every registered read
 
 **Heartbeat dashboard:** the user looked at healthchecks.io on 2026-10-20 and saw no visible issue. That is a manual
 look, not a proof. It does not show that every alarm email would be delivered in every failure. The last proofs of
-delivery are the user's labelled tests of 2026-10-15 (main check) and 2026-10-16 (direction check).
+delivery are the user's labelled tests of 2026-10-15 (main check) and 2026-10-16 (direction check). Between the
+previous audit and the 2026-10-28 audit no failure occurred, so no alarm was sent: **delivery is unverified since
+those tests.** A fresh proof needs the user, either a look at healthchecks.io or an approved labelled test.
 
 ## The registered checkpoints (unchanged)
 
@@ -329,11 +342,12 @@ prospective hours, run `python -m agent.research.live_checkpoint`:
   later checkpoint.
 - Afterwards a dated readiness assessment is added to the gate, again.
 
-**Then 5,000 hours:** the E013 verdict (≈ spring 2027).
+**Then 5,000 hours:** the E013 verdict (≈ 2027-04-18 at one graded hour per hour, if none are lost).
 
 **The direction shadow track (E034, separate; `research/DIRECTION_TRACK.md` v1.1).** Collecting since the 15:00 UTC hour of 2026-10-15 (written 16:13 UTC by the dispatched run at f47e7bd: every step green, both live cross-checks matched).
-- Readings at **1,000** eligible hours (≈ late November 2026, first look, no verdict), **3,000** (≈ late February
-  2027, no verdict) and **6,500** (≈ late July 2027, the verdict). E033 sized them: no direction conclusion is
+- Readings at **1,000** eligible hours (≈ 2026-11-26, first look, no verdict), **3,000** (≈ 2027-02-17, no verdict)
+  and **6,500** (≈ 2027-07-13, the verdict). These are estimates at one eligible hour per hour with none lost; the
+  measured rate from 2026-10-20 to 10-28 was 1.00. E033 sized them: no direction conclusion is
   possible by 2026-12-14.
 - Command: `python -m agent.research.direction_checkpoint`. It prints only operational counts until a reading is
   due, then writes `research/monitoring/direction_checkpoint_<N>h.md/.json` once.

@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-20T13:16:00Z",
+  "as_of": "2026-10-28T17:05:00Z",
   "human_readable": "docs/ops/STATUS.md",
   "consistency_test": "tests/test_status_docs.py",
   "mode": "POST-500H MONITORING-ONLY",
@@ -37,11 +37,11 @@
     "predictive_path": "frozen for the current prospective evaluation, through the 2,000- and 5,000-hour readings"
   },
   "prospective": {
-    "graded_shadow_hours": 682,
-    "counted_at": "2026-10-20T13:16:00Z",
+    "graded_shadow_hours": 877,
+    "counted_at": "2026-10-28T17:05:00Z",
     "checkpoints_done": [{"hours": 500, "taken_at": "2026-10-13T19:33:10Z", "reading": "research/monitoring/checkpoint_500h.md", "hours_read": "2026-09-21T17:00 -> 2026-10-12T21:00 UTC", "verdict": null, "readiness_audit": "docs/research/readiness_gate.md revision 3"}],
     "next_checkpoint_hours": 2000,
-    "next_checkpoint_expected": "2026-12-14 (late morning UTC, if no hours are lost; each lost hour adds one)",
+    "next_checkpoint_expected": "2026-12-14 (around midday UTC, 1,123 hours after the snapshot, if no hours are lost; each lost hour adds one; measured rate 2026-10-20 -> 10-28: 0.997 per hour)",
     "next_checkpoint_command": "python -m agent.research.live_checkpoint",
     "next_checkpoint_selection": "exactly the first 2,000 prospective graded hours in time order (research/LIVE_EVALUATION.md rule 8)",
     "next_checkpoint_approval": "none needed (the user's post-500h plan, 2026-10-14): first active session at 2,000",
@@ -51,7 +51,7 @@
     "news_first_look": "done 2026-10-14 (E030; research/results/E030/): first 500 usable hours, blind until run, no verdict by registration; 1h rho +0.046 [-0.052, +0.151], 6h +0.001, 24h -0.096 -- every interval includes zero; not evidence of no effect (detectable only |rho| >= 0.125 at this size)",
     "news_verdict_expected": "2027-02 (3,140 usable hours, E025)",
     "news_verdict_usable_hours": 3140,
-    "direction_track": {"experiment": "E034", "protocol": "research/DIRECTION_TRACK.md v1.1", "model_version": "direction_1h_v1", "artefact_sha256": "f04d6e322c24dde98e2209b78492e6a2feff6d9fba41dab19dd971f6e6d224d9", "tables": ["shadow_direction", "shadow_direction_errors"], "collecting_since": "the 15:00 UTC hour of 2026-10-15 (written 16:13 UTC by the dispatched run at f47e7bd: every step green, both live cross-checks matched)", "readings_eligible_hours": [1000, 3000, 6500], "verdict_at": 6500, "sized_by": "E033", "readings_expected": {"1000": "late November 2026", "3000": "late February 2027", "6500": "late July 2027"}, "command": "python -m agent.research.direction_checkpoint", "blind": "Amendment 1.1: only operational counts for this track until each reading", "touches_live_signal_or_move_size": false}
+    "direction_track": {"experiment": "E034", "protocol": "research/DIRECTION_TRACK.md v1.1", "model_version": "direction_1h_v1", "artefact_sha256": "f04d6e322c24dde98e2209b78492e6a2feff6d9fba41dab19dd971f6e6d224d9", "tables": ["shadow_direction", "shadow_direction_errors"], "collecting_since": "the 15:00 UTC hour of 2026-10-15 (written 16:13 UTC by the dispatched run at f47e7bd: every step green, both live cross-checks matched)", "readings_eligible_hours": [1000, 3000, 6500], "verdict_at": 6500, "sized_by": "E033", "readings_expected": {"1000": "2026-11-26 (estimate)", "3000": "2027-02-17 (estimate)", "6500": "2027-07-13 (estimate)"}, "counts_at_snapshot": {"rows": 313, "eligible_graded": 312, "pending": 1, "errors": 0, "lost_hours": 0}, "command": "python -m agent.research.direction_checkpoint", "blind": "Amendment 1.1: only operational counts for this track until each reading", "touches_live_signal_or_move_size": false}
   },
   "automation": {
     "primary_trigger": "Supabase pg_cron -> GitHub workflow_dispatch at :12 UTC",
@@ -67,7 +67,7 @@
   },
   "scheduled_checks": {
     "every_session": "hourly-health loop and the snapshot in STATUS.md",
-    "next_weekly_audit": "2026-10-27 (last done 2026-10-20: weekly report, integration 43/43 with the drift check, 0 known vulnerabilities, direction integrity 9/9; its gate FAILED at the mutation step on one stale guard anchor since 59aa794; repaired the same day on the user's post-audit plan -- f05606b re-points the guard, 368df96 checks every anchor on each commit, full suite 166 of 166 caught in a clean clone)",
+    "next_weekly_audit": "2026-11-04 (last done 2026-10-28, cutoff 13:53 UTC: weekly report research/monitoring/weekly_2026-10-28.md; 193 of 193 hours in the window; parity 925/925; integration 46 passed, 4 skipped (paused backup tests), drift check included; security and role checks OK; direction integrity 9/9; full mutation suite 176 of 176 caught in a clean clone; the dependency audit FAILED on certifi 2026.7.22 in the local environment (GHSA-6q48-6c7w-9gw2, rated CRITICAL by the advisory), fixed locally to 2026.10.23 the same day; production's version UNVERIFIED (run logs need a signed-in account))",
     "next_checkpoint": "first session after 2,000 graded prospective hours (the E012 verdict)"
   },
   "watch_items": [
@@ -101,16 +101,19 @@
     "(answered 2026-10-14 by the user's master plan: a prospective direction shadow track, isolated and registered first -> master plan Phase 3)",
     "(answered 2026-10-14 by the user's master plan: the EWMA warm-up must not read the holdout -> Amendment A1, done)"
   ],
-  "user_actions_required": [],
+  "user_actions_required": [
+    "certifi in production (2026-10-28): open one recent 'Hourly Bitcoin analysis' run while signed in to GitHub, expand the 'Install dependencies' step and read the certifi version (fixed from 2026.10.19). If it is older, approve a durable constraint certifi>=2026.10.19. The unauthenticated API refused the logs (HTTP 403)."
+  ],
   "unresolved_risks": [
     "NO verified, recoverable database backup exists (recorded 2026-10-21). The Supabase project (Free plan, no provider backups) holds the only copy of the prospective record: live predictions and outcomes, the move-size shadow record, the blind direction track and the news scores. An encrypted backup tool was built and tested on synthetic data only (1820d8a, docs/ops/BACKUP.md); the owner's GPG key could not be created (keyboxd error), and the user paused the backup work on 2026-10-21. The tool is inactive and has never touched real data. Revisiting it is a separate user decision."
   ],
   "monitoring_notes": [
-    "2026-10-20: the user looked at the healthchecks.io dashboard and saw no visible issue. A manual look, not a proof of email delivery in every failure; the last delivery proofs are the labelled tests of 2026-10-15 (main) and 2026-10-16 (direction)."
+    "2026-10-20: the user looked at the healthchecks.io dashboard and saw no visible issue. A manual look, not a proof of email delivery in every failure; the last delivery proofs are the labelled tests of 2026-10-15 (main) and 2026-10-16 (direction).",
+    "2026-10-28 (weekly audit): no failure occurred in the period, so no alarm was sent; email delivery is UNVERIFIED since the labelled tests of 2026-10-15/16. A fresh proof needs the user (a healthchecks.io look or an approved labelled test)."
   ],
   "calendar": [
     {"date": "2027-01-17", "item": "renew the Anthropic API key, which expires 2027-01-31 (the user, 2026-10-20): docs/ops/open_user_actions.md item 8; the weekly audit raises calendar items due within four weeks"},
-    {"date": "2026-12-19", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-10-20, the weekly audit); any commit resets it"},
+    {"date": "2026-12-27", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-10-28, the weekly audit); any commit resets it"},
     {"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}
   ],
   "emergency_rollback_database_role": "copy the DATABASE_URL line from the local .env into the GitHub secret DATABASE_URL"

@@ -75,6 +75,10 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
     recommendation: wait for the registered readings, and start nothing new without the user.
   - Also open: the proposals in that assessment (P1–P6) and in `docs/ops/observability.md`. None is adopted; start
     none without the user.
+- **2026-10-28:** the weekly audit (see the dated entry).
+  - Every check passed except the dependency audit on the local `certifi`, which is now fixed locally.
+  - Production's `certifi` version is unverified; checking it is the user's step (`status.json`).
+  - Back to monitoring. The next audit is ≈ 2026-11-04.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -1026,6 +1030,80 @@ only (the user's approval, after a read-only audit and the exact SQL).**
   untested; the generator script is not in the repository.
 - **Nothing** in code, the schema, policies, workflows, models or research tracks changed. The dashboard is still not
   connected.
+
+**2026-10-28 — the weekly audit (the user's brief; observational), then its follow-up (the user's approval: certifi
+locally, the audit record).**
+- **Period:** 2026-10-20 13:16 → 2026-10-28 13:54 UTC.
+- **The report:** `research/monitoring/weekly_2026-10-28.md`, cutoff 13:53 UTC. The registered command wrote it with
+  `--out` to a scratch folder, and it is committed unchanged.
+- **Operations:**
+  - 193 of 193 hours saved (reference hours 10-20 12:00 → 10-28 12:00), all by `bitcoin_agent`, all Binance, all
+    0.2.0/0.2.0;
+  - 0 duplicates in any table; 0 overdue outcomes; 0 errors on any track; 0 incidents.
+  - GitHub: hourly 363/363 (192 dispatched + 171 backup slots), reporting 396/396, watchdog 34/34, Tests 16/16;
+    dispatch answers 192/192 accepted.
+- **Integrity:**
+  - parity 925/925; stored probabilities reproduce (874 rows, 6.1e-16); shadow inputs within 2.2e-14;
+  - direction integrity 9/9 (310 rows, counts only);
+  - the six registered snapshots verified;
+  - the pre-check exits 3, with every mandatory item PASS.
+- **Security:**
+  - security and role checks OK;
+  - integration 46 passed, 4 skipped (the paused backup tests), with the drift check; the schema list is identical
+    before and after;
+  - secret scan: test placeholders only;
+  - **the complete mutation suite caught 176 of 176** (both controls held) in a disposable clone, 2 h 43 min. The data
+    files' checksums were unchanged, and the clone was deleted.
+- **certifi (FAILED in the local environment, fixed locally):**
+  - The finding: `certifi==2026.7.22`, advisory GHSA-6q48-6c7w-9gw2 / PYSEC-2026-4320.
+    - It is rated **CRITICAL by GitHub's advisory database** (CVSS 4.0 AV:N/AC:H/AT:P/PR:N/UI:N/VC:H/VI:H).
+    - It was published 2026-10-20 19:35 UTC, after the previous audit.
+    - That is the advisory's severity, not the measured exposure. Locally, only maintenance HTTPS calls use the bundle;
+      the database connection does not. The audit report's "MEDIUM-LOW" was my exposure estimate, and both are now
+      stated separately.
+  - The local fix: the `.venv` now has `certifi==2026.10.23`, and only that package changed. `pip check` is clean, and
+    the audit now finds 0 of 43.
+  - **Production is UNVERIFIED.** `certifi` is a transitive dependency, resolved fresh on every run, and the logs that
+    would show the version need a signed-in account (the API answered HTTP 403).
+  - No repository dependency change was made, because production is not confirmed affected. The user's check is
+    recorded in `status.json`.
+- **The 3 "unchecked" move-size rows (2026-10-04 06:00, 10-16 16:00, 10-24 00:00):**
+  - A delayed backup slot wrote each shadow row 1.7–5.2 s after the candle closed, before the live prediction existed.
+    So the write-time cross-check could not run, and `live_close_match` stays NULL.
+  - A later read-only comparison, done twice, found all 3 reference closes equal to the live predictions' (difference
+    0.0). The records are unchanged.
+- **Holdout:**
+  - No holdout value was read, parsed or evaluated during this audit, and the holdout was not opened. There is no
+    access log, and the governed reader stopped at the development cutoff.
+  - For the mutation run, the data files (which also hold the holdout period's rows) were copied byte for byte and
+    checksummed; nothing was parsed past the cutoff, and the copy was deleted.
+  - Historically the holdout is sealed for evaluation, not untouched (audit 2026-10-08 §18.2).
+- **Counts reconciled, all at the cutoff:**
+  - 929 saved hours of 940 expected since go-live (11 missing, none since 2026-10-07).
+  - 925 of them are pipeline 0.2.0; the 4 earliest are 0.1.0. That gives parity's 925 checked plus 4 skipped.
+  - 1h graded: 924 = 925 minus the pending 12:00 hour.
+  - "927 of 927 due" counts all 929 rows, and an outcome is due 1 h after its target candle closes. So 11:00 (graded,
+    inside the grace) and 12:00 (pending) are not yet due.
+  - The paper record's 939 = every hour from go-live to 11:00, computed from candles, missing hours included. Its
+    tracker comparison's 928 = saved rows with a graded 1h outcome.
+  - Move-size: 875 rows of 884 expected since 2026-09-21 17:00 (7 lost in the incident, 2 with no prediction); 874
+    graded + 1 pending.
+  - Direction: 310 rows for 310 hours; 309 eligible graded + 1 pending.
+  - News: 907 usable = 925 minus the 18 hours without a usable news score.
+- **Freshness (17:03 UTC):**
+  - the newest saved hour is 15:00 (saved 16:13 by `bitcoin_agent`);
+  - +3 rows on every track since the cutoff; 0 missing, 0 duplicates, 0 errors;
+  - 6/6 hourly and 6/6 reporting runs green.
+- **Regime:** all 874 graded move-size hours were calm (the low tercile), so the 2,000-hour E012 verdict will most
+  likely describe calm markets only. That is already documented (`research/DIAGNOSIS_2026-10-15.md` row 2); no rule
+  changed.
+- **Open:**
+  - email delivery is unverified since the labelled tests of 2026-10-15/16 (no failure occurred);
+  - **no database backup** (re-confirmed).
+- **Repository:** public. This commit moves GitHub's inactivity date to ≈ 2026-12-27.
+- **Next:** the weekly audit ≈ 2026-11-04; the direction first look ≈ 2026-11-26; the 2,000-hour reading ≈ 2026-12-14.
+- **Nothing** in prediction, scoring, the models, the direction track, the checkpoints or their registrations, the
+  schema, roles, policies or workflows changed.
 
 ## Research phase — rules and decisions (2026-09-19)
 
