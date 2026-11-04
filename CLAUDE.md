@@ -77,8 +77,12 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
     none without the user.
 - **2026-10-28:** the weekly audit (see the dated entry).
   - Every check passed except the dependency audit on the local `certifi`, which is now fixed locally.
-  - Production's `certifi` version is unverified; checking it is the user's step (`status.json`).
-  - Back to monitoring. The next audit is ≈ 2026-11-04.
+  - Production's `certifi` was then verified by the user, for one run (2026-11-01; `status.json`).
+- **2026-11-04:** the weekly audit, Week 45 (see the dated entry).
+  - Every check that ran passed, and the mutation suite caught 176 of 176 in a clone with no `data/` folder.
+  - Not run, under that audit's brief: the integration suite with its drift check (it writes a scratch schema and
+    throwaway roles to production), and anything that opens `data/`. Both await the user's decision (`status.json`).
+  - Back to monitoring. The next audit is ≈ 2026-11-11.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -1104,6 +1108,69 @@ locally, the audit record).**
 - **Next:** the weekly audit ≈ 2026-11-04; the direction first look ≈ 2026-11-26; the 2,000-hour reading ≈ 2026-12-14.
 - **Nothing** in prediction, scoring, the models, the direction track, the checkpoints or their registrations, the
   schema, roles, policies or workflows changed.
+
+**2026-11-04 — the weekly audit, Week 45 (the user's brief; read-only by default).**
+- **Period:** 2026-10-28 13:54 → 2026-11-04 14:07 UTC.
+- **The report:** `research/monitoring/weekly_2026-11-04.md`, cutoff 14:07 UTC. The registered command wrote it to a
+  scratch folder, and it is committed unchanged. Its section 3b (the paper record) says "Could not compute", because
+  the audit's hook refused the model fit's open of `data/`.
+- **Operations:**
+  - 168 of 168 hours saved (reference hours 10-28 13:00 → 11-04 12:00), all by `bitcoin_agent`, all Binance, all
+    0.2.0/0.2.0;
+  - 0 duplicates in any table; 0 overdue outcomes; 0 errors on any track; 0 incidents.
+  - GitHub: hourly 281/281 (168 dispatched + 113 backup slots), reporting 304/304, watchdog 23/23, Tests 1/1.
+  - Dispatch answers: 167 of 168 accepted. One timed out at `pg_net`'s limit (2026-10-30 08:12 UTC); GitHub still
+    started that run, and the hour was saved.
+- **Integrity:**
+  - parity 1,093 of 1,093; shadow inputs 1,043 × 9 within 2.2e-14; stored probabilities reproduce (1,045 rows, 6.1e-16);
+  - direction integrity 9/9 (481 rows, counts only);
+  - the pre-check exits 3, with every mandatory item PASS.
+  - **A fourth "unchecked" move-size row** (2026-10-30 13:00): a backup slot wrote it 3.8 s after the candle closed,
+    before the live prediction existed. All 4 reference closes equal the live predictions' (difference 0.0).
+- **Security:**
+  - security and role checks OK; secret scan: test placeholders only;
+  - **the complete mutation suite caught 176 of 176** (both controls held) in a disposable clone with no `data/`
+    folder, 2 h 26 min; unit tests there 840 passed, 51 skipped. The clone was deleted.
+- **Production dependencies, the first full record** (`status.json` → `production_dependencies`):
+  - the user pasted the newest run's log (41835921390): 40 packages, `certifi` 2026.10.23;
+  - OSV.dev lists none of those versions as vulnerable; the local audit found 0 of 43;
+  - from last week's list (also the user's paste): `anyio` 4.15.1 → 4.16.0, `python-dateutil` 3.0.0 → 4.0.0, `six`
+    removed; 38 unchanged. Nothing pinned;
+  - 11 versions differ from the local `.venv`, so a local audit does not stand in for production;
+  - the runner image and Python patch version are NOT VERIFIED.
+- **Not run, under the brief (both await the user's decision):**
+  - the integration suite and drift check, because they write a scratch schema and throwaway roles to the production
+    database. A read-only comparison of names stood in (it agrees, and it does not compare types, defaults or
+    conditions);
+  - the paper record, the registered-snapshot verification and the real-snapshot unit test, because they open files
+    under `data/`, which also hold the holdout period's rows.
+- **My slip, disclosed to the user:** while testing whether a session setting would make the connection read-only, I
+  ran `CREATE TEMP TABLE` on the production database, expecting a refusal. It executed and was rolled back, and no such
+  relation remains. The setting is not honoured through the pooler. My later scripts use a read-only transaction.
+- **Holdout:** no holdout value was read, parsed or evaluated, and the holdout was not opened (no access log). The
+  audit's commands ran under a hook that refuses any open under `data/`, and both clones had no such folder.
+  Historically the holdout is sealed for evaluation, not untouched (audit 2026-10-08 §18.2).
+- **Counts reconciled, at the cutoff:**
+  - 1,097 saved of 1,108 expected since go-live (11 missing, none since 2026-10-07);
+  - 1,093 of them are pipeline 0.2.0 and 4 are 0.1.0, which gives parity's 1,093 compared and 4 skipped;
+  - 1h graded: 1,096 = 1,097 minus the pending newest hour;
+  - move-size: 1,043 rows of 1,052 expected since 2026-09-21 17:00 (7 lost in the incident, 2 with no prediction); 1,042
+    graded + 1 pending;
+  - direction: 478 rows, 477 eligible graded + 1 pending. The report's "479 expected" counts the 13:00 hour, whose run
+    was due at 14:12, after the cutoff;
+  - news: 1,075 usable = 1,093 minus the 18 hours without a usable news score.
+- **Freshness (16:38 UTC):** the newest saved hour is 15:00; +3 rows on every track since the cutoff; 0 missing, 0
+  duplicates, 0 errors, 0 new incidents.
+- **Regime:** all 1,042 graded move-size hours were calm (the low tercile). The highest `rv_168` in the record is 95%
+  of the frozen low/mid cut. The 2,000-hour E012 verdict will most likely describe calm markets only (already documented,
+  `research/DIAGNOSIS_2026-10-15.md` row 2); no rule changed.
+- **Open:**
+  - email delivery is unverified since the labelled tests of 2026-10-15/16 (no failure occurred);
+  - **no database backup** (re-confirmed).
+- **Repository:** public. This commit moves GitHub's inactivity date to ≈ 2027-01-03.
+- **Next:** the weekly audit ≈ 2026-11-11; the direction first look ≈ 2026-11-26; the 2,000-hour reading ≈ 2026-12-14.
+- **Nothing** in prediction, scoring, the models, the direction track, the checkpoints or their registrations, the
+  schema, roles, policies, workflows or dependencies changed.
 
 ## Research phase — rules and decisions (2026-09-19)
 
