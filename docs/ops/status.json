@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-04T16:38:00Z",
+  "as_of": "2026-11-13T13:47:00Z",
   "human_readable": "docs/ops/STATUS.md",
   "consistency_test": "tests/test_status_docs.py",
   "mode": "POST-500H MONITORING-ONLY",
@@ -37,11 +37,11 @@
     "predictive_path": "frozen for the current prospective evaluation, through the 2,000- and 5,000-hour readings"
   },
   "prospective": {
-    "graded_shadow_hours": 1045,
-    "counted_at": "2026-11-04T16:36:00Z",
+    "graded_shadow_hours": 1258,
+    "counted_at": "2026-11-13T13:46:00Z",
     "checkpoints_done": [{"hours": 500, "taken_at": "2026-10-13T19:33:10Z", "reading": "research/monitoring/checkpoint_500h.md", "hours_read": "2026-09-21T17:00 -> 2026-10-12T21:00 UTC", "verdict": null, "readiness_audit": "docs/research/readiness_gate.md revision 3"}],
     "next_checkpoint_hours": 2000,
-    "next_checkpoint_expected": "2026-12-14 (around midday UTC, 955 hours after the snapshot, if no hours are lost; each lost hour adds one; measured rate 2026-10-28 -> 11-04: 168 graded hours in 167.5 h, about 1.00 per hour)",
+    "next_checkpoint_expected": "2026-12-14 (around midday UTC, 742 hours after the snapshot, if no hours are lost; each lost hour adds one; measured rate 2026-11-04 -> 11-13: 213 graded hours in 213.2 h, about 1.00 per hour)",
     "next_checkpoint_command": "python -m agent.research.live_checkpoint",
     "next_checkpoint_selection": "exactly the first 2,000 prospective graded hours in time order (research/LIVE_EVALUATION.md rule 8)",
     "next_checkpoint_approval": "none needed (the user's post-500h plan, 2026-10-14): first active session at 2,000",
@@ -51,14 +51,14 @@
     "news_first_look": "done 2026-10-14 (E030; research/results/E030/): first 500 usable hours, blind until run, no verdict by registration; 1h rho +0.046 [-0.052, +0.151], 6h +0.001, 24h -0.096 -- every interval includes zero; not evidence of no effect (detectable only |rho| >= 0.125 at this size)",
     "news_verdict_expected": "2027-02 (3,140 usable hours, E025)",
     "news_verdict_usable_hours": 3140,
-    "direction_track": {"experiment": "E034", "protocol": "research/DIRECTION_TRACK.md v1.1", "model_version": "direction_1h_v1", "artefact_sha256": "f04d6e322c24dde98e2209b78492e6a2feff6d9fba41dab19dd971f6e6d224d9", "tables": ["shadow_direction", "shadow_direction_errors"], "collecting_since": "the 15:00 UTC hour of 2026-10-15 (written 16:13 UTC by the dispatched run at f47e7bd: every step green, both live cross-checks matched)", "readings_eligible_hours": [1000, 3000, 6500], "verdict_at": 6500, "sized_by": "E033", "readings_expected": {"1000": "2026-11-26 (estimate)", "3000": "2027-02-17 (estimate)", "6500": "2027-07-13 (estimate)"}, "counts_at_snapshot": {"rows": 481, "eligible_graded": 480, "pending": 1, "errors": 0, "lost_hours": 0}, "command": "python -m agent.research.direction_checkpoint", "blind": "Amendment 1.1: only operational counts for this track until each reading", "touches_live_signal_or_move_size": false}
+    "direction_track": {"experiment": "E034", "protocol": "research/DIRECTION_TRACK.md v1.1", "model_version": "direction_1h_v1", "artefact_sha256": "f04d6e322c24dde98e2209b78492e6a2feff6d9fba41dab19dd971f6e6d224d9", "tables": ["shadow_direction", "shadow_direction_errors"], "collecting_since": "the 15:00 UTC hour of 2026-10-15 (written 16:13 UTC by the dispatched run at f47e7bd: every step green, both live cross-checks matched)", "readings_eligible_hours": [1000, 3000, 6500], "verdict_at": 6500, "sized_by": "E033", "readings_expected": {"1000": "2026-11-26 (estimate)", "3000": "2027-02-17 (estimate)", "6500": "2027-07-13 (estimate)"}, "counts_at_snapshot": {"rows": 694, "eligible_graded": 693, "pending": 1, "errors": 0, "lost_hours": 0}, "command": "python -m agent.research.direction_checkpoint", "blind": "Amendment 1.1: only operational counts for this track until each reading", "touches_live_signal_or_move_size": false}
   },
   "automation": {
     "primary_trigger": "Supabase pg_cron -> GitHub workflow_dispatch at :12 UTC",
     "backup_trigger": "GitHub schedule at :07, :22, :37, :52 (early exit once the hour is saved)",
     "self_check": "every run: the newest prediction must be at most 2 h old (a single missed hour followed by a good run does not fail it)",
     "watchdog": ["staleness < 3h", "shadow errors <= 2 in 6h", "no public-API exposure", "jobs connect as bitcoin_agent with exactly its proven rights"],
-    "watchdog_real_cadence": "about every 7 hours (measured 2026-10-28 -> 11-04: 23 runs, median gap 7.3 h, longest 13.0 h)",
+    "watchdog_real_cadence": "about every 8 hours (measured 2026-11-04 -> 11-13: 27 runs, median gap 8.4 h, longest 12.9 h)",
     "heartbeat": {"service": "healthchecks.io", "period_minutes": 60, "grace_minutes": 30, "fail_signal_on_failed_run": true, "verified": "2026-09-25 (user, dashboard)"},
     "missed_hour_signal": {"since": "2026-10-14", "step": "Heartbeat missed-hour signal (hourly.yml)", "command": "python -m agent.healthcheck --new-gap-since \"$JOB_STARTED_AT\" --gap-body-file missed-hours.txt", "rule": "the run that saves the first hour after a gap sends the heartbeat /fail with the missing hours in the body; once per gap; a late run is never reported; the success ping right after clears it", "email_seen": "2026-10-15 13:36 UTC (the user received the labelled DELIVERY TEST email)", "delivery_test_workflow": ".github/workflows/alert_test.yml (manual only; one labelled TEST report; run by the user 2026-10-15, email confirmed)"},
     "ai_failure_signal": {"since": "2026-10-17", "step": "Heartbeat AI-failure signal (hourly.yml)", "command": "python -m agent.healthcheck --ai-failure-body-file ai-failure.txt", "rule": "every run looks at the newest saved hour; if its news step or explanation failed, the heartbeat gets /fail with the error types (a key hint for authentication or permission errors) and the success ping is held back, so the check stays down until an hour is saved with working AI calls; it never fails a job", "delivery": "the missed-hour signal's /fail path (proven 2026-10-15); the failing case is tested, not yet seen live"},
@@ -67,7 +67,7 @@
   },
   "scheduled_checks": {
     "every_session": "hourly-health loop and the snapshot in STATUS.md",
-    "next_weekly_audit": "2026-11-11 (last done 2026-11-04, cutoff 14:07 UTC: weekly report research/monitoring/weekly_2026-11-04.md; 168 of 168 hours in the window; parity 1093/1093; security and role checks OK; direction integrity 9/9; full mutation suite 176 of 176 caught in a clone with no data folder; dependency audit 0 of 43 locally, and 0 of the 40 production versions listed by OSV.dev; NOT run under that audit's brief: the integration suite with its drift check, the paper record and the registered-snapshot verification)",
+    "next_weekly_audit": "2026-11-18 (last done 2026-11-13, Week 46, primary cutoff 13:44:58 UTC: weekly report research/monitoring/weekly_2026-11-13.md; 216 of 216 hours in the window; parity 1309/1309; security and role checks OK; direction integrity 9/9; the live structure's fingerprint unchanged since 2026-11-04; unit tests 840 passed, 51 skipped in a clone with no data folder; dependency audit 0 of 43 locally, and 0 of the 2026-11-04 production versions listed by OSV.dev; NOT run under that audit's brief: the integration suite with its drift check, the paper record and the registered-snapshot verification; the full mutation suite not run (the policy texts disagree; no code changed since the last two full runs); this week's production package list NOT VERIFIED)",
     "next_checkpoint": "first session after 2,000 graded prospective hours (the E012 verdict)"
   },
   "watch_items": [
@@ -80,7 +80,7 @@
   ],
   "known_non_critical": [
     "watchdog fires irregularly on GitHub; the heartbeat covers the hourly job during a gap, but nothing alarms if the watchdog itself stops (recorded 2026-11-04; no change made)",
-    "AI cost: about $9.75 per 30 days in the first full measured week, to 2026-10-05; about $11.43 per 30 days in the week to 2026-11-04 (accepted ~$12; flag above $15)",
+    "AI cost: about $9.75 per 30 days in the first full measured week, to 2026-10-05; about $11.43 per 30 days in the week to 2026-11-04; about $10.37 per 30 days in the 7 days to 2026-11-13 (accepted ~$12; flag above $15)",
     "Supabase grants the net schema to PUBLIC (unrevocable); not an exposed API schema",
     "permanent documented gaps: 9 missing hours (2026-09-19/20), 7 missing shadow hours (2026-09-21/22; first written as 8, corrected 2026-09-27), 17 news-unavailable hours (2026-09-21/22), 1 missing hour 2026-10-05 19:00 UTC (GitHub had no runner free; our code never started), 1 missing hour 2026-10-07 14:00 UTC (no run started; the dispatch result is gone after pg_net's ~6 h retention; cause unknown)",
     "the heartbeat proves a successful workflow run, not a saved hour: an early-exit backup run pings too, so until 2026-10-14 a single missed hour could pass without an alarm (2026-10-07); closed by automation.missed_hour_signal; a missed hour also shows in the weekly report, backend_state and the stats incident history",
@@ -101,18 +101,23 @@
     "(answered 2026-10-14 by the user's master plan: a prospective direction shadow track, isolated and registered first -> master plan Phase 3)",
     "(answered 2026-10-14 by the user's master plan: the EWMA warm-up must not read the holdout -> Amendment A1, done)",
     "2026-11-04: whether the weekly integration suite and drift check may run. They write a scratch schema and throwaway roles to the production database, so the Week 45 brief's rule against production writes stopped them. A read-only comparison of names stood in; it does not compare types, defaults or conditions.",
-    "2026-11-04: whether routine audit steps may open files under data/ through the governed reader (the paper record's model fit, the registered-snapshot verification and the real-snapshot unit test). The reader stops at the first holdout row, but the files hold the holdout period's rows, and the Week 45 brief forbids opening them."
+    "2026-11-04: whether routine audit steps may open files under data/ through the governed reader (the paper record's model fit, the registered-snapshot verification and the real-snapshot unit test). The reader stops at the first holdout row, but the files hold the holdout period's rows, and the Week 45 brief forbids opening them.",
+    "2026-11-13: whether the full mutation suite runs at every weekly audit. docs/ops/QUALITY_GATE.md names `check --integration --all-mutations` for the weekly audit; STATUS.md's weekly list names the report, the integration suite and the dependency audit only. Not run on 2026-11-13: the texts disagree, and no code, test or tool has changed since the full runs of 2026-10-28 and 2026-11-04 (176 of 176 each). Both 2026-11-04 decisions above are still open; the Week 46 brief again forbade production writes and any access to data/."
   ],
   "user_actions_required": [],
   "unresolved_risks": [
-    "NO verified, recoverable database backup exists (recorded 2026-10-21). The Supabase project (Free plan, no provider backups) holds the only copy of the prospective record: live predictions and outcomes, the move-size shadow record, the blind direction track and the news scores. An encrypted backup tool was built and tested on synthetic data only (1820d8a, docs/ops/BACKUP.md); the owner's GPG key could not be created (keyboxd error), and the user paused the backup work on 2026-10-21. The tool is inactive and has never touched real data. Revisiting it is a separate user decision. Re-confirmed unresolved at the weekly audit of 2026-11-04."
+    "NO verified, recoverable database backup exists (recorded 2026-10-21). The Supabase project (Free plan, no provider backups) holds the only copy of the prospective record: live predictions and outcomes, the move-size shadow record, the blind direction track and the news scores. An encrypted backup tool was built and tested on synthetic data only (1820d8a, docs/ops/BACKUP.md); the owner's GPG key could not be created (keyboxd error), and the user paused the backup work on 2026-10-21. The tool is inactive and has never touched real data. Revisiting it is a separate user decision. Re-confirmed unresolved at the weekly audits of 2026-11-04 and 2026-11-13."
   ],
   "monitoring_notes": [
     "2026-10-20: the user looked at the healthchecks.io dashboard and saw no visible issue. A manual look, not a proof of email delivery in every failure; the last delivery proofs are the labelled tests of 2026-10-15 (main) and 2026-10-16 (direction).",
     "2026-10-28 (weekly audit): no failure occurred in the period, so no alarm was sent; email delivery is UNVERIFIED since the labelled tests of 2026-10-15/16. A fresh proof needs the user (a healthchecks.io look or an approved labelled test).",
     "2026-11-01: the user verified production's certifi 2026.10.23 by hand in run 40723591301 (2026-10-28 16:12 UTC, job analyze, step Install dependencies), at or above the fixed 2026.10.19. This closes the 2026-10-28 audit's open item. It verifies that run only, because certifi is unpinned and resolved fresh on every run.",
     "2026-11-04 (weekly audit): no hourly-job failure or missed hour occurred from the labelled tests to this audit, so no alarm was due; email delivery stays UNVERIFIED since 2026-10-15/16. The alarm steps ran in the sampled runs, but they are continue-on-error, so a green step does not prove delivery.",
-    "2026-11-04 (weekly audit): production's runner image and Python patch version are NOT VERIFIED. The pasted Set up job showed runner 2.338.2 with its image headings collapsed. GitHub's annotation says ubuntu-latest migrates to Ubuntu 26 from 2026-10-19, and the workflow floats on ubuntu-latest and Python 3.12. No effect seen: parity and the shadow inputs reproduce."
+    "2026-11-04 (weekly audit): production's runner image and Python patch version are NOT VERIFIED. The pasted Set up job showed runner 2.338.2 with its image headings collapsed. GitHub's annotation says ubuntu-latest migrates to Ubuntu 26 from 2026-10-19, and the workflow floats on ubuntu-latest and Python 3.12. No effect seen: parity and the shadow inputs reproduce.",
+    "2026-11-13 (weekly audit, Week 46): no hourly-job failure or missed hour occurred, so no alarm was due; email delivery stays UNVERIFIED since 2026-10-15/16.",
+    "2026-11-13: this week's production package list, runner image and Python patch version are NOT VERIFIED. GitHub's job logs need a signed-in account, the built-in browser was not signed in, and no list was pasted. To verify, open run 43431599649 (2026-11-13 13:12 UTC, the newest successful hourly run before the cutoff), job analyze: Set up job (Operating System, Runner Image), the actions/setup-python step (the Successfully set up CPython line) and Install dependencies (the Successfully installed line), and keep the page address, which names the run.",
+    "2026-11-13: one Reporting snapshot run (42672133634, 2026-11-09 18:13 UTC, after the 18:12 hourly run) failed before any job started; GitHub's annotation is 'Internal server error'. The next reporting run (18:52 UTC) published. No incident was recorded, by design (no stale gap over 3 h), and the live record was unaffected.",
+    "2026-11-13: follow-up on the 2026-11-04 probe (CREATE TEMP TABLE audit_probe_never, run once as the owner role in an ordinary transaction, then rolled back). pg_stat_statements shows that statement once (calls 1, rows 0); no relation named audit_probe* exists in any schema; a temporary table cannot outlive its session; the public structure's fingerprint taken after it (2026-11-04 15:14 UTC) is unchanged on 2026-11-13. Not verifiable: the rollback itself (no database log covers that day any more), and the structure between the 2026-10-28 drift check and that fingerprint."
   ],
   "production_dependencies": {
     "run": "41835921390 (2026-11-04 13:12 UTC, commit 7c5a654, job analyze, step Install dependencies), the newest successful hourly run at the audit's cutoff",
@@ -121,11 +126,12 @@
     "osv_dev_check_2026_11_04": "0 of these 40 versions listed as vulnerable",
     "changes_from_the_previous_list": "anyio 4.15.1 -> 4.16.0; python-dateutil 3.0.0 -> 4.0.0 (major); six 1.17.0 removed; 38 unchanged, nothing added. The previous list is the user's paste, believed to be from run 40723591301 (2026-10-28); it agrees with the eight reference versions of that audit. No project code imports these three directly",
     "differs_from_the_local_venv": "11 versions (anyio, charset-normalizer, httpcore2, httpx2, iniconfig, jiter, narwhals, pluggy, python-dateutil, truststore, tzdata); colorama, pip and six are local only. The local dependency audit therefore does not stand in for production",
-    "use": "the baseline for the next audit's comparison. Recording it pins nothing"
+    "use": "the baseline for the next audit's comparison. Recording it pins nothing",
+    "checked_2026_11_13": "not re-read: this week's list is NOT VERIFIED (job logs need sign-in; none pasted). OSV.dev re-check of this list on 2026-11-13: 0 of 40 vulnerable"
   },
   "calendar": [
     {"date": "2027-01-17", "item": "renew the Anthropic API key, which expires 2027-01-31 (the user, 2026-10-20): docs/ops/open_user_actions.md item 8; the weekly audit raises calendar items due within four weeks"},
-    {"date": "2027-01-03", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-11-04, the weekly audit); any commit resets it"},
+    {"date": "2027-01-12", "item": "GitHub disables scheduled workflows after 60 days without repository activity (last commit 2026-11-13, the weekly audit); any commit resets it"},
     {"date": "2027-09-20", "item": "renew the GitHub token supabase-dispatch before it expires"}
   ],
   "emergency_rollback_database_role": "copy the DATABASE_URL line from the local .env into the GitHub secret DATABASE_URL"

@@ -1,0 +1,973 @@
+{
+  "generated_at": "2026-11-13T13:44:58.528457+00:00",
+  "pipeline_version": "0.2.0",
+  "scoring_version": "0.2.0",
+  "schema_version": {
+    "database": "4",
+    "code": "4",
+    "match": true
+  },
+  "live_since": "2026-09-19T09:00:00+00:00",
+  "live_hours": 1324.7,
+  "health_last_7_days": {
+    "since": "2026-11-06T13:44:58.528457+00:00",
+    "now": "2026-11-13T13:44:58.528457+00:00",
+    "expected_hours": 167,
+    "predictions": 167,
+    "missing_hours": [],
+    "present_hours": 167,
+    "rows_not_yet_due": 0,
+    "fetch_delay_min": {
+      "min": 0.004485583333333334,
+      "median": 12.5150232,
+      "max": 12.7212841
+    },
+    "price_sources": {
+      "binance": 167
+    },
+    "synthetic_rows": 0,
+    "pipeline_versions": {
+      "0.2.0": 167
+    },
+    "rows_without_explanation": 0,
+    "rows_with_zero_news": 0,
+    "mean_news_items": 44.91017964071856,
+    "run_errors": {},
+    "hours_with_a_failed_news_source": {},
+    "timestamp_rule_violations": [],
+    "outcome_coverage": {
+      "1h": {
+        "due": 165,
+        "ok": 165,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "6h": {
+        "due": 160,
+        "ok": 160,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "24h": {
+        "due": 142,
+        "ok": 142,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "72h": {
+        "due": 94,
+        "ok": 94,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "168h": {
+        "due": 0,
+        "ok": 0,
+        "unavailable": 0,
+        "overdue": 0
+      }
+    }
+  },
+  "health_since_go_live": {
+    "since": "2026-09-19T09:00:00+00:00",
+    "now": "2026-11-13T13:44:58.528457+00:00",
+    "expected_hours": 1324,
+    "predictions": 1313,
+    "missing_hours": [
+      "2026-09-19T10:00:00+00:00",
+      "2026-09-19T12:00:00+00:00",
+      "2026-09-19T13:00:00+00:00",
+      "2026-09-19T15:00:00+00:00",
+      "2026-09-19T16:00:00+00:00",
+      "2026-09-19T18:00:00+00:00",
+      "2026-09-19T19:00:00+00:00",
+      "2026-09-20T01:00:00+00:00",
+      "2026-09-20T02:00:00+00:00",
+      "2026-10-05T19:00:00+00:00",
+      "2026-10-07T14:00:00+00:00"
+    ],
+    "present_hours": 1313,
+    "rows_not_yet_due": 0,
+    "fetch_delay_min": {
+      "min": 0.004485583333333334,
+      "median": 12.54417675,
+      "max": 59.32737363333333
+    },
+    "price_sources": {
+      "binance": 1313
+    },
+    "synthetic_rows": 0,
+    "pipeline_versions": {
+      "0.1.0": 4,
+      "0.2.0": 1309
+    },
+    "rows_without_explanation": 1,
+    "rows_with_zero_news": 0,
+    "mean_news_items": 45.86747905559787,
+    "run_errors": {
+      "news_error": 18,
+      "explanation_error": 1
+    },
+    "hours_with_a_failed_news_source": {},
+    "timestamp_rule_violations": [],
+    "outcome_coverage": {
+      "1h": {
+        "due": 1311,
+        "ok": 1311,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "6h": {
+        "due": 1306,
+        "ok": 1306,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "24h": {
+        "due": 1288,
+        "ok": 1288,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "72h": {
+        "due": 1240,
+        "ok": 1240,
+        "unavailable": 0,
+        "overdue": 0
+      },
+      "168h": {
+        "due": 1144,
+        "ok": 1144,
+        "unavailable": 0,
+        "overdue": 0
+      }
+    }
+  },
+  "ai_cost_last_7_days": {
+    "measured_days": 8,
+    "measured_weekend_days": 2,
+    "full_week_measured": true,
+    "rows": 167,
+    "rows_with_usage": 167,
+    "steps": {
+      "news": {
+        "calls": 167,
+        "usage_unavailable": 0,
+        "mean_input_tokens": 1516.6167664670659,
+        "mean_output_tokens": 1820.2994011976048,
+        "max_output_tokens": 3167
+      },
+      "explanation": {
+        "calls": 167,
+        "usage_unavailable": 0,
+        "mean_input_tokens": 509.2694610778443,
+        "mean_output_tokens": 277.0179640718563,
+        "max_output_tokens": 357
+      }
+    },
+    "runs_priced": 167,
+    "mean_cost_per_run_usd": 0.01440683233532934,
+    "max_cost_per_run_usd": 0.021658,
+    "projected_30_days_usd": 10.372919281437124,
+    "unpriced_models": {},
+    "prices_usd_per_mtok": {
+      "claude-haiku-4-5": [
+        1.0,
+        5.0
+      ],
+      "claude-sonnet-5": [
+        2.0,
+        10.0
+      ]
+    },
+    "prices_as_of": "2026-09-23",
+    "accepted_usd_30d": 12.0,
+    "above_accepted": false
+  },
+  "dispatch_answers_last_7_days": {
+    "available": true,
+    "summary": {
+      "window_hours": 168.0,
+      "answers": 167,
+      "accepted_2xx": 167,
+      "by_status": {
+        "204": 167
+      },
+      "timed_out": 0,
+      "with_error_text": 0,
+      "slots_without_an_answer": [],
+      "newest": "2026-11-13 12:12:00.202374+00:00"
+    },
+    "not_accepted": 0,
+    "attention": false
+  },
+  "direction_track_operational": {
+    "available": true,
+    "operational": {
+      "rows": 694,
+      "first_hour": "2026-10-15T15:00:00+00:00",
+      "expected_hours_since_first": 694,
+      "status_counts": {
+        "ok": 694
+      },
+      "eligible_graded": 693,
+      "not_prospective": 0,
+      "pending_outcome": 1,
+      "outcome_unavailable": 0,
+      "live_close_mismatches": 0,
+      "live_scores_mismatches": 0,
+      "next_reading": 1000
+    },
+    "errors_last_7_days": 0,
+    "error_steps": [],
+    "attention": false
+  },
+  "signal_record": {
+    "rows_pipeline_0_2_0": 1309,
+    "signal_mix": {
+      "BUY": 297,
+      "SELL": 506,
+      "HOLD": 506
+    },
+    "scoring_versions": {
+      "0.1.0": 65,
+      "0.2.0": 1244
+    },
+    "by_horizon": {
+      "1h": {
+        "n": 1308,
+        "base_rate_up": 0.48853211009174313,
+        "naive_rate": 0.5114678899082569,
+        "acted_share": 0.6131498470948012,
+        "acted_accuracy": 0.5074812967581047,
+        "acted_n": 802,
+        "edge": {
+          "point": 3.45045992248672e-05,
+          "ci_low": -0.0006519827527033866,
+          "ci_high": 0.0006093020964342634,
+          "interval_available": true,
+          "hours_needed_for_interval": 96,
+          "resamples_without_an_edge": 0,
+          "interval_withheld": false
+        },
+        "buy_and_hold_mean_return": -0.0001136148443299791,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 297,
+            "mean": -9.504994380678994e-05
+          },
+          "HOLD": {
+            "n": 506,
+            "mean": -0.0001086034364466584
+          },
+          "SELL": {
+            "n": 505,
+            "mean": -0.00012955454303165714
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.4138785462532659,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 61,
+              "mean_predicted": 0.7765699166860557,
+              "observed": 0.5737704918032787,
+              "ci_low": 0.44895006843512514,
+              "ci_high": 0.6898497144203256,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 141,
+              "mean_predicted": 0.8512912303852078,
+              "observed": 0.4397163120567376,
+              "ci_low": 0.36046434458815024,
+              "ci_high": 0.5221660599365168,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 260,
+              "mean_predicted": 0.9289926456682596,
+              "observed": 0.5115384615384615,
+              "ci_low": 0.4510533586127693,
+              "ci_high": 0.5716875586648699,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 340,
+              "mean_predicted": 0.9705578759388473,
+              "observed": 0.5205882352941177,
+              "ci_low": 0.46755230517837415,
+              "ci_high": 0.5731641177326406,
+              "enough_rows": true
+            }
+          ]
+        }
+      },
+      "6h": {
+        "n": 1303,
+        "base_rate_up": 0.49347659247889486,
+        "naive_rate": 0.5065234075211051,
+        "acted_share": 0.6116653875671527,
+        "acted_accuracy": 0.4755332496863237,
+        "acted_n": 797,
+        "edge": {
+          "point": -0.0014899032534855224,
+          "ci_low": -0.005580569571555446,
+          "ci_high": 0.002035072914519262,
+          "interval_available": true,
+          "hours_needed_for_interval": 96,
+          "resamples_without_an_edge": 0,
+          "interval_withheld": false
+        },
+        "buy_and_hold_mean_return": -0.0006972526061684473,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 297,
+            "mean": -0.001315649646957596
+          },
+          "HOLD": {
+            "n": 506,
+            "mean": -0.0011954525769862533
+          },
+          "SELL": {
+            "n": 500,
+            "mean": 0.0001742536065279265
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.4458108465584524,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 61,
+              "mean_predicted": 0.7765699166860557,
+              "observed": 0.4098360655737705,
+              "ci_low": 0.2953514834927377,
+              "ci_high": 0.5350043374617113,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 140,
+              "mean_predicted": 0.8510066109945614,
+              "observed": 0.4714285714285714,
+              "ci_low": 0.39060995973633705,
+              "ci_high": 0.5537733063007483,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 256,
+              "mean_predicted": 0.9289448298077754,
+              "observed": 0.48828125,
+              "ci_low": 0.427675415913936,
+              "ci_high": 0.549233593267042,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 340,
+              "mean_predicted": 0.9705578759388473,
+              "observed": 0.47941176470588237,
+              "ci_low": 0.4268358822673593,
+              "ci_high": 0.5324476948216258,
+              "enough_rows": true
+            }
+          ]
+        }
+      },
+      "24h": {
+        "n": 1285,
+        "base_rate_up": 0.48249027237354086,
+        "naive_rate": 0.5175097276264591,
+        "acted_share": 0.6062256809338521,
+        "acted_accuracy": 0.417201540436457,
+        "acted_n": 779,
+        "edge": {
+          "point": -0.005909679744739608,
+          "ci_low": -0.017518646445405735,
+          "ci_high": 0.005830556162564709,
+          "interval_available": true,
+          "hours_needed_for_interval": 96,
+          "resamples_without_an_edge": 0,
+          "interval_withheld": false
+        },
+        "buy_and_hold_mean_return": -0.002390062907655133,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 297,
+            "mean": -0.005523732949341922
+          },
+          "HOLD": {
+            "n": 506,
+            "mean": -0.0031950760983477868
+          },
+          "SELL": {
+            "n": 482,
+            "mean": 0.00038594679539768556
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.5048547445333119,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 61,
+              "mean_predicted": 0.7765699166860557,
+              "observed": 0.4098360655737705,
+              "ci_low": 0.2953514834927377,
+              "ci_high": 0.5350043374617113,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 133,
+              "mean_predicted": 0.8511912532826654,
+              "observed": 0.38345864661654133,
+              "ci_low": 0.30519662302307843,
+              "ci_high": 0.4682640789856673,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 245,
+              "mean_predicted": 0.9294406798685633,
+              "observed": 0.37142857142857144,
+              "ci_low": 0.31334494972828136,
+              "ci_high": 0.4334819473821698,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 340,
+              "mean_predicted": 0.9705578759388473,
+              "observed": 0.4647058823529412,
+              "ci_low": 0.41238033889919584,
+              "ci_high": 0.5178200789676359,
+              "enough_rows": true
+            }
+          ]
+        }
+      },
+      "72h": {
+        "n": 1237,
+        "base_rate_up": 0.3734842360549717,
+        "naive_rate": 0.6265157639450283,
+        "acted_share": 0.6038803556992725,
+        "acted_accuracy": 0.4203480589022758,
+        "acted_n": 747,
+        "edge": {
+          "point": -0.010833505437409883,
+          "ci_low": -0.028319344892175847,
+          "ci_high": 0.0057568929811249074,
+          "interval_available": true,
+          "hours_needed_for_interval": 288,
+          "resamples_without_an_edge": 0,
+          "interval_withheld": false
+        },
+        "buy_and_hold_mean_return": -0.00778848125537282,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 296,
+            "mean": -0.014290006791290284
+          },
+          "HOLD": {
+            "n": 490,
+            "mean": -0.007848218759335088
+          },
+          "SELL": {
+            "n": 451,
+            "mean": -0.003456501353880401
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.5017235288398514,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 60,
+              "mean_predicted": 0.7765653025181265,
+              "observed": 0.4,
+              "ci_low": 0.28569303003765506,
+              "ci_high": 0.5263417560579315,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 126,
+              "mean_predicted": 0.8514760487667633,
+              "observed": 0.31746031746031744,
+              "ci_low": 0.2426113595627622,
+              "ci_high": 0.403110812684037,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 234,
+              "mean_predicted": 0.9292831498065018,
+              "observed": 0.4658119658119658,
+              "ci_low": 0.40296536885026707,
+              "ci_high": 0.5297629679924047,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 327,
+              "mean_predicted": 0.9708113721496873,
+              "observed": 0.43119266055045874,
+              "ci_low": 0.3786196876778523,
+              "ci_high": 0.4853635598943999,
+              "enough_rows": true
+            }
+          ]
+        }
+      },
+      "168h": {
+        "n": 1141,
+        "base_rate_up": 0.2085889570552147,
+        "naive_rate": 0.7914110429447853,
+        "acted_share": 0.5968448729184925,
+        "acted_accuracy": 0.5726872246696035,
+        "acted_n": 681,
+        "edge": {
+          "point": -0.004342654437915108,
+          "ci_low": -0.02373433925301999,
+          "ci_high": 0.010210006650842535,
+          "interval_available": true,
+          "hours_needed_for_interval": 672,
+          "resamples_without_an_edge": 0,
+          "interval_withheld": false
+        },
+        "buy_and_hold_mean_return": -0.017823247485899786,
+        "mean_return_by_signal": {
+          "BUY": {
+            "n": 296,
+            "mean": -0.018102115157526494
+          },
+          "HOLD": {
+            "n": 460,
+            "mean": -0.021045015038550944
+          },
+          "SELL": {
+            "n": 385,
+            "mean": -0.013759460719611386
+          }
+        },
+        "confidence_reliability": {
+          "ece": 0.3483361890317969,
+          "buckets": [
+            {
+              "lower": 0.7,
+              "upper": 0.8,
+              "n": 52,
+              "mean_predicted": 0.7759620794473906,
+              "observed": 0.5192307692307693,
+              "ci_low": 0.3868545397052721,
+              "ci_high": 0.6489610529711556,
+              "enough_rows": false
+            },
+            {
+              "lower": 0.8,
+              "upper": 0.9,
+              "n": 123,
+              "mean_predicted": 0.8510735825108906,
+              "observed": 0.4634146341463415,
+              "ci_low": 0.37773363767576046,
+              "ci_high": 0.551311722836879,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.9,
+              "upper": 0.95,
+              "n": 216,
+              "mean_predicted": 0.9287319056891227,
+              "observed": 0.5138888888888888,
+              "ci_low": 0.4475758626678593,
+              "ci_high": 0.5797165151168729,
+              "enough_rows": true
+            },
+            {
+              "lower": 0.95,
+              "upper": 1.0,
+              "n": 290,
+              "mean_predicted": 0.9709612907644806,
+              "observed": 0.6724137931034483,
+              "ci_low": 0.6164486944499317,
+              "ci_high": 0.7238707157356923,
+              "enough_rows": true
+            }
+          ]
+        }
+      }
+    }
+  },
+  "watch_list": {
+    "news_hours": {
+      "have": 1291,
+      "need": 500,
+      "ready": true,
+      "verdict_at": 3140,
+      "verdict_ready": false
+    },
+    "live_months": {
+      "have": 1.81,
+      "need": 6,
+      "ready": false,
+      "tests_waiting": [
+        "funding_last 24h contrarian (E005)"
+      ],
+      "tests_withdrawn": [
+        "dxy_ret_5d / tnx_chg_5d 168h negative (E006): void, see E006's correction_2026_10_17"
+      ]
+    }
+  },
+  "shadow_record": {
+    "n": 1259,
+    "first_hour": "2026-09-21T17:00:00+00:00",
+    "expected_hours": 1268,
+    "missing_hours": [
+      "2026-09-21T19:00:00+00:00",
+      "2026-09-22T01:00:00+00:00",
+      "2026-09-22T02:00:00+00:00",
+      "2026-09-22T04:00:00+00:00",
+      "2026-09-22T05:00:00+00:00",
+      "2026-09-22T07:00:00+00:00",
+      "2026-09-22T09:00:00+00:00",
+      "2026-10-05T19:00:00+00:00",
+      "2026-10-07T14:00:00+00:00"
+    ],
+    "present_hours": 1259,
+    "rows_not_yet_due": 0,
+    "unavailable": 0,
+    "unavailable_reasons": {},
+    "live_close_mismatch": 0,
+    "live_close_unchecked": 4,
+    "model_versions": {
+      "move_size_1h_v1": 1259
+    },
+    "outcomes": {
+      "ok_prospective": 1258,
+      "unavailable": 0,
+      "pending": 1
+    },
+    "not_prospective": [],
+    "errors": {
+      "n": 0,
+      "by_step": {},
+      "by_type": {},
+      "last_24h": 0,
+      "latest": null
+    },
+    "evaluation": {
+      "n": 1258,
+      "base_rate_large": 0.33306836248012717,
+      "mean_stated_p": 0.3571100151968704,
+      "brier": 0.20036145188975626,
+      "brier_base_rate": 0.22213382839493376,
+      "accuracy": 0.6820349761526232,
+      "naive_rate": 0.6669316375198728,
+      "brier_rel_gain": 0.09801468179114159,
+      "rank_corr_p_vs_abs_return": 0.33228014048214455,
+      "ece": 0.030107084386743064,
+      "accuracy_ci95": [
+        0.6557799226382444,
+        0.7071816408416727
+      ],
+      "base_rate_ci95": [
+        0.30756636212639415,
+        0.35958678926756854
+      ],
+      "accuracy_beats_naive": false,
+      "brier_rel_gain_ci95": [
+        0.05352393751374676,
+        0.14125066923248825
+      ],
+      "rank_corr_p_vs_abs_return_ci95": [
+        0.24101939516140725,
+        0.40954132063604853
+      ],
+      "ece_ci95": [
+        0.021436604221172863,
+        0.05728733867983362
+      ],
+      "interval_note": "95% intervals from a 48h block bootstrap, 2000 resamples -- OPTIMISTIC below ~2,000 hours: with this few blocks the interval is too narrow (E025: ~9% false positives at 500 hours instead of 5%)",
+      "reliability": [
+        {
+          "lower": 0.0,
+          "upper": 0.1,
+          "n": 26,
+          "mean_predicted": 0.08602612902824483,
+          "observed": 0.07692307692307693,
+          "ci_low": 0.02135463918337556,
+          "ci_high": 0.24141947480515052,
+          "enough_rows": false
+        },
+        {
+          "lower": 0.1,
+          "upper": 0.2,
+          "n": 196,
+          "mean_predicted": 0.14667147308890832,
+          "observed": 0.11224489795918367,
+          "ci_low": 0.07530197986635534,
+          "ci_high": 0.16409562303514263,
+          "enough_rows": true
+        },
+        {
+          "lower": 0.2,
+          "upper": 0.3,
+          "n": 209,
+          "mean_predicted": 0.25376939410105664,
+          "observed": 0.23923444976076555,
+          "ci_low": 0.18643353299878954,
+          "ci_high": 0.3014485351683357,
+          "enough_rows": true
+        },
+        {
+          "lower": 0.3,
+          "upper": 0.4,
+          "n": 350,
+          "mean_predicted": 0.3502611012137868,
+          "observed": 0.34,
+          "ci_low": 0.2923479111144477,
+          "ci_high": 0.3911262762055282,
+          "enough_rows": true
+        },
+        {
+          "lower": 0.4,
+          "upper": 0.5,
+          "n": 256,
+          "mean_predicted": 0.44779400527283975,
+          "observed": 0.4140625,
+          "ci_low": 0.3554287291479055,
+          "ci_high": 0.4752373381792662,
+          "enough_rows": true
+        },
+        {
+          "lower": 0.5,
+          "upper": 0.6,
+          "n": 148,
+          "mean_predicted": 0.5460190095685086,
+          "observed": 0.46621621621621623,
+          "ci_low": 0.3877181475034963,
+          "ci_high": 0.5464237477346994,
+          "enough_rows": true
+        },
+        {
+          "lower": 0.6,
+          "upper": 0.7,
+          "n": 65,
+          "mean_predicted": 0.6350522951089895,
+          "observed": 0.676923076923077,
+          "ci_low": 0.5561376050627119,
+          "ci_high": 0.7779627063768827,
+          "enough_rows": false
+        },
+        {
+          "lower": 0.7,
+          "upper": 0.8,
+          "n": 8,
+          "mean_predicted": 0.7383055371857187,
+          "observed": 0.875,
+          "ci_low": 0.5291051942301386,
+          "ci_high": 0.9775830911367038,
+          "enough_rows": false
+        }
+      ],
+      "note": "LIVE shadow record, prospective rows only (the probability was stored before the outcome candle closed). Read intervals, not points, until n is in the thousands."
+    },
+    "evaluation_vs_ewma_reference": {
+      "why": "E019: a 24-hour EWMA of 'did recent hours move a lot?' needs no fitting at all and reached 40% of the model's skill on development data. Comparing the model only against the base rate, as E012 did, sets the bar far too low.",
+      "hours_compared": 1258,
+      "model_brier": 0.20036145188975626,
+      "reference_brier": 0.2194580343868833,
+      "model_skill": 0.09801468179114159,
+      "reference_skill": 0.012045864546543217,
+      "model_brier_minus_reference": -0.019096582497127035,
+      "observed_large_move_share": 0.33306836248012717,
+      "development_expectation": "the model had 2.47x the reference's skill on validation data (E019)",
+      "note": "Pre-committed before the live sample was large enough to judge, so the comparison could not be chosen after seeing the answer. Far too few hours to mean anything yet -- this line exists to be read at the 500-hour checkpoint. Both skill figures are measured against a base rate computed on these very hours, which at small n is an ORACLE that knew whether the period turned out calm or wild; it flatters neither side but makes both look worse than they are. The difference between the two Briers is the part that is comparable."
+    }
+  },
+  "drift": {
+    "reference": "development period 2017-08-27 -> 2025-06-30 (snapshot btcusdt_1h_2026-09-19.csv); raw feature values (before log)",
+    "features": {
+      "tr_mean_14_rel": {
+        "n": 1259,
+        "dev_median": 0.008219970356210995,
+        "dev_iqr": 0.0062625525281903545,
+        "live_median": 0.004997105398429663,
+        "median_shift_iqr": -0.5146248184384682,
+        "share_outside_dev_1_99": 0.09213661636219221,
+        "status": "ok"
+      },
+      "rv_24": {
+        "n": 1259,
+        "dev_median": 0.005213735518525552,
+        "dev_iqr": 0.004240295289740068,
+        "live_median": 0.003079777388628777,
+        "median_shift_iqr": -0.5032569630374936,
+        "share_outside_dev_1_99": 0.05321683876092136,
+        "status": "ok"
+      },
+      "rv_168": {
+        "n": 1259,
+        "dev_median": 0.005764971032744351,
+        "dev_iqr": 0.0034698771587411527,
+        "live_median": 0.0035940971696482374,
+        "median_shift_iqr": -0.6256342123315085,
+        "share_outside_dev_1_99": 0.0,
+        "status": "ok"
+      },
+      "vol_ratio_24_168": {
+        "n": 1259,
+        "dev_median": 0.8807932168054635,
+        "dev_iqr": 0.4531093482009425,
+        "live_median": 0.9002053131513057,
+        "median_shift_iqr": 0.04284196833042033,
+        "share_outside_dev_1_99": 0.04924543288324067,
+        "status": "ok"
+      },
+      "trades_rel_24h": {
+        "n": 1259,
+        "dev_median": 0.8714218327168003,
+        "dev_iqr": 0.48413926586490463,
+        "live_median": 0.8342656584038826,
+        "median_shift_iqr": -0.07674687209379517,
+        "share_outside_dev_1_99": 0.0937251787132645,
+        "status": "ok"
+      },
+      "trades_rel_168h": {
+        "n": 1259,
+        "dev_median": 0.8531530324057546,
+        "dev_iqr": 0.5489125694216114,
+        "live_median": 0.8163837590812447,
+        "median_shift_iqr": -0.06698566469930467,
+        "share_outside_dev_1_99": 0.13423351866560762,
+        "status": "FLAG"
+      },
+      "hour_sin": {
+        "n": 1259,
+        "dev_median": 0.0,
+        "dev_iqr": 1.4142135623730954,
+        "live_median": 1.2246467991473532e-16,
+        "median_shift_iqr": 8.659560562354932e-17,
+        "share_outside_dev_1_99": 0.0,
+        "status": "ok"
+      },
+      "hour_cos": {
+        "n": 1259,
+        "dev_median": -1.8369701987210297e-16,
+        "dev_iqr": 1.4142135623730954,
+        "live_median": 6.123233995736766e-17,
+        "median_shift_iqr": 1.7319121124709863e-16,
+        "share_outside_dev_1_99": 0.0,
+        "status": "ok"
+      },
+      "is_weekend": {
+        "n": 1259,
+        "dev_median": 0.0,
+        "dev_iqr": 1.0,
+        "live_median": 0.0,
+        "median_shift_iqr": 0.0,
+        "share_outside_dev_1_99": 0.0,
+        "status": "ok"
+      }
+    },
+    "probability": {
+      "n": 1259,
+      "dev_median": 0.4683123149656863,
+      "dev_q05_q95": [
+        0.20662709854077255,
+        0.7428892643106039
+      ],
+      "live_median": 0.357285579990755,
+      "live_q05_q95": [
+        0.1144428030907791,
+        0.6090042728463863
+      ],
+      "share_above_dev_q95": 0.0023828435266084196,
+      "share_below_dev_q05": 0.1834789515488483,
+      "status": "ok"
+    },
+    "outcomes": {
+      "n": 1258,
+      "dev_share": 0.517990960781455,
+      "validation_share": 0.4752037784718519,
+      "live_share": 0.33306836248012717,
+      "live_share_ci95": [
+        0.3070234380539736,
+        0.35911328690628075
+      ],
+      "status": "FLAG"
+    },
+    "missing_and_timing": {
+      "shadow_unavailable_share": 0.0,
+      "shadow_rows": 1259,
+      "fetch_delay_by_week_median_min": {
+        "2026-W38": 12.415510699999999,
+        "2026-W39": 12.561804574999996,
+        "2026-W40": 12.546822391666673,
+        "2026-W41": 12.553522925000003,
+        "2026-W42": 12.528879550000006,
+        "2026-W43": 12.543413533333336,
+        "2026-W44": 12.54371464166666,
+        "2026-W45": 12.547989066666666,
+        "2026-W46": 12.517704583333341
+      },
+      "status": "ok"
+    },
+    "flags": [
+      "feature trades_rel_168h",
+      "outcomes"
+    ],
+    "note": "Flags are descriptive: investigate and document; never retrain or retune from them. Reference distributions are frozen."
+  },
+  "parity": {
+    "compared": 1309,
+    "parity_breaks": 0,
+    "breaks": [],
+    "skipped": [
+      [
+        "2026-09-19T09:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T11:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T14:00:00+00:00",
+        "pipeline version differs"
+      ],
+      [
+        "2026-09-19T17:00:00+00:00",
+        "pipeline version differs"
+      ]
+    ],
+    "verdict": "PARITY",
+    "candles_fetched": 1574
+  },
+  "paper_move_size_1h": {
+    "error": "data/btcusdt_1h_2026-09-19.csv is missing. Governed research never downloads a replacement or uses another file: restore the registered snapshot, or register a new one in a reviewed commit"
+  }
+}

@@ -82,7 +82,12 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
   - Every check that ran passed, and the mutation suite caught 176 of 176 in a clone with no `data/` folder.
   - Not run, under that audit's brief: the integration suite with its drift check (it writes a scratch schema and
     throwaway roles to production), and anything that opens `data/`. Both await the user's decision (`status.json`).
-  - Back to monitoring. The next audit is ≈ 2026-11-11.
+- **2026-11-13:** the weekly audit, Week 46 (see the dated entry).
+  - Every check that ran passed. The first 16 move-size hours outside the calm tercile appeared.
+  - Not run, under that audit's brief: the integration suite with its drift check, anything that opens `data/`, and the
+    full mutation suite (the policy texts disagree). This week's production package list is not verified. The
+    decisions are in `status.json`.
+  - Back to monitoring. The next audit is ≈ 2026-11-18.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -1169,6 +1174,59 @@ locally, the audit record).**
   - **no database backup** (re-confirmed).
 - **Repository:** public. This commit moves GitHub's inactivity date to ≈ 2027-01-03.
 - **Next:** the weekly audit ≈ 2026-11-11; the direction first look ≈ 2026-11-26; the 2,000-hour reading ≈ 2026-12-14.
+- **Nothing** in prediction, scoring, the models, the direction track, the checkpoints or their registrations, the
+  schema, roles, policies, workflows or dependencies changed.
+
+**2026-11-13 — the weekly audit, Week 46 (the user's brief, dated 11 November and run on 13 November; read-only).**
+- **Period:** 2026-11-04 14:07 → 2026-11-13 13:45 UTC. **Primary cutoff:** 13:44:58 UTC, the registered report's own time
+  (`research/monitoring/weekly_2026-11-13.md`, committed unchanged). Every principal count uses only rows written by it.
+- **How it ran:**
+  - every command ran from a fresh clone with no `data/` folder, under a wrapper that made each database connection
+    read-only before its first statement (the server confirmed each one) and refused any access under `data/`;
+  - only `DATABASE_URL` was taken from the local `.env`, and no value was printed;
+  - the guard's self-test tried one `data/` listing, which was refused before the system call.
+- **Operations:**
+  - 216 of 216 hours saved (reference hours 11-04 13:00 → 11-13 12:00), all by `bitcoin_agent`, all Binance, 250 candles
+    and no gap each, completeness 1.000;
+  - 0 duplicates; 0 overdue outcomes; 0 errors on any track; 0 new incidents.
+  - GitHub: hourly 347/347 (216 dispatched, one in every clock hour, + 131 backup slots, 15.2% of 860), watchdog 27/27
+    (median gap 8.4 h, longest 12.9 h), Tests 1/1, dispatch answers 216/216 accepted.
+  - **Reporting 373 of 374:** run 42672133634 (2026-11-09 18:13 UTC) failed before any job started. GitHub's annotation
+    is "Internal server error". The next reporting run (18:52) published, and no incident was due (no gap over 3 h).
+- **Integrity:**
+  - parity 1,309 of 1,309; move-size inputs 1,259 × 9 within 2.8e-14; stored probabilities 1,258 rows within 6.1e-16;
+    tracker vs candles 1,312 of 1,312;
+  - direction integrity 9/9 (694 rows, counts only);
+  - the pre-check exits 3, with every mandatory item PASS;
+  - still 4 rows without a write-time close check, none new; all 4 match exactly.
+- **Structure:** the live `public` fingerprint (the integration suite's own catalog reader: types, defaults, constraint
+  and index definitions, triggers, RLS, policies with conditions, API grants) equals the 2026-11-04 one. That shows no
+  change since then, not agreement with the repository; the drift check did not run.
+- **The 2026-11-04 probe, followed up from the session transcript and read-only catalog views:**
+  - the statement was `CREATE TEMP TABLE audit_probe_never (x int)`, run once as the owner role through the local
+    connection, in an ordinary (not autocommit) transaction, followed by an explicit rollback with no error;
+  - `pg_stat_statements` shows it once (calls 1, rows 0);
+  - no relation named `audit_probe*` exists in any schema, and a temporary table cannot outlive its session;
+  - the fingerprint taken after it is unchanged.
+  - Not verifiable: the rollback itself (no database log covers that day any more), and the structure between the
+    2026-10-28 drift check and that fingerprint.
+- **Dependencies:**
+  - local audit 0 of 43; OSV.dev re-check of the 2026-11-04 production list 0 of 40;
+  - **this week's production list, runner image and Python version: NOT VERIFIED** (the logs need sign-in; none pasted).
+- **Tests:** unit 840 passed, 51 skipped in the clone. The full mutation suite was not run, because `QUALITY_GATE.md`
+  and STATUS disagree on its cadence and no code has changed since the last two full runs (176 of 176 each).
+- **Regime:** the first 16 move-size hours outside the calm tercile (mid; 2026-11-05, 11-10, 11-11). 1,243 of 1,259 are
+  still calm.
+- **Running move-size figures (descriptive, n = 1,258, intervals optimistic):** Brier skill +9.8% [+5.4, +14.1]; ρ
+  +0.332; ECE 0.030; ahead of the EWMA rule (0.2004 vs 0.2195); accuracy 0.682 vs 0.667 naive, +1.5 points against the
+  registered +5.
+- **Holdout:** not opened; no holdout value read; no access log. Sealed for evaluation, not historically untouched.
+- **Counts at the cutoff:** 1,313 saved of 1,324 expected since go-live (11 missing, none since 2026-10-07); 1,309 at
+  pipeline 0.2.0 and 4 at 0.1.0; 1h graded 1,312; move-size 1,259 rows of 1,268 expected (9 without a row), 1,258 graded
+  + 1 pending; direction 694 rows, 693 eligible + 1 pending; news 1,291 usable.
+- **Open:** email delivery unverified since 2026-10-15/16; **no database backup** (re-confirmed).
+- **Repository:** this commit moves GitHub's inactivity date to ≈ 2027-01-12.
+- **Next:** the weekly audit ≈ 2026-11-18; the direction first look ≈ 2026-11-26; the 2,000-hour reading ≈ 2026-12-14.
 - **Nothing** in prediction, scoring, the models, the direction track, the checkpoints or their registrations, the
   schema, roles, policies, workflows or dependencies changed.
 
