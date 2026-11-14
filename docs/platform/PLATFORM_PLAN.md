@@ -350,6 +350,9 @@ Anything that would cost money is stopped and raised first.
   - P6: the website (`web/`): ten pages, light and dark, phone and desktop, the value chart with 13 periods, on
     fictional data; checked in a browser at 1280 px and 375 px, with no sideways overflow on any page.
   - Nothing in production, the database, the workflows or any published page changed.
+  - Correction, the same day: the demo file first lived in `web/data/`, which the repository's `data/` ignore rule
+    (it protects the research snapshots) kept out of the commit. It now lives in `web/fixtures/demo.json`, and a test
+    requires it to be the fictional 2030 run and the website's only JSON file.
 
 ## 15. Sources (accessed 2026-11-14)
 

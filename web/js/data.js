@@ -11,7 +11,7 @@ let cached = null;
 
 export async function loadState() {
   if (cached) return cached;
-  const res = await fetch("data/demo.json", { cache: "no-cache" });
+  const res = await fetch("fixtures/demo.json", { cache: "no-cache" });
   if (!res.ok) throw new Error(`could not load the data (${res.status})`);
   const doc = await res.json();
   cached = enrich(doc);

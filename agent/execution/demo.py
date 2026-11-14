@@ -1,11 +1,11 @@
 """
-Fictional demo data for the website (web/data/demo.json): the real execution engine (strategy rule-1.0) run hour by
+Fictional demo data for the website (web/fixtures/demo.json): the real execution engine (strategy rule-1.0) run hour by
 hour over an INVENTED price path in 2030, with invented signals that have no edge, a simulated exchange (default
 fee 0.1% per side; `--fee`) and the owner's cap of 150. Every value is fictional and the document says so (`"fictional": true`). Real data never
 goes into the repository: the website reads it through the two-factor login (docs/platform/PLATFORM_PLAN.md
 section 7).
 
-    python -m agent.execution.demo [--out web/data/demo.json] [--days 400] [--fee 0.001]
+    python -m agent.execution.demo [--out web/fixtures/demo.json] [--days 400] [--fee 0.001]
 """
 
 from __future__ import annotations
@@ -156,7 +156,7 @@ def build(days: int = 400, seed: int = 2030, fee: float = 0.001) -> dict:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
-    ap.add_argument("--out", default="web/data/demo.json")
+    ap.add_argument("--out", default="web/fixtures/demo.json")
     ap.add_argument("--days", type=int, default=400)
     ap.add_argument("--fee", type=float, default=0.001)
     args = ap.parse_args()

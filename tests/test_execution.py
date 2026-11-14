@@ -194,6 +194,20 @@ def test_the_prediction_engine_and_its_research_never_import_the_execution_layer
         assert not any(m.startswith("agent.execution") for m in _imports(path)), path
 
 
+def test_the_websites_committed_data_is_the_fictional_demo_and_nothing_real():
+    # The repository is public. The website's only committed data is the engine's invented 2030 run
+    # (python -m agent.execution.demo); real data reaches the website only through the two-factor login.
+    import json
+
+    path = Path("web/fixtures/demo.json")
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    assert doc["fictional"] is True and "invented" in doc["note"]
+    stamps = [doc["generated_at"], doc["series"]["start"], *(t["t"] for t in doc["trades"]),
+              *(d["as_of"] for d in doc["decisions"]), *(a["as_of"] for a in doc["activity"])]
+    assert all(s[:4] in ("2030", "2031") for s in stamps)
+    assert [p.name for p in Path("web").rglob("*.json")] == ["demo.json"]
+
+
 def test_the_execution_layer_cannot_write_the_prediction_record():
     for path in Path("agent/execution").glob("*.py"):
         mods = _imports(path)
