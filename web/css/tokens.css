@@ -1,0 +1,102 @@
+/* Design tokens: the only place colours, type and spacing are defined. Light is the default; dark follows the
+   system unless the owner picks a theme (html[data-theme]). Lovable may restyle these values later without touching
+   any behaviour. */
+:root {
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #f0f2f5;
+  --surface-3: #e8ebf0;
+  --border: #e2e5ea;
+  --border-strong: #cfd4dc;
+  --text: #0d1117;
+  --text-2: #525c6b;
+  --text-3: #8790a0;
+  --accent: #4b48e0;
+  --accent-soft: rgba(75, 72, 224, 0.10);
+  --accent-text: #ffffff;
+  --gain: #0e9f6e;
+  --gain-soft: rgba(14, 159, 110, 0.12);
+  --loss: #e0444b;
+  --loss-soft: rgba(224, 68, 75, 0.11);
+  --warn: #b7791f;
+  --warn-soft: rgba(183, 121, 31, 0.13);
+  --btc: #e8922f;
+  --chart-line: #4b48e0;
+  --chart-fill-top: rgba(75, 72, 224, 0.20);
+  --chart-fill-bottom: rgba(75, 72, 224, 0.00);
+  --chart-bench: #9aa3b2;
+  --chart-grid: rgba(13, 17, 23, 0.06);
+  --shadow: 0 1px 2px rgba(13, 17, 23, 0.04), 0 4px 16px rgba(13, 17, 23, 0.05);
+  --overlay: rgba(13, 17, 23, 0.40);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --gap: 16px;
+  --side-w: 248px;
+  --top-h: 60px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0c11;
+    --surface: #11141b;
+    --surface-2: #171b24;
+    --surface-3: #1e2330;
+    --border: #222837;
+    --border-strong: #2e3547;
+    --text: #edf0f5;
+    --text-2: #a3abbb;
+    --text-3: #6c7487;
+    --accent: #8f8dfb;
+    --accent-soft: rgba(143, 141, 251, 0.14);
+    --accent-text: #0a0c11;
+    --gain: #39d095;
+    --gain-soft: rgba(57, 208, 149, 0.13);
+    --loss: #ff6b70;
+    --loss-soft: rgba(255, 107, 112, 0.13);
+    --warn: #f0b252;
+    --warn-soft: rgba(240, 178, 82, 0.13);
+    --chart-line: #8f8dfb;
+    --chart-fill-top: rgba(143, 141, 251, 0.24);
+    --chart-fill-bottom: rgba(143, 141, 251, 0.00);
+    --chart-bench: #59627a;
+    --chart-grid: rgba(237, 240, 245, 0.06);
+    --shadow: none;
+    --overlay: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0c11;
+  --surface: #11141b;
+  --surface-2: #171b24;
+  --surface-3: #1e2330;
+  --border: #222837;
+  --border-strong: #2e3547;
+  --text: #edf0f5;
+  --text-2: #a3abbb;
+  --text-3: #6c7487;
+  --accent: #8f8dfb;
+  --accent-soft: rgba(143, 141, 251, 0.14);
+  --accent-text: #0a0c11;
+  --gain: #39d095;
+  --gain-soft: rgba(57, 208, 149, 0.13);
+  --loss: #ff6b70;
+  --loss-soft: rgba(255, 107, 112, 0.13);
+  --warn: #f0b252;
+  --warn-soft: rgba(240, 178, 82, 0.13);
+  --chart-line: #8f8dfb;
+  --chart-fill-top: rgba(143, 141, 251, 0.24);
+  --chart-fill-bottom: rgba(143, 141, 251, 0.00);
+  --chart-bench: #59627a;
+  --chart-grid: rgba(237, 240, 245, 0.06);
+  --shadow: none;
+  --overlay: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}

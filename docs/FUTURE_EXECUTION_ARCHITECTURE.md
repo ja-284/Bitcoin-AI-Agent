@@ -1,12 +1,12 @@
-# Future execution architecture — NOT ACTIVE
+# Execution architecture — APPROVED 2026-11-14, NOT YET LIVE
 
-**Status: NOT ACTIVE. Nothing described here exists in the code, and none of it may be built during the
-current prospective evaluation.** Recorded 2026-09-26 on the user's instruction, as a statement of the
-long-term direction. Project principle 10 in `CLAUDE.md` ("No real trading") remains binding: the system
-is analysis-only, it has no order, wallet, exchange-account or payment code anywhere, and
-`docs/ops/status.json` records `"trading_capability": false`.
+**Status (2026-11-14):** the owner approved real-money automatic trading (CLAUDE.md principle 10 and the decisions
+log). The execution layer is being built in `agent/execution`, and the plan, the evidence and the progress live in
+`docs/platform/PLATFORM_PLAN.md`. **Nothing trades yet:** no job runs the layer, no exchange key exists, and
+`docs/ops/status.json` records `"trading_capability": false` until the hourly workflow runs it (a test keeps the two
+in agreement).
 
-## The user's statement (verbatim)
+## The user's statement of 2026-09-26 (verbatim), whose requirements the layer keeps
 
 > FUTURE EXECUTION ARCHITECTURE — NOT ACTIVE
 >
@@ -31,24 +31,25 @@ is analysis-only, it has no order, wallet, exchange-account or payment code anyw
 > current prospective-validation and safety work has been completed
 > and a separate execution architecture has been designed and tested.
 
-## Facts to keep next to it (so the goal is never read as a green light)
+**What changed on 2026-11-14:** the owner decided not to wait for the prospective evaluation to finish, and not to run
+a paper-trading phase as a product ("this is not paper trading"). Every other requirement above is kept:
 
-- **The BUY/HOLD/SELL signal has no demonstrated predictive value** at any horizon tested (E001, E017;
-  scoring 0.2.0). A system that executed it today would be executing a measuring instrument under test.
-- **The one validated output says nothing about direction.** `move_size_1h_v1` estimates how likely the
-  next hour's move is to exceed 0.25%, not which way it goes. It is itself still under prospective test
-  (500 / 2,000 / 5,000-hour checkpoints, `research/LIVE_EVALUATION.md`).
-- The separation the statement asks for already has a foundation: the prediction engine only reads
-  public data and writes its own append-only record, the research shadow cannot write to the live record
-  (tested), and the backend contract (`docs/api/contract_v1.md`) is read-only. A future execution layer
-  would consume that record from outside; it would not live inside the engine.
+| requirement | how it is met |
+|---|---|
+| the prediction system can be evaluated independently | the layer only reads the prediction record (tested); the frozen models, checkpoints and holdout are untouched |
+| execution cannot alter predictive behaviour | nothing in the prediction engine imports the layer (tested) |
+| testing before live execution | unit tests, a simulated exchange, a dry run with no order, then one minimum-size order the owner watches |
+| risk controls can reject a prediction before any order | the pure strategy checks every limit before an order exists (`agent/execution/strategy.py`) |
+| every execution can be audited | every decision, including "no trade", is recorded with its inputs and checks |
+| an independent kill switch | the owner's pause in the app and a repository variable, either one stops every order |
+| the exchange can be changed without a rewrite | one small adapter interface (`agent/execution/exchange.py`); Firi is one implementation |
 
-## What would have to happen first (in this order, none of it started)
+## Facts to keep next to it
 
-1. The current prospective evaluation finishes as registered, followed by the strict final readiness audit.
-2. A signal with demonstrated, pre-registered, out-of-sample predictive value exists, which is not the case today.
-3. A separate execution architecture is designed, reviewed with the user and approved in `CLAUDE.md`'s
-   decisions log, with its own risk limits, audit log, kill switch and paper-trading stage.
-4. Paper trading is run and evaluated before any real account is connected.
-
-Until then this file is the only place the topic lives.
+- **The BUY/HOLD/SELL signal has no demonstrated predictive value** at any horizon tested (E001, E017; scoring 0.2.0).
+  Since go-live, the owner's rule would have lost 12.3% at a 0.10% fee in a market that fell 18.8%
+  (`docs/platform/PLATFORM_PLAN.md` section 2.1).
+- **Costs decide the result while there is no edge.** On Firi a buy and a later sell cost about 2.7% at the spread and
+  fee seen on 2026-11-14 (one snapshot). The strategy is built to trade rarely.
+- **The one validated output says nothing about direction.** `move_size_1h_v1` estimates how likely the next hour's
+  move is to exceed 0.25%; the strategy uses it only to size positions down.

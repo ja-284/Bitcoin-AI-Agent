@@ -93,7 +93,11 @@ def test_the_checkpoint_command_is_the_same_everywhere_and_the_verdict_matches_t
     assert Path("agent/research/live_checkpoint.py").exists()
 
 
-def test_no_trading_capability_and_the_execution_note_is_marked_not_active():
-    assert _js()["production"]["trading_capability"] is False
+def test_the_trading_capability_flag_matches_the_hourly_job_and_the_execution_note():
+    # Real-money execution was approved on 2026-11-14 (CLAUDE.md principle 10). The status may call the system able to
+    # trade exactly when the hourly job runs the execution layer, and the execution note must say the same.
+    wired = "agent.execution" in Path(".github/workflows/hourly.yml").read_text(encoding="utf-8")
+    assert _js()["production"]["trading_capability"] is wired
     note = Path("docs/FUTURE_EXECUTION_ARCHITECTURE.md").read_text(encoding="utf-8")
-    assert note.startswith("# Future execution architecture — NOT ACTIVE")
+    expected = "# Execution architecture — LIVE" if wired else "# Execution architecture — APPROVED 2026-11-14, NOT YET LIVE"
+    assert note.splitlines()[0] == expected

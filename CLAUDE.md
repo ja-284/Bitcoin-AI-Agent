@@ -88,6 +88,12 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
     full mutation suite (the policy texts disagree). This week's production package list is not verified. The
     decisions are in `status.json`.
   - Back to monitoring. The next audit is ≈ 2026-11-18.
+- **Since 2026-11-14: the trading platform** (the owner's brief; plan and progress in `docs/platform/PLATFORM_PLAN.md`).
+  Real-money automatic trading on Firi is approved (principle 10 and the decisions log). Built so far: the execution
+  core (`agent/execution`: strategy `rule-1.0`, risk limits, engine, simulated exchange, Firi adapter; 24 tests) and
+  the website (`web/`, on fictional demo data). **Not yet live:** no production table, no hourly step, no key. Next:
+  the owner's Firi key as secrets, then storage, a dry run with no order, then a minimum-size first order the owner
+  watches. The prediction engine, the frozen models, the checkpoints, the holdout and the weekly audits are unchanged.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -146,7 +152,13 @@ These rules govern every decision in this project. They should not be broken wit
 7. **Test every meaningful change against historical data** before trusting it.
 8. **Don't assume a signal is good just because the AI's explanation for it sounds convincing** — a persuasive-sounding explanation is not evidence that the call was right.
 9. **Keep the architecture modular** — the AI model, data providers, technical indicators, scoring system, news sources, database, and frontend must each be swappable without rebuilding everything else.
-10. **No real trading** — this project stays analysis-only for now, and for the foreseeable future. Do not implement real trading in this phase or any time soon.
+10. **Real-money automatic trading only through the separate, capped execution layer** — *replaced 2026-11-14 by the
+    owner's decision; until then it read "No real trading".* Orders are placed only by `agent/execution`
+    (`docs/platform/PLATFORM_PLAN.md`), on the owner's own Firi account, never above the hard cap in code (NOK 500)
+    or the owner's cap (from NOK 150), with the daily-loss and drawdown stops, the kill switch and at most one order an
+    hour. The execution layer only reads the prediction record; it never changes the prediction engine, the frozen
+    models, the registered checkpoints or the holdout. The signal has no demonstrated predictive value, and the app
+    must say so. I never create exchange accounts, handle keys or place orders myself.
 
 ## Architecture Decisions Log
 
@@ -166,7 +178,17 @@ Phase 1 architecture **approved 2026-09-19**. Full reasoning lives in the approv
 - **Backtests are technical-only and never touch the predictions table.** RSS has no archive, so past news is unknowable; backtests run with news absent (weight 0) and are labeled as such — not directly comparable to live runs. Results go to CSV files under `backtests/` (git-ignored), keeping live data pure. The no-lookahead rule is enforced by construction (each hour sees only `bars[:i+1]`) and checked by `tests/test_point_in_time.py`.
 - **Outcomes record raw prices and returns only.** Whether a signal was "right" is decided at analysis time (which horizon, what threshold, vs. buy-and-hold), never by the tracker. Horizons: 1h, 24h, 168h.
 - **Module map & build order**: see the full plan file — 13 build steps from project skeleton through to scheduled go-live, each module with a narrow, swappable interface (settings, market data, indicators, patterns, news, scoring, AI, decision/confidence, database, orchestrator, backtest runner, outcome tracker).
-- **Future execution (recorded 2026-09-26 on the user's instruction): NOT ACTIVE.** The long-term goal of automatically executing BUY/HOLD/SELL decisions is written down, verbatim, in `docs/FUTURE_EXECUTION_ARCHITECTURE.md`. It must be a separate layer from the prediction/research engine (paper trading first, risk controls, audit log, independent kill switch), designed and tested only after the current prospective validation and safety work. Nothing of it is implemented; principle 10 remains binding.
+- **Future execution (recorded 2026-09-26 on the user's instruction): NOT ACTIVE.** The long-term goal of automatically executing BUY/HOLD/SELL decisions is written down, verbatim, in `docs/FUTURE_EXECUTION_ARCHITECTURE.md`. It must be a separate layer from the prediction/research engine (paper trading first, risk controls, audit log, independent kill switch), designed and tested only after the current prospective validation and safety work. Nothing of it is implemented; principle 10 remains binding. *(Superseded 2026-11-14, next entry.)*
+- **Execution approved (2026-11-14, the owner's decision, after the evidence in `docs/platform/PLATFORM_PLAN.md`
+  section 2).** Real-money automatic trading on the owner's **Firi** account (BTC/NOK), through `agent/execution`: a
+  separate layer that only reads the prediction record. Strategy `rule-1.0` (section 3.1 of the plan): target exposure
+  instead of flips, volatility and move-size sizing, confidence disabled (uninformative), a no-trade band, a 6-hour
+  minimum holding time, at most 4 trades in 24 h, a data-quality veto, a daily-loss stop (10%), a drawdown stop
+  (30%), a kill switch, a hard cap of NOK 500 in code and the owner's cap from NOK 150. **Going live is approved after
+  tests**: the production tables and the hourly step are added once the tests and a no-order dry run pass, and the
+  first real order is a minimum-size one the owner watches. The owner creates the Firi key (no withdrawal right:
+  Firi forbids it through the API) and stores it as a secret. A website (PWA, `web/`) shows everything, in light and
+  dark, at NOK 0 of extra cost. The weekly audits continue, extended to the execution layer.
 
 ## Status
 
@@ -1229,6 +1251,24 @@ locally, the audit record).**
 - **Next:** the weekly audit ≈ 2026-11-18; the direction first look ≈ 2026-11-26; the 2,000-hour reading ≈ 2026-12-14.
 - **Nothing** in prediction, scoring, the models, the direction track, the checkpoints or their registrations, the
   schema, roles, policies, workflows or dependencies changed.
+
+**2026-11-14 — the trading platform begins (the owner's brief: a website/PWA with real-money automatic trading).**
+- **The owner's decisions:** principle 10 replaced (real-money automatic trading through the separate, capped execution
+  layer); venue **Firi**; go live after tests, with a minimum-size first order the owner watches. The owner added:
+  "this is not paper trading", and the weekly audits continue.
+- **Evidence given before the decisions** (`docs/platform/PLATFORM_PLAN.md` section 2):
+  - the owner's rule on the live record since go-live: −12.3% at 0.10% fees, against −18.9% for buy-and-hold and 0%
+    for cash; its timing was no better than chance (descriptive, nothing tuned);
+  - Firi's BTC/NOK spread in one snapshot was 1.29%, so a round trip costs about 2.7% with the fee;
+  - the real engine on invented no-edge data lost about what it paid in fees.
+- **Built (code and tests only; nothing live):**
+  - `agent/execution`: strategy `rule-1.0`, the engine, the simulated exchange, the Firi adapter (signature checked
+    against Firi's reference implementation), fictional demo data; 24 tests;
+  - 12 mutation guards in area `execution`;
+  - `web/`: the website, on fictional data only.
+- **Next:** the owner creates the Firi key and stores it as secrets, then storage and a dry run, then the first order.
+- **Nothing** in the prediction engine, the frozen models, the direction track, the checkpoints, the holdout, the
+  schema, roles, policies or workflows changed.
 
 ## Research phase — rules and decisions (2026-09-19)
 

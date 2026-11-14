@@ -23,7 +23,7 @@
   "production": {
     "live_since": "2026-09-19",
     "trading_capability": false,
-    "future_execution": "NOT ACTIVE -- docs/FUTURE_EXECUTION_ARCHITECTURE.md",
+    "future_execution": "APPROVED 2026-11-14 by the owner, NOT YET LIVE: agent/execution exists in code and tests only; no job runs it and no exchange key exists -- docs/FUTURE_EXECUTION_ARCHITECTURE.md, docs/platform/PLATFORM_PLAN.md",
     "pipeline_version": "0.2.0",
     "scoring_version": "0.2.0",
     "signal_predictive_value": "none demonstrated (E001, E017)",

@@ -53,9 +53,10 @@ other or with the versions in the code. **Update both, together, from the comman
 
 ## Production state (changes only by a versioned, committed decision)
 
-- **Live since 2026-09-19**, hourly, analysis only. No trading capability exists anywhere. Automated
-  execution is a long-term goal recorded as **NOT ACTIVE** in `docs/FUTURE_EXECUTION_ARCHITECTURE.md`;
-  none of it may be built during this evaluation.
+- **Live since 2026-09-19**, hourly. **Real-money automatic trading on Firi was approved by the owner on
+  2026-11-14** (CLAUDE.md principle 10; `docs/platform/PLATFORM_PLAN.md`). It is **not yet live**: the execution layer
+  (`agent/execution`) exists in code and tests only, no job runs it and no exchange key exists, so no order can be
+  placed. `docs/FUTURE_EXECUTION_ARCHITECTURE.md` says the same, and a test keeps the two in agreement.
 - Versions, all frozen for the prospective evaluation: pipeline **0.2.0**, scoring **0.2.0** (the
   BUY/HOLD/SELL signal, *no demonstrated predictive value*, E001/E017), shadow model **`move_size_1h_v1`**
   (the calibrated 1h move-size probability under prospective test), schema **4**, contract **v1**.
