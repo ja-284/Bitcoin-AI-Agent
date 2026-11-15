@@ -1,8 +1,8 @@
 {
   "id": "E040",
   "date": "2026-11-15",
-  "git_commit": "registrering (denne commiten), før noe kode finnes; kode og resultat i senere commiter",
-  "status": "REGISTRERT -- ikke kjørt. Eierens mål av 2026-11-15 (alternativ 2): med Firis kostnader skal systemet ikke tape penger (stå på startverdien eller høyere) i minst 75 % av periodene, uansett om Bitcoin stiger eller faller, og helst tjene i periodene der det stiger. Bare utviklingsdata; hypotesegenererende (validation wear).",
+  "git_commit": "registrering b223385 (før all kode); kode 87bd199; kjørt 2026-11-15 20:18-20:23 UTC (296 s) ved 87bd199; resultatet i neste commit",
+  "status": "FERDIG -- etter de registrerte reglene: SHORTLIST 3 (alle utbruddsregelen 55/20 med og uten overlegg), CANDIDATE 2 (G_up55_down20 og H_G_up55_down20_sl10), begge merket «eksponering» av timing-testen. H1 og H3 holder; H2 holder. Bare utviklingsdata, hypotesegenererende; ingenting live, frosset eller registrert endret.",
   "why": "Eieren ba om at «utallige forskjellige metoder» testes mot dette målet. Grunnlinjen (beskrivende, 2026-11-15, NOK 300, 1,25 % per side): dagens modell (rule-1.0) ender på 300 kr eller mer i bare om lag 20 % av 5-dagersperiodene og 4 % av kvartalene; én beslutning per dag 50 % og 31 %; kjøp og hold 45 % og 54 %. I perioder der Bitcoin falt endte ingen variant i pluss. Hos Firi kan systemet bare eie Bitcoin eller stå i kontanter, så i fallende perioder er 0 det beste mulige uten ekte forutsigelse. Målet må derfor måles slik at kontanter teller som «ikke tap», men slik at et system som aldri handler ikke kan bestå.",
   "question": "Finnes det, blant 104 forhåndsbestemte daglige regler og overlegg, noen som med Firis kostnader står på startverdien eller høyere i minst 75 % av alle 5- og 30-dagersperioder, med positiv gjennomsnittsavkastning, i BEGGE utviklingsperiodene? Og kommer det i så fall av timing eller bare av hvor ofte regelen eier Bitcoin?",
   "duplicate_check": "Nytt: målet (andelen perioder som ikke taper, fersk start i kontanter) er aldri målt. Gjenbrukt: de daglige signalene fra E039 (samme definisjoner og kode), kostnadsnivåene fra E038, signalets gjenkjøring fra E017. Overlapp: B-familien inneholder E039s trendregler; de vurderes her på et annet mål og er ikke nye tester av retning. Dagens timessignal brukes bare én gang per dag (familie A), som i eierens analyse.",
@@ -36,7 +36,11 @@
     "baselines": "kontanter; kjøp og hold (kjøp ved start, aldri salg).",
     "references_not_candidates": "Dagens modell på timesnivå (rule-1.0 som bygget, og maks 1 handel per 24 t), simulert med E038s bekreftede kopi over de samme 5- og 30-dagersperiodene (start kl. 00 UTC dagen etter dag s)."
   },
-  "costs_per_side": {"S2_firi_optimistisk": 0.008, "S3_firi_realistisk": 0.0125, "S4_firi_konservativ": 0.016},
+  "costs_per_side": {
+    "S2_firi_optimistisk": 0.008,
+    "S3_firi_realistisk": 0.0125,
+    "S4_firi_konservativ": 0.016
+  },
   "metrics": "Per strategi x kostnad x periode x W: andel perioder >= startverdien (hovedmålet), andel > startverdien, begge delt på stigende og fallende perioder, gjennomsnittlig og median periodeavkastning; pluss en sammenhengende kjøring per periode (nettoavkastning, maks fall, handler per år, andel tid investert). Usikkerhet for hovedandelen: sirkulær blokk-bootstrap over startdagene, blokker på 60 dager, 2 000 trekk, frø 31.",
   "what_each_answer_means_decided_in_advance": {
     "SHORTLIST": "Ved S3 i utforskingen: andel >= start minst 75 % for både W = 5 og W = 30, gjennomsnittlig periodeavkastning > 0 for begge, og sammenhengende nettoavkastning > 0.",
@@ -50,5 +54,5 @@
   "stop_rules": "Stopp hvis porten feiler, en lesing når holdout-perioden, eller implementasjonen avviker fra denne registreringen.",
   "validation_wear": "33 eksperimenter hadde sett utviklingsårene (E039 inkludert). Alt her er HYPOTESEGENERERENDE; bare papirhandel framover, eller én gang den forseglede holdout-perioden (eierens beslutning), kan bekrefte.",
   "compute_and_storage": "Lokalt, noen minutter; ingen nettverk, database, AI-kall, ny tabell eller tjeneste. Resultat i research/results/E040/.",
-  "result": "(fylles inn etter den ene kjøringen)"
+  "result": "Port: 10 av 10 (B_MA200 = E038s C3 ved fem kostnader), største avvik 0,0. Perioder: utforsking 1 959 (5 d) / 1 934 (30 d), validering 542 / 517. Ingen tripwire. 104 strategier. Hovedmålet ved S3 (1,25 % per side): 6 strategier når >= 75 % for begge periodelengder i utforskingen, 3 av dem også med positivt snitt og nettoavkastning: utbruddsregelen G_up55_down20 (kjøp når sluttkursen er over de 55 foregående, selg når den er under de 20 foregående) og dens to overlegg. KANDIDAT G_up55_down20, utforsking / validering: andel >= start 5 d 87 % / 85 %, 30 d 78 % [71 %, 84 %] / 75 % [58 %, 89 %] (stigende 79 % / 75 %, fallende 77 % / 76 %); andel > start 30 d 28 % / 28 %; snitt 30 d +2,89 % / +3,15 %; netto +580 % / +44 % (kjøp og hold +562 % / +139 %); maks fall 43 % / 23 % (kjøp og hold 77 % / 28 %); 5,8 / 8,0 handler i året; investert 37 % / 39 % av tiden. Ved S4: 30 d 77 % / 75 %, snitt +2,65 % / +2,89 %. År for år (S3, sammenhengende): 2018 0 % (Bitcoin -41 %), 2019 +104 % (+94 %), 2020 +132 % (+302 %), 2021 +29 % (+60 %), 2022 -30 % (-64 %), 2023 +59 % (+156 %), 2024 +64 % (+121 %), 2025 til 30.06 -7 % (+16 %). Timing-testen (30 d, S3): andel 94. / 81. persentil, snitt 99. / 93,5. persentil; tilfeldig timing med samme eksponering gir median 74 % / 71 % >= start -> «eksponering». H_G_up55_down20_sl10: 96,5 / 81 og 99,5 / 96 -> «eksponering». Dagens modell: daglig (A_sig23) 30 d >= start 29 % / 36 %, snitt -4,45 % / -3,09 %; på timesnivå (rule-1.0) 30 d 10 % / 7 %, snitt -17,9 % / -19,0 %; med maks 1 per 24 t 17 % / 12 %. Bare i valideringen (ikke kortlistet): F_dip8_hold3 100 % / 100 % med snitt +0,15 % (nesten aldri investert). Rapport: research/BESKYTTELSESMAAL_2026-11-15.md."
 }

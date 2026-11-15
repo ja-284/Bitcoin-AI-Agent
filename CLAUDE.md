@@ -1328,6 +1328,26 @@ locally, the audit record).**
 - **Nothing** live, frozen or registered changed; the blind direction track was not read; `research/HOLDOUT_ACCESS.log`
   does not exist.
 
+**2026-11-15 (kveld) — eierens beskyttelsesmål: E040 (prosjektspråket er norsk bokmål fra nå av).**
+- **Eierens mål (alternativ 2):** med Firis kostnader skal systemet ikke tape i minst 75 % av periodene (5 og 30 dager,
+  fersk start), uansett om Bitcoin stiger eller faller, og helst tjene når det stiger. Positiv snittavkastning kreves
+  også, så kontanter alene ikke består.
+- **Beskrivende grunnlag først:** NOK 300 med dagens modell 9.–14. november ga 289,66 kr (kjøp og hold 270,14 kr). Over
+  tre stigende måneder i 2025 tapte den 41–42 %. Med én beslutning om dagen ga den +3,6 % (kjøp og hold +28 %).
+- **E040** (registrert `b223385` før koden `87bd199`; kjørt én gang, 296 s): 104 daglige regler i åtte familier, tre
+  Firi-kostnader, port 10 av 10.
+  - **Én regel består i begge periodene: utbruddsregelen 55/20** (kjøp ved ny 55-dagers topp, selg ved ny 20-dagers
+    bunn).
+  - 30-dagersperioder uten tap: 78 % / 75 %. 5-dagersperioder: 87 % / 85 %.
+  - Snitt +2,9 % / +3,2 % per 30 dager. Netto +580 % / +44 % mot kjøp og hold +562 % / +139 %. Maks fall 43 % / 23 %.
+  - Merket **«eksponering»**: tilfeldig timing med samme eksponering gir 71–74 %, og regelen tjener bare i 28 % av
+    30-dagersperiodene.
+  - Dagens modell klarer 7–36 %.
+- **Neste steg, på eierens godkjenning:** registrert papirhandel framover med 55/20-regelen. Den kan starte straks, fordi
+  den bare trenger 55 dager live historikk. Ekte penger først etter en egen godkjenning.
+  Rapport: `research/BESKYTTELSESMAAL_2026-11-15.md`.
+- **Ingenting** live, frosset eller registrert endret; holdout-perioden ikke rørt; `research/HOLDOUT_ACCESS.log` finnes ikke.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
