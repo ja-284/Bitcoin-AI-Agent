@@ -35,7 +35,20 @@
     "FUND7": "mean of the last 21 funding settlements at or before the day's close (about 7 days); the hypothesis from E005 is contrarian (negative).",
     "TAKER7": "taker-buy share of volume over the last 7 days; no sign hypothesis (two-sided)."
   },
-  "horizons_days": {"primary": 7, "secondary": [1, 30], "map": [1, 3, 7, 14, 30]},
+  "horizons_days": {
+    "primary": 7,
+    "secondary": [
+      1,
+      30
+    ],
+    "map": [
+      1,
+      3,
+      7,
+      14,
+      30
+    ]
+  },
   "map": "Lookbacks {1, 3, 7, 14, 28, 56, 84, 182} days x horizons {1, 3, 7, 14, 30} days: Spearman rho of the past return with the forward return, both periods, descriptive only (40 cells x 2 periods; no claim is made from a single cell).",
   "prediction_metrics": "Per signal x horizon x period: Spearman rho(signal_d, forward H-day return_d) on daily rows; for the sign-type signals (R*, MA*, X50_200, TREND) also the hit rate of sign(signal) against the sign of the forward return; the number of rows and n_eff = rows / H.",
   "power_computed_in_advance": "Minimal detectable rho at 80% power, two-sided 5%: 2.80 / sqrt(n_eff). With about 1,960 exploration days and 547 validation days: 1 d: 0.063 / 0.120; 7 d: 0.167 / 0.317; 30 d: 0.35 / 0.66. The 30-day tests, and every validation test beyond 1 day, can only detect large effects; their silence is not evidence of absence.",
@@ -48,7 +61,13 @@
   "trading_rules": {
     "decision": "once a day on the 23:00 UTC row: fill at that close with cost c per side (E038's arithmetic: a buy of q receives (q - q*c)/close BTC; a sale of x BTC receives x*close - x*close*c); start 150 in cash each period; equity marked at daily closes; long/cash only.",
     "rules": "T_R7, T_R14, T_R28, T_R84, T_R182, T_MA20, T_MA200, T_X50_200, T_TREND: fully invested when the signal is > 0, otherwise cash. T_TREND_VS: exposure = min(1, max(0, TREND) * 0.0294 / sigma30) (0.0294 = rule-1.0's 0.6% an hour as a daily figure), rebalanced only when the change exceeds 20% of equity, or to exit or enter fully. T_M7: invested when M7's p > 0.5, on M7's out-of-sample days only.",
-    "costs_per_side": {"S0_gross": 0.0, "S1_low_cost_reference": 0.0011, "S2_firi_optimistic": 0.008, "S3_firi_realistic": 0.0125, "S4_firi_conservative": 0.016},
+    "costs_per_side": {
+      "S0_gross": 0.0,
+      "S1_low_cost_reference": 0.0011,
+      "S2_firi_optimistic": 0.008,
+      "S3_firi_realistic": 0.0125,
+      "S4_firi_conservative": 0.016
+    },
     "benchmarks": "buy-and-hold (one entry), cash, and exposure-matched buy-and-hold (a constant exposure equal to the rule's mean exposure, no costs; descriptive).",
     "metrics": "final equity, net and annualised return, mean daily return with a 95% interval (20-day blocks, 2,000, seed 31), paired daily difference against buy-and-hold, Sharpe (sqrt 365), maximum drawdown, actions and cycles per year, mean exposure, mean holding days, costs paid, per calendar year.",
     "random_timing_null": "the rule's daily target-exposure path circularly shifted against the daily returns by 200 offsets drawn uniformly from [60, N - 60] days (seed 2039), simulated at S0 and at S3 (same turnover, random timing); the actual result's percentile among the 200."
@@ -67,5 +86,13 @@
   "stop_rules": "Stop if: the gate fails; the governed reader refuses a file; any forward return uses a close after 2025-06-30 23:00 UTC; the implementation deviates from this record. A stopped or failed run is not re-run under a changed method as the same experiment.",
   "validation_wear": "Thirty-two experiments had examined these development years (E038 included). E004 examined trend features on the same days at shorter horizons and E038 the 200-day rule. Every E039 result is HYPOTHESIS-GENERATING; only a prospective record, or once the sealed holdout (the owner's decision), can confirm.",
   "compute_and_storage": "Local only, a few minutes: no network, no AI call, no database, no new table, no workflow, no paid service. Output under research/results/E039/ (JSON + markdown, < 5 MB).",
+  "execution_details_fixed_before_any_result": [
+    "Side data comes only through the one reviewed route, agent.research.feature_test.compute_group_features (research/HOLDOUT_ROUTES.md), cut at the candles' own information cutoff; tests/test_holdout_routes.py stays unchanged. Its features are taken at each day's 23:00 UTC row.",
+    "FUND7 = that route's funding_sum_21 / 21: the mean of the last 21 settlements at or before the day's close, exactly as registered.",
+    "TAKER7 = the mean of the last 7 daily values of that route's taker_buy_share_24h (equal weight per day). The record said 'taker-buy share of volume over the last 7 days'; the route gives the 24 h share, not the volumes, so this is the equal-weighted version. Decided before any result.",
+    "sigma30 = the standard deviation of the daily log returns over the last 30 calendar days, needing at least 20 of them (missing days leave gaps).",
+    "The trading rules T_MA20 / T_MA200 compare close > SMA directly (E038's own comparison, needed for the exactness gate); the MA20 / MA200 signal values are the ratios. Every SMA is sum(last N available daily closes) / N, as in E038.",
+    "A day without a daily close, or with its signal missing, is no decision: the position is kept. T_M7 trades from M7's first out-of-sample day (2020-01-01) to the period's end, and its buy-and-hold comparison uses the same days."
+  ],
   "result": "(filled after the one-time run)"
 }
