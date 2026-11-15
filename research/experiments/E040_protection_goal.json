@@ -1,0 +1,54 @@
+{
+  "id": "E040",
+  "date": "2026-11-15",
+  "git_commit": "registrering (denne commiten), før noe kode finnes; kode og resultat i senere commiter",
+  "status": "REGISTRERT -- ikke kjørt. Eierens mål av 2026-11-15 (alternativ 2): med Firis kostnader skal systemet ikke tape penger (stå på startverdien eller høyere) i minst 75 % av periodene, uansett om Bitcoin stiger eller faller, og helst tjene i periodene der det stiger. Bare utviklingsdata; hypotesegenererende (validation wear).",
+  "why": "Eieren ba om at «utallige forskjellige metoder» testes mot dette målet. Grunnlinjen (beskrivende, 2026-11-15, NOK 300, 1,25 % per side): dagens modell (rule-1.0) ender på 300 kr eller mer i bare om lag 20 % av 5-dagersperiodene og 4 % av kvartalene; én beslutning per dag 50 % og 31 %; kjøp og hold 45 % og 54 %. I perioder der Bitcoin falt endte ingen variant i pluss. Hos Firi kan systemet bare eie Bitcoin eller stå i kontanter, så i fallende perioder er 0 det beste mulige uten ekte forutsigelse. Målet må derfor måles slik at kontanter teller som «ikke tap», men slik at et system som aldri handler ikke kan bestå.",
+  "question": "Finnes det, blant 104 forhåndsbestemte daglige regler og overlegg, noen som med Firis kostnader står på startverdien eller høyere i minst 75 % av alle 5- og 30-dagersperioder, med positiv gjennomsnittsavkastning, i BEGGE utviklingsperiodene? Og kommer det i så fall av timing eller bare av hvor ofte regelen eier Bitcoin?",
+  "duplicate_check": "Nytt: målet (andelen perioder som ikke taper, fersk start i kontanter) er aldri målt. Gjenbrukt: de daglige signalene fra E039 (samme definisjoner og kode), kostnadsnivåene fra E038, signalets gjenkjøring fra E017. Overlapp: B-familien inneholder E039s trendregler; de vurderes her på et annet mål og er ikke nye tester av retning. Dagens timessignal brukes bare én gang per dag (familie A), som i eierens analyse.",
+  "target_definition": {
+    "window": "Fersk start: 300 kr i kontanter ved slutten av dag s (23:00 UTC-lyset, ordre ca. 00:13 UTC), beslutninger ved slutten av dag s ... s+W-1, verdien vurdert til sluttkursen på dag s+W (uten salgskostnad). Én periode starter hver dag; perioder med W = 5 og W = 30 dager.",
+    "success": "En periode lykkes når sluttverdien >= startverdien (ingen handel teller som lykket).",
+    "rising_falling": "En periode er «stigende» når Bitcoins egen kurs steg fra dag s til dag s+W, ellers «fallende».",
+    "periods": "Utforsking: fra første dag alle signaler finnes (2018-08-16) til 2023-12-31; validering: 2024-01-01 -> 2025-06-30. En periode må ligge helt innenfor én av dem."
+  },
+  "hypotheses": {
+    "H1": "Dagens modell (familie A) når ikke 75 % i noen av periodene ved 1,25 % per side.",
+    "H2": "Regler som eier Bitcoin sjelden kan nå 75 % ikke-tap, men da med liten gjennomsnittsavkastning; ingen regel når målet i begge perioder med en avkastning som skyldes timing (over 95. persentil av tilfeldig timing med samme eksponering).",
+    "H3": "Beskyttende overlegg (stop-loss, glidende stopp) øker andelen ikke-tap litt, men koster avkastning gjennom flere handler."
+  },
+  "expectation_stated_in_advance": "Sannsynlig: noen sjeldent investerte regler (dip-kjøp med høy terskel, sterke trendfiltre) består målet i utforskingen fordi de står mye i kontanter og 2018-23 steg kraftig; færre i valideringen; ingen med timing som skiller seg fra tilfeldig. En kandidat vil da være en eksponeringsregel, ikke en spådom, og avhenge av at Bitcoin fortsetter å stige over tid.",
+  "data": {
+    "permitted": "Det samme som E039 (registrerte spot-lys via load_bars, sidedata bare via den gjennomgåtte ruten feature_test.compute_group_features), pluss signalets gjenkjøring (replay-cachen med sha256 accf1a73d665e91bf04f2cb556d23d2de90197a269de128496f763e0c164c0fb, funnet via replay-modulens egen navngiving) og E018s prediksjoner for referanseradene på timesnivå.",
+    "never": "Den forseglede holdout-perioden (2025-07-01 -> 2026-08-19; research/HOLDOUT_ACCESS.log skal fortsatt ikke finnes), bufferen, det live registeret, det blinde retningssporet, nedlastinger."
+  },
+  "daily_inputs": "E039s signaler (R1-R182, MA20, MA200, X50_200, TREND, SIGMA30) med samme kode, pluss SMA50, SMA100 (summen av de siste N tilgjengelige sluttkursene / N), X20_100 = SMA20/SMA100 - 1, sig23 = gjenkjøringens BUY/HOLD/SELL på dagens 23:00-time, vote = gjennomsnittet av dagens overall_score, calm = SIGMA30 <= medianen av alle tidligere SIGMA30-verdier (punkt i tid).",
+  "strategies": {
+    "rule": "Hver strategi er en ønsket posisjon per dag (1 = eie, 0 = kontanter, NaN = behold) beregnet bare fra informasjon kjent ved dagens slutt, pluss eventuelle overlegg. Hele kapitalen kjøpes eller selges; maks én handel per dag.",
+    "A (dagens modell, daglig)": "A_sig23: BUY -> 1, SELL -> 0, HOLD -> behold. A_vote: vote >= +0,15 -> 1, <= -0,15 -> 0, ellers behold. A_confirm2: BUY to dager på rad -> 1, SELL to dager på rad -> 0.",
+    "B (trendfortegn)": "1 når verdien > 0, ellers 0: R7, R14, R28, R56, R84, R182, MA20, MA50, MA100, MA200, X20_100, X50_200; TREND >= 0,2; TREND >= 0,6; TREND = 1.",
+    "C (trend med hysterese)": "MA50, MA100, MA200 med bånd b i {1 %, 3 %, 5 %}: 1 når forholdet > +b, 0 når < -b, ellers behold.",
+    "D (dagens modell bak et regimefilter)": "A_sig23 og A_vote, men tvunget til 0 når MA200 <= 0 (D_*_ma200) eller TREND < 0,6 (D_*_trend).",
+    "E (rolig marked)": "E_calm_ma200: 1 når calm og MA200 > 0, ellers 0. E_calm: 1 når calm, ellers 0.",
+    "F (kjøp etter fall)": "Kjøp når R1 <= -x, x i {3 %, 5 %, 8 %}; selg etter H dager, H i {3, 7, 14} (tidsstopp).",
+    "G (utbrudd)": "Kjøp når sluttkursen er høyere enn alle de N foregående (N i {20, 55}); selg når den er lavere enn alle de M foregående (M i {10, 20}).",
+    "H (overlegg)": "Hver regel i B, C og G, og kjøp-og-hold, med stop-loss 10 % fra kjøpskursen eller glidende stopp 15 % fra toppen siden kjøpet (sjekket på dagens sluttkurs). Etter et stopp kjøpes det ikke igjen før grunnregelen har vært 0 minst én dag.",
+    "baselines": "kontanter; kjøp og hold (kjøp ved start, aldri salg).",
+    "references_not_candidates": "Dagens modell på timesnivå (rule-1.0 som bygget, og maks 1 handel per 24 t), simulert med E038s bekreftede kopi over de samme 5- og 30-dagersperiodene (start kl. 00 UTC dagen etter dag s)."
+  },
+  "costs_per_side": {"S2_firi_optimistisk": 0.008, "S3_firi_realistisk": 0.0125, "S4_firi_konservativ": 0.016},
+  "metrics": "Per strategi x kostnad x periode x W: andel perioder >= startverdien (hovedmålet), andel > startverdien, begge delt på stigende og fallende perioder, gjennomsnittlig og median periodeavkastning; pluss en sammenhengende kjøring per periode (nettoavkastning, maks fall, handler per år, andel tid investert). Usikkerhet for hovedandelen: sirkulær blokk-bootstrap over startdagene, blokker på 60 dager, 2 000 trekk, frø 31.",
+  "what_each_answer_means_decided_in_advance": {
+    "SHORTLIST": "Ved S3 i utforskingen: andel >= start minst 75 % for både W = 5 og W = 30, gjennomsnittlig periodeavkastning > 0 for begge, og sammenhengende nettoavkastning > 0.",
+    "CANDIDATE": "En SHORTLIST-strategi som oppfyller det samme ved S3 i valideringen, og der gjennomsnittlig 30-dagersavkastning også er > 0 ved S4 i begge perioder.",
+    "timing_or_exposure": "For hver kandidat: den ønskede posisjonsbanen forskjøvet sirkulært mot kursene med 200 tilfeldige forskyvninger fra [60, N - 60] dager (frø 2040), ved S3; persentilen til kandidatens andel >= start og gjennomsnitt (W = 30) blant forskyvningene. «Timing» bare når begge er >= 95. persentil i begge perioder; ellers «eksponering» (resultatet kommer av hvor ofte og hvor lenge den eier Bitcoin, ikke av når).",
+    "meaning": "En kandidat tillater ingenting alene: neste steg er papirhandel framover med eierens godkjenning. Ingen kandidat betyr at målet ikke nås med disse metodene og Firis kostnader i utviklingsdataene."
+  },
+  "multiple_comparisons": "104 strategier i utforskingen; terskelkravene er ikke signifikanstester, så tilfeldige treff ventes. Vernet er at valideringen må gjentas, og at timing-testen skiller flaks og eksponering fra ekte timing.",
+  "exactness_gate_before_any_result": "B_MA200 uten overlegg, kjørt sammenhengende på E038s egne perioder fra 150 i kontanter, skal gi E038s C3_ma200d-sluttverdi ved alle fem E038-kostnadsnivåer innen 1e-9 (relativt).",
+  "tripwire": "En strategi med andel >= start over 95 % og gjennomsnittlig 30-dagersavkastning over 3 % i begge perioder stopper lesingen til punkt-i-tid-banen er sjekket.",
+  "stop_rules": "Stopp hvis porten feiler, en lesing når holdout-perioden, eller implementasjonen avviker fra denne registreringen.",
+  "validation_wear": "33 eksperimenter hadde sett utviklingsårene (E039 inkludert). Alt her er HYPOTESEGENERERENDE; bare papirhandel framover, eller én gang den forseglede holdout-perioden (eierens beslutning), kan bekrefte.",
+  "compute_and_storage": "Lokalt, noen minutter; ingen nettverk, database, AI-kall, ny tabell eller tjeneste. Resultat i research/results/E040/.",
+  "result": "(fylles inn etter den ene kjøringen)"
+}
