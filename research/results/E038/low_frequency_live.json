@@ -1,0 +1,623 @@
+{
+ "experiment": "E038 (live, descriptive only)",
+ "generated_at": "2026-11-15T11:33:40+00:00",
+ "live": {
+  "rows": 1355,
+  "first_hour": "2026-09-19 20:00:00+00:00",
+  "last_hour": "2026-11-15 10:00:00+00:00"
+ },
+ "signal_stability": {
+  "changes_per_day": 3.693667157584683,
+  "median_run_hours": 3.0,
+  "share_runs_under_6h": 0.6666666666666666,
+  "mix": {
+   "BUY": 0.21918819188191882,
+   "HOLD": 0.37343173431734317,
+   "SELL": 0.407380073800738
+  }
+ },
+ "results": {
+  "live/S0_gross/A4": {
+   "final_equity": 129.52303384519587,
+   "net_return": -0.13651310769869418,
+   "max_drawdown": 0.15994163651231197,
+   "normal_actions": 35,
+   "risk_exits": 0,
+   "cycles": 16,
+   "mean_exposure_share": 0.3128208670950052,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/A2": {
+   "final_equity": 131.17840524490126,
+   "net_return": -0.1254772983673249,
+   "max_drawdown": 0.147768666953477,
+   "normal_actions": 33,
+   "risk_exits": 0,
+   "cycles": 15,
+   "mean_exposure_share": 0.29808978817615106,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/A1": {
+   "final_equity": 133.39876843940547,
+   "net_return": -0.11067487707063017,
+   "max_drawdown": 0.13533809443313305,
+   "normal_actions": 25,
+   "risk_exits": 0,
+   "cycles": 12,
+   "mean_exposure_share": 0.35252508050142023,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/B1_persist_cap1": {
+   "final_equity": 135.15027965947195,
+   "net_return": -0.09899813560352033,
+   "max_drawdown": 0.12052161973824094,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20777628879621335,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/B1_persist_cap2": {
+   "final_equity": 135.15027965947195,
+   "net_return": -0.09899813560352033,
+   "max_drawdown": 0.12052161973824094,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20777628879621335,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/B2_daily_vote": {
+   "final_equity": 140.56383081638458,
+   "net_return": -0.06290779455743611,
+   "max_drawdown": 0.10429237299664529,
+   "normal_actions": 6,
+   "risk_exits": 0,
+   "cycles": 3,
+   "mean_exposure_share": 0.19772887136086917,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/B3_strong_cap1": {
+   "final_equity": 138.645548401584,
+   "net_return": -0.07569634398944003,
+   "max_drawdown": 0.09117396352938234,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.22062103097715094,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/B3_strong_cap2": {
+   "final_equity": 138.645548401584,
+   "net_return": -0.07569634398944003,
+   "max_drawdown": 0.09117396352938234,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.22062103097715094,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/B4_gate_cap1": {
+   "final_equity": 140.55654878025018,
+   "net_return": -0.06295634146499873,
+   "max_drawdown": 0.1434720994374784,
+   "normal_actions": 49,
+   "risk_exits": 0,
+   "cycles": 24,
+   "mean_exposure_share": 0.4735115496813448,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/B4_gate_cap2": {
+   "final_equity": 123.68462392454411,
+   "net_return": -0.1754358405030393,
+   "max_drawdown": 0.2375531062107108,
+   "normal_actions": 85,
+   "risk_exits": 0,
+   "cycles": 42,
+   "mean_exposure_share": 0.6030340794187362,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/C1_buy_and_hold": {
+   "final_equity": 121.24800675445469,
+   "net_return": -0.1916799549703021,
+   "max_drawdown": 0.2815510924725483,
+   "normal_actions": 1,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 1.0,
+   "costs_paid": 0.0
+  },
+  "live/S0_gross/C2_cash": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S1_low_cost_reference/A4": {
+   "final_equity": 125.13921936393676,
+   "net_return": -0.1657385375737549,
+   "max_drawdown": 0.18624663025757948,
+   "normal_actions": 35,
+   "risk_exits": 0,
+   "cycles": 16,
+   "mean_exposure_share": 0.3128677481774796,
+   "costs_paid": 4.773706317695032
+  },
+  "live/S1_low_cost_reference/A2": {
+   "final_equity": 127.03441965406435,
+   "net_return": -0.1531038689729043,
+   "max_drawdown": 0.17252632301747572,
+   "normal_actions": 33,
+   "risk_exits": 0,
+   "cycles": 15,
+   "mean_exposure_share": 0.29812669770363387,
+   "costs_paid": 4.4798210340314295
+  },
+  "live/S1_low_cost_reference/A1": {
+   "final_equity": 130.04156324010785,
+   "net_return": -0.1330562450659477,
+   "max_drawdown": 0.1557958463019592,
+   "normal_actions": 25,
+   "risk_exits": 0,
+   "cycles": 12,
+   "mean_exposure_share": 0.35262516457851567,
+   "costs_paid": 3.6351771739045824
+  },
+  "live/S1_low_cost_reference/B1_persist_cap1": {
+   "final_equity": 134.18508603452705,
+   "net_return": -0.1054327597698197,
+   "max_drawdown": 0.12559039897655633,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20780488581552334,
+   "costs_paid": 1.0219919023358104
+  },
+  "live/S1_low_cost_reference/B1_persist_cap2": {
+   "final_equity": 134.18508603452705,
+   "net_return": -0.1054327597698197,
+   "max_drawdown": 0.12559039897655633,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20780488581552334,
+   "costs_paid": 1.0219919023358104
+  },
+  "live/S1_low_cost_reference/B2_daily_vote": {
+   "final_equity": 139.86723226766622,
+   "net_return": -0.06755178488222513,
+   "max_drawdown": 0.10628416441798128,
+   "normal_actions": 6,
+   "risk_exits": 0,
+   "cycles": 3,
+   "mean_exposure_share": 0.19775335038433053,
+   "costs_paid": 0.7223513695710209
+  },
+  "live/S1_low_cost_reference/B3_strong_cap1": {
+   "final_equity": 138.28096436230024,
+   "net_return": -0.07812690425133173,
+   "max_drawdown": 0.093301955871675,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.22054798608320034,
+   "costs_paid": 0.38313288405650325
+  },
+  "live/S1_low_cost_reference/B3_strong_cap2": {
+   "final_equity": 138.28096436230024,
+   "net_return": -0.07812690425133173,
+   "max_drawdown": 0.093301955871675,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.22054798608320034,
+   "costs_paid": 0.38313288405650325
+  },
+  "live/S1_low_cost_reference/B4_gate_cap1": {
+   "final_equity": 141.20103625737784,
+   "net_return": -0.05865975828414771,
+   "max_drawdown": 0.07128102821082272,
+   "normal_actions": 1,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.22952548892421026,
+   "costs_paid": 0.04125
+  },
+  "live/S1_low_cost_reference/B4_gate_cap2": {
+   "final_equity": 141.20103625737784,
+   "net_return": -0.05865975828414771,
+   "max_drawdown": 0.07128102821082272,
+   "normal_actions": 1,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.22952548892421026,
+   "costs_paid": 0.04125
+  },
+  "live/S1_low_cost_reference/C1_buy_and_hold": {
+   "final_equity": 121.11463394702479,
+   "net_return": -0.19256910701983476,
+   "max_drawdown": 0.2815510924725483,
+   "normal_actions": 1,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 1.0,
+   "costs_paid": 0.165
+  },
+  "live/S1_low_cost_reference/C2_cash": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S2_firi_optimistic/A4": {
+   "final_equity": 103.21523884192311,
+   "net_return": -0.3118984077205126,
+   "max_drawdown": 0.32189034038225905,
+   "normal_actions": 33,
+   "risk_exits": 0,
+   "cycles": 15,
+   "mean_exposure_share": 0.29844648390676054,
+   "costs_paid": 30.096757981007144
+  },
+  "live/S2_firi_optimistic/A2": {
+   "final_equity": 105.21174925296164,
+   "net_return": -0.2985883383135891,
+   "max_drawdown": 0.30759799298633317,
+   "normal_actions": 32,
+   "risk_exits": 1,
+   "cycles": 15,
+   "mean_exposure_share": 0.29018069619941667,
+   "costs_paid": 29.712012039080044
+  },
+  "live/S2_firi_optimistic/A1": {
+   "final_equity": 110.77135615758654,
+   "net_return": -0.2615242922827564,
+   "max_drawdown": 0.27645210355887806,
+   "normal_actions": 25,
+   "risk_exits": 0,
+   "cycles": 12,
+   "mean_exposure_share": 0.35258204549563316,
+   "costs_paid": 24.556016739358693
+  },
+  "live/S2_firi_optimistic/B1_persist_cap1": {
+   "final_equity": 128.25811101493989,
+   "net_return": -0.1449459265670674,
+   "max_drawdown": 0.15904286131987833,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20798680790600474,
+   "costs_paid": 7.300455103160329
+  },
+  "live/S2_firi_optimistic/B1_persist_cap2": {
+   "final_equity": 128.25811101493989,
+   "net_return": -0.1449459265670674,
+   "max_drawdown": 0.15904286131987833,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20798680790600474,
+   "costs_paid": 7.300455103160329
+  },
+  "live/S2_firi_optimistic/B2_daily_vote": {
+   "final_equity": 135.55381561210234,
+   "net_return": -0.09630789591931777,
+   "max_drawdown": 0.11875312441490993,
+   "normal_actions": 6,
+   "risk_exits": 0,
+   "cycles": 3,
+   "mean_exposure_share": 0.19790938291553384,
+   "costs_paid": 5.196152880692772
+  },
+  "live/S2_firi_optimistic/B3_strong_cap1": {
+   "final_equity": 136.01033476111803,
+   "net_return": -0.09326443492587977,
+   "max_drawdown": 0.1065712526616388,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.22008857800812648,
+   "costs_paid": 2.7696588884013233
+  },
+  "live/S2_firi_optimistic/B3_strong_cap2": {
+   "final_equity": 136.01033476111803,
+   "net_return": -0.09326443492587977,
+   "max_drawdown": 0.1065712526616388,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.22008857800812648,
+   "costs_paid": 2.7696588884013233
+  },
+  "live/S2_firi_optimistic/B4_gate_cap1": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S2_firi_optimistic/B4_gate_cap2": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S2_firi_optimistic/C1_buy_and_hold": {
+   "final_equity": 120.27802270041906,
+   "net_return": -0.19814651533053962,
+   "max_drawdown": 0.2815510924725484,
+   "normal_actions": 1,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 1.0,
+   "costs_paid": 1.2
+  },
+  "live/S2_firi_optimistic/C2_cash": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S3_firi_realistic/A4": {
+   "final_equity": 96.08187121220423,
+   "net_return": -0.3594541919186385,
+   "max_drawdown": 0.3647709612227227,
+   "normal_actions": 31,
+   "risk_exits": 0,
+   "cycles": 14,
+   "mean_exposure_share": 0.30426136273135806,
+   "costs_paid": 41.69456093510043
+  },
+  "live/S3_firi_realistic/A2": {
+   "final_equity": 99.11454811522316,
+   "net_return": -0.33923634589851226,
+   "max_drawdown": 0.3436020014811614,
+   "normal_actions": 28,
+   "risk_exits": 1,
+   "cycles": 13,
+   "mean_exposure_share": 0.2755607937343251,
+   "costs_paid": 39.526835915447535
+  },
+  "live/S3_firi_realistic/A1": {
+   "final_equity": 106.11519141637493,
+   "net_return": -0.2925653905575005,
+   "max_drawdown": 0.3040525940070191,
+   "normal_actions": 23,
+   "risk_exits": 0,
+   "cycles": 11,
+   "mean_exposure_share": 0.33482157993618916,
+   "costs_paid": 34.00617422849539
+  },
+  "live/S3_firi_realistic/B1_persist_cap1": {
+   "final_equity": 124.5127204718149,
+   "net_return": -0.16991519685456735,
+   "max_drawdown": 0.1826276664415314,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20806331082439902,
+   "costs_paid": 11.27299117108821
+  },
+  "live/S3_firi_realistic/B1_persist_cap2": {
+   "final_equity": 124.5127204718149,
+   "net_return": -0.16991519685456735,
+   "max_drawdown": 0.1826276664415314,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20806331082439902,
+   "costs_paid": 11.27299117108821
+  },
+  "live/S3_firi_realistic/B2_daily_vote": {
+   "final_equity": 132.79245568379503,
+   "net_return": -0.11471696210803317,
+   "max_drawdown": 0.12847460531027033,
+   "normal_actions": 6,
+   "risk_exits": 0,
+   "cycles": 3,
+   "mean_exposure_share": 0.1980134917673133,
+   "costs_paid": 8.061042193242256
+  },
+  "live/S3_firi_realistic/B3_strong_cap1": {
+   "final_equity": 134.54456054645738,
+   "net_return": -0.10303626302361746,
+   "max_drawdown": 0.1151520123808234,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.2197878259700034,
+   "costs_paid": 4.310596219381969
+  },
+  "live/S3_firi_realistic/B3_strong_cap2": {
+   "final_equity": 134.54456054645738,
+   "net_return": -0.10303626302361746,
+   "max_drawdown": 0.1151520123808234,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.2197878259700034,
+   "costs_paid": 4.310596219381969
+  },
+  "live/S3_firi_realistic/B4_gate_cap1": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S3_firi_realistic/B4_gate_cap2": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S3_firi_realistic/C1_buy_and_hold": {
+   "final_equity": 119.732406670024,
+   "net_return": -0.2017839555331733,
+   "max_drawdown": 0.2815510924725483,
+   "normal_actions": 1,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 1.0,
+   "costs_paid": 1.875
+  },
+  "live/S3_firi_realistic/C2_cash": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S4_firi_conservative/A4": {
+   "final_equity": 83.93438469754518,
+   "net_return": -0.4404374353496988,
+   "max_drawdown": 0.44234394310091774,
+   "normal_actions": 31,
+   "risk_exits": 0,
+   "cycles": 14,
+   "mean_exposure_share": 0.2680541346453668,
+   "costs_paid": 50.70490330135309
+  },
+  "live/S4_firi_conservative/A2": {
+   "final_equity": 91.98012319975288,
+   "net_return": -0.38679917866831415,
+   "max_drawdown": 0.3878416419153371,
+   "normal_actions": 28,
+   "risk_exits": 1,
+   "cycles": 13,
+   "mean_exposure_share": 0.27617961976049343,
+   "costs_paid": 48.22075875441286
+  },
+  "live/S4_firi_conservative/A1": {
+   "final_equity": 89.79772665713678,
+   "net_return": -0.4013484889524215,
+   "max_drawdown": 0.4091999642279963,
+   "normal_actions": 23,
+   "risk_exits": 0,
+   "cycles": 11,
+   "mean_exposure_share": 0.3422923600654511,
+   "costs_paid": 42.339743979313255
+  },
+  "live/S4_firi_conservative/B1_persist_cap1": {
+   "final_equity": 121.67591677407324,
+   "net_return": -0.18882722150617837,
+   "max_drawdown": 0.2005091029736098,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20797147820104925,
+   "costs_paid": 14.291790661946441
+  },
+  "live/S4_firi_conservative/B1_persist_cap2": {
+   "final_equity": 121.67591677407324,
+   "net_return": -0.18882722150617837,
+   "max_drawdown": 0.2005091029736098,
+   "normal_actions": 8,
+   "risk_exits": 0,
+   "cycles": 4,
+   "mean_exposure_share": 0.20797147820104925,
+   "costs_paid": 14.291790661946441
+  },
+  "live/S4_firi_conservative/B2_daily_vote": {
+   "final_equity": 130.68359654781645,
+   "net_return": -0.12877602301455704,
+   "max_drawdown": 0.14073250379168367,
+   "normal_actions": 6,
+   "risk_exits": 0,
+   "cycles": 3,
+   "mean_exposure_share": 0.19796451640018922,
+   "costs_paid": 10.255352639908821
+  },
+  "live/S4_firi_conservative/B3_strong_cap1": {
+   "final_equity": 133.41268589746159,
+   "net_return": -0.11058209401692276,
+   "max_drawdown": 0.12178622066998346,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.21955328213175274,
+   "costs_paid": 5.500702165411214
+  },
+  "live/S4_firi_conservative/B3_strong_cap2": {
+   "final_equity": 133.41268589746159,
+   "net_return": -0.11058209401692276,
+   "max_drawdown": 0.12178622066998346,
+   "normal_actions": 4,
+   "risk_exits": 0,
+   "cycles": 2,
+   "mean_exposure_share": 0.21955328213175274,
+   "costs_paid": 5.500702165411214
+  },
+  "live/S4_firi_conservative/B4_gate_cap1": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S4_firi_conservative/B4_gate_cap2": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  },
+  "live/S4_firi_conservative/C1_buy_and_hold": {
+   "final_equity": 119.3080386463834,
+   "net_return": -0.20461307569077736,
+   "max_drawdown": 0.2815510924725484,
+   "normal_actions": 1,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 1.0,
+   "costs_paid": 2.4
+  },
+  "live/S4_firi_conservative/C2_cash": {
+   "final_equity": 150.0,
+   "net_return": 0.0,
+   "max_drawdown": 0.0,
+   "normal_actions": 0,
+   "risk_exits": 0,
+   "cycles": 0,
+   "mean_exposure_share": 0.0,
+   "costs_paid": 0.0
+  }
+ },
+ "rv_missing": 50,
+ "p_missing": 50
+}

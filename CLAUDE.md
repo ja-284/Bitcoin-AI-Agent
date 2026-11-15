@@ -91,9 +91,12 @@ in agreement). The checkpoint rules live in `research/LIVE_EVALUATION.md`.
 - **Since 2026-11-14: the trading platform** (the owner's brief; plan and progress in `docs/platform/PLATFORM_PLAN.md`).
   Real-money automatic trading on Firi is approved (principle 10 and the decisions log). Built so far: the execution
   core (`agent/execution`: strategy `rule-1.0`, risk limits, engine, simulated exchange, Firi adapter; 24 tests) and
-  the website (`web/`, on fictional demo data). **Not yet live:** no production table, no hourly step, no key. Next:
-  the owner's Firi key as secrets, then storage, a dry run with no order, then a minimum-size first order the owner
-  watches. The prediction engine, the frozen models, the checkpoints, the holdout and the weekly audits are unchanged.
+  the website (`web/`, on fictional demo data). **Not yet live:** no production table, no hourly step, no key.
+  The prediction engine, the frozen models, the checkpoints, the holdout and the weekly audits are unchanged.
+  - **Since 2026-11-15, the low-frequency redesign** (the owner's brief; `docs/platform/LOW_FREQUENCY_PLAN.md`, E038).
+    **Any move to real money is a separate, explicitly approved stage** (the owner's rule, replacing "go live after
+    tests" for the first order). Next: the owner's decisions D1–D6 in that plan, then stages L1–L5 (no key, no money),
+    and only then the key, the dry run and, on a separate approval, a minimum-size order.
 - Other work only for: a real production problem; a security / data-integrity / reliability problem; a
   due scheduled audit; genuinely new live evidence; a registered checkpoint. Otherwise do not create work.
   The freeze is for the current prospective evaluation, not permanent.
@@ -1269,6 +1272,36 @@ locally, the audit record).**
 - **Next:** the owner creates the Firi key and stores it as secrets, then storage and a dry run, then the first order.
 - **Nothing** in the prediction engine, the frozen models, the direction track, the checkpoints, the holdout, the
   schema, roles, policies or workflows changed.
+
+**2026-11-15 — the low-frequency redesign: investigation, E038, plan (the owner's brief; no production change).**
+- **The brief:** specialise the trader for at most 1 or 2 trades a day, choose between them on evidence, set measurable
+  test goals, plan, and implement nothing major first. **The owner's rule: any move to real money is a separate,
+  explicitly approved stage.** The owner also said the brief may contain untrue statements, to be checked, not assumed.
+- **Verified:**
+  - Firi's fee is 0.7% on each buy and each sell (official price list); its BTC/NOK spread was 0.9–1.3% (a public
+    order-book sampler, no key);
+  - its API: limit orders only, no client order id, no documented minimum, and order-history endpoints;
+  - rule-1.0's constants as reported; the cap is a rolling-24 h count of fills, held in memory.
+  - Found: a NaN move-size probability gives full size (`min(1.0, nan)` is 1.0), and a risk exit consumes allowance.
+- **E038** (registered `86393c3` before its code `3748bba`): execution policies on development data. The first launch
+  stopped at its exactness gate on a timestamp-unit defect in the loader (pandas parsed microseconds), fixed in
+  `d2ebcba` before any result existed. Run once: the lean simulator reproduces the production engine bit for bit
+  (30 of 30). The engine comparison lives in `tools/e038_low_frequency.py`, so the isolation test stays untouched.
+- **Results** (1.25% a side, Firi realistic):
+  - rule-1.0 at 4 / 2 / 1 per 24 h lost ~93% in both periods;
+  - no selection design was supported (strong scores only −3% / −24%, intervals include zero);
+  - a correctly priced cost gate never traded;
+  - no policy beat random timing in both periods;
+  - persistence and strength carry no directional information.
+  - **1 vs 2 cannot be chosen on predictive grounds; the default is 1 per rolling 24 h, as a cost decision.**
+  - Live record, descriptive only: rule-1.0 −36%, strong scores only −10%, the gate 0%, buy-and-hold −20%.
+- **The plan** (`docs/platform/LOW_FREQUENCY_PLAN.md`):
+  - the recommended design is `lf-1.0`: assess hourly, act only when the expected return over a stated horizon clears
+    the full round trip at its lower 95% bound, keep risk exits outside the allowance, and record every opportunity;
+  - with today's evidence it does not trade;
+  - it sets the test goals and the go/no-go gates G1–G5, the roadmap L0–L8, and the owner's decisions D1–D6.
+- **Nothing** in production, the database, the workflows, the prediction engine, the frozen models, the direction
+  track, the checkpoints or the holdout changed. `research/HOLDOUT_ACCESS.log` does not exist.
 
 ## Research phase — rules and decisions (2026-09-19)
 

@@ -16,6 +16,14 @@ automatic trading through this layer), and **going live after tests**. Built: P0
 adapter (P2, P4 code), and the website on demo data (P6, first version). Not yet: production tables, the hourly step
 and the dry run, which need the owner's Firi key first (section 12, "what is left").
 
+**Update 2026-11-15: the low-frequency redesign.** The owner's brief of 2026-11-15 asked how to make the trader
+genuinely low-frequency (1 or 2 trades a day) before any account is connected, and set a new rule: **any move to real
+money is a separate, explicitly approved stage**. The investigation, E038 and the plan are in
+[`LOW_FREQUENCY_PLAN.md`](LOW_FREQUENCY_PLAN.md). In short: at Firi's verified 0.7% fee and its ~1% spread, rule-1.0
+would have lost ~93% on 2018–2025 data at 4, 2 or 1 trades a day; no low-frequency design showed an edge; the
+recommended design (`lf-1.0`) trades only when an opportunity clears the full round-trip cost, which with today's
+evidence means it does not trade. The roadmap there (L1–L8) replaces the "what is left" list of section 12.
+
 ---
 
 ## 1. Phase 1: what the project actually is today (investigated, not assumed)
@@ -308,7 +316,7 @@ Anything that would cost money is stopped and raised first.
 3. **Go live after tests:** the production tables and the hourly step are added once the tests and a no-order dry run
    pass; the first real order is a minimum-size one the owner watches.
 
-**What is left, in order:**
+**What is left, in order** *(superseded 2026-11-15 by `LOW_FREQUENCY_PLAN.md` sections 10 and 12; item 2 is now its decision D1, and a real order needs the owner's separate approval)*:
 1. **The owner:** a Firi account with NOK deposited (the cap, e.g. NOK 150); an API key with trading rights; the key,
    client id and secret stored as the GitHub repository secrets `FIRI_API_KEY`, `FIRI_CLIENT_ID`, `FIRI_SECRET_KEY`.
    I never see or type them.
@@ -353,6 +361,16 @@ Anything that would cost money is stopped and raised first.
   - Correction, the same day: the demo file first lived in `web/data/`, which the repository's `data/` ignore rule
     (it protects the research snapshots) kept out of the commit. It now lives in `web/fixtures/demo.json`, and a test
     requires it to be the fictional 2030 run and the website's only JSON file.
+- **2026-11-15:** the owner's low-frequency brief.
+  - Firi's fee verified on its official price list: 0.7% on each buy and each sell. Spreads 0.9–1.3% on a public
+    order-book sampler (no key). Firi's API reference read: limit orders only, no client order id, no documented
+    minimum, order-history endpoints that let a lost order answer be recovered.
+  - **E038** registered (`86393c3`) before its code (`3748bba`). The first launch stopped at its exactness gate on a
+    timestamp-unit defect in the loader, fixed in `d2ebcba` before any result existed. Run once: the lean simulator
+    reproduces the production engine bit for bit (30 of 30), and the results are in section 4 of the new plan.
+  - A latent sizing defect found: a NaN move-size probability means full size (`min(1.0, nan)` is 1.0). Fix planned
+    (L1, S6), not yet made.
+  - Nothing in production, the database, the workflows or the prediction engine changed.
 
 ## 15. Sources (accessed 2026-11-14)
 
