@@ -97,6 +97,132 @@ So 2024–25 can only confirm large effects beyond one day.
 - Anything weaker is a hypothesis, recorded as such.
 - Nothing is adopted into the live system from development data alone.
 
-## 3. Results
+## 3. Results (E039, run once at `909923d`, 320 s)
 
-*(filled after the one-time run)*
+**The checks first:**
+- The 200-day rule reproduced E038 exactly: 10 of 10, difference 0.0.
+- No tripwire fired.
+- `research/HOLDOUT_ACCESS.log` does not exist.
+- Full tables: `research/results/E039/daily_direction.md`.
+
+### 3.1 The map: where reversal turns into momentum
+
+Spearman ρ between the past return over L days and the forward return over H days. An asterisk means the interval
+excludes zero.
+
+| Lookback | 2018–23: 1 d | 3 d | 7 d | 14 d | 30 d | 2024–25: 1 d | 3 d | 7 d | 14 d | 30 d |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 day | **−0.074*** | −0.010 | −0.005 | +0.011 | +0.035 | −0.064 | −0.039 | −0.048 | −0.008 | −0.001 |
+| 7 days | −0.000 | +0.017 | +0.011 | +0.064 | +0.105 | −0.046 | −0.054 | −0.033 | +0.010 | +0.040 |
+| 28 days | +0.033 | **+0.070*** | **+0.100*** | **+0.135*** | +0.182 | −0.011 | −0.010 | +0.045 | +0.070 | −0.036 |
+| 56 days | **+0.050*** | **+0.083*** | +0.093 | +0.087 | +0.136 | −0.012 | −0.033 | −0.045 | −0.051 | −0.037 |
+| 84 days | +0.040 | +0.067 | +0.080 | +0.095 | +0.139 | −0.008 | −0.041 | −0.079 | −0.124 | −0.163 |
+| 182 days | +0.006 | +0.009 | +0.005 | −0.006 | +0.025 | −0.067 | **−0.121*** | −0.176 | −0.265 | **−0.420*** |
+
+**What it shows:**
+- **One day:** a reversal in both periods, the same family as the hourly reversal.
+- **2018–23:** momentum from 1–2-month lookbacks at 3–30-day horizons.
+- **2024–25:** no momentum, and **reversal** at 3–6-month lookbacks. A strong half-year was followed by a weaker
+  month.
+- The sign of the multi-week effect **flipped between the periods**, as E004 found at shorter horizons. Trend is a
+  property of the regime, not a stable predictor.
+
+### 3.2 Fourteen signals at 1, 7 and 30 days
+
+**0 of 42 tests survive Holm.**
+- The best is the 1-day reversal: −0.074 [−0.121, −0.025] in 2018–23 and −0.064 [−0.142, +0.014] in 2024–25. Its
+  Holm-adjusted p is 0.29.
+- Every other test has an adjusted p of 0.99 or more.
+- No LEAD and no REPLICATED pair.
+- Funding over 7 days at 30 days kept its contrarian sign in both periods (−0.17, −0.11), but both intervals are wide
+  and include zero. The registered live re-test (≈ 2027-03) is unchanged.
+
+### 3.3 Fitting them together makes it worse
+
+The walk-forward logistic M7 (13 signals, 7-day direction):
+
+| Period | Brier M7 | Brier base rate | Base − M7 [95% CI] | Calibration slope |
+|---|---|---|---|---|
+| 2020–23 | 0.2802 | 0.2528 | **−0.0274 [−0.0430, −0.0117]** | −0.19 |
+| 2024–25 | 0.2468 | 0.2471 | +0.0003 [−0.0075, +0.0074] | 0.44 |
+
+- In 2020–23 it is clearly **worse than the base rate**, and its coefficients swing between years: NOT_SUPPORTED.
+- Its trading rule was below random timing in 2020–23 (6th percentile) and above it in 2024–25 (100th). A model that
+  is anti-skilful in one period and skilful in the next is fitting regimes, not finding skill.
+
+### 3.4 Trading rules at Firi's realistic cost (1.25% a side)
+
+| Rule | Net 2018–23 | Net 2024–25 | Actions a year | Beats random timing (percentile, 2018–23 / 2024–25) |
+|---|---|---|---|---|
+| 50/200 crossover | **+366%** | **+41%** | 2–3 | 85 / 21 |
+| 200-day average | +351% | +21% | 6–14 | 92 / 15 |
+| 84-day return | +151% | +58% | 13–15 | 92 / 61 |
+| 182-day return | +87% | +103% | 3–9 | 72 / 31 |
+| 28-day return | +214% | −32% | 29–40 | **100** / 30 |
+| Trend score | +9% | −33% | 38–46 | **99** / 37 |
+| 7-day return | −95% | −61% | 62–70 | 84 / 15 |
+| Fitted model M7 | −90% | +36% | 38–57 | 6 / **100** |
+| Buy-and-hold | +570% | +142.5% | — | — |
+
+- **No rule is a trading candidate.**
+- The low-turnover rules survive Firi's costs in both periods. But they trail buy-and-hold in both, and their timing
+  is not distinguishable from random in 2024–25.
+- In 2018–23 their maximum drawdown (68–79%) was about buy-and-hold's (~77%), so they did not protect much either.
+- The faster rules showed real momentum timing in 2018–23 (the 99th–100th percentile without costs), but costs eat it
+  and 2024–25 did not repeat it.
+
+### 3.5 The risk of a large fall
+
+The share of days followed by a 30-day fall worse than −20%:
+- **2018–23:** 10.1% overall; 9.8% above the 200-day average and 10.4% below it, so no difference. By the trend score,
+  5.5% at +1.0 against 15.7% at −0.6, in the expected direction, but the intervals overlap.
+- **2024–25:** one such day in 517, so it cannot be tested.
+
+### 3.6 Verdicts, by the registered rules
+
+| Hypothesis | Outcome |
+|---|---|
+| H1, the map | holds, with the twist that 2024–25 reversed |
+| H2, no replicated signal | holds |
+| H3, the model does not beat the base rate | holds |
+| H4, no trading candidate | holds |
+| H5, the trend state raises large-fall risk | not supported as stated |
+
+## 4. What this means for the direction predictor
+
+1. **The evidence now covers 1 hour to 30 days.** Together, E001–E039 say the only directional structure with the same
+   sign in both development periods is **short-term reversal**: after a rise over the last hour or day, slightly
+   weaker returns follow. It is real and repeatable, and far too small for any realistic cost (E015, E032, E038,
+   E039).
+2. **Longer-horizon direction exists only as a regime.** Momentum ruled 2018–23 (driven by 2019–21 and the 2022 crash)
+   and reversal ruled 2024–25. Two big bear markets carry most of the value a trend rule showed in development. Two
+   events cannot tell whether that repeats.
+3. **More fitting is not the fix.** The combined model was worse than knowing nothing in 2020–23. With two regimes in
+   the data, a flexible model learns the regime it was trained in.
+4. **So another offline search on these candles is not justified.** It would mostly add false positives to worn data.
+   This study is the last broad one I would run on them.
+
+## 5. Recommendations, ranked
+
+1. **Keep the registered prospective readings as the arbiter.**
+   - The direction track's first look at 1,000 eligible hours (≈ 2026-11-26; no verdict);
+   - the funding re-test (≈ 2027-03);
+   - the direction verdict at 6,500 hours (≈ 2027-07).
+
+   Nothing here changes them.
+2. **The only path with real potential is new information, collected prospectively** (the October review's Rank 4):
+   - order-book imbalance from Firi's and Binance's free public books (the session's spread sampler is a first piece);
+   - futures funding and open interest.
+
+   Register the features and target before collecting, then test once at a size from a power analysis. This needs
+   the owner's go-ahead (new collection job, new storage, no cost).
+3. **For the trader (`LOW_FREQUENCY_PLAN.md`):** nothing here opens its cost gate. If the owner ever wants a trend
+   component, the 50/200 crossover is the one rule that survived Firi's costs in both periods with 2–3 actions a
+   year. But it is a regime and risk choice, not a predictor. It trailed buy-and-hold in both periods and could not be
+   told from random timing in 2024–25. It would need its own registration and a prospective record, and the decision
+   is the owner's.
+4. **Not recommended:**
+   - fitted daily models (M7);
+   - fast trend rules (costs);
+   - the 1-day reversal as a trading signal (costs);
+   - further candle-based searches.

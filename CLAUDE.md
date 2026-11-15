@@ -1303,6 +1303,31 @@ locally, the audit record).**
 - **Nothing** in production, the database, the workflows, the prediction engine, the frozen models, the direction
   track, the checkpoints or the holdout changed. `research/HOLDOUT_ACCESS.log` does not exist.
 
+**2026-11-15 (evening) — direction at trading horizons: E039 (the owner's direction brief; research only).**
+- **The brief:** make this session's focus the direction predictor; review, plan, then do a lot of safe backtesting.
+  Earlier the same evening the owner asked to finish the unfinished background task (the Firi spread sampler, 9 of
+  36 samples before the PC shut down); it was restarted for the remaining 27.
+- **The gap found:** every directional experiment had sampled hourly rows and stopped at 168 h, while E038 showed that
+  only multi-week holds can cover Firi's costs.
+- **E039** (registered `6600440` before its code `909923d`; run once, 320 s): daily samples, horizons 1 / 7 / 30 days;
+  development data only; side data only through the reviewed route.
+  - The gate: the 200-day rule reproduced E038's C3 exactly (10 of 10).
+  - **0 of 42** signal tests survive Holm; the best is the 1-day reversal (−0.074 / −0.064).
+  - The map: **momentum in 2018–23** (28-day lookback, 3–14 days, ρ +0.07 to +0.14) and **reversal in 2024–25** (182-day
+    lookback, 30 days, −0.42). Trend is a regime property, not a stable predictor.
+  - The walk-forward logistic is **worse than the base rate** in 2020–23 (−0.027 [−0.043, −0.012]): NOT_SUPPORTED.
+  - No trading candidate. Low-turnover rules (the 50/200 crossover +366% / +41% at 1.25% a side) survive the costs but
+    trail buy-and-hold and do not beat random timing in 2024–25; fast rules lose.
+  - Large 30-day falls: no reliable difference by trend state; 2024–25 had one such day.
+- **Conclusion** (`research/DIRECTION_TRADING_HORIZONS_2026-11-15.md`):
+  - from 1 hour to 30 days, the only direction effect with the same sign in both periods is short-term reversal, far
+    below costs;
+  - no further broad search on these candles is justified;
+  - the one path with real potential is new information collected prospectively (owner's decision);
+  - the registered readings stay the arbiter.
+- **Nothing** live, frozen or registered changed; the blind direction track was not read; `research/HOLDOUT_ACCESS.log`
+  does not exist.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
