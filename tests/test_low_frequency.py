@@ -132,3 +132,17 @@ def test_the_cost_gate_needs_more_than_a_round_trip_and_never_trades_without_eno
 
 def test_the_registered_constants_still_match_rule_1_0():
     e038.check_constants()  # raises if strategy.py changed since E038 was registered
+
+
+def test_hours_are_whole_hours_since_the_epoch_whatever_resolution_pandas_parses():
+    # E038's first launch stopped at its exactness gate: pandas parsed the replay's ISO times at microsecond
+    # resolution, and dividing those by nanoseconds-per-hour collapsed every hour into one.
+    import pandas as pd
+
+    stamps = ["2018-11-27T15:00:00+00:00", "2018-11-27T16:00:00+00:00", "2025-06-30T23:00:00+00:00"]
+    for idx in (pd.DatetimeIndex([pd.Timestamp(s) for s in stamps]), pd.DatetimeIndex(stamps).as_unit("ns"),
+                pd.DatetimeIndex(stamps).as_unit("s")):
+        h = lf.hours_of(idx)
+        assert h.tolist() == [int(pd.Timestamp(s).timestamp()) // 3600 for s in stamps]
+    with pytest.raises(SystemExit):
+        lf.hours_of(pd.DatetimeIndex([pd.Timestamp(stamps[1]), pd.Timestamp(stamps[0])]))

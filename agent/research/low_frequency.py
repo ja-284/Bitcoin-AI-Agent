@@ -108,7 +108,7 @@ def load_development() -> Inputs:
 
     bars, snapshot, rows, sha = _registered_replay()
     idx = pd.DatetimeIndex([pd.Timestamp(r["as_of"]) for r in rows])
-    hours = (idx.asi8 // 3_600_000_000_000).astype(np.int64)
+    hours = hours_of(idx)
     if hours.max() >= DEV_END_H:
         raise SystemExit("the replay reaches the holdout")
     sig = np.array([{"BUY": 1, "HOLD": 0, "SELL": -1}[r["signal"]] for r in rows], dtype=np.int8)
@@ -130,6 +130,15 @@ def load_development() -> Inputs:
             "rv_missing_in_simulation": int(np.isnan(rv[start:]).sum()),
             "p_missing_in_simulation": int(np.isnan(p[start:]).sum())}
     return Inputs(hours, close, sig, score, rv, p, start, meta)
+
+
+def hours_of(index: pd.DatetimeIndex) -> np.ndarray:
+    """Whole hours since the epoch, whatever resolution pandas parsed the times at (it may choose microseconds; the
+    first launch of E038 divided microseconds as if they were nanoseconds and collapsed every hour into one)."""
+    hours = ((index - pd.Timestamp("1970-01-01", tz="UTC")) // pd.Timedelta(hours=1)).to_numpy(np.int64)
+    if len(hours) > 1 and not (np.diff(hours) > 0).all():
+        raise SystemExit("the hours are not strictly increasing: STOP")
+    return hours
 
 
 # ------------------------------------------------------------------------------------------------- selectors
@@ -757,7 +766,7 @@ def load_live() -> tuple[Inputs, dict]:
                            WHERE p.pipeline_version = '0.2.0' ORDER BY p.as_of""")
             rows = cur.fetchall()
         conn.rollback()
-    hours = np.array([int(r[0].timestamp() // 3600) for r in rows], dtype=np.int64)
+    hours = hours_of(pd.DatetimeIndex([pd.Timestamp(r[0]) for r in rows]))
     inp = Inputs(hours, np.array([float(r[1]) for r in rows]),
                  np.array([{"BUY": 1, "HOLD": 0, "SELL": -1}[r[2]] for r in rows], dtype=np.int8),
                  np.array([float(r[3]) for r in rows]),
@@ -807,7 +816,7 @@ def main_live() -> int:
 def load_development_light() -> Inputs:
     """The replay rows only (no move-size fit): the history the live run's point-in-time selectors carry over."""
     _, _, rows, _ = _registered_replay()
-    hours = np.array([int(pd.Timestamp(r["as_of"]).timestamp() // 3600) for r in rows], dtype=np.int64)
+    hours = hours_of(pd.DatetimeIndex([pd.Timestamp(r["as_of"]) for r in rows]))
     return Inputs(hours, np.array([r["close"] for r in rows]),
                   np.array([{"BUY": 1, "HOLD": 0, "SELL": -1}[r["signal"]] for r in rows], dtype=np.int8),
                   np.array([r["overall_score"] for r in rows]), np.full(len(rows), np.nan), np.full(len(rows), np.nan), 0, {})
