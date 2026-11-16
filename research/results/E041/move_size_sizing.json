@@ -1,0 +1,2369 @@
+{
+ "experiment": "E041",
+ "generated_at": "2026-11-16T15:17:13+00:00",
+ "gate_largest_relative_difference": 0.0,
+ "window_counts": {
+  "exploration/W5": 1855,
+  "exploration/W30": 1830,
+  "validation/W5": 542,
+  "validation/W30": 517
+ },
+ "pbar_days": 2260,
+ "results": {
+  "G_up55_down20/full/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8781671159029649,
+    "share_gt0": 0.10943396226415095,
+    "share_ge0_rising": 0.8952095808383234,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": 0.002428698796826276,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7754098360655738,
+    "share_gt0": 0.3038251366120219,
+    "share_ge0_rising": 0.800575263662512,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.03374920618907377,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 6.82365577096386,
+    "trades": 31
+   }
+  },
+  "G_up55_down20/full/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8690036900369004,
+    "share_gt0": 0.12546125461254612,
+    "share_ge0_rising": 0.8947368421052632,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": 0.0019200339315916001,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7601547388781431,
+    "share_gt0": 0.28239845261121854,
+    "share_ge0_rising": 0.7587301587301587,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.03477799096142117,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.5221003675436597,
+    "trades": 12
+   }
+  },
+  "G_up55_down20/full/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8679245283018868,
+    "share_gt0": 0.09919137466307278,
+    "share_ge0_rising": 0.8762475049900199,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": 0.0013622306653898672,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7683060109289618,
+    "share_gt0": 0.2967213114754098,
+    "share_ge0_rising": 0.788111217641419,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.030493705250227956,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 5.795135641855236,
+    "trades": 31
+   }
+  },
+  "G_up55_down20/full/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8523985239852399,
+    "share_gt0": 0.1088560885608856,
+    "share_ge0_rising": 0.8651315789473685,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": 0.000747958131911604,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7543520309477756,
+    "share_gt0": 0.2765957446808511,
+    "share_ge0_rising": 0.7492063492063492,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.031470433640555864,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.44128038627852506,
+    "trades": 12
+   }
+  },
+  "G_up55_down20/full/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8636118598382749,
+    "share_gt0": 0.09487870619946091,
+    "share_ge0_rising": 0.8682634730538922,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": 0.0005327955092458399,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7601092896174864,
+    "share_gt0": 0.28852459016393445,
+    "share_ge0_rising": 0.7737296260786194,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.027966537673782214,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 5.086896938758664,
+    "trades": 31
+   }
+  },
+  "G_up55_down20/full/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8394833948339483,
+    "share_gt0": 0.0959409594095941,
+    "share_ge0_rising": 0.8421052631578947,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": -0.000163656378950641,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7485493230174082,
+    "share_gt0": 0.27079303675048355,
+    "share_ge0_rising": 0.7396825396825397,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.028903519827420388,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.38116131651331164,
+    "trades": 12
+   }
+  },
+  "G_up55_down20/msmore/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8738544474393531,
+    "share_gt0": 0.10512129380053908,
+    "share_ge0_rising": 0.8832335329341318,
+    "share_ge0_falling": 0.8628370457209847,
+    "mean": 0.0010691214147414679,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.746448087431694,
+    "share_gt0": 0.2748633879781421,
+    "share_ge0_rising": 0.7497603068072867,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.013919665694825445,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 1.3045192827735828,
+    "trades": 182
+   }
+  },
+  "G_up55_down20/msmore/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8671586715867159,
+    "share_gt0": 0.12361623616236163,
+    "share_ge0_rising": 0.8881578947368421,
+    "share_ge0_falling": 0.8403361344537815,
+    "mean": 0.00019612616169547458,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7427466150870407,
+    "share_gt0": 0.26499032882011603,
+    "share_ge0_rising": 0.7301587301587301,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.011648544316578923,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.01386918930025871,
+    "trades": 78
+   }
+  },
+  "G_up55_down20/msmore/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8630727762803234,
+    "share_gt0": 0.09433962264150944,
+    "share_ge0_rising": 0.8662674650698603,
+    "share_ge0_falling": 0.8593200468933178,
+    "mean": 8.019197671622032e-05,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7289617486338797,
+    "share_gt0": 0.2573770491803279,
+    "share_ge0_rising": 0.7190795781399808,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.008359928535893808,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.6455104270611514,
+    "trades": 182
+   }
+  },
+  "G_up55_down20/msmore/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8413284132841329,
+    "share_gt0": 0.09778597785977859,
+    "share_ge0_rising": 0.8453947368421053,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": -0.0010152439201308774,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7137330754352031,
+    "share_gt0": 0.23597678916827852,
+    "share_ge0_rising": 0.6825396825396826,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.0039908250915435435,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": -0.1322822434521479,
+    "trades": 78
+   }
+  },
+  "G_up55_down20/msmore/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8495956873315363,
+    "share_gt0": 0.08086253369272237,
+    "share_ge0_rising": 0.8423153692614771,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": -0.0006848015985530985,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7163934426229508,
+    "share_gt0": 0.2448087431693989,
+    "share_ge0_rising": 0.6970278044103547,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.004085183542163244,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.26576605968966716,
+    "trades": 182
+   }
+  },
+  "G_up55_down20/msmore/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8210332103321033,
+    "share_gt0": 0.07749077490774908,
+    "share_ge0_rising": 0.8092105263157895,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": -0.0019552630432388292,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6769825918762089,
+    "share_gt0": 0.19922630560928434,
+    "share_ge0_rising": 0.6222222222222222,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": -0.0018862970628818674,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": -0.23132422957067833,
+    "trades": 78
+   }
+  },
+  "G_up55_down20/msless/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8722371967654986,
+    "share_gt0": 0.10350404312668464,
+    "share_ge0_rising": 0.8812375249500998,
+    "share_ge0_falling": 0.861664712778429,
+    "mean": 0.0007764720881134686,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7584699453551913,
+    "share_gt0": 0.28688524590163933,
+    "share_ge0_rising": 0.7670182166826462,
+    "share_ge0_falling": 0.747141041931385,
+    "mean": 0.009039677432719426,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.7577869654730183,
+    "trades": 128
+   }
+  },
+  "G_up55_down20/msless/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8634686346863468,
+    "share_gt0": 0.11992619926199262,
+    "share_ge0_rising": 0.881578947368421,
+    "share_ge0_falling": 0.8403361344537815,
+    "mean": 7.61594691877989e-05,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7195357833655706,
+    "share_gt0": 0.24177949709864605,
+    "share_ge0_rising": 0.6888888888888889,
+    "share_ge0_falling": 0.7673267326732673,
+    "mean": 0.004730263479009953,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.058084668096776815,
+    "trades": 73
+   }
+  },
+  "G_up55_down20/msless/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8619946091644205,
+    "share_gt0": 0.09326145552560647,
+    "share_ge0_rising": 0.8642714570858283,
+    "share_ge0_falling": 0.8593200468933178,
+    "mean": 0.0002040278755259319,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7431693989071039,
+    "share_gt0": 0.2715846994535519,
+    "share_ge0_rising": 0.7420901246404602,
+    "share_ge0_falling": 0.7445997458703939,
+    "mean": 0.005538341358904756,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.4064189735536221,
+    "trades": 128
+   }
+  },
+  "G_up55_down20/msless/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8505535055350554,
+    "share_gt0": 0.1070110701107011,
+    "share_ge0_rising": 0.8585526315789473,
+    "share_ge0_falling": 0.8403361344537815,
+    "mean": -0.0007553091650178692,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6615087040618955,
+    "share_gt0": 0.18375241779497098,
+    "share_ge0_rising": 0.5968253968253968,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": -0.0013136429493461317,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": -0.06637253000318066,
+    "trades": 73
+   }
+  },
+  "G_up55_down20/msless/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8560646900269542,
+    "share_gt0": 0.08733153638814016,
+    "share_ge0_rising": 0.8542914171656687,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": -0.00023468644240708838,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7256830601092896,
+    "share_gt0": 0.2540983606557377,
+    "share_ge0_rising": 0.713326941514861,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.0029000202389194707,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.18597329127107498,
+    "trades": 127
+   }
+  },
+  "G_up55_down20/msless/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8357933579335793,
+    "share_gt0": 0.09225092250922509,
+    "share_ge0_rising": 0.8355263157894737,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": -0.0014009320801463396,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6479690522243714,
+    "share_gt0": 0.1702127659574468,
+    "share_ge0_rising": 0.5746031746031746,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": -0.005961363563534901,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": -0.15305371674145885,
+    "trades": 73
+   }
+  },
+  "G_up55_down20/vol/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8781671159029649,
+    "share_gt0": 0.10943396226415095,
+    "share_ge0_rising": 0.8952095808383234,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": 0.002261854978634756,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7765027322404372,
+    "share_gt0": 0.30491803278688523,
+    "share_ge0_rising": 0.8024928092042186,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.03000663800218678,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 6.14215147881193,
+    "trades": 39
+   }
+  },
+  "G_up55_down20/vol/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8690036900369004,
+    "share_gt0": 0.12546125461254612,
+    "share_ge0_rising": 0.8947368421052632,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": 0.0019182563480682284,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7562862669245648,
+    "share_gt0": 0.27852998065764023,
+    "share_ge0_rising": 0.7523809523809524,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.03360189802629008,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.5103984288021381,
+    "trades": 13
+   }
+  },
+  "G_up55_down20/vol/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8679245283018868,
+    "share_gt0": 0.09919137466307278,
+    "share_ge0_rising": 0.8762475049900199,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": 0.0012973592514032037,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7688524590163934,
+    "share_gt0": 0.2972677595628415,
+    "share_ge0_rising": 0.7890699904122723,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.02699088555693444,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 5.260635492784676,
+    "trades": 39
+   }
+  },
+  "G_up55_down20/vol/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8523985239852399,
+    "share_gt0": 0.1088560885608856,
+    "share_ge0_rising": 0.8651315789473685,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": 0.0007505442355687603,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.7524177949709865,
+    "share_gt0": 0.2746615087040619,
+    "share_ge0_rising": 0.746031746031746,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.030254601856618456,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.43019979320514756,
+    "trades": 13
+   }
+  },
+  "G_up55_down20/vol/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.8636118598382749,
+    "share_gt0": 0.09487870619946091,
+    "share_ge0_rising": 0.8682634730538922,
+    "share_ge0_falling": 0.8581477139507621,
+    "mean": 0.0005472536633034696,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.760655737704918,
+    "share_gt0": 0.2890710382513661,
+    "share_ge0_rising": 0.7746883988494727,
+    "share_ge0_falling": 0.7420584498094028,
+    "mean": 0.02463959469454858,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 4.648803383731023,
+    "trades": 39
+   }
+  },
+  "G_up55_down20/vol/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.8394833948339483,
+    "share_gt0": 0.0959409594095941,
+    "share_ge0_rising": 0.8421052631578947,
+    "share_ge0_falling": 0.8361344537815126,
+    "mean": -0.00015767629637529454,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.746615087040619,
+    "share_gt0": 0.2688588007736944,
+    "share_ge0_rising": 0.7365079365079366,
+    "share_ge0_falling": 0.7623762376237624,
+    "mean": 0.027657106239706738,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.3705429200772863,
+    "trades": 13
+   }
+  },
+  "C_MA100_b5/full/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7466307277628033,
+    "share_gt0": 0.2641509433962264,
+    "share_ge0_rising": 0.9271457085828343,
+    "share_ge0_falling": 0.5345838218053928,
+    "mean": 0.00496790578288172,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7459016393442623,
+    "share_gt0": 0.3879781420765027,
+    "share_ge0_rising": 0.9079578139980825,
+    "share_ge0_falling": 0.531130876747141,
+    "mean": 0.05748203517257163,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 16.58027981268163,
+    "trades": 15
+   }
+  },
+  "C_MA100_b5/full/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.6236162361623616,
+    "share_gt0": 0.2693726937269373,
+    "share_ge0_rising": 0.8289473684210527,
+    "share_ge0_falling": 0.36134453781512604,
+    "mean": 0.0012990902509226602,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6499032882011605,
+    "share_gt0": 0.4564796905222437,
+    "share_ge0_rising": 0.8571428571428571,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": 0.04246360271099483,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.8173949042203499,
+    "trades": 7
+   }
+  },
+  "C_MA100_b5/full/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7272237196765499,
+    "share_gt0": 0.24474393530997304,
+    "share_ge0_rising": 0.8912175648702595,
+    "share_ge0_falling": 0.5345838218053928,
+    "mean": 0.002579024524991727,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7382513661202186,
+    "share_gt0": 0.380327868852459,
+    "share_ge0_rising": 0.8945349952061361,
+    "share_ge0_falling": 0.531130876747141,
+    "mean": 0.0540639908087673,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 15.421289792343678,
+    "trades": 15
+   }
+  },
+  "C_MA100_b5/full/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.6070110701107011,
+    "share_gt0": 0.25276752767527677,
+    "share_ge0_rising": 0.7993421052631579,
+    "share_ge0_falling": 0.36134453781512604,
+    "mean": -0.001636141568804863,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6421663442940039,
+    "share_gt0": 0.44874274661508706,
+    "share_ge0_rising": 0.8444444444444444,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": 0.03827033867995911,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.7604647396693012,
+    "trades": 7
+   }
+  },
+  "C_MA100_b5/full/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7153638814016172,
+    "share_gt0": 0.23288409703504043,
+    "share_ge0_rising": 0.8692614770459082,
+    "share_ge0_falling": 0.5345838218053928,
+    "mean": 0.0007211237450177757,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7311475409836066,
+    "share_gt0": 0.373224043715847,
+    "share_ge0_rising": 0.8820709491850431,
+    "share_ge0_falling": 0.531130876747141,
+    "mean": 0.05140705335555128,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 14.56959003686477,
+    "trades": 15
+   }
+  },
+  "C_MA100_b5/full/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.5959409594095941,
+    "share_gt0": 0.24169741697416974,
+    "share_ge0_rising": 0.7796052631578947,
+    "share_ge0_falling": 0.36134453781512604,
+    "mean": -0.0039190996508152364,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6286266924564797,
+    "share_gt0": 0.43520309477756286,
+    "share_ge0_rising": 0.8222222222222222,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": 0.03501106460080718,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.7172490703678416,
+    "trades": 7
+   }
+  },
+  "C_MA100_b5/msmore/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7320754716981132,
+    "share_gt0": 0.2495956873315364,
+    "share_ge0_rising": 0.8892215568862275,
+    "share_ge0_falling": 0.5474794841735052,
+    "mean": 0.0019750499341056427,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.6989071038251367,
+    "share_gt0": 0.34098360655737703,
+    "share_ge0_rising": 0.822627037392138,
+    "share_ge0_falling": 0.5349428208386277,
+    "mean": 0.02453186541044437,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 2.4090248390098123,
+    "trades": 211
+   }
+  },
+  "C_MA100_b5/msmore/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.6143911439114391,
+    "share_gt0": 0.26014760147601473,
+    "share_ge0_rising": 0.7993421052631579,
+    "share_ge0_falling": 0.37815126050420167,
+    "mean": -0.0017675801614011218,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.5415860735009671,
+    "share_gt0": 0.3481624758220503,
+    "share_ge0_rising": 0.6761904761904762,
+    "share_ge0_falling": 0.3316831683168317,
+    "mean": 0.005909985298906781,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": -0.016229094111982034,
+    "trades": 145
+   }
+  },
+  "C_MA100_b5/msmore/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7094339622641509,
+    "share_gt0": 0.22695417789757413,
+    "share_ge0_rising": 0.8532934131736527,
+    "share_ge0_falling": 0.5404454865181711,
+    "mean": -0.00017777745633100665,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.6775956284153005,
+    "share_gt0": 0.319672131147541,
+    "share_ge0_rising": 0.7861936720997124,
+    "share_ge0_falling": 0.5336721728081322,
+    "mean": 0.017398276092160252,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 1.3587773330622714,
+    "trades": 211
+   }
+  },
+  "C_MA100_b5/msmore/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.5793357933579336,
+    "share_gt0": 0.22509225092250923,
+    "share_ge0_rising": 0.7467105263157895,
+    "share_ge0_falling": 0.36554621848739494,
+    "mean": -0.005021229436307534,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.4700193423597679,
+    "share_gt0": 0.2765957446808511,
+    "share_ge0_rising": 0.5619047619047619,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": -0.007676640500121757,
+    "median": -0.007228101872164938
+   },
+   "continuous": {
+    "net": -0.2265506324892077,
+    "trades": 145
+   }
+  },
+  "C_MA100_b5/msmore/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.6948787061994609,
+    "share_gt0": 0.21239892183288409,
+    "share_ge0_rising": 0.8293413173652695,
+    "share_ge0_falling": 0.536928487690504,
+    "mean": -0.001849156843815489,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.6612021857923497,
+    "share_gt0": 0.30327868852459017,
+    "share_ge0_rising": 0.7583892617449665,
+    "share_ge0_falling": 0.5324015247776366,
+    "mean": 0.011825035303280692,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.7595873137264681,
+    "trades": 213
+   }
+  },
+  "C_MA100_b5/msmore/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.551660516605166,
+    "share_gt0": 0.1974169741697417,
+    "share_ge0_rising": 0.6973684210526315,
+    "share_ge0_falling": 0.36554621848739494,
+    "mean": -0.007527327121617385,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.4274661508704062,
+    "share_gt0": 0.23404255319148937,
+    "share_ge0_rising": 0.49206349206349204,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": -0.018086496665228713,
+    "median": -0.017762967455970502
+   },
+   "continuous": {
+    "net": -0.35859845626815356,
+    "trades": 145
+   }
+  },
+  "C_MA100_b5/msless/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7390835579514825,
+    "share_gt0": 0.25660377358490566,
+    "share_ge0_rising": 0.908183632734531,
+    "share_ge0_falling": 0.5404454865181711,
+    "mean": 0.0009125824176496062,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7071038251366121,
+    "share_gt0": 0.34918032786885245,
+    "share_ge0_rising": 0.8370086289549377,
+    "share_ge0_falling": 0.5349428208386277,
+    "mean": 0.014138721640290132,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 1.1133808026941256,
+    "trades": 171
+   }
+  },
+  "C_MA100_b5/msless/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.6143911439114391,
+    "share_gt0": 0.26014760147601473,
+    "share_ge0_rising": 0.8026315789473685,
+    "share_ge0_falling": 0.3739495798319328,
+    "mean": -0.0008580733420231535,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.528046421663443,
+    "share_gt0": 0.3346228239845261,
+    "share_ge0_rising": 0.6571428571428571,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": 0.002253015005637157,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": -0.053195982447819645,
+    "trades": 123
+   }
+  },
+  "C_MA100_b5/msless/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7110512129380054,
+    "share_gt0": 0.22857142857142856,
+    "share_ge0_rising": 0.8602794411177644,
+    "share_ge0_falling": 0.5357561547479485,
+    "mean": -0.0004282982280183415,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.6841530054644809,
+    "share_gt0": 0.3262295081967213,
+    "share_ge0_rising": 0.7976989453499521,
+    "share_ge0_falling": 0.5336721728081322,
+    "mean": 0.00943647037825899,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.6136238246841565,
+    "trades": 171
+   }
+  },
+  "C_MA100_b5/msless/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.584870848708487,
+    "share_gt0": 0.23062730627306274,
+    "share_ge0_rising": 0.75,
+    "share_ge0_falling": 0.3739495798319328,
+    "mean": -0.0032427849106874676,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.43907156673114117,
+    "share_gt0": 0.24564796905222436,
+    "share_ge0_rising": 0.5111111111111111,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": -0.009187145373877194,
+    "median": -0.007912729073575542
+   },
+   "continuous": {
+    "net": -0.242305673155762,
+    "trades": 123
+   }
+  },
+  "C_MA100_b5/msless/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.6943396226415094,
+    "share_gt0": 0.21185983827493263,
+    "share_ge0_rising": 0.8303393213572854,
+    "share_ge0_falling": 0.5345838218053928,
+    "mean": -0.0014632196496826308,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.6715846994535519,
+    "share_gt0": 0.31366120218579235,
+    "share_ge0_rising": 0.775647171620326,
+    "share_ge0_falling": 0.5336721728081322,
+    "mean": 0.005877780833545903,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.31207081472705833,
+    "trades": 170
+   }
+  },
+  "C_MA100_b5/msless/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.566420664206642,
+    "share_gt0": 0.21217712177121772,
+    "share_ge0_rising": 0.7236842105263158,
+    "share_ge0_falling": 0.36554621848739494,
+    "mean": -0.005104410046356928,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.40038684719535783,
+    "share_gt0": 0.20696324951644102,
+    "share_ge0_rising": 0.44761904761904764,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": -0.017967509097112064,
+    "median": -0.017816463600322185
+   },
+   "continuous": {
+    "net": -0.3629301490406348,
+    "trades": 123
+   }
+  },
+  "C_MA100_b5/vol/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7466307277628033,
+    "share_gt0": 0.2641509433962264,
+    "share_ge0_rising": 0.9271457085828343,
+    "share_ge0_falling": 0.5345838218053928,
+    "mean": 0.0038847158795416044,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7437158469945355,
+    "share_gt0": 0.38579234972677595,
+    "share_ge0_rising": 0.9041227229146692,
+    "share_ge0_falling": 0.531130876747141,
+    "mean": 0.048409827576732026,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 12.098576856328874,
+    "trades": 28
+   }
+  },
+  "C_MA100_b5/vol/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.6236162361623616,
+    "share_gt0": 0.2693726937269373,
+    "share_ge0_rising": 0.8289473684210527,
+    "share_ge0_falling": 0.36134453781512604,
+    "mean": 0.0013620814452809688,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6441005802707931,
+    "share_gt0": 0.4506769825918762,
+    "share_ge0_rising": 0.8476190476190476,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": 0.04224180982454817,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.7971976945717423,
+    "trades": 9
+   }
+  },
+  "C_MA100_b5/vol/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7272237196765499,
+    "share_gt0": 0.24474393530997304,
+    "share_ge0_rising": 0.8912175648702595,
+    "share_ge0_falling": 0.5345838218053928,
+    "mean": 0.0017949354808638942,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7349726775956285,
+    "share_gt0": 0.3770491803278688,
+    "share_ge0_rising": 0.8887823585810163,
+    "share_ge0_falling": 0.531130876747141,
+    "mean": 0.045199482451531485,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 11.127436835998108,
+    "trades": 28
+   }
+  },
+  "C_MA100_b5/vol/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.6070110701107011,
+    "share_gt0": 0.25276752767527677,
+    "share_ge0_rising": 0.7993421052631579,
+    "share_ge0_falling": 0.36134453781512604,
+    "mean": -0.0014929681469717986,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.6363636363636364,
+    "share_gt0": 0.44294003868471954,
+    "share_ge0_rising": 0.834920634920635,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": 0.03800802447984159,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.7371360764611308,
+    "trades": 9
+   }
+  },
+  "C_MA100_b5/vol/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.7153638814016172,
+    "share_gt0": 0.23288409703504043,
+    "share_ge0_rising": 0.8692614770459082,
+    "share_ge0_falling": 0.5345838218053928,
+    "mean": 0.00016966703761179654,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.7278688524590164,
+    "share_gt0": 0.3699453551912568,
+    "share_ge0_rising": 0.8763183125599233,
+    "share_ge0_falling": 0.531130876747141,
+    "mean": 0.042694039816044464,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 10.42562639269361,
+    "trades": 28
+   }
+  },
+  "C_MA100_b5/vol/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.5959409594095941,
+    "share_gt0": 0.24169741697416974,
+    "share_ge0_rising": 0.7796052631578947,
+    "share_ge0_falling": 0.36134453781512604,
+    "mean": -0.003713562274279567,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.620889748549323,
+    "share_gt0": 0.4274661508704062,
+    "share_ge0_rising": 0.8095238095238095,
+    "share_ge0_falling": 0.32673267326732675,
+    "mean": 0.03473053321593885,
+    "median": 0.0
+   },
+   "continuous": {
+    "net": 0.6916488256899975,
+    "trades": 9
+   }
+  },
+  "A_sig23/full/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.5326145552560647,
+    "share_gt0": 0.28247978436657684,
+    "share_ge0_rising": 0.6706586826347305,
+    "share_ge0_falling": 0.3704572098475967,
+    "mean": -0.004678581601151433,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.3524590163934426,
+    "share_gt0": 0.3524590163934426,
+    "share_ge0_rising": 0.6001917545541706,
+    "share_ge0_falling": 0.0241423125794155,
+    "mean": -0.01448484256054552,
+    "median": -0.05837404632622645
+   },
+   "continuous": {
+    "net": -0.8510201310901466,
+    "trades": 344
+   }
+  },
+  "A_sig23/full/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.518450184501845,
+    "share_gt0": 0.2822878228782288,
+    "share_ge0_rising": 0.6480263157894737,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.005220040373974796,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.40618955512572535,
+    "share_gt0": 0.40618955512572535,
+    "share_ge0_rising": 0.6507936507936508,
+    "share_ge0_falling": 0.024752475247524754,
+    "mean": -0.010881825393404534,
+    "median": -0.03757387892336561
+   },
+   "continuous": {
+    "net": -0.2712235843441668,
+    "trades": 77
+   }
+  },
+  "A_sig23/full/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.5067385444743935,
+    "share_gt0": 0.25660377358490566,
+    "share_ge0_rising": 0.626746506986028,
+    "share_ge0_falling": 0.365767878077374,
+    "mean": -0.00973785224325751,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.3087431693989071,
+    "share_gt0": 0.3087431693989071,
+    "share_ge0_rising": 0.5302013422818792,
+    "share_ge0_falling": 0.015247776365946633,
+    "mean": -0.03887807762079172,
+    "median": -0.08268310361596742
+   },
+   "continuous": {
+    "net": -0.9688199903373357,
+    "trades": 344
+   }
+  },
+  "A_sig23/full/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.5018450184501845,
+    "share_gt0": 0.2656826568265683,
+    "share_ge0_rising": 0.618421052631579,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.009814714638120272,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.3617021276595745,
+    "share_gt0": 0.3617021276595745,
+    "share_ge0_rising": 0.5841269841269842,
+    "share_ge0_falling": 0.01485148514851485,
+    "mean": -0.03085907611995753,
+    "median": -0.05604373291607023
+   },
+   "continuous": {
+    "net": -0.48648564937519956,
+    "trades": 77
+   }
+  },
+  "A_sig23/full/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.493800539083558,
+    "share_gt0": 0.24366576819407007,
+    "share_ge0_rising": 0.6027944111776448,
+    "share_ge0_falling": 0.365767878077374,
+    "mean": -0.013659007908917713,
+    "median": -0.0022164821731748274
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.2792349726775956,
+    "share_gt0": 0.2792349726775956,
+    "share_ge0_rising": 0.48034515819750717,
+    "share_ge0_falling": 0.012706480304955527,
+    "mean": -0.05743560647719448,
+    "median": -0.10020409983331496
+   },
+   "continuous": {
+    "net": -0.9908076568722072,
+    "trades": 344
+   }
+  },
+  "A_sig23/full/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4797047970479705,
+    "share_gt0": 0.24354243542435425,
+    "share_ge0_rising": 0.5789473684210527,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.013380095700980857,
+    "median": -0.003295214684555403
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.32688588007736946,
+    "share_gt0": 0.32688588007736946,
+    "share_ge0_rising": 0.5301587301587302,
+    "share_ge0_falling": 0.009900990099009901,
+    "mean": -0.04614432085952653,
+    "median": -0.0696271592208717
+   },
+   "continuous": {
+    "net": -0.6093227400577703,
+    "trades": 77
+   }
+  },
+  "A_sig23/msmore/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.5196765498652292,
+    "share_gt0": 0.2695417789757412,
+    "share_ge0_rising": 0.6427145708582834,
+    "share_ge0_falling": 0.37514654161781946,
+    "mean": -0.00432504326548965,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.307103825136612,
+    "share_gt0": 0.307103825136612,
+    "share_ge0_rising": 0.5225311601150527,
+    "share_ge0_falling": 0.021601016518424398,
+    "mean": -0.019987197590344452,
+    "median": -0.03847022542579037
+   },
+   "continuous": {
+    "net": -0.823466787860721,
+    "trades": 491
+   }
+  },
+  "A_sig23/msmore/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4907749077490775,
+    "share_gt0": 0.25461254612546125,
+    "share_ge0_rising": 0.5953947368421053,
+    "share_ge0_falling": 0.35714285714285715,
+    "mean": -0.006491700175500854,
+    "median": -0.0007629828131773264
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.3578336557059961,
+    "share_gt0": 0.3578336557059961,
+    "share_ge0_rising": 0.5650793650793651,
+    "share_ge0_falling": 0.034653465346534656,
+    "mean": -0.027412314405406056,
+    "median": -0.03955418850777137
+   },
+   "continuous": {
+    "net": -0.4559296774956787,
+    "trades": 167
+   }
+  },
+  "A_sig23/msmore/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.49056603773584906,
+    "share_gt0": 0.24043126684636118,
+    "share_ge0_rising": 0.5948103792415169,
+    "share_ge0_falling": 0.36811254396248533,
+    "mean": -0.007961395364439539,
+    "median": -0.0012113824366406512
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.2650273224043716,
+    "share_gt0": 0.2650273224043716,
+    "share_ge0_rising": 0.4534995206136146,
+    "share_ge0_falling": 0.015247776365946633,
+    "mean": -0.03856878207503202,
+    "median": -0.05228101494183607
+   },
+   "continuous": {
+    "net": -0.9461945782236396,
+    "trades": 491
+   }
+  },
+  "A_sig23/msmore/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.45018450184501846,
+    "share_gt0": 0.2140221402214022,
+    "share_ge0_rising": 0.5263157894736842,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.010569142206000122,
+    "median": -0.004740239608210073
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.27852998065764023,
+    "share_gt0": 0.27852998065764023,
+    "share_ge0_rising": 0.44126984126984126,
+    "share_ge0_falling": 0.024752475247524754,
+    "mean": -0.0482454636408069,
+    "median": -0.057549510532704296
+   },
+   "continuous": {
+    "net": -0.6283639499301726,
+    "trades": 167
+   }
+  },
+  "A_sig23/msmore/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.46846361185983826,
+    "share_gt0": 0.2183288409703504,
+    "share_ge0_rising": 0.5558882235528942,
+    "share_ge0_falling": 0.365767878077374,
+    "mean": -0.010777825724653743,
+    "median": -0.0034009444569372826
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.24043715846994534,
+    "share_gt0": 0.24043715846994534,
+    "share_ge0_rising": 0.411313518696069,
+    "share_ge0_falling": 0.01397712833545108,
+    "mean": -0.052800659802681005,
+    "median": -0.06558477263156515
+   },
+   "continuous": {
+    "net": -0.978742696887704,
+    "trades": 490
+   }
+  },
+  "A_sig23/msmore/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.42988929889298894,
+    "share_gt0": 0.1937269372693727,
+    "share_ge0_rising": 0.4901315789473684,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.013730640203099937,
+    "median": -0.007637676019625506
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.22437137330754353,
+    "share_gt0": 0.22437137330754353,
+    "share_ge0_rising": 0.35555555555555557,
+    "share_ge0_falling": 0.019801980198019802,
+    "mean": -0.06414808988596117,
+    "median": -0.07148421118428216
+   },
+   "continuous": {
+    "net": -0.7238858662139738,
+    "trades": 167
+   }
+  },
+  "A_sig23/msless/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.5283018867924528,
+    "share_gt0": 0.27816711590296495,
+    "share_ge0_rising": 0.6596806387225549,
+    "share_ge0_falling": 0.37397420867526376,
+    "mean": -0.002044817350814462,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.3475409836065574,
+    "share_gt0": 0.3475409836065574,
+    "share_ge0_rising": 0.588686481303931,
+    "share_ge0_falling": 0.02795425667090216,
+    "mean": -0.009070861548494562,
+    "median": -0.020989535733405784
+   },
+   "continuous": {
+    "net": -0.5192567633869245,
+    "trades": 461
+   }
+  },
+  "A_sig23/msless/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.5018450184501845,
+    "share_gt0": 0.2656826568265683,
+    "share_ge0_rising": 0.6019736842105263,
+    "share_ge0_falling": 0.3739495798319328,
+    "mean": -0.0031009950094998276,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.3230174081237911,
+    "share_gt0": 0.3230174081237911,
+    "share_ge0_rising": 0.5047619047619047,
+    "share_ge0_falling": 0.039603960396039604,
+    "mean": -0.01529289362337025,
+    "median": -0.02512592682849757
+   },
+   "continuous": {
+    "net": -0.24643288612257408,
+    "trades": 154
+   }
+  },
+  "A_sig23/msless/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.49865229110512127,
+    "share_gt0": 0.24851752021563342,
+    "share_ge0_rising": 0.6117764471057884,
+    "share_ge0_falling": 0.365767878077374,
+    "mean": -0.004490973136202422,
+    "median": -0.00016824341729559933
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.30601092896174864,
+    "share_gt0": 0.30601092896174864,
+    "share_ge0_rising": 0.5225311601150527,
+    "share_ge0_falling": 0.01905972045743329,
+    "mean": -0.022288837732733584,
+    "median": -0.030872186838039162
+   },
+   "continuous": {
+    "net": -0.7897010070247323,
+    "trades": 461
+   }
+  },
+  "A_sig23/msless/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.46863468634686345,
+    "share_gt0": 0.23247232472324722,
+    "share_ge0_rising": 0.5526315789473685,
+    "share_ge0_falling": 0.36134453781512604,
+    "mean": -0.00591361461025441,
+    "median": -0.0024546053388059264
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.2127659574468085,
+    "share_gt0": 0.2127659574468085,
+    "share_ge0_rising": 0.33650793650793653,
+    "share_ge0_falling": 0.019801980198019802,
+    "mean": -0.030943596780938238,
+    "median": -0.040226967316246975
+   },
+   "continuous": {
+    "net": -0.43374951663222805,
+    "trades": 154
+   }
+  },
+  "A_sig23/msless/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.47924528301886793,
+    "share_gt0": 0.22911051212938005,
+    "share_ge0_rising": 0.5758483033932136,
+    "share_ge0_falling": 0.365767878077374,
+    "mean": -0.006368731081214382,
+    "median": -0.0015678744219053131
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.2721311475409836,
+    "share_gt0": 0.2721311475409836,
+    "share_ge0_rising": 0.46596356663470756,
+    "share_ge0_falling": 0.015247776365946633,
+    "mean": -0.03222242588141572,
+    "median": -0.03861319628939619
+   },
+   "continuous": {
+    "net": -0.8881224446000198,
+    "trades": 459
+   }
+  },
+  "A_sig23/msless/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.45018450184501846,
+    "share_gt0": 0.2140221402214022,
+    "share_ge0_rising": 0.5263157894736842,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.008101028739325828,
+    "median": -0.004190970021127671
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.1644100580270793,
+    "share_gt0": 0.1644100580270793,
+    "share_ge0_rising": 0.2634920634920635,
+    "share_ge0_falling": 0.009900990099009901,
+    "mean": -0.04304777663433648,
+    "median": -0.04979661494546428
+   },
+   "continuous": {
+    "net": -0.5477074059926805,
+    "trades": 153
+   }
+  },
+  "A_sig23/vol/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.5326145552560647,
+    "share_gt0": 0.28247978436657684,
+    "share_ge0_rising": 0.6706586826347305,
+    "share_ge0_falling": 0.3704572098475967,
+    "mean": -0.0038215759245062574,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.35355191256830604,
+    "share_gt0": 0.35355191256830604,
+    "share_ge0_rising": 0.6059443911792906,
+    "share_ge0_falling": 0.01905972045743329,
+    "mean": -0.011341802058375164,
+    "median": -0.050268101612493954
+   },
+   "continuous": {
+    "net": -0.7726094888455352,
+    "trades": 347
+   }
+  },
+  "A_sig23/vol/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.518450184501845,
+    "share_gt0": 0.2822878228782288,
+    "share_ge0_rising": 0.6480263157894737,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.004508487629927126,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.41392649903288203,
+    "share_gt0": 0.41392649903288203,
+    "share_ge0_rising": 0.6634920634920635,
+    "share_ge0_falling": 0.024752475247524754,
+    "mean": -0.006986421396938219,
+    "median": -0.03732572970807957
+   },
+   "continuous": {
+    "net": -0.21759648960560174,
+    "trades": 77
+   }
+  },
+  "A_sig23/vol/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.5067385444743935,
+    "share_gt0": 0.25660377358490566,
+    "share_ge0_rising": 0.626746506986028,
+    "share_ge0_falling": 0.365767878077374,
+    "mean": -0.008188533424817833,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.3087431693989071,
+    "share_gt0": 0.3087431693989071,
+    "share_ge0_rising": 0.5302013422818792,
+    "share_ge0_falling": 0.015247776365946633,
+    "mean": -0.03247430412930011,
+    "median": -0.06905757236967053
+   },
+   "continuous": {
+    "net": -0.940660668958803,
+    "trades": 347
+   }
+  },
+  "A_sig23/vol/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.5018450184501845,
+    "share_gt0": 0.2656826568265683,
+    "share_ge0_rising": 0.618421052631579,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.008920510505065333,
+    "median": 0.0
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.3733075435203095,
+    "share_gt0": 0.3733075435203095,
+    "share_ge0_rising": 0.5968253968253968,
+    "share_ge0_falling": 0.024752475247524754,
+    "mean": -0.026144558216360338,
+    "median": -0.054580270721484414
+   },
+   "continuous": {
+    "net": -0.4394079165692024,
+    "trades": 77
+   }
+  },
+  "A_sig23/vol/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.49433962264150944,
+    "share_gt0": 0.24420485175202156,
+    "share_ge0_rising": 0.6037924151696606,
+    "share_ge0_falling": 0.365767878077374,
+    "mean": -0.011573685315380574,
+    "median": -0.0018152696209290387
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.2792349726775956,
+    "share_gt0": 0.2792349726775956,
+    "share_ge0_rising": 0.48034515819750717,
+    "share_ge0_falling": 0.012706480304955527,
+    "mean": -0.04858415354983599,
+    "median": -0.08207145354328904
+   },
+   "continuous": {
+    "net": -0.9791971645842782,
+    "trades": 347
+   }
+  },
+  "A_sig23/vol/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4797047970479705,
+    "share_gt0": 0.24354243542435425,
+    "share_ge0_rising": 0.5789473684210527,
+    "share_ge0_falling": 0.35294117647058826,
+    "mean": -0.012344443246156397,
+    "median": -0.003295214684555403
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.33268858800773693,
+    "share_gt0": 0.33268858800773693,
+    "share_ge0_rising": 0.5365079365079365,
+    "share_ge0_falling": 0.01485148514851485,
+    "mean": -0.04081393799996642,
+    "median": -0.06755521994762126
+   },
+   "continuous": {
+    "net": -0.5678684547026633,
+    "trades": 77
+   }
+  },
+  "BH/full/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.4797843665768194,
+    "share_gt0": 0.4797843665768194,
+    "share_ge0_rising": 0.8882235528942116,
+    "share_ge0_falling": 0.0,
+    "mean": 0.0013108550737118971,
+    "median": -0.002617867271033303
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.5497267759562842,
+    "share_gt0": 0.5497267759562842,
+    "share_ge0_rising": 0.9645254074784276,
+    "share_ge0_falling": 0.0,
+    "mean": 0.05393753229561849,
+    "median": 0.025460901773725064
+   },
+   "continuous": {
+    "net": 8.835119959670328,
+    "trades": 1
+   }
+  },
+  "BH/full/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.45940959409594095,
+    "share_gt0": 0.45940959409594095,
+    "share_ge0_rising": 0.819078947368421,
+    "share_ge0_falling": 0.0,
+    "mean": 0.0017857787939442895,
+    "median": -0.0037433726994629546
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.586073500967118,
+    "share_gt0": 0.586073500967118,
+    "share_ge0_rising": 0.9619047619047619,
+    "share_ge0_falling": 0.0,
+    "mean": 0.056005841292540416,
+    "median": 0.026983661056464214
+   },
+   "continuous": {
+    "net": 1.4058490410155828,
+    "trades": 1
+   }
+  },
+  "BH/full/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.44258760107816714,
+    "share_gt0": 0.44258760107816714,
+    "share_ge0_rising": 0.8193612774451098,
+    "share_ge0_falling": 0.0,
+    "mean": -0.0032313816680538815,
+    "median": -0.007142282187646454
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.5426229508196722,
+    "share_gt0": 0.5426229508196722,
+    "share_ge0_rising": 0.9520613614573347,
+    "share_ge0_falling": 0.0,
+    "mean": 0.049156565667261405,
+    "median": 0.020809113408824076
+   },
+   "continuous": {
+    "net": 8.790505000175855,
+    "trades": 1
+   }
+  },
+  "BH/full/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4354243542435424,
+    "share_gt0": 0.4354243542435424,
+    "share_ge0_rising": 0.7763157894736842,
+    "share_ge0_falling": 0.0,
+    "mean": -0.0027586123396975406,
+    "median": -0.008262681996693111
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.5783365570599613,
+    "share_gt0": 0.5783365570599613,
+    "share_ge0_rising": 0.9492063492063492,
+    "share_ge0_falling": 0.0,
+    "mean": 0.05121549221409649,
+    "median": 0.02232496501336545
+   },
+   "continuous": {
+    "net": 1.394935411293234,
+    "trades": 1
+   }
+  },
+  "BH/full/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.4172506738544474,
+    "share_gt0": 0.4172506738544474,
+    "share_ge0_rising": 0.7724550898203593,
+    "share_ge0_falling": 0.0,
+    "mean": -0.006764232467205141,
+    "median": -0.01066127156723462
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.5355191256830601,
+    "share_gt0": 0.5355191256830601,
+    "share_ge0_rising": 0.9395973154362416,
+    "share_ge0_falling": 0.0,
+    "mean": 0.045438036067428016,
+    "median": 0.0171910557916789
+   },
+   "continuous": {
+    "net": 8.755804476124599,
+    "trades": 1
+   }
+  },
+  "BH/full/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4151291512915129,
+    "share_gt0": 0.4151291512915129,
+    "share_ge0_rising": 0.7401315789473685,
+    "share_ge0_falling": 0.0,
+    "mean": -0.006293138776974629,
+    "median": -0.011777700338983399
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.5589941972920697,
+    "share_gt0": 0.5589941972920697,
+    "share_ge0_rising": 0.9174603174603174,
+    "share_ge0_falling": 0.0,
+    "mean": 0.04748966515308444,
+    "median": 0.018701534757621596
+   },
+   "continuous": {
+    "net": 1.3864470326202958,
+    "trades": 1
+   }
+  },
+  "BH/msmore/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.4485175202156334,
+    "share_gt0": 0.4485175202156334,
+    "share_ge0_rising": 0.8163672654690619,
+    "share_ge0_falling": 0.016412661195779603,
+    "mean": -0.0017936176334185316,
+    "median": -0.003084139178222922
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.5060109289617486,
+    "share_gt0": 0.5060109289617486,
+    "share_ge0_rising": 0.8552253116011506,
+    "share_ge0_falling": 0.043202033036848796,
+    "mean": 0.015423654692097416,
+    "median": 0.002359980441052456
+   },
+   "continuous": {
+    "net": 0.5082663033712116,
+    "trades": 324
+   }
+  },
+  "BH/msmore/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4354243542435424,
+    "share_gt0": 0.4354243542435424,
+    "share_ge0_rising": 0.7598684210526315,
+    "share_ge0_falling": 0.02100840336134454,
+    "mean": -0.0023858534652110713,
+    "median": -0.004610279553406871
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.4951644100580271,
+    "share_gt0": 0.4951644100580271,
+    "share_ge0_rising": 0.8,
+    "share_ge0_falling": 0.019801980198019802,
+    "mean": 0.009427506214380993,
+    "median": -0.0011681555676428257
+   },
+   "continuous": {
+    "net": 0.08126435029007406,
+    "trades": 195
+   }
+  },
+  "BH/msmore/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.40808625336927223,
+    "share_gt0": 0.40808625336927223,
+    "share_ge0_rising": 0.7475049900199601,
+    "share_ge0_falling": 0.009378663540445486,
+    "mean": -0.00592584736686383,
+    "median": -0.005815315582099467
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.4737704918032787,
+    "share_gt0": 0.4737704918032787,
+    "share_ge0_rising": 0.8015340364333653,
+    "share_ge0_falling": 0.03939008894536213,
+    "mean": 0.004141719526055967,
+    "median": -0.008326456023907025
+   },
+   "continuous": {
+    "net": -0.10973242677606576,
+    "trades": 324
+   }
+  },
+  "BH/msmore/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.3837638376383764,
+    "share_gt0": 0.3837638376383764,
+    "share_ge0_rising": 0.680921052631579,
+    "share_ge0_falling": 0.004201680672268907,
+    "mean": -0.007716307123075731,
+    "median": -0.009968486905669871
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.38104448742746616,
+    "share_gt0": 0.38104448742746616,
+    "share_ge0_rising": 0.6253968253968254,
+    "share_ge0_falling": 0.0,
+    "mean": -0.010411305458380144,
+    "median": -0.019637228279662522
+   },
+   "continuous": {
+    "net": -0.2153077622571522,
+    "trades": 195
+   }
+  },
+  "BH/msmore/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.3762803234501348,
+    "share_gt0": 0.3762803234501348,
+    "share_ge0_rising": 0.6916167664670658,
+    "share_ge0_falling": 0.005861664712778429,
+    "mean": -0.009137988241341953,
+    "median": -0.00818572599607359
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.44699453551912566,
+    "share_gt0": 0.44699453551912566,
+    "share_ge0_rising": 0.7574304889741131,
+    "share_ge0_falling": 0.035578144853875476,
+    "mean": -0.0046768079368117105,
+    "median": -0.015617018447562414
+   },
+   "continuous": {
+    "net": -0.4163552297993993,
+    "trades": 328
+   }
+  },
+  "BH/msmore/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.33210332103321033,
+    "share_gt0": 0.33210332103321033,
+    "share_ge0_rising": 0.5888157894736842,
+    "share_ge0_falling": 0.004201680672268907,
+    "mean": -0.011824094110666686,
+    "median": -0.01383008822353704
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.3036750483558994,
+    "share_gt0": 0.3036750483558994,
+    "share_ge0_rising": 0.4984126984126984,
+    "share_ge0_falling": 0.0,
+    "mean": -0.025585285025966208,
+    "median": -0.03589500761780695
+   },
+   "continuous": {
+    "net": -0.38858147157685585,
+    "trades": 195
+   }
+  },
+  "BH/msless/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.4673854447439353,
+    "share_gt0": 0.4673854447439353,
+    "share_ge0_rising": 0.8532934131736527,
+    "share_ge0_falling": 0.01406799531066823,
+    "mean": -0.0007963509648696321,
+    "median": -0.0017175032970475623
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.49398907103825135,
+    "share_gt0": 0.49398907103825135,
+    "share_ge0_rising": 0.850431447746884,
+    "share_ge0_falling": 0.021601016518424398,
+    "mean": 0.011250876367841112,
+    "median": -0.001086061918383563
+   },
+   "continuous": {
+    "net": 0.7999779252903594,
+    "trades": 259
+   }
+  },
+  "BH/msless/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4151291512915129,
+    "share_gt0": 0.4151291512915129,
+    "share_ge0_rising": 0.7236842105263158,
+    "share_ge0_falling": 0.02100840336134454,
+    "mean": -0.002771401960749324,
+    "median": -0.0039726000803338435
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.40618955512572535,
+    "share_gt0": 0.40618955512572535,
+    "share_ge0_rising": 0.6634920634920635,
+    "share_ge0_falling": 0.0049504950495049506,
+    "mean": -0.002721422547042695,
+    "median": -0.009727024219539748
+   },
+   "continuous": {
+    "net": -0.05427682549353341,
+    "trades": 149
+   }
+  },
+  "BH/msless/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.41455525606469,
+    "share_gt0": 0.41455525606469,
+    "share_ge0_rising": 0.7634730538922155,
+    "share_ge0_falling": 0.004689331770222743,
+    "mean": -0.0035195916679516387,
+    "median": -0.003966120179064503
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.44754098360655736,
+    "share_gt0": 0.44754098360655736,
+    "share_ge0_rising": 0.7746883988494727,
+    "share_ge0_falling": 0.01397712833545108,
+    "mean": 0.0031147278517621715,
+    "median": -0.007959477206895993
+   },
+   "continuous": {
+    "net": 0.20939288319247584,
+    "trades": 259
+   }
+  },
+  "BH/msless/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.36900369003690037,
+    "share_gt0": 0.36900369003690037,
+    "share_ge0_rising": 0.6447368421052632,
+    "share_ge0_falling": 0.01680672268907563,
+    "mean": -0.00657783457346416,
+    "median": -0.007547221411756122
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.29980657640232106,
+    "share_gt0": 0.29980657640232106,
+    "share_ge0_rising": 0.49206349206349204,
+    "share_ge0_falling": 0.0,
+    "mean": -0.018234020206094274,
+    "median": -0.02430075134970433
+   },
+   "continuous": {
+    "net": -0.2751512261827005,
+    "trades": 149
+   }
+  },
+  "BH/msless/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.38221024258760106,
+    "share_gt0": 0.38221024258760106,
+    "share_ge0_rising": 0.7065868263473054,
+    "share_ge0_falling": 0.0011723329425556857,
+    "mean": -0.005612262802837306,
+    "median": -0.005486138625234838
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.4169398907103825,
+    "share_gt0": 0.4169398907103825,
+    "share_ge0_rising": 0.7238734419942474,
+    "share_ge0_falling": 0.010165184243964422,
+    "mean": -0.0029528410244145775,
+    "median": -0.014191336032420232
+   },
+   "continuous": {
+    "net": -0.10221607272287747,
+    "trades": 258
+   }
+  },
+  "BH/msless/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.34870848708487084,
+    "share_gt0": 0.34870848708487084,
+    "share_ge0_rising": 0.6151315789473685,
+    "share_ge0_falling": 0.008403361344537815,
+    "mean": -0.009559027111081366,
+    "median": -0.01016016797176511
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.25918762088974856,
+    "share_gt0": 0.25918762088974856,
+    "share_ge0_rising": 0.4253968253968254,
+    "share_ge0_falling": 0.0,
+    "mean": -0.03014448135780193,
+    "median": -0.034171998563147565
+   },
+   "continuous": {
+    "net": -0.410651973916179,
+    "trades": 149
+   }
+  },
+  "BH/vol/S2_firi_optimistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.47924528301886793,
+    "share_gt0": 0.47924528301886793,
+    "share_ge0_rising": 0.8872255489021956,
+    "share_ge0_falling": 0.0,
+    "mean": 0.0006376448391072005,
+    "median": -0.002326577410583841
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.5437158469945356,
+    "share_gt0": 0.5437158469945356,
+    "share_ge0_rising": 0.950143815915628,
+    "share_ge0_falling": 0.005082592121982211,
+    "mean": 0.043421943991638436,
+    "median": 0.020295092366261924
+   },
+   "continuous": {
+    "net": 5.567693937794112,
+    "trades": 28
+   }
+  },
+  "BH/vol/S2_firi_optimistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.45940959409594095,
+    "share_gt0": 0.45940959409594095,
+    "share_ge0_rising": 0.819078947368421,
+    "share_ge0_falling": 0.0,
+    "mean": 0.0021331210930978697,
+    "median": -0.0036610501136146167
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.586073500967118,
+    "share_gt0": 0.586073500967118,
+    "share_ge0_rising": 0.9555555555555556,
+    "share_ge0_falling": 0.009900990099009901,
+    "mean": 0.056259974368280515,
+    "median": 0.026844543645927477
+   },
+   "continuous": {
+    "net": 1.435061427685254,
+    "trades": 7
+   }
+  },
+  "BH/vol/S3_firi_realistisk/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.44258760107816714,
+    "share_gt0": 0.44258760107816714,
+    "share_ge0_rising": 0.8193612774451098,
+    "share_ge0_falling": 0.0,
+    "mean": -0.0032760367733391774,
+    "median": -0.0063310791137417555
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.5360655737704918,
+    "share_gt0": 0.5360655737704918,
+    "share_ge0_rising": 0.9386385426653883,
+    "share_ge0_falling": 0.0025412960609911056,
+    "mean": 0.0388918341254608,
+    "median": 0.015953781490448682
+   },
+   "continuous": {
+    "net": 5.361092422455216,
+    "trades": 28
+   }
+  },
+  "BH/vol/S3_firi_realistisk/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4354243542435424,
+    "share_gt0": 0.4354243542435424,
+    "share_ge0_rising": 0.7763157894736842,
+    "share_ge0_falling": 0.0,
+    "mean": -0.0022554658583616234,
+    "median": -0.0076894552598545385
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.5783365570599613,
+    "share_gt0": 0.5783365570599613,
+    "share_ge0_rising": 0.9428571428571428,
+    "share_ge0_falling": 0.009900990099009901,
+    "mean": 0.05144004552687934,
+    "median": 0.022189948206596366
+   },
+   "continuous": {
+    "net": 1.40943500537644,
+    "trades": 7
+   }
+  },
+  "BH/vol/S4_firi_konservativ/exploration": {
+   "W5": {
+    "n": 1855,
+    "share_ge0": 0.41778975741239893,
+    "share_gt0": 0.41778975741239893,
+    "share_ge0_rising": 0.7734530938123753,
+    "share_ge0_falling": 0.0,
+    "mean": -0.0063199571944453315,
+    "median": -0.009503274986087829
+   },
+   "W30": {
+    "n": 1830,
+    "share_ge0": 0.5289617486338798,
+    "share_gt0": 0.5289617486338798,
+    "share_ge0_rising": 0.9271332694151486,
+    "share_ge0_falling": 0.0012706480304955528,
+    "mean": 0.03535494307233487,
+    "median": 0.012369407721046555
+   },
+   "continuous": {
+    "net": 5.204911740251711,
+    "trades": 28
+   }
+  },
+  "BH/vol/S4_firi_konservativ/validation": {
+   "W5": {
+    "n": 542,
+    "share_ge0": 0.4151291512915129,
+    "share_gt0": 0.4151291512915129,
+    "share_ge0_rising": 0.7401315789473685,
+    "share_ge0_falling": 0.0,
+    "mean": -0.0056688112650524255,
+    "median": -0.010887865340622083
+   },
+   "W30": {
+    "n": 517,
+    "share_ge0": 0.5570599613152805,
+    "share_gt0": 0.5570599613152805,
+    "share_ge0_rising": 0.9079365079365079,
+    "share_ge0_falling": 0.009900990099009901,
+    "mean": 0.0477047590279781,
+    "median": 0.018566996491433674
+   },
+   "continuous": {
+    "net": 1.3896809541899398,
+    "trades": 7
+   }
+  }
+ },
+ "verdicts": {
+  "G_up55_down20/msmore": {
+   "verdict": "WORSE",
+   "meets_owner_goal": false
+  },
+  "G_up55_down20/msless": {
+   "verdict": "WORSE",
+   "meets_owner_goal": false
+  },
+  "G_up55_down20/vol": {
+   "verdict": "MIXED",
+   "meets_owner_goal": true
+  },
+  "C_MA100_b5/msmore": {
+   "verdict": "WORSE",
+   "meets_owner_goal": false
+  },
+  "C_MA100_b5/msless": {
+   "verdict": "WORSE",
+   "meets_owner_goal": false
+  },
+  "C_MA100_b5/vol": {
+   "verdict": "WORSE",
+   "meets_owner_goal": false
+  },
+  "A_sig23/msmore": {
+   "verdict": "MIXED",
+   "meets_owner_goal": false
+  },
+  "A_sig23/msless": {
+   "verdict": "MIXED",
+   "meets_owner_goal": false
+  },
+  "A_sig23/vol": {
+   "verdict": "IMPROVES",
+   "meets_owner_goal": false
+  },
+  "BH/msmore": {
+   "verdict": "WORSE",
+   "meets_owner_goal": false
+  },
+  "BH/msless": {
+   "verdict": "WORSE",
+   "meets_owner_goal": false
+  },
+  "BH/vol": {
+   "verdict": "MIXED",
+   "meets_owner_goal": false
+  }
+ },
+ "runtime_seconds": 76.8
+}

@@ -1,8 +1,8 @@
 {
   "id": "E041",
   "date": "2026-11-16",
-  "git_commit": "registrering (denne commiten), før noe kode finnes; kode og resultat i senere commiter",
-  "status": "REGISTRERT -- ikke kjørt. Eierens spørsmål av 2026-11-15: blir resultatet bedre hvis mer forventet bevegelse (move-size) betyr at mer penger settes inn? Bare utviklingsdata; hypotesegenererende.",
+  "git_commit": "registrering 0281953 (før all kode); kode 5581498; kjørt 2026-11-16 15:16-15:17 UTC (77 s) ved 5581498; resultatet i neste commit",
+  "status": "FERDIG -- etter de registrerte reglene: msmore er WORSE for 3 av 4 grunnregler (MIXED for dagens modell), msless WORSE for 3 av 4, vol MIXED for utbrudd 55/20 og kjøp og hold, WORSE for MA100, IMPROVES bare for dagens modell (som fortsatt taper). H1 og H3 holder; H2 holder ikke (msless ble også dårligere). Bare utviklingsdata; ingenting live endret.",
   "why": "Eieren ba om å prøve at «mer Move-Size betyr at mer penger skal investeres». Hos Firi kan systemet bare eie Bitcoin eller stå i kontanter, så «mer penger» kan bare bety en større andel i Bitcoin når en regel vil eie. Prosjektets eneste modell med påvist treffsikkerhet er move-size-modellen (sannsynligheten for et timetrekk over 0,25 %), men den sier noe om hvor stort, ikke hvilken vei. Spørsmålet er derfor om størrelsen på posisjonen bør følge forventet bevegelse opp, ned, eller etter volatilitet.",
   "question": "Gir en posisjonsstørrelse som øker med forventet bevegelse (msmore), som minker med den (msless), eller som følger volatiliteten (vol), et bedre resultat på eierens mål enn full posisjon, for fire grunnregler, med Firis kostnader, i begge utviklingsperiodene?",
   "duplicate_check": "Nytt som spørsmål: E038 brukte rule-1.0s størrelse (som minker med bevegelse) på timesnivå, og E039 testet T_TREND_VS (trend delt på volatilitet) på et annet mål. Ingen test har sammenlignet størrelse som øker med bevegelse mot størrelse som minker, på eierens mål.",
@@ -34,5 +34,5 @@
   "stop_rules": "Stopp hvis porten feiler, en lesing når holdout-perioden, eller implementasjonen avviker fra denne registreringen.",
   "validation_wear": "34 eksperimenter har sett utviklingsårene. Hypotesegenererende; papirhandelen (E042) er den framtidige prøven.",
   "compute_and_storage": "Lokalt, noen minutter. Resultat i research/results/E041/.",
-  "result": "(fylles inn etter den ene kjøringen)"
+  "result": "Port: papirhandelens motor i modus «full» = E040 til siste bit (største relative avvik 0,0). Perioder: utforsking 1 855 (5 d) / 1 830 (30 d) fra 2018-11-28, validering 542 / 517. Ved 1,25 % per side, 30-dagersperioder uten tap (utforsking / validering) og snitt per 30 dager: utbrudd 55/20 full 77 % / 75 %, +3,05 % / +3,15 %; msmore 73 % / 71 %, +0,84 % / +0,40 % (WORSE); msless 74 % / 66 %, +0,55 % / -0,13 % (WORSE); vol 77 % / 75 %, +2,70 % / +3,03 % (MIXED, når fortsatt eierens mål). MA100 b5 full 74 % / 64 %; msmore 68 % / 47 %; msless 68 % / 44 %; vol 73 % / 64 % (alle WORSE). Dagens modell daglig full 31 % / 36 %; vol 31 % / 37 % (IMPROVES, men snitt -3,25 % / -2,61 %). Kjøp og hold full 54 % / 58 %, +4,92 % / +5,12 %; msmore 47 % / 38 %, +0,41 % / -1,04 %; msless 45 % / 30 %; vol 54 % / 58 % (MIXED). Lesning: å sette inn mer når forventet bevegelse er stor gjør resultatet dårligere, fordi move-size sier hvor urolig markedet er, ikke hvor det går, og fordi en størrelse som endres fra dag til dag gir flere handler med Firis kostnader. Størrelse etter volatilitet (vol) endrer lite. Rapport: research/results/E041/move_size_sizing.md."
 }

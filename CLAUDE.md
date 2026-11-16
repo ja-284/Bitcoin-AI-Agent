@@ -1348,6 +1348,29 @@ locally, the audit record).**
   Rapport: `research/BESKYTTELSESMAAL_2026-11-15.md`.
 - **Ingenting** live, frosset eller registrert endret; holdout-perioden ikke rørt; `research/HOLDOUT_ACCESS.log` finnes ikke.
 
+**2026-11-16 — E041 (move-size-størrelse) og E042 (papirhandel med 118 strategier) satt i gang (eierens godkjenning).**
+- **Eierens ønske (2026-11-15):** papirhandel med mange metoder, hver med egen regnskapsbok; prøve om mer forventet
+  bevegelse bør gi mer penger inn; snakk med eieren på enkel norsk, men uten å ta prosjektet mindre seriøst
+  (eierens presisering 2026-11-16).
+- **E041** (registrert `0281953`, kode `5581498`, kjørt én gang, 77 s; port mot E040: avvik 0,0):
+  - mer penger ved stor forventet bevegelse (msmore) gjør det **dårligere** for 3 av 4 grunnregler. Utbrudd 55/20:
+    30-dagersperioder uten tap 77 % / 75 % → 73 % / 71 %, og snittet per 30 dager +3,1 % → +0,4–0,8 %;
+  - msless er også dårligere, fordi en størrelse som endres daglig gir flere handler med Firis kostnader;
+  - størrelse etter volatilitet (vol) endrer lite.
+- **E042, papirhandelen** (registrert `0281953`):
+  - **Programmet:** `agent/papertrade/` (motor, strategisett pt-1.0, daglig steg), egne tabeller `paper_days`,
+    `paper_ledger` og `paper_errors` (bare tillegg, RLS, API-rollene uten rettigheter, `bitcoin_agent` SELECT/INSERT,
+    34 policyer), og et steg i `hourly.yml` som aldri kan få jobben til å feile.
+  - **Strategiene:** 118 strategier × to bøker á 500 kr: «modell» (Binance-sluttkurs, 1,25 % per side) og «firi» (Firis
+    ask/bid, 0,7 % gebyr).
+  - **Daglig drift:** én beslutning per UTC-dag, bare innen 6 timer etter sluttkursen. Første dag: 2026-11-16, behandlet
+    ved 00:12 UTC 2026-11-17.
+  - **Tørrkjøring mot det live registeret** (bare lesing): 58 dager historikk, 65 av 118 strategier aktive (resten
+    venter på lengre historikk), Firis kurs hentet.
+  - **Oversikt for eieren:** `python -m agent.papertrade.run --status`.
+  - **Avlesninger:** 90 / 180 / 365 dager. Ingen ekte penger uten en egen godkjenning.
+- **Ingenting** i prediksjonsmotoren, de frosne modellene, retningssporet, sjekkpunktene eller holdout-perioden er endret.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:

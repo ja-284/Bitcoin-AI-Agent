@@ -41,6 +41,7 @@ SCHEMA_FILES = [
     ROOT / "reporting" / "schema.sql",  # the private stats read model (derived caches; read by nothing in the system)
     ROOT / "database" / "dispatch_log.sql",  # GitHub's answers to the hourly dispatch, kept 90 days (owner-only diagnostics)
     ROOT / "direction_shadow" / "schema.sql",  # the prospective direction shadow track (E034) and its error log
+    ROOT / "papertrade" / "schema.sql",  # papirhandelen framover (E042): dager, regnskapsbøker, feil
 ]
 
 

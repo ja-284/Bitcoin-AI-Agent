@@ -21,6 +21,12 @@
     "start": "500 kr i kontanter i hver bok for hver strategi."
   },
   "operation": "Én beslutning per UTC-dag, etter at 23:00-timen er lagret: timesjobben forsøker hver time til dagen er behandlet (idempotent: én rad per dag, strategi og bok). En dag ingen kjøring rakk, får ingen beslutning (posisjonene står). Første dag er den første dagen etter at steget er satt i drift; ingenting fylles inn bakover. Steget kan aldri stoppe timesjobben (feil lagres, exit 0).",
+  "execution_details_fixed_before_start": [
+    "En dag behandles bare innen 6 timer etter sluttkursen (midnatt UTC); senere blir det ingen beslutning for den dagen, slik at Firi-kursen alltid hører til beslutningen. Første dag blir derfor 2026-11-16 (behandlet ved 00:12 UTC 2026-11-17), ikke 2026-11-15.",
+    "Uten gyldig Firi-kurs skrives ingen Firi-rad den dagen (boken står), og feilen lagres; modellboken går som vanlig.",
+    "Stopp og topper i begge bøkene regnes på Binance-sluttkursen (signalets kurs); bare kjøp, salg og verdi bruker Firis ask og bid.",
+    "To kjøringer samtidig (en reserveslot) kan ikke skrive samme dag to ganger: dagen er primærnøkkel, og den andre kjøringen gir seg uten å lagre en feil."
+  ],
   "storage": "Egne tabeller (paper_days, paper_ledger, paper_errors), bare tillegg, RLS på, API-rollene uten rettigheter, jobbrollen bitcoin_agent bare SELECT og INSERT.",
   "readings": {
     "running": "Eieren kan se papirresultatene når som helst (de er ikke blinde). En månedlig beskrivende oversikt: driftstall og hver strategis verdi og mål så langt. Ingen strategi endres underveis.",

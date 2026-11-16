@@ -20,11 +20,13 @@ def test_the_expectations_are_read_from_the_proven_file():
                       "reporting_incidents": {"SELECT", "INSERT"},  # (2026-10-05) append only
                       # (2026-10-15) the prospective direction shadow track (E034): append, grade once
                       "shadow_direction": {"SELECT", "INSERT"}, "shadow_direction_errors": {"SELECT", "INSERT"},
-                      "shadow_direction_health": {"SELECT", "INSERT"}}  # (2026-10-16) the direction track's health record
+                      "shadow_direction_health": {"SELECT", "INSERT"},  # (2026-10-16) the direction track's health record
+                      # (2026-11-16) papirhandelen (E042): bare tillegg
+                      "paper_days": {"SELECT", "INSERT"}, "paper_ledger": {"SELECT", "INSERT"}, "paper_errors": {"SELECT", "INSERT"}}
     assert columns == {"shadow_move_size": {"outcome_status", "outcome_close", "outcome_return", "outcome_large",
                                             "outcome_checked_at"},
                        "shadow_direction": {"outcome_status", "outcome_close", "outcome_return", "outcome_up", "outcome_checked_at"}}
-    assert policies == 28
+    assert policies == 34  # 28 + papirhandelens 6 (2026-11-16)
 
 
 def test_a_change_to_the_file_changes_the_expectation():

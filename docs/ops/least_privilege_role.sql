@@ -93,5 +93,14 @@ GRANT SELECT, INSERT ON shadow_direction_health TO bitcoin_agent;
 CREATE POLICY backend_read   ON shadow_direction_health FOR SELECT TO bitcoin_agent USING (true);
 CREATE POLICY backend_insert ON shadow_direction_health FOR INSERT TO bitcoin_agent WITH CHECK (true);
 
+-- (2026-11-16) papirhandelen (E042, research/experiments/E042_paper_trading.json): bare tillegg, aldri endring
+GRANT SELECT, INSERT ON paper_days, paper_ledger, paper_errors TO bitcoin_agent;
+CREATE POLICY backend_read   ON paper_days   FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON paper_days   FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_read   ON paper_ledger FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON paper_ledger FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_read   ON paper_errors FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON paper_errors FOR INSERT TO bitcoin_agent WITH CHECK (true);
+
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;

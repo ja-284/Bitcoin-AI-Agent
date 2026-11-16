@@ -94,6 +94,13 @@ jobs:
       - name: Grade direction shadow rows
         run: python -m agent.direction_shadow.outcomes
 
+      # Papirhandel framover (E042, research/experiments/E042_paper_trading.json): ingen ekte penger, ingen nøkkel.
+      # Gjør noe bare én gang per UTC-dag, når den siste 23:00-timen er lagret og dagen ikke er behandlet ennå; skriver
+      # bare i paper_days, paper_ledger og paper_errors. Som retningssporet: enhver feil lagres og gir exit 0 (testet), så
+      # steget kan aldri endre jobbens resultat; bare varslingsstegene bærer continue-on-error.
+      - name: Paper trading (once a day)
+        run: python -m agent.papertrade.run
+
       # The DIRECTION track's own alert (master plan addendum 2026-10-16), on its OWN healthchecks.io check, separate
       # from the main heartbeat below. A success ping when the latest closed hour has a valid direction observation;
       # ONE /fail per incident when an hour is lost for good (each lost hour and each recovery recorded once in
