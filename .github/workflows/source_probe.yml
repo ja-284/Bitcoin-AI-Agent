@@ -1,0 +1,25 @@
+# Kildeprøve (research/RETNINGSPLAN_2026-11-16.md, kandidat B; eierens ja 2026-11-16): svarer de gratis kildene for
+# terminmarked, opsjoner og ordrebok fra GitHubs servere (USA), der timesjobben kjører? Bare lesing av offentlige
+# markedsdata: ingen hemmelighet, ingen database, ingenting lagres. Resultatet står som merknader på kjøringen.
+# Prøven feiler aldri (verktøyet avslutter med 0), så den gir ingen feil-e-post.
+
+name: Kildeprøve
+
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/source_probe.yml", "tools/source_probe.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
+
+      - name: Prøv kildene fra GitHubs servere
+        run: python3 tools/source_probe.py --github
