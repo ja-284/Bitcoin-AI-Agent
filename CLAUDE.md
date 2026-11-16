@@ -1387,6 +1387,23 @@ locally, the audit record).**
   (`.github/workflows/pages.yml`; `tools/pages_config.py` nekter en hemmelig nøkkel). **Venter på eieren:**
   `docs/ops/open_user_actions.md` punkt 9.
 
+**2026-11-16 (kveld) — eierens nye fokus: retning, særlig når Bitcoin faller; plan i `research/RETNINGSPLAN_2026-11-16.md`.**
+- **Eierens ord:** forbedre hvilken vei Bitcoin går innenfor lyset vi bruker, både opp og ned, men mest ved fall, der
+  systemet er svakt. Målet er lønnsomhet; vi tar oss tid. Eieren vil også at sider fremover får papirsidens design, og
+  at jeg jobber selvstendig.
+- **Diagnose** (beskrivende, `python tools/falls_diagnosis.py`, 1 385 timer; blinde retningssporet ikke lest):
+  - på 1 time er signalet ikke bedre enn tilfeldig i noen retning;
+  - på 24 timer kom KJØP oftere før fall (steg 38,7 % mot 46,5 %; ~57 uavhengige døgn);
+  - signalet jager bevegelsen: SELG i 73 % etter en time med fall over 0,5 %, men neste time stiger i 50 %; dominert
+    av chart_pattern.
+- **Planen:** et fast målebånd (treff ved fall, varsling av fall minus varsling av stigning, fallfangst, Firi-kostnader,
+  tilfeldig timing med samme eksponering); en trakt med sju porter fra idé til ekte penger; kandidater rangert: A
+  beslutningslaget (etter 2 000 timer), B ny informasjon om fall samlet framover (terminmarked, opsjoner, ordrebok),
+  C lengre beslutninger.
+- **Neste, selvstendig:** lesesjekk av kildene B1–B3. **Eierens beslutninger:** innsamling framover per kilde, og
+  horisonten for handel.
+- Ingenting live, frosset eller registrert er endret.
+
 ## Research phase — rules and decisions (2026-09-19)
 
 The user's research brief (from ChatGPT, reviewed and adopted) governs everything after Phase 1. Its order is binding: **fix → prove the fixes → evaluate what exists → improve only on evidence.** Decisions already made:
