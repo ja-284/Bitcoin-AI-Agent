@@ -255,7 +255,11 @@ def test_the_registered_rules_are_each_modules_own_point_in_time_rules():
     assert REAL_REGISTRY["klines_extra"].visible_after == REAL_REGISTRY["premium"].visible_after == H  # a candle closes 1 h after it opens
     assert REAL_REGISTRY["spot"].visible_after == H
     assert REAL_REGISTRY["funding"].visible_after == REAL_REGISTRY["difficulty"].visible_after == timedelta(0)  # known when stamped
-    assert set(REAL_REGISTRY) == {"spot", "klines_extra", "funding", "premium", "onchain", "difficulty", "macro"}
+    assert set(REAL_REGISTRY) == {"spot", "klines_extra", "funding", "premium", "onchain", "difficulty", "macro",
+                                  "dvol", "oi_bybit", "margin_bitfinex"}  # the last three: E043, 2026-11-16
+    assert all(REAL_REGISTRY[n].visible_after == H for n in ("dvol", "oi_bybit", "margin_bitfinex"))
+    # E043's files hold development rows only: nothing was downloaded past the last development candle
+    assert all(REAL_REGISTRY[n].development_sha256 == REAL_REGISTRY[n].file_sha256 for n in ("dvol", "oi_bybit", "margin_bitfinex"))
     assert [n for n, s in REAL_REGISTRY.items() if s.refused] == ["macro"]
     assert snapshots.DEVELOPMENT_CUTOFF == HOLDOUT.start
 

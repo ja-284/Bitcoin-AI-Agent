@@ -76,6 +76,18 @@ REGISTERED: dict[str, Snapshot] = {
     "difficulty": Snapshot("difficulty_adjustments_2026-09-20.csv", "adjusted_at", timedelta(0), 434,
                            "0e950a6146b960b3e4e8d08da368fb88a584f23f5f97803d061b028a46edd348", 28123,
                            "567fd953a4ea9e17384e401a7d4cfa036d8e307b0ce9fc0b359408b0dc31f386"),
+    # E043 (registered 9a67dea before these were fetched; tools/fetch_e043_snapshots.py, 2026-11-16): fetched only up to
+    # the candle opening 2025-06-30 22:00 UTC, so every row is a development row and no holdout row was ever downloaded.
+    # Each row is an hourly value; a value stamped T is used only from T + 1 h (forsiktig for Bybit og Bitfinex).
+    "dvol": Snapshot("dvol_btc_1h_2026-11-16.csv", "as_of", timedelta(hours=1), 37439,
+                     "802f83aa18238938e50dbd859bb2e634262f31d3a2092f379a2154556450bf7c", 1862105,
+                     "802f83aa18238938e50dbd859bb2e634262f31d3a2092f379a2154556450bf7c"),
+    "oi_bybit": Snapshot("oi_bybit_btcusdt_1h_2026-11-16.csv", "as_of", timedelta(hours=1), 42335,
+                         "5cf066039a0c94974a2865c392c0e37175dab54afca52fa8abb164b8f1d76649", 1729067,
+                         "5cf066039a0c94974a2865c392c0e37175dab54afca52fa8abb164b8f1d76649"),
+    "margin_bitfinex": Snapshot("margin_bitfinex_btcusd_1h_2026-11-16.csv", "as_of", timedelta(hours=1), 38130,
+                                "5bf6c8e6709368b98167604efca5eaa42ac1f852e7f0e58728da54ff7afc7ec6", 2076701,
+                                "5bf6c8e6709368b98167604efca5eaa42ac1f852e7f0e58728da54ff7afc7ec6"),
     "macro": Snapshot("macro_2026-09-20.csv", "trading_date", timedelta(hours=22), 488,
                       "36367624183ec40c84fddaf8739fafeed969d377625c969b8b5816a311aee51b", 28574,
                       "6d15db0de4ad51515293086fa1c3ea3b4d092f31b2de6bd57ac1be3ed6f9a9bd",
