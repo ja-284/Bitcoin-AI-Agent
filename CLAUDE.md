@@ -1408,6 +1408,10 @@ locally, the audit record).**
   timesjobben): én rad per kilde og time i `context_hourly` (feil i `context_errors`), bare tillegg, lukket utenfra,
   ~22 MB i året, kan aldri stoppe jobben. Punkt i tid via `fetched_at`; ses ikke mot utfall før et registrert
   eksperiment. Status i `research/RETNINGSPLAN_2026-11-16.md` §7.
+- **E043 (samme kveld; registrert 9a67dea, øyeblikksbilder e3ff801, kode bd45d5f, kjørt én gang):** Deribit DVOL,
+  Bybit åpne posisjoner og Bitfinex belånte posisjoner, hentet bare til 2025-06-30. **0 av 10 SUPPORTED**
+  (4 INCONCLUSIVE, 6 NOT_SUPPORTED). Spor framover: fryktpremien på 1 t (+3,4 pp, alle 5 år, Holm p 0,41) og
+  DVOL-endringen på døgn (−18 pp, svært bredt). Ingen varianter på historikken.
 - Ingenting i prediksjonen, de frosne modellene, sporene, sjekkpunktene eller holdout-perioden er endret.
 
 ## Research phase — rules and decisions (2026-09-19)

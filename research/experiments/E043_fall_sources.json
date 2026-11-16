@@ -2,23 +2,45 @@
   "id": "E043",
   "date": "2026-11-16",
   "git_commit": "registrering (denne commiten), før noen av de tre nye dataseriene er hentet og før noen kode for E043 finnes",
-  "status": "REGISTERT -- ikke kjørt. Retningsplanen (research/RETNINGSPLAN_2026-11-16.md), kandidat B, port 4: den raske testen på historikk. Eierens ja 2026-11-16 («sett i gang med kildene dine. A, B og C ... slik vil vi ha det»; «kan B gjøres nå?»).",
+  "status": "KJØRT ÉN GANG 2026-11-16 19:55 UTC (kode bd45d5f, 46 s, bare utviklingsdata; research/HOLDOUT_ACCESS.log finnes ikke). 0 av 10 SUPPORTED: 4 INCONCLUSIVE, 6 NOT_SUPPORTED. REGISTERT -- ikke kjørt. Retningsplanen (research/RETNINGSPLAN_2026-11-16.md), kandidat B, port 4: den raske testen på historikk. Eierens ja 2026-11-16 («sett i gang med kildene dine. A, B og C ... slik vil vi ha det»; «kan B gjøres nå?»).",
   "why": "Eierens fokus er retning, særlig når Bitcoin faller. Lysene alene er prøvd ut (E039). Store fall er ofte tvangssalg av belånte posisjoner og kommer med frykt i opsjonsmarkedet. Tre gratis kilder med slik informasjon har historikk tilbake til 2021 og er aldri undersøkt i dette prosjektet: Deribits volatilitetsindeks (DVOL), åpne posisjoner på Bybit og belånte long/short-posisjoner på Bitfinex. Funding og prisforskjellen termin/spot er allerede testet (E006/E008) og tas ikke med igjen; funding har sin egen registrerte test (≈ 2027-03).",
   "question": "Varsler opsjonsfrykt eller belåning FALL bedre enn de varsler STIGNING, i neste time (hoved) og neste døgn (sekundær)?",
   "data": {
     "new_snapshots": [
-      {"name": "dvol", "source": "Deribit, public/get_volatility_index_data, currency BTC, resolution 3600 (ingen nøkkel)",
-       "columns": ["as_of", "open", "high", "low", "close"],
-       "range": "fra første time (2021-03-24) til og med lyset som åpner 2025-06-30 22:00 UTC",
-       "visible_after": "1 time: et lys stemplet T er ferdig ved T + 1 t"},
-      {"name": "oi_bybit", "source": "Bybit v5, market/open-interest, category linear, BTCUSDT, intervalTime 1h (ingen nøkkel)",
-       "columns": ["as_of", "open_interest"],
-       "range": "fra første time (≈ 2020-10) til og med 2025-06-30 22:00 UTC",
-       "visible_after": "1 time (forsiktig: Bybit sier ikke om verdien gjelder starten eller slutten av timen)"},
-      {"name": "margin_bitfinex", "source": "Bitfinex, stats1 pos.size:1h:tBTCUSD:long og :short, /hist (ingen nøkkel)",
-       "columns": ["as_of", "longs", "shorts"],
-       "range": "fra første time (2021-02-22) til og med 2025-06-30 22:00 UTC",
-       "visible_after": "1 time (forsiktig, av samme grunn)"}
+      {
+        "name": "dvol",
+        "source": "Deribit, public/get_volatility_index_data, currency BTC, resolution 3600 (ingen nøkkel)",
+        "columns": [
+          "as_of",
+          "open",
+          "high",
+          "low",
+          "close"
+        ],
+        "range": "fra første time (2021-03-24) til og med lyset som åpner 2025-06-30 22:00 UTC",
+        "visible_after": "1 time: et lys stemplet T er ferdig ved T + 1 t"
+      },
+      {
+        "name": "oi_bybit",
+        "source": "Bybit v5, market/open-interest, category linear, BTCUSDT, intervalTime 1h (ingen nøkkel)",
+        "columns": [
+          "as_of",
+          "open_interest"
+        ],
+        "range": "fra første time (≈ 2020-10) til og med 2025-06-30 22:00 UTC",
+        "visible_after": "1 time (forsiktig: Bybit sier ikke om verdien gjelder starten eller slutten av timen)"
+      },
+      {
+        "name": "margin_bitfinex",
+        "source": "Bitfinex, stats1 pos.size:1h:tBTCUSD:long og :short, /hist (ingen nøkkel)",
+        "columns": [
+          "as_of",
+          "longs",
+          "shorts"
+        ],
+        "range": "fra første time (2021-02-22) til og med 2025-06-30 22:00 UTC",
+        "visible_after": "1 time (forsiktig, av samme grunn)"
+      }
     ],
     "rules": [
       "Hentes én gang, og bare til og med 2025-06-30 22:00 UTC: ingen rad fra den forseglede holdout-perioden lastes ned.",
@@ -58,5 +80,27 @@
   "expectation_stated_in_advance": "Mest sannsynlig INCONCLUSIVE eller NOT_SUPPORTED på 1 time: retning time for time er nesten tilfeldig (E015, E032, E039). Døgnmålet har mer rom (belåning og frykt virker over dager), men få uavhengige døgn (~1 000 og ~545), så intervallene blir brede.",
   "wear": "Spotlysene i disse periodene er undersøkt av 31 eksperimenter; de tre nye seriene er aldri undersøkt. Resultatet er hypotesegenererende (port 4), ikke bekreftende.",
   "stop_rules": "Et øyeblikksbilde som ikke stemmer med registreringen, en holdout-rad i en hentet fil, eller en egenskap regnet fra en verdi som ikke var synlig ennå, stopper kjøringen. Det rettes bare for feil i koden (dokumentert), aldri etter å ha sett et resultat. Én kjøring.",
-  "result": "(fylles inn etter kjøringen)"
+  "result": {
+    "files": "research/results/E043/fall_sources.json og fall_sources.md (`python -m agent.research.fall_sources`)",
+    "data": "37 979 spotlys (2021-03-01 → 2025-06-30 23:00); dekning fra 2021-04: 99,4–100 % per egenskap; 13 127 timer og 546 døgn i kontrollperioden",
+    "verdicts": {
+      "1h": {
+        "F1_dvol_chg24": "INCONCLUSIVE (C −2,5 / −2,8 pp, Holm p 1,0)",
+        "F2_iv_rv": "INCONCLUSIVE (C +4,0 / +3,4 pp [+0,1, +6,3], rå p 0,045, Holm p 0,405, samme fortegn alle 5 år; under 5 pp-terskelen)",
+        "F3_oi_chg24": "INCONCLUSIVE (C +0,9 / +2,1 pp, Holm p 1,0)",
+        "F4_oi_x_ret": "NOT_SUPPORTED (fortegnet snur: +0,5 / −5,0 pp; kontrollperiodens intervall utelukker 0, nettopp det to-periode-regelen fanger)",
+        "F5_margin_ls_chg24": "NOT_SUPPORTED (3 av 5 år)"
+      },
+      "24h": {
+        "F1_dvol_chg24": "INCONCLUSIVE (C −10,9 / −18,2 pp [−32,7, +5,5], Holm p 1,0, 4 av 5 år)",
+        "F2_iv_rv": "NOT_SUPPORTED (fortegnet snur)",
+        "F3_oi_chg24": "NOT_SUPPORTED (2 av 5 år)",
+        "F4_oi_x_ret": "NOT_SUPPORTED (0 av 5 år)",
+        "F5_margin_ls_chg24": "NOT_SUPPORTED (fortegnet snur)"
+      }
+    },
+    "control": "X0 (bare svingningens størrelse): 1 t −4,0 / +0,7 pp (nær 0, som ventet); døgn −9,0 / −7,3 pp, 4 av 5 år: på døgn bærer selve svingningsendringen litt retning (tilbakevending etter uro). F1s døgntall må leses med det i tankene.",
+    "reading": "Som ventet på forhånd. Ingen av de tre nye kildene gir et sikkert varsel om fall på historikken. To spor er verdt å følge framover, ikke å tro på: (a) fryktpremien (F2) på 1 time, liten men med samme fortegn i alle fem år: når opsjonene priser inn mer svingning enn markedet faktisk har, kommer det litt flere store fall enn store stigninger neste time; (b) DVOL-endringen (F1) på døgn: når frykten har falt siste døgn, kommer det oftere fall enn stigning dagen etter, men intervallet er svært bredt og delvis det samme som kontrollen.",
+    "consequence_as_registered": "Ingen ny test på historikken og ingen varianter. F1 og F2 kan bare prøves framover: DVOL samles live fra Deribit (agent/context) og realisert svingning finnes i lysene. Åpne posisjoner og belånte long/short (NOT_SUPPORTED/INCONCLUSIVE uten spor) prioriteres ned. Likvidasjoner og ordrebok har ingen gratis historikk og prøves bare framover. Ingenting live, frosset eller registrert er endret."
+  }
 }

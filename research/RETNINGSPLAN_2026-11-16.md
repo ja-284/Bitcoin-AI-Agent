@@ -209,3 +209,13 @@ timeprediksjonen forbedres som byggestein.
 - **Historikken bakover** (Deribit, Bybit, Binance-termin, Bitfinex) kan hentes herfra til en rask test (port 4).
   - Den må registreres som et øyeblikksbilde gjennom datagrensen (`agent/research/snapshots.py`).
   - Den tas bare til 2025-06-30, så holdout-perioden aldri lastes ned.
+
+**E043, den raske testen på historikk (samme kveld, `research/results/E043/`):**
+- **Testet:** Deribit DVOL, Bybit åpne posisjoner og Bitfinex belånte posisjoner; 2021–2025, bare utviklingsdata.
+- **Resultat: 0 av 10 består.** Det ble registrert som forventet.
+- **To spor følges framover, uten å tro på dem:**
+  - fryktpremien på 1 time: liten, men med samme retning i alle fem år;
+  - DVOL-endringen på døgn: et fall i frykten kom oftere før fall dagen etter, men usikkerheten er svært stor.
+- **Prioriteres ned:** åpne posisjoner og belånte posisjoner.
+- **Ingen flere tester på historikken.** Neste prøve er framover, på det som samles nå, inkludert likvidasjoner og
+  ordrebok.
