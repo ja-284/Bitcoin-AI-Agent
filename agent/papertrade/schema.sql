@@ -73,9 +73,13 @@ BEGIN
         FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
             IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
                 EXECUTE format('REVOKE ALL ON TABLE %I FROM %I', t, r);
-                s := pg_get_serial_sequence(t, 'id');
-                IF s IS NOT NULL THEN
-                    EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM %I', s, r);
+                -- paper_days has no id column (its key is the day), so only tables with one have a sequence
+                IF EXISTS (SELECT 1 FROM information_schema.columns
+                           WHERE table_schema = current_schema() AND table_name = t AND column_name = 'id') THEN
+                    s := pg_get_serial_sequence(t, 'id');
+                    IF s IS NOT NULL THEN
+                        EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM %I', s, r);
+                    END IF;
                 END IF;
             END IF;
         END LOOP;
