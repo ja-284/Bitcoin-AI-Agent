@@ -293,14 +293,15 @@ def test_every_table_is_locked_against_the_public_api(scratch_db):
         assert set(tables) >= {"predictions", "prediction_outcomes", "schema_meta", "shadow_move_size",
                                "shadow_run_errors", "backend_state", "reporting_snapshot", "reporting_runs"}
         assert all(tables.values()), f"RLS is off on: {[t for t, on in tables.items() if not on]}"
-        from agent.database.security import VIEWER_READ_TABLES
+        from agent.database.security import ALL_READ_TABLES
 
         for t in tables:
             for role in ("anon", "authenticated"):
                 for priv in ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE"):
                     # The ONE deliberate opening (2026-09-27): SELECT on the two stats caches for signed-in viewers,
                     # behind an owner-set claim (tests/integration/test_stats_access.py proves the rest). Nothing else.
-                    if t in VIEWER_READ_TABLES and role == "authenticated" and priv == "SELECT":
+                    # (2026-11-16, the owner's approval) and the paper-trading page's one-row document, same rule
+                    if t in ALL_READ_TABLES and role == "authenticated" and priv == "SELECT":
                         continue
                     cur.execute("SELECT has_table_privilege(%s, %s, %s)", (role, f"{SCHEMA}.{t}", priv))
                     assert not cur.fetchone()[0], f"`{role}` still holds {priv} on {t}"

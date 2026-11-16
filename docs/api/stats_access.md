@@ -31,6 +31,23 @@ authoritative production records ---- read-only ----> agent/reporting (computes 
 
 Nothing flows back up. Nothing in the prediction system reads the reporting tables.
 
+## Addendum 2026-11-16: the paper-trading page reads one more table (the owner's approval)
+
+- **What:** `paper_snapshot`, one row: the paper-trading page's document («paper-state 1»,
+  `agent/papertrade/snapshot.py`). The paper step in the hourly job (`python -m agent.papertrade.run`) replaces it
+  every hour, as `bitcoin_agent` (SELECT, INSERT, UPDATE on that table only).
+- **Who:** exactly the reader of §2: the Control Center account `9e021560-…`, in a two-factor (aal2) session, SELECT
+  only, through the one policy `control_center_read` (`agent/papertrade/schema.sql`). `anon`, a password-only
+  session and every other account see nothing.
+- **Nothing else of paper trading opens:** `paper_days`, `paper_ledger`, `paper_errors`, `firi_quotes` and
+  `firi_trades` stay fully closed to the API roles.
+- **Checked:** `agent.database.security` (`PAPER_READ_TABLES`) holds this table to the same rule and fails on any
+  widening; a static test pins the schema file's one opening; the integration suite proves the reader, the refusals
+  and that the ledgers stay closed, on real Postgres acting as the API roles.
+- **The page:** `web/papir/` (GitHub Pages). It holds no secret: the project URL and the publishable key are injected
+  at deploy (repository variables), never committed.
+- **Emergency deny-all:** `DROP POLICY control_center_read ON paper_snapshot;` (closed, and the check accepts it).
+
 ## 0. Who reads and who writes what (the precise model)
 
 | data | the reporting layer's computing side (`source.py`, `views.py`) | the two writers (`publish.py`, `incidents.py`) | the website |

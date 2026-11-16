@@ -99,12 +99,13 @@ def test_a_bad_firi_quote_is_refused():
 
 def _sql_targets(path: Path) -> set[str]:
     text = path.read_text(encoding="utf-8")
-    return set(re.findall(r"(?:INSERT INTO|UPDATE|DELETE FROM)\s+(\w+)", text))
+    # "ON CONFLICT ... DO UPDATE SET" updates the row the same INSERT targets, not a table named SET
+    return set(re.findall(r"(?:INSERT INTO|(?<!DO )UPDATE|DELETE FROM)\s+(\w+)", text))
 
 
 def test_paper_trading_writes_only_its_own_tables_and_never_touches_execution_or_research_loaders():
     for f in Path("agent/papertrade").glob("*.py"):
-        assert _sql_targets(f) <= {"paper_days", "paper_ledger", "paper_errors", "firi_quotes", "firi_trades"}, f
+        assert _sql_targets(f) <= {"paper_days", "paper_ledger", "paper_errors", "firi_quotes", "firi_trades", "paper_snapshot"}, f
         tree = ast.parse(f.read_text(encoding="utf-8"))
         mods = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
         assert not any(m.startswith("agent.execution") for m in mods), f
@@ -120,6 +121,7 @@ def test_the_hourly_job_can_never_fail_because_of_paper_trading(monkeypatch):
 
     monkeypatch.setattr(R, "run_once", boom)
     monkeypatch.setattr(R, "record_market", boom)
+    monkeypatch.setattr(R, "publish_snapshot", boom)
     monkeypatch.setattr(R, "record_error", lambda *a, **k: None)
     assert R.main([]) == 0
 

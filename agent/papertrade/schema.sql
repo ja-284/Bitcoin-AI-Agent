@@ -86,6 +86,17 @@ CREATE TABLE IF NOT EXISTS firi_trades (
 );
 CREATE INDEX IF NOT EXISTS idx_firi_trades_time ON firi_trades (traded_at);
 
+-- (2026-11-16, eierens godkjenning) Papirsidens dokument («paper-state 1», agent/papertrade/snapshot.py): én rad, som
+-- papirsteget bytter ut hver time. Det ENESTE fra papirhandelen som kan leses utenfra, og bare av Control Center-kontoen
+-- med to trinn (se åpningen nederst). Bøkene, feilene og Firi-loggene forblir helt lukket. Ikke bare tillegg: dette er
+-- en kopi som regnes ut på nytt fra de lagrede radene, som rapporttabellenes reporting_snapshot.
+CREATE TABLE IF NOT EXISTS paper_snapshot (
+    id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),   -- nøyaktig én rad
+    schema TEXT NOT NULL CHECK (length(schema) <= 32),  -- så siden kan avvise et format den ikke kjenner
+    generated_at TIMESTAMPTZ NOT NULL,
+    document JSONB NOT NULL
+);
+
 -- Bare tillegg: ingen rad kan endres eller slettes, heller ikke av eieren uten å fjerne triggeren først.
 CREATE OR REPLACE FUNCTION paper_forbid_change() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
@@ -110,7 +121,7 @@ DECLARE
     r text;
     s text;
 BEGIN
-    FOREACH t IN ARRAY ARRAY['paper_days', 'paper_ledger', 'paper_errors', 'firi_quotes', 'firi_trades'] LOOP
+    FOREACH t IN ARRAY ARRAY['paper_days', 'paper_ledger', 'paper_errors', 'firi_quotes', 'firi_trades', 'paper_snapshot'] LOOP
         EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
         FOREACH r IN ARRAY ARRAY['anon', 'authenticated'] LOOP
             IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
@@ -126,4 +137,20 @@ BEGIN
             END IF;
         END LOOP;
     END LOOP;
+END $$;
+
+-- Så den ENE åpningen (2026-11-16, eierens godkjenning; docs/api/stats_access.md), og ikke noe bredere: SELECT på
+-- paper_snapshot alene, for `authenticated` alene, og bare for Bitcoin AI Control Center-kontoen i en økt som har bestått
+-- innlogging med to trinn (aal2) -- nøyaktig samme regel som de tre rapporttabellene. `anon`, en økt med bare passord og
+-- enhver annen konto ser null rader. `python -m agent.database.security` (vaktsjekken) feiler hvis noe her blir bredere.
+-- Nødstopp: DROP POLICY control_center_read ON paper_snapshot (sjekken godtar at den mangler: lukket).
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated')
+       AND to_regprocedure('auth.jwt()') IS NOT NULL AND to_regprocedure('auth.uid()') IS NOT NULL THEN
+        GRANT SELECT ON TABLE paper_snapshot TO authenticated;
+        DROP POLICY IF EXISTS control_center_read ON paper_snapshot;
+        CREATE POLICY control_center_read ON paper_snapshot FOR SELECT TO authenticated
+            USING (auth.uid() = '9e021560-dd06-40f1-80ad-d58d44d9a3f6'::uuid AND (auth.jwt() ->> 'aal') = 'aal2');
+    END IF;
 END $$;

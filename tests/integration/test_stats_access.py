@@ -29,6 +29,8 @@ DASHBOARD = "9e021560-dd06-40f1-80ad-d58d44d9a3f6"  # agent/database/security.DA
 OTHER = "00000000-0000-4000-8000-000000000001"
 VIEWER = {"sub": DASHBOARD, "role": "authenticated", "aal": "aal2"}
 CACHES = ("reporting_snapshot", "reporting_runs", "reporting_incidents")
+PAPER_PAGE = "paper_snapshot"  # (2026-11-16, the owner's approval) the paper-trading page's one-row document
+PAPER_CLOSED = ("paper_days", "paper_ledger", "paper_errors", "firi_quotes", "firi_trades")
 RECORD = ("predictions", "prediction_outcomes", "shadow_move_size", "shadow_run_errors", "backend_state", "schema_meta")
 
 
@@ -83,6 +85,9 @@ def _publish_one_hour(db):
         "INCIDENT_RUN_URL": "https://github.com/ja-284/Bitcoin-AI-Agent/actions/runs/99", "INCIDENT_TRIGGER": "schedule"}))
     snapshot, runs = publish.build(load(all_details=True), at, at)
     publish.store(snapshot, runs, at, at)
+    from agent.papertrade import run as paper
+
+    paper.publish_snapshot()  # the paper page's document, through the real writer (no paper day yet)
 
 
 def _as(db, role: str, sql: str, claims: dict | None = None):
@@ -129,8 +134,16 @@ def test_the_viewer_sees_the_recorded_incident_and_nobody_can_change_or_erase_it
             conn.rollback()
 
 
+def test_the_paper_page_reads_its_document_and_nothing_else_of_paper_trading(stats_db):
+    assert _as(stats_db, "authenticated", f"SELECT schema, document->>'fictional' FROM {PAPER_PAGE}", VIEWER) == [("paper-state 1", "false")]
+    for table in PAPER_CLOSED:
+        assert _refused(_as(stats_db, "authenticated", f"SELECT count(*) FROM {table}", VIEWER)), table
+    for sql in (f"UPDATE {PAPER_PAGE} SET document = '{{}}'", f"DELETE FROM {PAPER_PAGE}"):
+        assert _refused(_as(stats_db, "authenticated", sql, VIEWER)), sql
+
+
 def test_an_anonymous_request_is_refused(stats_db):
-    for table in CACHES:
+    for table in CACHES + (PAPER_PAGE,):
         assert _refused(_as(stats_db, "anon", f"SELECT count(*) FROM {table}")), table
         assert _refused(_as(stats_db, "anon", f"SELECT count(*) FROM {table}", {"role": "anon"})), table
 
@@ -151,7 +164,7 @@ def test_the_tests_name_the_same_account_as_the_security_check():
     {"role": "authenticated", "aal": "aal2"},                              # no account at all
 ], ids=["no-claims", "aal1", "no-aal", "other-account-aal2", "old-flag-aal2", "self-set-user-metadata", "no-sub"])
 def test_anyone_but_the_dashboard_account_at_aal2_sees_nothing(stats_db, claims):
-    for table in CACHES:
+    for table in CACHES + (PAPER_PAGE,):
         assert _as(stats_db, "authenticated", f"SELECT count(*) FROM {table}", claims) == [(0,)], (table, claims)
 
 

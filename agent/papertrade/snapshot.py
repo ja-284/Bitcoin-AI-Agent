@@ -5,7 +5,7 @@ Bare lesing og bare beskrivende. Ingen avlesning og ingen konklusjon: avlesninge
 registrert i E042 (research/experiments/E042_paper_trading.json) og regnes der, med fersk start. Tallene her er
 løpende tall fra regnskapsbøkene, slik de står. Med 118 strategier vil den beste se bedre ut enn den er.
 
-`build_document` er ren utregning (testet uten database); `load` henter radene med en lesende tilkobling.
+`build_document` er ren utregning (testet uten database); `read_rows` henter radene (fra papirhandelens egne tabeller).
 """
 
 from __future__ import annotations
@@ -266,7 +266,7 @@ def build_document(days: list[dict], ledger: list[dict], quotes: list[dict], tra
 
 # ---------------------------------------------------------------- reading the database
 
-def load(conn) -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]:
+def read_rows(conn) -> tuple[list[dict], list[dict], list[dict], list[dict], list[dict]]:
     """Alle rader dokumentet trenger, på en tilkobling som er satt til bare lesing av den som kaller."""
     def rows(cur, sql):
         cur.execute(sql)

@@ -107,6 +107,11 @@ CREATE POLICY backend_read   ON firi_quotes FOR SELECT TO bitcoin_agent USING (t
 CREATE POLICY backend_insert ON firi_quotes FOR INSERT TO bitcoin_agent WITH CHECK (true);
 CREATE POLICY backend_read   ON firi_trades FOR SELECT TO bitcoin_agent USING (true);
 CREATE POLICY backend_insert ON firi_trades FOR INSERT TO bitcoin_agent WITH CHECK (true);
+-- (2026-11-16) papirsidens dokument: én rad som byttes ut hver time (som reporting_snapshot)
+GRANT SELECT, INSERT, UPDATE ON paper_snapshot TO bitcoin_agent;
+CREATE POLICY backend_read    ON paper_snapshot FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert  ON paper_snapshot FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_replace ON paper_snapshot FOR UPDATE TO bitcoin_agent USING (true) WITH CHECK (true);
 
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;

@@ -123,6 +123,21 @@ def test_the_reporting_schema_file_opens_exactly_the_designed_surface():
     assert arrays == [security.VIEWER_READ_TABLES] * 2, arrays  # the lockdown loop and the grant loop name the same tables
 
 
+def test_the_paper_schema_file_opens_only_its_page_document_and_exactly_as_designed():
+    """Static (2026-11-16): one policy, on paper_snapshot only, the dashboard account AND aal2, SELECT, nothing else."""
+    import re
+
+    sql = Path("agent/papertrade/schema.sql").read_text(encoding="utf-8")
+    code = re.sub(r"--[^\n]*", "", sql)
+    opened = re.findall(r"CREATE POLICY (\w+) ON (\w+) FOR (\w+) TO (\w+)\s+USING \((.*?)\);", code, flags=re.S)
+    assert len(opened) == 1, opened
+    name, table, command, role, condition = opened[0]
+    assert (name, table, command, role) == ("control_center_read", "paper_snapshot", "SELECT", "authenticated")
+    assert security._normalised(condition) == security.VIEWER_CONDITION
+    assert re.findall(r"GRANT ([\w, ]+) ON TABLE (\w+) TO ([\w, ]+);", code) == [("SELECT", "paper_snapshot", "authenticated")]
+    assert "TO anon" not in code and "_metadata" not in code and code.count(security.DASHBOARD_USER_ID) == 1
+
+
 def test_the_watchdog_runs_the_live_posture_check():
     wf = Path(".github/workflows/watchdog.yml").read_text(encoding="utf-8")
     assert "python -m agent.database.security" in wf

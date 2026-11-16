@@ -175,6 +175,29 @@ def record_market(get=requests.get) -> str:
     return f"Firi market: quote for {quote['hour']:%Y-%m-%d %H}:00, {len(fresh)} recent trades offered"
 
 
+UPSERT_SNAPSHOT = """INSERT INTO paper_snapshot (id, schema, generated_at, document)
+                     VALUES (1, %(schema)s, %(generated_at)s, %(document)s)
+                     ON CONFLICT (id) DO UPDATE SET schema = EXCLUDED.schema, generated_at = EXCLUDED.generated_at,
+                                                    document = EXCLUDED.document"""
+
+
+def publish_snapshot() -> str:
+    """Papirsidens dokument («paper-state 1») regnet ut på nytt fra de lagrede radene, i den ene raden i paper_snapshot.
+    Det eneste papirsiden (web/papir) kan lese, og bare Control Center-kontoen med to trinn kan lese det."""
+    from psycopg.types.json import Jsonb
+
+    from agent.database.db import get_connection
+    from agent.papertrade import snapshot as P
+
+    with get_connection() as conn:
+        doc = P.build_document(*P.read_rows(conn), now=datetime.now(timezone.utc))
+        with conn.cursor() as cur:
+            cur.execute(UPSERT_SNAPSHOT, {"schema": doc["schema"], "generated_at": doc["generated_at"],
+                                          "document": Jsonb(doc)})
+        conn.commit()
+    return f"page document: {len(doc['days'])} days, {sum(len(b['accounts']) for b in doc['books'].values())} accounts"
+
+
 def record_error(day, step: str, err: BaseException | str) -> None:
     from agent.database.db import get_connection
     etype = type(err).__name__ if isinstance(err, BaseException) else "Note"
@@ -278,6 +301,11 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as e:  # the hourly job must never fail because of paper trading
         print(f"paper trading failed ({type(e).__name__}): {e}")
         record_error(None, "run", e)
+    try:  # after the decision, so the page shows it; a failure here never touches the ledgers or the job
+        print("paper trading:", publish_snapshot())
+    except Exception as e:
+        print(f"paper trading: page document failed ({type(e).__name__}): {e}")
+        record_error(None, "snapshot", e)
     return 0
 
 
