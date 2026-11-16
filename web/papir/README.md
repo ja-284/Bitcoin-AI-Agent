@@ -33,14 +33,22 @@ Dataene er ett dokument, «paper-state 1», bygget av `agent/papertrade/snapshot
 
 Forhåndsvisning lokalt: `python -m http.server 8765 --directory web`, så `http://localhost:8765/papir/`.
 
+## Slik henger det sammen (eierens godkjenning 2026-11-16)
+
+- **Tallene:** papirsteget i timesjobben regner dokumentet ut på nytt hver time og legger det i `paper_snapshot`
+  (én rad). Den tabellen kan bare leses av Control Center-kontoen i en økt med to trinn; alt annet i papirhandelen er
+  stengt (`docs/api/stats_access.md`, tillegget 2026-11-16).
+- **Innloggingen** (`auth.js`): e-post og passord, så koden fra autentiseringsappen, rett mot Supabase sin innlogging
+  uten tredjepartskode. Økten huskes på telefonen til du logger ut (⏻ øverst).
+- **Publiseringen** (`.github/workflows/pages.yml`): gratis på GitHub Pages. `tools/pages_config.py` skriver
+  `config.js` med prosjektets adresse og den offentlige nøkkelen fra repository-variablene (aldri committet, og den
+  nekter en hemmelig nøkkel). Demoen og denne filen tas ut av det som publiseres.
+- **Uten `config.js`** (lokalt, i repoet) viser siden den oppdiktede demoen.
+
 ## Plan videre
 
-1. **Gjort:** dokumentet, demoen og siden på oppdiktede data, sjekket i mobilbredde, mørkt og lyst.
-2. **Krever eierens godkjenning:** ekte data. Forslaget følger plattformplanens §7 (`docs/platform/PLATFORM_PLAN.md`):
-   - timesjobben skriver dokumentet i en egen tabell (`paper_snapshot`, én rad);
-   - den kan bare leses av eierens egen konto for Bitcoin AI Control Center, innlogget med to trinn
-     (passord + kode fra autentiseringsappen), med samme regel som de tre rapporttabellene;
-   - sikkerhetssjekken utvides til å godta akkurat det og ingenting mer.
-3. **Krever eierens godkjenning:** publisering gratis på GitHub Pages. Bare selve sidefilene blir offentlige; tallene
-   ligger bak innloggingen, og ingen nøkkel eller hemmelighet ligger i sidefilene.
-4. Eieren logger inn på mobilen én gang og legger siden på hjemskjermen.
+1. **Gjort:** dokumentet, demoen, siden, tabellen med den ene åpningen (live 2026-11-16 17:23 UTC), innloggingen og
+   publiseringsjobben; alt testet.
+2. **Eierens steg:** `docs/ops/open_user_actions.md` punkt 9 (skru av nye registreringer i Supabase, slå på Pages,
+   legg inn de to offentlige verdiene, kjør publiseringen).
+3. **Så:** jeg sjekker publiseringen, og eieren logger inn på mobilen og legger siden på hjemskjermen.

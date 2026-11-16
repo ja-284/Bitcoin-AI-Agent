@@ -334,6 +334,24 @@ emails "down" from the first such hour, with a key hint for an authentication er
 report rows without an explanation and hours without news. Nothing is lost except those hours' news scores and
 explanations, which are never backfilled.
 
+## 9. Papirsiden på mobilen (GitHub Pages) — OPEN, eierens steg (godkjent 2026-11-16)
+
+Alt i koden er klart (`web/papir/`, `.github/workflows/pages.yml`, `docs/api/stats_access.md`, tillegget 2026-11-16).
+Fire små steg som bare eieren kan gjøre; jeg håndterer aldri nøkler.
+
+1. **Supabase → Authentication → Sign In / Providers:** skru AV «Allow new users to sign up». Da kan ingen andre lage
+   en konto på prosjektet (de ville uansett ikke se noe, men det holder døra lukket).
+2. **GitHub → repoet → Settings → Pages → Build and deployment → Source:** velg **GitHub Actions**.
+3. **GitHub → Settings → Secrets and variables → Actions → fanen *Variables* → New repository variable**, to stykker:
+   - `SUPABASE_URL`: prosjektets adresse (Supabase → Project Settings → API / Data API → *Project URL*);
+   - `SUPABASE_PUBLISHABLE_KEY`: den OFFENTLIGE nøkkelen (*Publishable key*, `sb_publishable_…`, eller den eldre
+     `anon`-nøkkelen). **Aldri** den hemmelige (`sb_secret_…` / `service_role`): publiseringen nekter den uansett.
+4. **GitHub → Actions → «Papirsiden (GitHub Pages)» → Run workflow.** Åpne adressen den viser
+   (`https://<brukernavn>.github.io/<repo>/`) på mobilen, logg inn med Control Center-kontoen og koden fra
+   autentiseringsappen, og legg siden på hjemskjermen (Del → Legg til på Hjem-skjerm).
+
+Si fra når det er gjort, så sjekker jeg at publiseringen gikk riktig og at bare din konto ser tallene.
+
 ## Not on this list, deliberately
 
 - **Anything involving real money, orders, wallets or exchanges.** The project is analysis-only. The

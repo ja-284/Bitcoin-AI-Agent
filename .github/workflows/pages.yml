@@ -1,0 +1,56 @@
+# Papirsiden (web/papir) på GitHub Pages, gratis. Eierens godkjenning 2026-11-16.
+#
+# Bare selve sidefilene blir offentlige. Tallene ligger i databasen bak innloggingen: siden henter dem først etter at
+# eieren har logget inn med Control Center-kontoen og koden fra autentiseringsappen (to trinn), og databasen viser dem
+# bare til den kontoen (docs/api/stats_access.md). Den oppdiktede demoen tas ut av det som publiseres.
+#
+# Innstillingene (Settings -> Secrets and variables -> Actions -> Variables): SUPABASE_URL og SUPABASE_PUBLISHABLE_KEY,
+# begge OFFENTLIGE verdier. tools/pages_config.py nekter å publisere med en hemmelig nøkkel. Ingen hemmelighet,
+# ingen databasetilkobling og ingen nøkkel med skriverett finnes i denne jobben.
+
+name: Papirsiden (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/papir/**", ".github/workflows/pages.yml", "tools/pages_config.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write     # å publisere siden
+  id-token: write  # Pages krever det for å bekrefte at publiseringen kommer fra denne arbeidsflyten
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Hoppes over (ikke feilet) til eieren har lagt inn innstillingene (docs/ops/open_user_actions.md punkt 9).
+    if: ${{ vars.SUPABASE_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
+
+      - name: Sidens offentlige innstillinger (aldri committet)
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: python3 tools/pages_config.py web/papir/config.js
+
+      - name: Ta ut den oppdiktede demoen og beskrivelsen
+        run: rm web/papir/demo.json web/papir/README.md
+
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5, pinned 2026-11-16
+
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4, pinned 2026-11-16
+        with:
+          path: web/papir
+
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4, pinned 2026-11-16

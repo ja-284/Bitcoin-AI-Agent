@@ -1,6 +1,6 @@
 // Papirhandel: oversikt over alle kontoene og én side per konto. Leser bare dokumentet fra data.js.
 import { bars, donut, lineChart, makeTip, ring, spark } from "./charts.js";
-import { loadDoc } from "./data.js";
+import { auth, loadDoc } from "./data.js";
 
 const app = document.getElementById("app");
 const tip = makeTip(document.getElementById("tip"));
@@ -326,12 +326,106 @@ addEventListener("hashchange", () => {
 let lastW = innerWidth;
 addEventListener("resize", () => { if (Math.abs(innerWidth - lastW) > 20) { lastW = innerWidth; const y = scrollY; render(); scrollTo(0, y); } });
 
-loadDoc().then((doc) => {
-  doc.familyNames = { A: "Modellens signal", B: "Trend", C: "Snitt med margin", D: "Signal med filter", E: "Rolig marked",
-    F: "Kjøp etter fall", G: "Utbrudd", H: "Med stopp", MS: "Størrelse", BASE: "Grunnlinjer" };
-  for (const f of doc.books[S.book]?.summary?.families || []) doc.familyNames[f.family] = f.name;
-  S.doc = doc;
-  render();
-}).catch((e) => {
-  app.replaceChildren(h("div", { class: "wrap" }, h("div", { class: "skeleton" }, e.message)));
+// ---------------------------------------------------------------- innlogging (bare når siden er publisert)
+const FAMILY_NAMES = { A: "Modellens signal", B: "Trend", C: "Snitt med margin", D: "Signal med filter", E: "Rolig marked",
+  F: "Kjøp etter fall", G: "Utbrudd", H: "Med stopp", MS: "Størrelse", BASE: "Grunnlinjer" };
+let loadedAt = 0;
+
+function norsk(e) {
+  const m = `${e.code || ""} ${e.message || ""}`.toLowerCase();
+  if (e.status === 429 || m.includes("rate")) return "For mange forsøk. Vent litt og prøv igjen.";
+  if (m.includes("invalid login") || m.includes("invalid_credentials")) return "Feil e-post eller passord.";
+  if (m.includes("mfa") || m.includes("code") || m.includes("totp")) return "Feil eller utløpt kode. Prøv med koden som står i appen nå.";
+  if (e instanceof TypeError) return "Får ikke kontakt. Sjekk nettet og prøv igjen.";
+  return "Noe gikk galt. Prøv igjen.";
+}
+
+function loginView(stage, factor, note) {
+  const err = h("p", { class: "login-err", role: "alert" }, note || "");
+  const busy = (form, on) => form.querySelectorAll("input,button").forEach((x) => { x.disabled = on; });
+  let form;
+  if (stage === "password") {
+    form = h("form", { class: "login-form", onsubmit: async (e) => {
+      e.preventDefault();
+      busy(form, true);
+      err.textContent = "";
+      try {
+        const aal = await auth.signIn(form.email.value.trim(), form.password.value);
+        if (aal === "aal2") return start();
+        const f = await auth.totpFactor();
+        if (!f) {
+          auth.forget();
+          return show(loginView("password", null, "Denne kontoen har ikke to trinn. Bare Control Center-kontoen med autentiseringsapp kan se tallene."));
+        }
+        show(loginView("code", f));
+      } catch (x) { err.textContent = norsk(x); busy(form, false); }
+    } },
+      h("label", {}, "E-post", h("input", { name: "email", type: "email", autocomplete: "username", required: true, inputmode: "email" })),
+      h("label", {}, "Passord", h("input", { name: "password", type: "password", autocomplete: "current-password", required: true })),
+      h("button", { class: "primary", type: "submit" }, "Logg inn"));
+  } else {
+    form = h("form", { class: "login-form", onsubmit: async (e) => {
+      e.preventDefault();
+      busy(form, true);
+      err.textContent = "";
+      try {
+        const aal = await auth.verify(factor.id, form.code.value.replace(/\s/g, ""));
+        if (aal === "aal2") return start();
+        err.textContent = "Innloggingen fullførte ikke to trinn.";
+        busy(form, false);
+      } catch (x) { err.textContent = norsk(x); busy(form, false); form.code.select(); }
+    } },
+      h("label", {}, "Kode fra autentiseringsappen", h("input", { name: "code", type: "text", inputmode: "numeric", autocomplete: "one-time-code",
+        pattern: "[0-9 ]{6,7}", maxlength: "7", required: true, class: "code" })),
+      h("button", { class: "primary", type: "submit" }, "Bekreft"),
+      h("button", { class: "link", type: "button", onclick: () => { auth.forget(); show(loginView("password")); } }, "Tilbake"));
+  }
+  const view = h("div", { class: "wrap" }, h("section", { class: "card login" },
+    h("div", { class: "logo big", "aria-hidden": "true" }, "₿"),
+    h("h1", {}, stage === "password" ? "Logg inn" : "To trinn"),
+    h("p", { class: "login-sub" }, stage === "password" ? "Med Control Center-kontoen din." : "Skriv inn den sekssifrede koden."),
+    form, err));
+  setTimeout(() => form.querySelector("input")?.focus(), 50);
+  return view;
+}
+
+function show(view) { tip.hide(); app.replaceChildren(view); }
+
+function emptyView() {
+  return h("div", { class: "wrap" }, card(null, null,
+    h("p", { class: "empty" }, "Ingen tall å vise ennå. Enten er dokumentet ikke laget ennå (det oppdateres hver time), eller så er dette ikke Control Center-kontoen."),
+    h("button", { class: "more", onclick: async () => { await auth.signOut(); start(); } }, "Logg ut")));
+}
+
+async function start() {
+  const out = document.getElementById("logout");
+  try {
+    const doc = await loadDoc();
+    out.hidden = !auth || !!doc.needsLogin;
+    if (doc.needsLogin) return show(loginView("password"));
+    if (doc.empty) return show(emptyView());
+    doc.familyNames = { ...FAMILY_NAMES };
+    for (const f of doc.books[S.book]?.summary?.families || []) doc.familyNames[f.family] = f.name;
+    S.doc = doc;
+    loadedAt = Date.now();
+    render();
+  } catch (e) {
+    show(h("div", { class: "wrap" }, h("div", { class: "skeleton" }, e.message || "Noe gikk galt.")));
+  }
+}
+
+document.getElementById("logout").addEventListener("click", async () => {
+  if (!auth) return;
+  await auth.signOut();
+  S.doc = null;
+  start();
 });
+// tallene oppdateres hver time: hent dem på nytt når appen åpnes igjen etter en stund
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && auth && S.doc && Date.now() - loadedAt > 10 * 60 * 1000) {
+    const y = scrollY;
+    start().then(() => scrollTo(0, y));
+  }
+});
+
+start();

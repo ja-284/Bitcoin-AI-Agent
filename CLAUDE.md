@@ -1379,8 +1379,13 @@ locally, the audit record).**
   oversikt over alle 118 kontoene med ringer og smultring, beste/svakeste, grupper, Firi-markedet; kontoside med
   verdidiagram mot kjøp og hold, kjøp/salg-markører og trådkors). Dataene er ett dokument, «paper-state 1»
   (`agent/papertrade/snapshot.py`); i dag vises bare den OPPDIKTEDE demoen (`python -m agent.papertrade.demo`, den
-  ekte motoren på syntetiske 2030-kurser). **Venter på eieren:** en `paper_snapshot`-tabell lesbar bare av Control
-  Center-kontoen med to trinn, og publisering på GitHub Pages (`web/papir/README.md`).
+  ekte motoren på syntetiske 2030-kurser).
+- **Ekte tall på mobilsiden (eierens godkjenning samme kveld):** `paper_snapshot` (én rad, skrevet hver time av
+  papirsteget) er den ENESTE papirtabellen som kan leses utenfra, og bare av Control Center-kontoen med to trinn (samme
+  regel som rapporttabellene; sikkerhetssjekken `PAPER_READ_TABLES`, live 17:23 UTC, `e857777` + `7746a59`). Siden
+  logger inn mot Supabase uten tredjepartskode (`web/papir/auth.js`) og publiseres gratis på GitHub Pages
+  (`.github/workflows/pages.yml`; `tools/pages_config.py` nekter en hemmelig nøkkel). **Venter på eieren:**
+  `docs/ops/open_user_actions.md` punkt 9.
 
 ## Research phase — rules and decisions (2026-09-19)
 
