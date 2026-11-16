@@ -43,6 +43,7 @@ less than 2e-10 (`research/LIVE_EVALUATION.md`, 500-hour procedure, item 3).
 | live paths (the hourly job, outcome grading, the shadow model) | no: they fetch the latest hours, or the target hours of live predictions |
 | the direction shadow track (`agent/direction_shadow`, E034, since 2026-10-15) | no. Its hourly step fetches the latest 250 closed hours; its grading fetches the target hours of its own rows, all written from 2026-10-15 on; its artefact was fitted through `build_frame`'s default, which stops at the holdout (tested) |
 | `agent/research/snapshots.py`, the side snapshots' reader (since 2026-10-17) | **Only through the logged route.** It is the one reader of the six side snapshots (the loaders in `microstructure.py`, `derivatives.py`, `macro.py` and `onchain.py` call it). It serves registered files only: a fixed name, the count and sha256 of the development rows, and the whole file's size and sha256. Rows are cut by when they became visible, at the last development cutoff (2025-07-01 00:00 UTC, the close of the last development candle), and reading stops at the first row past it. Rows past it are served only after `load_bars(allow_holdout=True, reason=...)` opened the holdout in the same process; the whole file's sha256 is then checked. A missing, changed, out-of-order or unregistered file is refused, and nothing is downloaded. The macro snapshot is refused outright: its bars are not daily |
+| `agent/research/fall_sources.py` (E043, 2026-11-16) | no. It reads its three snapshots through `snapshots.py` (each fetched only up to the candle opening 2025-06-30 22:00, so they hold no holdout row at all) and the spot candles through `load_bars(end=HOLDOUT.start)`, and stops if any value reaches the holdout's start (tested route) |
 | `feature_test.compute_group_features`, the one research route to side data | It asks for side data up to the candles' own information cutoff (the close of the latest candle), so candles that stop at the holdout get side data that stops there too (tested) |
 | the side snapshot files themselves | only `snapshots.py` names them, and no other file in `agent/` parses a CSV (both tested) |
 
@@ -61,6 +62,9 @@ strictly increasing in time. The development rows are those visible at or before
 | `onchain_2026-09-20.csv` | 6,462 | 6,022 | 440 | T + 30 h |
 | `difficulty_adjustments_2026-09-20.csv` | 466 | 434 | 32 | T |
 | `macro_2026-09-20.csv` (refused) | 504 | 488 | 16 | T + 22 h, as the code assumed for daily bars |
+| `dvol_btc_1h_2026-11-16.csv` (E043) | 37,439 | 37,439 | **0: never downloaded** | T + 1 h |
+| `oi_bybit_btcusdt_1h_2026-11-16.csv` (E043) | 42,335 | 42,335 | **0: never downloaded** | T + 1 h |
+| `margin_bitfinex_btcusd_1h_2026-11-16.csv` (E043) | 38,130 | 38,130 | **0: never downloaded** | T + 1 h |
 
 **What the evidence establishes, and what it does not.**
 - **Established, from the code and its tests:** no holdout-period side value entered a development feature value.

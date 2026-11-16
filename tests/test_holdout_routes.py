@@ -156,7 +156,8 @@ def test_side_data_is_read_only_through_the_governed_reader():
     assert _callers({"read_snapshot_rows", "read_snapshot_frame"}) == {
         "agent/research/snapshots.py": {"read_snapshot_rows"}, "agent/research/history.py": {"read_snapshot_rows"},
         "agent/research/microstructure.py": {"read_snapshot_frame"}, "agent/research/derivatives.py": {"read_snapshot_frame"},
-        "agent/research/macro.py": {"read_snapshot_frame"}, "agent/research/onchain.py": {"read_snapshot_frame"}}
+        "agent/research/macro.py": {"read_snapshot_frame"}, "agent/research/onchain.py": {"read_snapshot_frame"},
+        "agent/research/fall_sources.py": {"read_snapshot_frame"}}  # E043 (2026-11-16): its three registered snapshots
     # nothing downloads a replacement: every downloader is run by hand only (the spot loader stopped too, 2026-10-17)
     assert _callers(DOWNLOADERS) == {}
 
