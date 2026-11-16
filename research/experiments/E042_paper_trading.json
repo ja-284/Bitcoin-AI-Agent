@@ -1,0 +1,33 @@
+{
+  "id": "E042",
+  "date": "2026-11-16",
+  "git_commit": "registrering (denne commiten), før noe kode eller noen papirhandel finnes",
+  "status": "REGISTRERT -- ikke startet. Papirhandel framover (ingen ekte penger), eierens godkjenning 2026-11-15: «sett i gang med papir-handelen, kjør MANGE forskjellige metoder ... alle skal ha selvstendig papir-handel, etter det ser vi hvilke som fungerer».",
+  "why": "E040 fant én regel som når eierens mål i utviklingsdataene (utbrudd 55/20), merket som eksponering, ikke timing, og 34 eksperimenter har slitt på de samme årene. Den eneste ærlige prøven igjen er framtiden: mange strategier handlet på papir, hver med egen regnskapsbok, med ekte daglige priser og Firis ekte kjøps- og salgskurser.",
+  "question": "Hvilke av 118 forhåndsbestemte strategier når eierens mål (ikke tap i minst 75 % av 5- og 30-dagersperiodene, med positivt snitt) på papir framover, med Firis faktiske priser og gebyr?",
+  "strategy_set": {
+    "version": "pt-1.0 (frosset; en ny strategi betyr et nytt sett som starter fra null)",
+    "members": "E040s 104 regler (A, B, C, D, E, F, G og overleggene H) + E041s 12 størrelsesvarianter (msmore, msless og vol på G_up55_down20, C_MA100_b5, A_sig23 og BH) + 2 grunnlinjer (kjøp og hold, kontanter) = 118.",
+    "definitions": "Nøyaktig koden i agent/research/protection_goal.py (E040) og E041s størrelsesregler, kjørt på de daglige live-dataene. En strategi hvis inndata ennå ikke finnes (for kort historikk), står i kontanter og er merket «ikke aktiv ennå» til dataene finnes."
+  },
+  "data": {
+    "source": "Bare det live registeret: predictions (pipeline 0.2.0) og shadow_move_size, fra 2026-09-19. Ingen nedlasting av historiske lys, ingen forseglet holdout, ingen buffer, ikke det blinde retningssporet.",
+    "daily": "Dagens sluttkurs = close_price på 23:00 UTC-timen; sig23 = den timens signal; vote = snittet av dagens overall_score; pbar = snittet av dagens move-size-sannsynligheter (status ok, minst 20 av 24).",
+    "firi": "Firis offentlige BTC/NOK-ticker (ingen nøkkel) hentet i samme kjøring, rett før papirhandlene."
+  },
+  "ledgers": {
+    "modell": "Binance-sluttkursen på dag d og 1,25 % kostnad per side (sammenlignbar med E038-E041).",
+    "firi": "Firis faktiske priser: kjøp til ask, salg til bid, gebyr 0,7 % av beløpet; verdien regnes til bid. Uten en gyldig ticker handler ikke Firi-boken den dagen (feilen lagres).",
+    "start": "500 kr i kontanter i hver bok for hver strategi."
+  },
+  "operation": "Én beslutning per UTC-dag, etter at 23:00-timen er lagret: timesjobben forsøker hver time til dagen er behandlet (idempotent: én rad per dag, strategi og bok). En dag ingen kjøring rakk, får ingen beslutning (posisjonene står). Første dag er den første dagen etter at steget er satt i drift; ingenting fylles inn bakover. Steget kan aldri stoppe timesjobben (feil lagres, exit 0).",
+  "storage": "Egne tabeller (paper_days, paper_ledger, paper_errors), bare tillegg, RLS på, API-rollene uten rettigheter, jobbrollen bitcoin_agent bare SELECT og INSERT.",
+  "readings": {
+    "running": "Eieren kan se papirresultatene når som helst (de er ikke blinde). En månedlig beskrivende oversikt: driftstall og hver strategis verdi og mål så langt. Ingen strategi endres underveis.",
+    "registered": "Avlesninger ved 90, 180 og 365 dager: eierens mål på Firi-boken (perioder på 5 og 30 dager med fersk start, bygget opp igjen fra de lagrede daglige beslutningene og prisene), sammenlignet med samme eksponering tilfeldig plassert.",
+    "candidate": "PAPIRKANDIDAT bare ved 365 dager: minst 75 % uten tap for både 5 og 30 dager og positivt snitt, på Firi-boken. Med 118 strategier vil den beste se bedre ut enn den er; avlesningen sier hvor mange som ville bestått ved ren tilfeldighet."
+  },
+  "what_each_answer_means_decided_in_advance": "En papirkandidat tillater ingenting alene: ekte penger krever en egen, uttrykkelig godkjenning fra eieren (LOW_FREQUENCY_PLAN.md). Ingen kandidat ved 365 dager betyr at ingen av disse strategiene når målet framover med Firis kostnader.",
+  "stop_rules": "Papirhandelen stoppes og rapporteres hvis den skriver noe annet sted enn sine egne tabeller, leser noe annet enn det live registeret og Firis offentlige ticker, eller får timesjobben til å feile.",
+  "result": "(fylles inn ved avlesningene)"
+}

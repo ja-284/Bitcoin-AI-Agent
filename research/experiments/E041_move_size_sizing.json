@@ -1,0 +1,38 @@
+{
+  "id": "E041",
+  "date": "2026-11-16",
+  "git_commit": "registrering (denne commiten), før noe kode finnes; kode og resultat i senere commiter",
+  "status": "REGISTRERT -- ikke kjørt. Eierens spørsmål av 2026-11-15: blir resultatet bedre hvis mer forventet bevegelse (move-size) betyr at mer penger settes inn? Bare utviklingsdata; hypotesegenererende.",
+  "why": "Eieren ba om å prøve at «mer Move-Size betyr at mer penger skal investeres». Hos Firi kan systemet bare eie Bitcoin eller stå i kontanter, så «mer penger» kan bare bety en større andel i Bitcoin når en regel vil eie. Prosjektets eneste modell med påvist treffsikkerhet er move-size-modellen (sannsynligheten for et timetrekk over 0,25 %), men den sier noe om hvor stort, ikke hvilken vei. Spørsmålet er derfor om størrelsen på posisjonen bør følge forventet bevegelse opp, ned, eller etter volatilitet.",
+  "question": "Gir en posisjonsstørrelse som øker med forventet bevegelse (msmore), som minker med den (msless), eller som følger volatiliteten (vol), et bedre resultat på eierens mål enn full posisjon, for fire grunnregler, med Firis kostnader, i begge utviklingsperiodene?",
+  "duplicate_check": "Nytt som spørsmål: E038 brukte rule-1.0s størrelse (som minker med bevegelse) på timesnivå, og E039 testet T_TREND_VS (trend delt på volatilitet) på et annet mål. Ingen test har sammenlignet størrelse som øker med bevegelse mot størrelse som minker, på eierens mål.",
+  "hypotheses": {
+    "H1": "msmore senker andelen perioder uten tap og øker tapene når Bitcoin faller, fordi stor bevegelse ikke sier noe om retning (E003, E011).",
+    "H2": "msless og vol øker andelen uten tap litt, men senker snittavkastningen.",
+    "H3": "Ingen størrelsesregel gjør en grunnregel som ikke besto E040 til en som består."
+  },
+  "expectation_stated_in_advance": "H1-H3 holder. Move-size-modellen vet hvor urolig markedet er, ikke hvor det går, så mer penger inn når det er urolig gir større svingninger begge veier.",
+  "design": {
+    "bases": "Fire grunnregler fra E040, uendret: G_up55_down20 (utbrudd 55/20, E040s kandidat), C_MA100_b5 (best snitt i E040s utforsking), A_sig23 (dagens modell én gang per dag), BH (alltid inne).",
+    "sizing": {
+      "full": "100 % når grunnregelen vil eie (E040 som før).",
+      "msmore": "andel = klipp((pbar - 0,20) / 0,40, 0,25, 1): p 0,20 gir 25 %, p 0,60 gir 100 %.",
+      "msless": "andel = klipp((0,60 - pbar) / 0,40, 0,25, 1): det motsatte.",
+      "vol": "andel = klipp(0,0294 / sigma30, 0,25, 1) (rule-1.0s 0,6 % per time som dagstall)."
+    },
+    "pbar": "gjennomsnittet av dagens timesvise move-size-sannsynligheter (utvikling: E018s prediksjoner utenfor treningsutvalget; live: shadow_move_size), minst 20 av 24 timer, ellers 25 %.",
+    "rebalance": "Når forskjellen mellom ønsket og faktisk andel er minst 20 prosentpoeng, eller ved full inngang eller utgang.",
+    "evaluation": "E040s mål og maskineri uendret: fersk start i kontanter, perioder på 5 og 30 dager som starter hver dag, kostnad 0,8 / 1,25 / 1,6 % per side, pluss en sammenhengende kjøring. Utforsking fra 2018-11-28 (første hele dag med move-size-prediksjoner) til 2023-12-31; validering 2024-01-01 -> 2025-06-30. Alle 16 kombinasjoner på nøyaktig de samme periodene."
+  },
+  "what_each_answer_means_decided_in_advance": {
+    "IMPROVES": "Ved 1,25 % i begge periodene: andelen 30-dagersperioder uten tap er ikke lavere enn grunnregelens (full), og snittet per 30 dager er ikke lavere.",
+    "WORSE": "Både andelen og snittet er lavere enn grunnregelens i begge periodene.",
+    "MIXED": "Alt annet.",
+    "goal": "I tillegg: om kombinasjonen når eierens mål etter E040s CANDIDATE-regel."
+  },
+  "exactness_gate_before_any_result": "Papirhandelens motor (agent/papertrade/engine.py) i modus «full» skal gi nøyaktig E040s sluttverdi (pg.run_window) for de fire grunnreglene i alle perioder ved 1,25 %, største relative avvik 1e-12.",
+  "stop_rules": "Stopp hvis porten feiler, en lesing når holdout-perioden, eller implementasjonen avviker fra denne registreringen.",
+  "validation_wear": "34 eksperimenter har sett utviklingsårene. Hypotesegenererende; papirhandelen (E042) er den framtidige prøven.",
+  "compute_and_storage": "Lokalt, noen minutter. Resultat i research/results/E041/.",
+  "result": "(fylles inn etter den ene kjøringen)"
+}
