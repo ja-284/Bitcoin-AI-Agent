@@ -22,6 +22,7 @@ SCHEMA_FILES = [
     Path("agent/database/dispatch_log.sql"),
     Path("agent/direction_shadow/schema.sql"),
     Path("agent/papertrade/schema.sql"),
+    Path("agent/context/schema.sql"),
 ]
 
 

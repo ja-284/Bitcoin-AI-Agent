@@ -113,5 +113,12 @@ CREATE POLICY backend_read    ON paper_snapshot FOR SELECT TO bitcoin_agent USIN
 CREATE POLICY backend_insert  ON paper_snapshot FOR INSERT TO bitcoin_agent WITH CHECK (true);
 CREATE POLICY backend_replace ON paper_snapshot FOR UPDATE TO bitcoin_agent USING (true) WITH CHECK (true);
 
+-- (2026-11-16) markedskontekst for retningsforskningen (retningsplanen, kandidat B): bare tillegg
+GRANT SELECT, INSERT ON context_hourly, context_errors TO bitcoin_agent;
+CREATE POLICY backend_read   ON context_hourly FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON context_hourly FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_read   ON context_errors FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON context_errors FOR INSERT TO bitcoin_agent WITH CHECK (true);
+
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;

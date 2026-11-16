@@ -25,11 +25,13 @@ def test_the_expectations_are_read_from_the_proven_file():
                       "paper_days": {"SELECT", "INSERT"}, "paper_ledger": {"SELECT", "INSERT"}, "paper_errors": {"SELECT", "INSERT"},
                       # (2026-11-16, E042 tillegg 1) Firis marked og handler hver time
                       "firi_quotes": {"SELECT", "INSERT"}, "firi_trades": {"SELECT", "INSERT"},
-                      "paper_snapshot": {"SELECT", "INSERT", "UPDATE"}}
+                      "paper_snapshot": {"SELECT", "INSERT", "UPDATE"},
+                      # (2026-11-16) markedskontekst for retningsforskningen: bare tillegg
+                      "context_hourly": {"SELECT", "INSERT"}, "context_errors": {"SELECT", "INSERT"}}
     assert columns == {"shadow_move_size": {"outcome_status", "outcome_close", "outcome_return", "outcome_large",
                                             "outcome_checked_at"},
                        "shadow_direction": {"outcome_status", "outcome_close", "outcome_return", "outcome_up", "outcome_checked_at"}}
-    assert policies == 41  # 28 + papirhandelens 6 + Firi-markedets 4 + papirsidens dokument 3 (2026-11-16)
+    assert policies == 45  # 28 + papirhandelens 6 + Firi-markedets 4 + papirsidens dokument 3 + markedskonteksten 4 (2026-11-16)
 
 
 def test_a_change_to_the_file_changes_the_expectation():

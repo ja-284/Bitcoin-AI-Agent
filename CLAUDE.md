@@ -1400,9 +1400,15 @@ locally, the audit record).**
   tilfeldig timing med samme eksponering); en trakt med sju porter fra idé til ekte penger; kandidater rangert: A
   beslutningslaget (etter 2 000 timer), B ny informasjon om fall samlet framover (terminmarked, opsjoner, ordrebok),
   C lengre beslutninger.
-- **Neste, selvstendig:** lesesjekk av kildene B1–B3. **Eierens beslutninger:** innsamling framover per kilde, og
-  horisonten for handel.
-- Ingenting live, frosset eller registrert er endret.
+- **Eierens ja samme kveld til A, B og C** (også handel over dager, timeprediksjon som byggestein).
+- **Kildesjekken** (`tools/source_probe.py` og arbeidsflyten «Kildeprøve» fra GitHubs servere): OKX, Deribit, Kraken
+  Futures, Hyperliquid, Bitfinex og Binance-speilets ordrebok svarer; Binance-termin (451), Bybit og BitMEX (403) er
+  stengt fra USA.
+- **Innsamling framover** (`agent/context`, `python -m agent.context.run [--status]`, steget «Market context» i
+  timesjobben): én rad per kilde og time i `context_hourly` (feil i `context_errors`), bare tillegg, lukket utenfra,
+  ~22 MB i året, kan aldri stoppe jobben. Punkt i tid via `fetched_at`; ses ikke mot utfall før et registrert
+  eksperiment. Status i `research/RETNINGSPLAN_2026-11-16.md` §7.
+- Ingenting i prediksjonen, de frosne modellene, sporene, sjekkpunktene eller holdout-perioden er endret.
 
 ## Research phase — rules and decisions (2026-09-19)
 

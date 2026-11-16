@@ -101,6 +101,13 @@ jobs:
       - name: Paper trading (once a day)
         run: python -m agent.papertrade.run
 
+      # Markedskontekst for retningsforskningen (research/RETNINGSPLAN_2026-11-16.md, kandidat B; eierens ja 2026-11-16):
+      # terminmarked, opsjoner og ordrebok fra seks gratis kilder, én rad per kilde og time i context_hourly, bare de som
+      # mangler for timen hentes. Skriver bare i context_hourly og context_errors, rører aldri prediksjonen, og gir alltid
+      # exit 0 (testet), så steget kan aldri endre jobbens resultat.
+      - name: Market context (research data)
+        run: python -m agent.context.run
+
       # The DIRECTION track's own alert (master plan addendum 2026-10-16), on its OWN healthchecks.io check, separate
       # from the main heartbeat below. A success ping when the latest closed hour has a valid direction observation;
       # ONE /fail per incident when an hour is lost for good (each lost hour and each recovery recorded once in

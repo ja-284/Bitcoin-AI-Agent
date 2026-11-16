@@ -179,3 +179,33 @@ strategier). Det er der kostnadene kan bæres.
    fordi en enkelttime ikke kan betale Firis kostnader.
 
 Alt annet i planen gjør jeg selv, i rekkefølgen over, og rapporterer underveis.
+
+---
+
+## 7. Status
+
+**2026-11-16 (kveld), eierens ja til A, B og C** («slik vil vi ha det»), også til at handelen skjer over dager mens
+timeprediksjonen forbedres som byggestein.
+
+**Kildesjekken** (`python tools/source_probe.py`, og arbeidsflyten «Kildeprøve» på GitHubs servere i USA):
+
+| Kilde | Herfra (Norge) | Fra GitHub (USA) | Historikk bakover (sett herfra) |
+|---|---|---|---|
+| OKX: funding, åpne posisjoner, long/short, likvidasjoner | ✅ | ✅ | long/short og OI ~30 dager; likvidasjoner bare de siste |
+| Deribit: DVOL, opsjoner, funding | ✅ | ✅ | DVOL time for time fra 2021 |
+| Kraken Futures: funding, åpne posisjoner | ✅ | ✅ | funding ~1 år |
+| Hyperliquid: funding, åpne posisjoner, premie | ✅ | ✅ | funding fra 2023 |
+| Bitfinex: funding, belånte long/short | ✅ | ✅ | belånte posisjoner fra 2021 |
+| Binance-ordreboken (speilet) | ✅ | ✅ | bare nå |
+| Binance-termin | ✅ | ❌ HTTP 451 | funding fra 2019, basis fra 2020 |
+| Bybit | ✅ | ❌ HTTP 403 | åpne posisjoner fra 2021 |
+| BitMEX | ❌ 403 | ❌ 403 | – |
+
+**Innsamlingen framover** (`agent/context`, tabellene `context_hourly` og `context_errors`):
+- **Kildene:** de seks som svarer fra GitHub, med én rad per kilde og time.
+- **Hvordan:** hentes i timesjobben og bare der det mangler. Raden er et kort sammendrag (~2,5 kB i timen, ~22 MB i året) med kildens egne tidsstempler og `fetched_at`. Tabellene får bare nye rader og kan ikke leses utenfra. Steget kan aldri stoppe timesjobben.
+- **Punkt i tid:** en rad kan bare brukes for prediksjoner med informasjonsgrense etter `fetched_at`.
+- **Blind til registreringen:** dataene ses ikke mot utfall før et registrert eksperiment (port 3).
+- **Historikken bakover** (Deribit, Bybit, Binance-termin, Bitfinex) kan hentes herfra til en rask test (port 4).
+  - Den må registreres som et øyeblikksbilde gjennom datagrensen (`agent/research/snapshots.py`).
+  - Den tas bare til 2025-06-30, så holdout-perioden aldri lastes ned.
