@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0e17">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Papirhandel: 118 strategier med 500 kr hver, uten ekte penger.">
+  <title>Papirhandel</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="glow g1" aria-hidden="true"></div>
+  <div class="glow g2" aria-hidden="true"></div>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="#/">
+        <div class="logo" aria-hidden="true">₿</div>
+        <div><div class="brand-name">Papirhandel</div><div class="brand-sub">118 kontoer · ingen ekte penger</div></div>
+      </a>
+      <button class="icon-btn" id="theme" type="button" aria-label="Bytt tema">☀</button>
+    </div>
+  </header>
+  <main id="app"><div class="wrap"><div class="skeleton">Henter …</div></div></main>
+  <div id="tip" class="tip" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

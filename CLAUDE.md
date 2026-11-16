@@ -1375,8 +1375,12 @@ locally, the audit record).**
   (`firi_quotes`: kurser, hva 500 kr koster gjennom boken, dybde) og offentlige handler (`firi_trades`, like handler
   med løpenummer). Ingen strategi, bok eller avlesning endret; stoppregelen utvidet til Firis ordrebok og historikk.
   Lagt inn live i én transaksjon 16:39 UTC (rollesjekk eksakt, 38 policyer; sikkerhet OK, 18 tabeller) før koden.
-  **Neste, eierens ønske:** en enkel, myk mobilside for papirhandelen (alle kontoene, hvem som går best, kursdiagram
-  per konto).
+- **Mobilsiden for papirhandelen (eierens ønske samme dag):** `web/papir/` (myk, mørk «krypto»-stil, mobil først;
+  oversikt over alle 118 kontoene med ringer og smultring, beste/svakeste, grupper, Firi-markedet; kontoside med
+  verdidiagram mot kjøp og hold, kjøp/salg-markører og trådkors). Dataene er ett dokument, «paper-state 1»
+  (`agent/papertrade/snapshot.py`); i dag vises bare den OPPDIKTEDE demoen (`python -m agent.papertrade.demo`, den
+  ekte motoren på syntetiske 2030-kurser). **Venter på eieren:** en `paper_snapshot`-tabell lesbar bare av Control
+  Center-kontoen med to trinn, og publisering på GitHub Pages (`web/papir/README.md`).
 
 ## Research phase — rules and decisions (2026-09-19)
 

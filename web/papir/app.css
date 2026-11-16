@@ -1,0 +1,208 @@
+/* Papirhandel: en myk, mørk «krypto»-side for mobil. Fargene i diagrammene er validert (dataviz-skriptet) mot
+   kortflaten i begge moduser: konto #9085e9 / #6250d6, kjøp og hold #c98500 / #c97a00. Opp/ned vises alltid med
+   fortegn og pil, aldri med farge alene. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0e17;
+  --bg-2: #0f1320;
+  --card: rgba(255, 255, 255, 0.045);
+  --card-solid: #141927;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-2: rgba(255, 255, 255, 0.14);
+  --text: #eef1f8;
+  --text-2: #a7b0c4;
+  --muted: #6f7a92;
+  --accent: #9085e9;
+  --accent-soft: rgba(144, 133, 233, 0.16);
+  --bh: #c98500;
+  --up: #34d399;
+  --up-soft: rgba(52, 211, 153, 0.14);
+  --down: #ff6b7a;
+  --down-soft: rgba(255, 107, 122, 0.14);
+  --flat: #5d6780;
+  --glow-1: rgba(124, 92, 255, 0.28);
+  --glow-2: rgba(0, 196, 170, 0.16);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --radius: 22px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f5fb;
+  --bg-2: #eef1f8;
+  --card: rgba(255, 255, 255, 0.82);
+  --card-solid: #ffffff;
+  --line: rgba(18, 23, 37, 0.07);
+  --line-2: rgba(18, 23, 37, 0.13);
+  --text: #121725;
+  --text-2: #4a5468;
+  --muted: #7d879b;
+  --accent: #6250d6;
+  --accent-soft: rgba(98, 80, 214, 0.1);
+  --bh: #c97a00;
+  --up: #0b9e6a;
+  --up-soft: rgba(11, 158, 106, 0.1);
+  --down: #d63a4a;
+  --down-soft: rgba(214, 58, 74, 0.09);
+  --flat: #a3abbd;
+  --glow-1: rgba(124, 92, 255, 0.16);
+  --glow-2: rgba(0, 196, 170, 0.12);
+  --shadow: 0 10px 30px rgba(40, 50, 90, 0.08);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.num { font-variant-numeric: tabular-nums; }
+button, input { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+
+/* myke lysflekker i bakgrunnen */
+.glow { position: fixed; z-index: -1; width: 520px; height: 520px; border-radius: 50%; filter: blur(90px); pointer-events: none; }
+.glow.g1 { background: var(--glow-1); top: -220px; left: -160px; }
+.glow.g2 { background: var(--glow-2); bottom: -260px; right: -200px; }
+
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 16px calc(32px + env(safe-area-inset-bottom)); }
+
+/* toppen */
+.top { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 12px; padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.logo { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; font-weight: 700;
+  background: linear-gradient(135deg, #8b7bff, #3fd0c0); color: #fff; box-shadow: 0 4px 16px rgba(124, 92, 255, 0.4); }
+.brand-name { font-weight: 650; letter-spacing: 0.2px; }
+.brand-sub { font-size: 12px; color: var(--muted); }
+.icon-btn { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--line); background: var(--card);
+  display: grid; place-items: center; cursor: pointer; }
+.icon-btn:focus-visible, .seg button:focus-visible, .chip:focus-visible, .row:focus-visible, .tabs button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.banner { margin: 14px 0 0; padding: 10px 14px; border-radius: 14px; font-size: 13px; color: var(--text-2);
+  background: var(--accent-soft); border: 1px solid var(--line); }
+
+/* kort */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
+  margin-top: 14px; box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.card h2 { font-size: 13px; font-weight: 600; color: var(--text-2); margin: 0 0 12px; letter-spacing: 0.3px; text-transform: uppercase; }
+.card h2 .sub { text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 500; margin-left: 6px; }
+
+/* segmentert valg */
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); margin-top: 14px; }
+.seg button { flex: 1; border: 0; background: none; padding: 9px 8px; border-radius: 10px; cursor: pointer; color: var(--text-2); font-weight: 550; }
+.seg button[aria-pressed="true"] { background: var(--card-solid); color: var(--text); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); }
+
+/* helten */
+.hero { display: flex; align-items: center; gap: 18px; }
+.hero .big { font-size: 13px; color: var(--text-2); }
+.hero .big b { display: block; font-size: 20px; color: var(--text); font-weight: 650; margin-bottom: 2px; }
+.ok { color: var(--up); }
+.warn { color: var(--down); }
+
+/* ringer */
+.rings { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+.ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ring-label { font-size: 12px; color: var(--text-2); line-height: 1.25; }
+.ring text { font-variant-numeric: tabular-nums; }
+
+/* donut + forklaring */
+.split { display: flex; align-items: center; gap: 18px; }
+.legend { display: grid; gap: 8px; flex: 1; }
+.legend .item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.legend .key { width: 10px; height: 10px; border-radius: 4px; flex: none; }
+.legend .val { margin-left: auto; font-weight: 600; }
+
+/* tall og brikker */
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; }
+.stat .k { font-size: 12px; color: var(--text-2); }
+.stat .v { font-size: 19px; font-weight: 650; margin-top: 2px; }
+.pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.pill.up { color: var(--up); background: var(--up-soft); }
+.pill.down { color: var(--down); background: var(--down-soft); }
+.pill.flat { color: var(--text-2); background: var(--card); border: 1px solid var(--line); }
+.tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-2); padding: 3px 9px;
+  border-radius: 999px; border: 1px solid var(--line); background: var(--card); }
+.dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* lister */
+.list { display: grid; gap: 2px; }
+.row { display: grid; grid-template-columns: 18px 1fr 52px auto; align-items: center; gap: 10px; padding: 10px 6px;
+  border-radius: 14px; cursor: pointer; }
+.row:hover { background: var(--card); }
+.row .rank { font-size: 12px; color: var(--muted); text-align: center; }
+.row .name { font-weight: 560; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; line-clamp: 2; overflow-wrap: anywhere; }
+.row .meta { font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; overflow: hidden; white-space: nowrap; }
+.row .right { text-align: right; display: grid; gap: 3px; justify-items: end; }
+.row .value { font-size: 12px; color: var(--text-2); }
+.row.no-rank { grid-template-columns: 1fr 52px auto; }
+.more { margin-top: 8px; width: 100%; padding: 11px; border-radius: 14px; border: 1px solid var(--line); background: var(--card);
+  color: var(--text-2); cursor: pointer; font-weight: 550; }
+
+/* søk og filtre */
+.search { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--card-solid); outline: none; }
+.search:focus { border-color: var(--accent); }
+.chips { display: flex; gap: 6px; overflow-x: auto; padding: 10px 0 6px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; border: 1px solid var(--line); background: var(--card); padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  font-size: 13px; color: var(--text-2); }
+.chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); border-color: var(--accent); }
+
+/* grupper */
+.fam { display: grid; grid-template-columns: 1fr 120px 64px; align-items: center; gap: 10px; padding: 7px 0; font-size: 14px; }
+.fam .n { color: var(--muted); font-size: 12px; margin-left: 4px; }
+.fam .bar { position: relative; height: 10px; border-radius: 6px; background: var(--card); border: 1px solid var(--line); }
+.fam .bar i { position: absolute; top: 1px; bottom: 1px; border-radius: 4px; }
+.fam .bar .zero { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--line-2); }
+.fam .pct { text-align: right; font-weight: 600; font-size: 13px; }
+
+/* kontosiden */
+.back { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; color: var(--text-2); cursor: pointer; border: 0; background: none; padding: 4px 0; }
+.acct-head h1 { font-size: 23px; margin: 8px 0 8px; font-weight: 680; line-height: 1.2; }
+.acct-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.acct-value { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.acct-value .v { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; }
+.rule { font-size: 13px; color: var(--text-2); margin-top: 8px; }
+.tabs { display: flex; gap: 4px; margin: 4px 0 8px; }
+.tabs button { border: 0; background: none; padding: 6px 12px; border-radius: 10px; color: var(--muted); cursor: pointer; font-weight: 600; font-size: 13px; }
+.tabs button[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); }
+.chart { position: relative; width: 100%; touch-action: pan-y; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.key-row { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); margin-top: 8px; flex-wrap: wrap; }
+.key-row .ln { display: inline-block; width: 16px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+.key-row .ln.dash { border-top-style: dashed; }
+.trade { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.trade:first-child { border-top: 0; }
+.trade .ic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; font-size: 13px; }
+.trade .ic.buy { background: var(--up-soft); color: var(--up); }
+.trade .ic.sell { background: var(--down-soft); color: var(--down); }
+.trade .t1 { font-weight: 560; }
+.trade .t2 { font-size: 12px; color: var(--muted); }
+.trade .amt { text-align: right; font-size: 13px; }
+.empty { color: var(--muted); font-size: 14px; padding: 6px 0; }
+
+/* verktøytips */
+.tip { position: fixed; z-index: 20; pointer-events: none; background: var(--card-solid); border: 1px solid var(--line-2);
+  border-radius: 12px; padding: 8px 10px; font-size: 12px; box-shadow: var(--shadow); min-width: 120px; }
+.tip .tv { font-weight: 650; font-size: 14px; }
+.tip .tl { color: var(--text-2); display: flex; align-items: center; gap: 6px; }
+.tip .tl i { display: inline-block; width: 12px; border-top: 2px solid; }
+.tip .tl i.dash { border-top-style: dashed; }
+.tip .td { color: var(--muted); margin-bottom: 4px; }
+
+.foot { margin-top: 22px; font-size: 12px; color: var(--muted); text-align: center; line-height: 1.5; }
+.skeleton { padding: 60px 0; text-align: center; color: var(--muted); }
+
+/* mykt, men aldri skjult: ingen inngangsanimasjon som kan stoppe halvveis (innholdet skal alltid synes) */
+@media (prefers-reduced-motion: no-preference) {
+  .row, .chip, .seg button, .more { transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; }
+}

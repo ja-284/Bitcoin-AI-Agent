@@ -205,7 +205,11 @@ def test_the_websites_committed_data_is_the_fictional_demo_and_nothing_real():
     stamps = [doc["generated_at"], doc["series"]["start"], *(t["t"] for t in doc["trades"]),
               *(d["as_of"] for d in doc["decisions"]), *(a["as_of"] for a in doc["activity"])]
     assert all(s[:4] in ("2030", "2031") for s in stamps)
-    assert [p.name for p in Path("web").rglob("*.json")] == ["demo.json"]
+    # exactly two data files, both invented: this one and the paper-trading page's (2026-11-16; python -m
+    # agent.papertrade.demo, checked in full in tests/test_papertrade_snapshot.py)
+    assert sorted(p.as_posix() for p in Path("web").rglob("*.json")) == ["web/fixtures/demo.json", "web/papir/demo.json"]
+    paper = json.loads(Path("web/papir/demo.json").read_text(encoding="utf-8"))
+    assert paper["fictional"] is True and all(d[:4] in ("2030", "2031") for d in paper["days"])
 
 
 def test_the_execution_layer_cannot_write_the_prediction_record():
