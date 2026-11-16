@@ -6,7 +6,7 @@ opsjoner og ordrebok, sett fra maskinen dette kjører på? Arbeidsflyten «Kilde
 Bare lesing av offentlige markedsdata: ingen nøkkel, ingen hemmelighet, ingen database, ingenting lagres. Skriver én
 linje per kilde (på GitHub som merknader, `::notice`, som kan leses uten innlogging) og avslutter alltid med 0.
 
-    python tools/source_probe.py [--github]
+    python tools/source_probe.py [--github] [--group binance-termin|okx|bybit|deribit|andre]
 """
 
 from __future__ import annotations
@@ -82,7 +82,10 @@ def check(method: str, url: str, body: dict | None, timeout: float = 15) -> tupl
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     github = "--github" in argv
+    only = argv[argv.index("--group") + 1] if "--group" in argv else None  # GitHub viser høyst 10 merknader per steg
     for group, items in SOURCES.items():
+        if only and group != only:
+            continue
         for name, method, url, body in items:
             status, why = check(method, url, body)
             line = f"{status.upper():3s} {name}: {why}"

@@ -21,5 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, pinned 2026-09-26
 
-      - name: Prøv kildene fra GitHubs servere
-        run: python3 tools/source_probe.py --github
+      # Ett steg per gruppe: GitHub viser høyst 10 merknader per steg.
+      - name: Prøv binance-termin fra GitHubs servere
+        run: python3 tools/source_probe.py --github --group binance-termin
+
+      - name: Prøv okx fra GitHubs servere
+        run: python3 tools/source_probe.py --github --group okx
+
+      - name: Prøv bybit fra GitHubs servere
+        run: python3 tools/source_probe.py --github --group bybit
+
+      - name: Prøv deribit fra GitHubs servere
+        run: python3 tools/source_probe.py --github --group deribit
+
+      - name: Prøv andre fra GitHubs servere
+        run: python3 tools/source_probe.py --github --group andre
