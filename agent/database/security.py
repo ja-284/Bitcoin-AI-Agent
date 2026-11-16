@@ -49,7 +49,8 @@ PUBLIC_REACHING = {"anon", "authenticated", "public"}  # roles a policy can name
 PRIVILEGES = ("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER")
 LOCKDOWN_MARKER = "Access lockdown"
 
-# The ONE deliberate read surface (2026-09-27): the private stats read model (docs/api/stats_access.md).
+# The ONE deliberate read surface (2026-09-27): the private stats read model (docs/api/stats_access.md), and since
+# 2026-11-16 the paper-trading page's document beside it (PAPER_READ_TABLES below, same reader and rule).
 # Exactly these three reporting tables, readable ONLY by a signed-in Supabase Auth user (`authenticated`,
 # never `anon`), and only with SELECT. Since 2026-10-21 (the user's approval) the reader is ONE named account,
 # the Bitcoin AI Control Center's dedicated dashboard account, and only in a session that passed two-factor
@@ -57,6 +58,11 @@ LOCKDOWN_MARKER = "Access lockdown"
 # privilege, a second policy, or a policy whose condition is anything but the designed one is reported, so the
 # opening cannot widen quietly. Every other table stays fully closed.
 VIEWER_READ_TABLES = ("reporting_snapshot", "reporting_runs", "reporting_incidents")
+# 2026-11-16 (the owner's approval): the paper-trading page (web/papir) reads ONE more table, its one-row document
+# (agent/papertrade/schema.sql), with exactly the same reader, privilege and condition. Nothing else of paper trading
+# is readable: its ledgers, errors and Firi logs stay fully closed.
+PAPER_READ_TABLES = ("paper_snapshot",)
+ALL_READ_TABLES = VIEWER_READ_TABLES + PAPER_READ_TABLES
 VIEWER_ROLE = "authenticated"
 VIEWER_PRIVILEGE = "SELECT"
 DASHBOARD_USER_ID = "9e021560-dd06-40f1-80ad-d58d44d9a3f6"  # Supabase Auth user id (an identifier, not a secret)
@@ -103,7 +109,7 @@ def judge(tables: dict[str, dict]) -> list[str]:
     """
     problems: list[str] = []
     for name, t in tables.items():
-        viewer_table = name in VIEWER_READ_TABLES
+        viewer_table = name in ALL_READ_TABLES
         if not t["rls"]:
             problems.append(f"{name}: Row Level Security is OFF")
         for role, granted in t["api_privileges"].items():
@@ -310,7 +316,7 @@ def main() -> int:
     for note in result["notes"]:
         print("  NOTE (outside this project's control, not a failure): " + note)
     if result["ok"]:
-        viewer = ", ".join(t for t in VIEWER_READ_TABLES if t in result["tables"]) or "no table yet"
+        viewer = ", ".join(t for t in ALL_READ_TABLES if t in result["tables"]) or "no table yet"
         print(f"OK: all {len(result['tables'])} tables have RLS on; the public API roles hold nothing except SELECT "
               f"for the dashboard reader on {viewer}; no view, callable function, default grant or extra API role "
               "exposes anything")

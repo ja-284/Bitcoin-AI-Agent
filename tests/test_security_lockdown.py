@@ -84,6 +84,23 @@ def test_the_only_read_surface_is_two_cache_tables_for_signed_in_viewers():
     assert security.API_SWITCHABLE_ROLES == {"anon", "authenticated", "service_role"}
     assert not set(security.VIEWER_READ_TABLES) & {"predictions", "prediction_outcomes", "shadow_move_size",
                                                      "shadow_run_errors", "backend_state", "schema_meta"}
+    # 2026-11-16 (the owner's approval): the paper-trading page's one-row document, and no other paper table
+    assert security.PAPER_READ_TABLES == ("paper_snapshot",)
+    assert security.ALL_READ_TABLES == security.VIEWER_READ_TABLES + security.PAPER_READ_TABLES
+
+
+def test_the_paper_page_document_is_held_to_the_same_rule_and_the_paper_ledgers_stay_closed():
+    ok = {"paper_snapshot": _t(grants={"anon": [], "authenticated": ["SELECT"]}, policies=[_viewer()]),
+          "paper_ledger": _t(), "firi_trades": _t()}
+    assert security.judge(ok) == []
+    (wide,) = security.judge({"paper_snapshot": _t(grants={"authenticated": ["SELECT"]}, policies=[_viewer(qual="true")])})
+    assert wide.startswith("paper_snapshot: policy `control_center_read` lets through more than the designed"), wide
+    (aal1,) = security.judge({"paper_snapshot": _t(grants={"authenticated": ["SELECT"]},
+                                                   policies=[_viewer(qual=QUAL.replace("aal2", "aal1"))])})
+    assert "lets through more than the designed" in aal1
+    assert security.judge({"paper_snapshot": _t(grants={"anon": ["SELECT"]})}) == ["paper_snapshot: `anon` holds SELECT"]
+    (ledger,) = security.judge({"paper_ledger": _t(grants={"authenticated": ["SELECT"]}, policies=[_viewer()])})[:1]
+    assert ledger == "paper_ledger: `authenticated` holds SELECT"
 
 
 def test_the_reporting_schema_file_opens_exactly_the_designed_surface():
