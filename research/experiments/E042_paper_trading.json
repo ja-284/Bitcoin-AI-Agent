@@ -35,5 +35,19 @@
   },
   "what_each_answer_means_decided_in_advance": "En papirkandidat tillater ingenting alene: ekte penger krever en egen, uttrykkelig godkjenning fra eieren (LOW_FREQUENCY_PLAN.md). Ingen kandidat ved 365 dager betyr at ingen av disse strategiene når målet framover med Firis kostnader.",
   "stop_rules": "Papirhandelen stoppes og rapporteres hvis den skriver noe annet sted enn sine egne tabeller, leser noe annet enn det live registeret og Firis offentlige ticker, eller får timesjobben til å feile.",
+  "tillegg_1_2026_11_16": {
+    "made": "2026-11-16, før den første papirdagen (2026-11-16) er behandlet (00:12 UTC 2026-11-17): paper_days og paper_ledger har 0 rader, så ingen papirresultat finnes som kunne påvirke tillegget.",
+    "why": "Eierens ønske 2026-11-16: papirhandelens hovedmål er å forbedre systemet, så den skal lære så mye som mulig, og eieren skal kunne se hvordan alt ligger an. Fire ting manglet for det: hvorfor en handel skjedde, alle dagens inndata, hva Firi faktisk koster time for time, og om en tålmodig ordre (kjøp på kjøpskursen i stedet for på salgskursen) ville blitt fylt.",
+    "what": [
+      "Hver rad i paper_ledger får en grunn (reason): signal, stop_loss, trailing_stop, time_stop eller rebalance; NULL når ingenting ble handlet. Motoren regner nøyaktig det samme som før (testet); den sier bare hvilken regel som utløste handelen.",
+      "paper_days.inputs lagrer alle dagens inndata (sluttkurs, avkastninger, glidende snitt, TREND, SIGMA30, calm, topper og bunner, sig23, vote, pbar) i stedet for fire av dem.",
+      "Hver time (hver kjøring, også reserveslottene; én rad per klokketime) lagres Firis ordrebok i firi_quotes: beste kjøps- og salgskurs, mengden der, snittkursen for et kjøp og et salg på 500 kr gjennom boken, og kronene innenfor 1 % av midtkursen.",
+      "Hver time lagres Firis siste offentlige handler i firi_trades (nye legges til; helt like handler får et løpenummer). Med dem kan det regnes ut i ettertid om en tålmodig ordre ville blitt fylt.",
+      "En lesende oversikt på norsk for eieren (python -m agent.papertrade.report) kommer i en egen commit. Den er beskrivende og endrer ingenting."
+    ],
+    "what_does_not_change": "Strategisettet pt-1.0 (alle 118 strategier og deres regler), de to regnskapsbøkene og prisene de handler på (Firi-boken bruker fortsatt tickeren), 6-timersregelen, avlesningene ved 90, 180 og 365 dager og hva hvert svar betyr. Ingen ekte penger, ingen nøkkel.",
+    "stop_rule_widened": "Stoppregelen gjelder nå med «Firis offentlige ticker, ordrebok og handelshistorikk» i stedet for «Firis offentlige ticker», og med firi_quotes og firi_trades blant papirhandelens egne tabeller. Alt annet i stoppregelen står.",
+    "safety": "Markedsloggen kjører før beslutningen i et eget forsøk: feiler den, lagres feilen i paper_errors (steg «market») og beslutningen kjøres som vanlig. Steget gir fortsatt alltid exit 0. De nye tabellene er bare tillegg, med RLS på, API-rollene uten rettigheter og bitcoin_agent bare SELECT og INSERT."
+  },
   "result": "(fylles inn ved avlesningene)"
 }

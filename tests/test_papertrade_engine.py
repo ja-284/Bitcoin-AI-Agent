@@ -63,3 +63,17 @@ def test_the_step_never_changes_the_state_it_was_given():
     st = engine.State(cash=1.0)
     engine.step(st, 1.0, 100.0, 0.01)
     assert st == engine.State(cash=1.0)
+
+
+def test_every_trade_records_why_it_happened():
+    st = engine.State(cash=1.0)
+    r = engine.step(st, 1.0, 100.0, 0.0, sl=0.10)
+    assert (r.action, r.reason) == ("BUY", "signal")
+    assert engine.step(r.state, NAN, 89.0, 0.0, sl=0.10).reason == "stop_loss"
+    t = engine.step(engine.step(st, 1.0, 100.0, 0.0, tr=0.15).state, NAN, 120.0, 0.0, tr=0.15)
+    assert engine.step(t.state, NAN, 101.0, 0.0, tr=0.15).reason == "trailing_stop"
+    assert engine.step(engine.step(st, 1.0, 100.0, 0.0, tstop=1).state, NAN, 100.0, 0.0, tstop=1).reason == "time_stop"
+    assert engine.step(r.state, 0.0, 100.0, 0.0).reason == "signal"
+    assert engine.step(st, NAN, 100.0, 0.0).reason is None
+    a = engine.step(st, 1.0, 100.0, 0.0, size=0.5)
+    assert a.reason == "signal" and engine.step(a.state, NAN, 100.0, 0.0, size=0.9).reason == "rebalance"

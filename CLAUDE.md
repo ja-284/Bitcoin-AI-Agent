@@ -1370,6 +1370,13 @@ locally, the audit record).**
   - **Oversikt for eieren:** `python -m agent.papertrade.run --status`.
   - **Avlesninger:** 90 / 180 / 365 dager. Ingen ekte penger uten en egen godkjenning.
 - **Ingenting** i prediksjonsmotoren, de frosne modellene, retningssporet, sjekkpunktene eller holdout-perioden er endret.
+- **E042 tillegg 1 (samme dag, før første papirdag; eierens ønske: papirhandelen skal lære mest mulig):** grunnen til
+  hver handel (`paper_ledger.reason`), alle dagens inndata i `paper_days.inputs`, og hver time Firis ordrebok
+  (`firi_quotes`: kurser, hva 500 kr koster gjennom boken, dybde) og offentlige handler (`firi_trades`, like handler
+  med løpenummer). Ingen strategi, bok eller avlesning endret; stoppregelen utvidet til Firis ordrebok og historikk.
+  Lagt inn live i én transaksjon 16:39 UTC (rollesjekk eksakt, 38 policyer; sikkerhet OK, 18 tabeller) før koden.
+  **Neste, eierens ønske:** en enkel, myk mobilside for papirhandelen (alle kontoene, hvem som går best, kursdiagram
+  per konto).
 
 ## Research phase — rules and decisions (2026-09-19)
 

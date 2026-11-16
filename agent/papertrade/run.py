@@ -26,6 +26,11 @@ START_CASH = 500.0
 COST_MODEL = 0.0125  # modellboken: 0,7 % gebyr + halve spreaden, per side (E038)
 FIRI_FEE = 0.007  # Firis offisielle gebyr, per side (firi.com/no/priser, lest 2026-11-15)
 FIRI_TICKER = "https://api.firi.com/v2/markets/BTCNOK/ticker"
+FIRI_DEPTH = "https://api.firi.com/v2/markets/BTCNOK/depth"
+FIRI_TRADES = "https://api.firi.com/v2/markets/BTCNOK/history?count=1000"
+PROBE_NOK = 500.0  # størrelsen papirhandelen handler med; ordreboken gås gjennom for denne summen
+INPUT_COLUMNS = ["close", "R1", "R3", "R7", "R14", "R28", "R56", "R84", "R182", "MA20", "MA50", "MA100", "MA200",
+                 "X20_100", "X50_200", "TREND", "SIGMA30", "calm", "HI20", "HI55", "LO10", "LO20", "sig23", "vote", "pbar"]
 BOOKS = ("modell", "firi")
 MAX_DELAY_HOURS = 6  # en dag behandles bare innen 6 timer etter sluttkursen, så Firi-prisen hører til beslutningen
 
@@ -34,9 +39,17 @@ INSERT_DAY = """INSERT INTO paper_days (day, strategy_set, code_commit, close, f
                 VALUES (%(day)s, %(strategy_set)s, %(code_commit)s, %(close)s, %(firi_bid)s, %(firi_ask)s,
                         %(firi_fetched_at)s, %(inputs)s, %(strategies)s)"""
 INSERT_ROW = """INSERT INTO paper_ledger (day, strategy, book, active, desired, size, action, notional, fee, cash, btc, value,
-                                          state)
+                                          state, reason)
                 VALUES (%(day)s, %(strategy)s, %(book)s, %(active)s, %(desired)s, %(size)s, %(action)s, %(notional)s,
-                        %(fee)s, %(cash)s, %(btc)s, %(value)s, %(state)s)"""
+                        %(fee)s, %(cash)s, %(btc)s, %(value)s, %(state)s, %(reason)s)"""
+INSERT_QUOTE = """INSERT INTO firi_quotes (hour, fetched_at, bid, ask, bid_qty, ask_qty, buy_500_avg, sell_500_avg, depth_bid_nok,
+                                         depth_ask_nok)
+                  VALUES (%(hour)s, %(fetched_at)s, %(bid)s, %(ask)s, %(bid_qty)s, %(ask_qty)s, %(buy_500_avg)s,
+                          %(sell_500_avg)s, %(depth_bid_nok)s, %(depth_ask_nok)s)
+                  ON CONFLICT (hour) DO NOTHING"""
+INSERT_TRADE = """INSERT INTO firi_trades (traded_at, side, price, amount, n, total, fetched_at)
+                  VALUES (%(traded_at)s, %(side)s, %(price)s, %(amount)s, %(n)s, %(total)s, %(fetched_at)s)
+                  ON CONFLICT (traded_at, side, price, amount, n) DO NOTHING"""
 INSERT_ERROR = """INSERT INTO paper_errors (day, step, error_type, error_message, code_commit)
                   VALUES (%(day)s, %(step)s, %(error_type)s, %(error_message)s, %(code_commit)s)"""
 
@@ -89,8 +102,77 @@ def decide_day(df, specs: dict, i: int, states: dict, quote) -> list[dict]:
                 r = engine.step(st, w, close, FIRI_FEE, buy_px=ask, sell_px=bid, mark_px=bid, size=size, **spec["ov"])
             rows.append({"day": day, "strategy": name, "book": book, "active": act, "desired": _num(w), "size": size,
                          "action": r.action, "notional": r.notional, "fee": r.fee, "cash": r.state.cash,
-                         "btc": r.state.btc, "value": r.value, "state": r.state.to_json()})
+                         "btc": r.state.btc, "value": r.value, "state": r.state.to_json(), "reason": r.reason})
     return rows
+
+
+def quote_from_depth(depth: dict, fetched_at: datetime, probe: float = PROBE_NOK) -> dict:
+    """Beste kurser, mengden der, snittkursen for `probe` kroner gjennom boken og dybden innenfor 1 % av midtkursen."""
+    bids = sorted(((float(p), float(q)) for p, q in depth["bids"]), reverse=True)
+    asks = sorted((float(p), float(q)) for p, q in depth["asks"])
+    if not bids or not asks:
+        raise ValueError("empty order book")
+    bid, ask = bids[0][0], asks[0][0]
+    if not 0 < bid <= ask:
+        raise ValueError(f"crossed or empty book: bid {bid} ask {ask}")
+    mid = (bid + ask) / 2
+
+    def walk(levels):
+        left, btc = probe, 0.0
+        for p, q in levels:
+            take = min(left, p * q)
+            btc += take / p
+            left -= take
+            if left <= 1e-9:
+                return probe / btc
+        return None
+
+    return {"hour": fetched_at.replace(minute=0, second=0, microsecond=0), "fetched_at": fetched_at, "bid": bid, "ask": ask,
+            "bid_qty": sum(q for p, q in bids if p == bid), "ask_qty": sum(q for p, q in asks if p == ask),
+            "buy_500_avg": walk(asks), "sell_500_avg": walk(bids),
+            "depth_bid_nok": sum(p * q for p, q in bids if p >= mid * 0.99),
+            "depth_ask_nok": sum(p * q for p, q in asks if p <= mid * 1.01)}
+
+
+def trades_from_history(rows: list, fetched_at: datetime) -> list[dict]:
+    """Firis offentlige handler som rader; en ukjent side eller en umulig verdi hoppes over. Firi gir ingen handels-id,
+    så helt like handler (samme tid, side, kurs og mengde) får et løpenummer `n` i stedet for å slås sammen."""
+    out, seen = [], {}
+    for r in rows:
+        side = r.get("type")
+        if side not in ("bid", "ask"):
+            continue
+        t = {"traded_at": datetime.fromisoformat(r["created_at"].replace("Z", "+00:00")), "side": side,
+             "price": float(r["price"]), "amount": float(r["amount"]), "total": float(r["total"]),
+             "fetched_at": fetched_at}
+        if t["price"] <= 0 or t["amount"] <= 0:
+            continue
+        key = (t["traded_at"], side, t["price"], t["amount"])
+        seen[key] = t["n"] = seen.get(key, 0) + 1
+        out.append(t)
+    return out
+
+
+def record_market(get=requests.get) -> str:
+    """Hver time: Firis ordrebok (én rad per time) og de siste offentlige handlene (nye legges til). Bare lesing hos Firi."""
+    from agent.database.db import get_connection
+    now = datetime.now(timezone.utc)
+    depth = get(FIRI_DEPTH, timeout=15)
+    depth.raise_for_status()
+    quote = quote_from_depth(depth.json(), now)
+    hist = get(FIRI_TRADES, timeout=15)
+    hist.raise_for_status()
+    trades = trades_from_history(hist.json(), now)
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(INSERT_QUOTE, quote)
+            cur.execute("SELECT max(traded_at) FROM firi_trades")
+            newest = cur.fetchone()[0]
+            fresh = [t for t in trades if newest is None or t["traded_at"] >= newest]
+            if fresh:
+                cur.executemany(INSERT_TRADE, fresh)
+        conn.commit()
+    return f"Firi market: quote for {quote['hour']:%Y-%m-%d %H}:00, {len(fresh)} recent trades offered"
 
 
 def record_error(day, step: str, err: BaseException | str) -> None:
@@ -134,8 +216,8 @@ def run_once() -> str:
             states = {(s, b): engine.State(**st) for s, b, st in cur.fetchall()}
             quote, qerr = firi_quote()
             rows = decide_day(df, specs, i, states, quote)
-            inputs = {"sig23": _num(df["sig23"].iat[i]), "vote": _num(df["vote"].iat[i]), "pbar": _num(df["pbar"].iat[i]),
-                      "sigma30": _num(df["SIGMA30"].iat[i]), "history_days": int(len(df)), "firi_error": qerr}
+            inputs = {c: _num(df[c].iat[i]) for c in INPUT_COLUMNS if c in df.columns}
+            inputs.update({"history_days": int(len(df)), "firi_error": qerr})
             for r in rows:
                 r["state"] = Jsonb(r["state"])
             try:  # a concurrent run (a backup slot) may have written the same day a moment earlier
@@ -186,6 +268,11 @@ def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if "--status" in argv:
         return status()
+    try:
+        print("paper trading:", record_market())
+    except Exception as e:  # the market log is for learning; it must never stop the decision or the job
+        print(f"paper trading: market log failed ({type(e).__name__}): {e}")
+        record_error(None, "market", e)
     try:
         print("paper trading:", run_once())
     except Exception as e:  # the hourly job must never fail because of paper trading

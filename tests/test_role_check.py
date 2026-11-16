@@ -22,11 +22,13 @@ def test_the_expectations_are_read_from_the_proven_file():
                       "shadow_direction": {"SELECT", "INSERT"}, "shadow_direction_errors": {"SELECT", "INSERT"},
                       "shadow_direction_health": {"SELECT", "INSERT"},  # (2026-10-16) the direction track's health record
                       # (2026-11-16) papirhandelen (E042): bare tillegg
-                      "paper_days": {"SELECT", "INSERT"}, "paper_ledger": {"SELECT", "INSERT"}, "paper_errors": {"SELECT", "INSERT"}}
+                      "paper_days": {"SELECT", "INSERT"}, "paper_ledger": {"SELECT", "INSERT"}, "paper_errors": {"SELECT", "INSERT"},
+                      # (2026-11-16, E042 tillegg 1) Firis marked og handler hver time
+                      "firi_quotes": {"SELECT", "INSERT"}, "firi_trades": {"SELECT", "INSERT"}}
     assert columns == {"shadow_move_size": {"outcome_status", "outcome_close", "outcome_return", "outcome_large",
                                             "outcome_checked_at"},
                        "shadow_direction": {"outcome_status", "outcome_close", "outcome_return", "outcome_up", "outcome_checked_at"}}
-    assert policies == 34  # 28 + papirhandelens 6 (2026-11-16)
+    assert policies == 38  # 28 + papirhandelens 6 + Firi-markedets 4 (2026-11-16)
 
 
 def test_a_change_to_the_file_changes_the_expectation():

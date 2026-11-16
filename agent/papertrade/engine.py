@@ -42,6 +42,7 @@ class Step:
     fee: float
     state: State
     value: float
+    reason: str | None = None  # signal, stop_loss, trailing_stop, time_stop eller rebalance (None uten handel)
 
 
 def _buy(s: State, amount: float, buy_px: float, c: float) -> float:
@@ -58,18 +59,21 @@ def step(s: State, w: float, close: float, c: float, buy_px: float | None = None
     sell_px = close if sell_px is None else sell_px
     mark_px = close if mark_px is None else mark_px
     s = State(**asdict(s))
-    action, notional, fee = "NONE", 0.0, 0.0
+    action, notional, fee, reason = "NONE", 0.0, 0.0, None
     if size is None:  # helt inn / helt ut, som E040
         if s.btc > 0.0:
             s.held += 1
             s.peak = max(s.peak, close)
-            stopped = (sl is not None and close <= s.entry * (1 - sl)) or (tr is not None and close <= s.peak * (1 - tr))
+            hit_sl = sl is not None and close <= s.entry * (1 - sl)
+            hit_tr = tr is not None and close <= s.peak * (1 - tr)
+            stopped = hit_sl or hit_tr
             timed = tstop is not None and s.held >= tstop
             if stopped or timed or w == 0.0:
                 gross = s.btc * sell_px
                 fee = gross * c
                 s.cash, s.btc, s.trades = gross - fee, 0.0, s.trades + 1
                 action, notional = "SELL", gross
+                reason = "stop_loss" if hit_sl else "trailing_stop" if hit_tr else "time_stop" if timed else "signal"
                 if stopped and w != 0.0:
                     s.blocked = True
         elif w == 1.0 and not s.blocked:
@@ -79,7 +83,7 @@ def step(s: State, w: float, close: float, c: float, buy_px: float | None = None
             s.entry = s.peak = close
             s.held = 0
             s.trades += 1
-            action = "BUY"
+            action, reason = "BUY", "signal"
         if s.blocked and w == 0.0:
             s.blocked = False
     else:  # størrelse, E041
@@ -97,15 +101,15 @@ def step(s: State, w: float, close: float, c: float, buy_px: float | None = None
                 amount = min(delta, s.cash)
                 if amount > 0:
                     fee = _buy(s, amount, buy_px, c)
-                    action, notional = "BUY", amount
+                    action, notional, reason = "BUY", amount, "signal" if enter else "rebalance"
             elif delta < 0:
                 x = s.btc if leave else min(s.btc, -delta / sell_px)
                 gross = x * sell_px
                 fee = gross * c
                 s.cash, s.btc, s.trades = s.cash + gross - fee, max(s.btc - x, 0.0), s.trades + 1
-                action, notional = "SELL", gross
+                action, notional, reason = "SELL", gross, "signal" if leave else "rebalance"
     value = s.cash + s.btc * mark_px
-    return Step(action, notional, fee, s, value)
+    return Step(action, notional, fee, s, value, reason)
 
 
 def size_for(mode: str, pbar: float | None, sigma30: float | None) -> float | None:

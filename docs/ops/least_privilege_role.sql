@@ -101,6 +101,12 @@ CREATE POLICY backend_read   ON paper_ledger FOR SELECT TO bitcoin_agent USING (
 CREATE POLICY backend_insert ON paper_ledger FOR INSERT TO bitcoin_agent WITH CHECK (true);
 CREATE POLICY backend_read   ON paper_errors FOR SELECT TO bitcoin_agent USING (true);
 CREATE POLICY backend_insert ON paper_errors FOR INSERT TO bitcoin_agent WITH CHECK (true);
+-- (2026-11-16, E042 tillegg 1) Firis marked og handler hver time: bare tillegg
+GRANT SELECT, INSERT ON firi_quotes, firi_trades TO bitcoin_agent;
+CREATE POLICY backend_read   ON firi_quotes FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON firi_quotes FOR INSERT TO bitcoin_agent WITH CHECK (true);
+CREATE POLICY backend_read   ON firi_trades FOR SELECT TO bitcoin_agent USING (true);
+CREATE POLICY backend_insert ON firi_trades FOR INSERT TO bitcoin_agent WITH CHECK (true);
 
 -- the BIGSERIAL ids
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO bitcoin_agent;

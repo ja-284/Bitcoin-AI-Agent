@@ -69,6 +69,14 @@ def test_decisions_for_both_books_and_none_for_firi_without_a_quote():
     assert bh["modell"]["btc"] == pytest.approx(500 * (1 - 0.0125) / df["close"].iat[i])
     cash = [r for r in rows if r["strategy"] == "BASE_cash"]
     assert all(r["value"] == 500.0 and r["action"] == "NONE" for r in cash)
+    # (tillegg 1) hver handel har en grunn, og en dag uten handel har ingen
+    assert all((r["reason"] is None) == (r["action"] == "NONE") for r in rows)
+    assert bh["firi"]["reason"] == "signal"
+
+
+def test_every_daily_input_the_step_stores_exists_in_the_daily_frame():
+    df = S.daily_frame(*live_rows())
+    assert set(R.INPUT_COLUMNS) <= set(df.columns)
 
 
 def test_a_bad_firi_quote_is_refused():
@@ -96,7 +104,7 @@ def _sql_targets(path: Path) -> set[str]:
 
 def test_paper_trading_writes_only_its_own_tables_and_never_touches_execution_or_research_loaders():
     for f in Path("agent/papertrade").glob("*.py"):
-        assert _sql_targets(f) <= {"paper_days", "paper_ledger", "paper_errors"}, f
+        assert _sql_targets(f) <= {"paper_days", "paper_ledger", "paper_errors", "firi_quotes", "firi_trades"}, f
         tree = ast.parse(f.read_text(encoding="utf-8"))
         mods = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom) and n.module}
         assert not any(m.startswith("agent.execution") for m in mods), f
@@ -111,6 +119,7 @@ def test_the_hourly_job_can_never_fail_because_of_paper_trading(monkeypatch):
         raise RuntimeError("database down")
 
     monkeypatch.setattr(R, "run_once", boom)
+    monkeypatch.setattr(R, "record_market", boom)
     monkeypatch.setattr(R, "record_error", lambda *a, **k: None)
     assert R.main([]) == 0
 
@@ -122,3 +131,27 @@ def test_a_day_is_traded_only_within_six_hours_of_its_close():
     assert not R.too_late(day, close_at + timedelta(minutes=13))
     assert not R.too_late(day, close_at + timedelta(hours=6))
     assert R.too_late(day, close_at + timedelta(hours=6, seconds=1))
+
+
+def test_the_order_book_is_read_into_prices_costs_and_depth():
+    now = datetime(2030, 1, 1, 12, 34, tzinfo=timezone.utc)
+    depth = {"bids": [["600000", "0.0005"], ["599000", "1"], ["590000", "5"]],
+             "asks": [["606000", "0.0005"], ["607000", "1"], ["700000", "5"]]}
+    q = R.quote_from_depth(depth, now)
+    assert (q["bid"], q["ask"], q["hour"]) == (600000.0, 606000.0, datetime(2030, 1, 1, 12, tzinfo=timezone.utc))
+    btc = 0.0005 + (500 - 606000 * 0.0005) / 607000  # 303 kr at 606 000, the other 197 kr at 607 000
+    assert q["buy_500_avg"] == pytest.approx(500 / btc)
+    assert q["depth_ask_nok"] == pytest.approx(606000 * 0.0005 + 607000)  # 700 000 is beyond 1 % of the mid
+    with pytest.raises(ValueError):
+        R.quote_from_depth({"bids": [["610000", "1"]], "asks": [["600000", "1"]]}, now)
+
+
+def test_public_trades_are_parsed_and_unknown_sides_dropped():
+    now = datetime(2030, 1, 1, tzinfo=timezone.utc)
+    rows = [{"type": "bid", "amount": "0.001", "price": "626224.95", "created_at": "2030-01-01T00:00:01.221Z", "total": "626.22"},
+            {"type": "weird", "amount": "1", "price": "1", "created_at": "2030-01-01T00:00:02Z", "total": "1"}]
+    t = R.trades_from_history(rows, now)
+    assert len(t) == 1 and t[0]["side"] == "bid" and t[0]["traded_at"].microsecond == 221000 and t[0]["n"] == 1
+    same = {"type": "ask", "amount": "0.01", "price": "620000", "created_at": "2030-01-01T00:00:03Z", "total": "6200"}
+    t = R.trades_from_history([same, dict(same), {**same, "amount": "0.02", "total": "12400"}], now)
+    assert [x["n"] for x in t] == [1, 2, 1]  # two identical trades are both kept
